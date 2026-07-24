@@ -29,6 +29,7 @@ Resume:
     checkpoints/student_distill_3/step_1000/
 """
 
+import faulthandler
 import json
 import math
 import sys
@@ -47,6 +48,7 @@ from dataloader import create_unified_dataloader
 
 TEACHER_HIDDEN_SIZE = 3584  # Qwen2.5-VL-7B LLM hidden_size
 STUDENT_HIDDEN_SIZE = 2048  # Qwen2.5-VL-3B LLM hidden_size
+VISION_HIDDEN_SIZE  = 1280  # Qwen2.5-VL vision encoder hidden_size (teacher/student 동일)
 
 
 # =============================================================================
@@ -58,7 +60,8 @@ CONFIG = {
     "teacher_base":       "Qwen/Qwen2.5-VL-7B-Instruct",
     "teacher_lora":       "checkpoints/teacher_lora/epoch_1",
     "student_base":       "Qwen/Qwen2.5-VL-3B-Instruct",
-    "output_dir":         "checkpoints/student_distill_3",
+    # 실험별로 명확히 분리: Full(spatial+temporal) / student_spatial / student_temporal
+    "output_dir":         "checkpoints/student_full",
 
     # Resume — None이면 처음부터, 경로 지정 시 해당 체크포인트 LoRA/projection 가중치 로드
     "resume_from":        None,
@@ -87,11 +90,19 @@ CONFIG = {
     # 중 하나 — 전체attention이라 패치 간 전역 문맥 반영, merger 직전(31)보다 덜 추상화됨)
     "spatial_layer_idx":  23,
 
-    # L_temporal: teacher에게 줄 프레임 수(현재 포함). 처음엔 2로 축소해서 스모크 테스트 권장.
-    "temporal_k":         3,
-    # teacher 멀티프레임 토큰화 max_length. K=3 기준 image_pad 토큰만 약 693개 소요됨을
-    # 실측 확인 — truncation이 이미지 토큰을 조용히 잘라내면 즉시 크래시하므로 여유 있게 설정.
-    "teacher_max_length": 1280,
+    # L_temporal: teacher에게 줄 프레임 수(현재 포함). temporal_k=1이면 teacher도 student와
+    # 완전히 동일한 단일 프레임만 보게 되어(dataloader가 teacher_* 필드 자체를 생성하지 않음),
+    # +L_spatial 단독 ablation 시 이 값을 1로 낮추면 데이터 파이프라인(이미지 로딩+토큰화)과
+    # teacher forward 비용을 함께 줄일 수 있다. 키프레임 평균 간격이 약 3.1초로 성긴 편이라
+    # K를 크게 늘리는 것보다 K=2(직전 프레임 1개)로 시작해 A5 ablation에서 K를 늘려본다.
+    "temporal_k":         2,
+    # teacher 멀티프레임 토큰화 max_length. K=2 기준 DriveLM+NuScenes-QA train 전체
+    # 754,587개 샘플을 실제 chat-template 토큰화로 전수 스캔한 실측 최댓값은 1546
+    # (900은 0.25%, 1280도 0.006% 샘플에서 truncation 발생 — 드물지만 조용히 KD 신호를
+    # 오염시키므로 0에 수렴시킴). 1600으로 설정하면 이론상 truncation이 전혀 발생하지
+    # 않는다. K를 바꾸면(예: K=3 ablation) 이 값도 그에 맞게 다시 전수 스캔해서 명시할 것
+    # — 재현성을 위해 자동 계산식(None) 대신 항상 실측 고정값으로 기록한다.
+    "teacher_max_length": 1600,
 
     # 데이터
     "drivelm_json":       "data/QA_dataset_nus/v1_0_train_nus.json",
@@ -119,21 +130,27 @@ class SpatialFeatureKDLoss(nn.Module):
     """
     L_spatial: 공간 정보 보존 Feature KD.
 
-    teacher/student vision encoder는 depth=32, hidden_size=1280으로 아키텍처가 완전히
-    동일(가중치 값은 다름)하므로, 중간 block의 patch-level hidden state를 projection
-    없이 바로 코사인 손실로 정렬할 수 있다. attention map(스케일 0.0004 수준으로 죽음)
-    대신 hidden state를 쓰는 이유가 이것.
+    teacher/student vision encoder는 depth=32, hidden_size=1280으로 아키텍처는 완전히
+    동일(가중치 값은 다름)하지만, 초기 학습 관찰 결과 차원이 같다고 두 feature 공간이
+    선형으로 정렬돼 있는 건 아니었다(projection 없이 450 step 동안 loss가 0.437→0.438로
+    정체 — task/temporal은 같은 구간에 각각 47%/13% 감소). L_temporal의 학습 가능한
+    projection과 동일한 패턴을 적용해 "공간 정렬"이라는 일을 rank-16 vision LoRA
+    델타에서 분리시킨다 — LoRA는 표현 조정, projection은 정렬을 전담. 추론 시에는
+    두 projection 모두 제거되므로 배포 모델 크기에는 영향 없음.
+    attention map(스케일 0.0004 수준으로 죽음) 대신 hidden state를 쓰는 이유는 기존과 동일.
 
     teacher는 L_temporal용으로 K개 프레임을 입력받으므로, vision block 출력에는 K개
     이미지의 패치가 모두 섞여 있다 — 이 중 "현재 프레임"(각 샘플의 마지막 이미지)에
     해당하는 패치만 offset으로 슬라이싱해서 student(단일 프레임)와 비교한다.
     """
 
-    def __init__(self, layer_idx: int):
+    def __init__(self, layer_idx: int, hidden_size: int = 1280):
         super().__init__()
         self.layer_idx = layer_idx
         self._captured = {}
         self._hooks = []
+        # student 쪽 패치를 teacher 쪽으로 정렬 (L_temporal의 proj(h_S)->h_T와 동일 방향)
+        self.proj = nn.Linear(hidden_size, hidden_size)
 
     def register_hooks(self, teacher_model, student_model):
         def make_hook(key):
@@ -188,7 +205,7 @@ class SpatialFeatureKDLoss(nn.Module):
         losses = []
         for t_p, s_p in zip(current_frame_patches, student_frame_patches):
             t_p = t_p.float()
-            s_p = s_p.float()
+            s_p = self.proj(s_p.float())
             cos = F.cosine_similarity(t_p, s_p, dim=-1)  # (n_patch,)
             losses.append((1 - cos).mean())
 
@@ -333,7 +350,9 @@ def train(config):
         teacher_max_length=config["teacher_max_length"],
     )
 
-    spatial_criterion = SpatialFeatureKDLoss(layer_idx=config["spatial_layer_idx"])
+    spatial_criterion = SpatialFeatureKDLoss(
+        layer_idx=config["spatial_layer_idx"], hidden_size=VISION_HIDDEN_SIZE,
+    ).to(accelerator.device)
     temporal_criterion = TemporalContextKDLoss(
         teacher_hidden=TEACHER_HIDDEN_SIZE, student_hidden=STUDENT_HIDDEN_SIZE,
     ).to(accelerator.device)
@@ -346,9 +365,17 @@ def train(config):
     elif resume_from:
         print(f"  경고: {resume_from}에 temporal_proj.pt가 없어 projection을 새로 초기화합니다")
 
+    if resume_from and (Path(resume_from) / "spatial_proj.pt").exists():
+        state = torch.load(Path(resume_from) / "spatial_proj.pt", map_location="cpu")
+        spatial_criterion.load_state_dict(state)
+        print(f"  spatial_proj 가중치 로드 완료 (resume): {resume_from}")
+    elif resume_from:
+        print(f"  경고: {resume_from}에 spatial_proj.pt가 없어 projection을 새로 초기화합니다")
+
     optimizer = torch.optim.AdamW(
         list(filter(lambda p: p.requires_grad, student.parameters()))
-        + list(temporal_criterion.parameters()),
+        + list(temporal_criterion.parameters())
+        + list(spatial_criterion.parameters()),
         lr=config["learning_rate"],
         weight_decay=0.01,
     )
@@ -364,8 +391,8 @@ def train(config):
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
-    student, temporal_criterion, optimizer, dataloader, scheduler = accelerator.prepare(
-        student, temporal_criterion, optimizer, dataloader, scheduler
+    student, temporal_criterion, spatial_criterion, optimizer, dataloader, scheduler = accelerator.prepare(
+        student, temporal_criterion, spatial_criterion, optimizer, dataloader, scheduler
     )
 
     # vision block hook은 accelerator.prepare로 모델이 최종 배치된 뒤 등록
@@ -373,6 +400,19 @@ def train(config):
 
     output_dir = Path(config["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
+
+    # --- Watchdog: micro-step 진행이 WATCHDOG_TIMEOUT_SEC 이상 없으면 전체 스레드
+    # 스택을 덤프하고 프로세스를 종료한다. 이 환경은 ptrace가 막혀 있어 py-spy 등
+    # 외부 도구로 실행 중인 프로세스의 스택을 볼 수 없으므로, 프로세스가 스스로를
+    # 감시하는 방식(faulthandler)을 쓴다. 매 micro-step 성공 시 타이머를 리셋하므로
+    # 정상 진행 중에는 절대 발동하지 않고, hang 시에만 자동으로 죽으면서 원인 조사에
+    # 쓸 스택 덤프를 남긴다 — "GPU를 14시간 동안 헛되이 점유"하는 사고를 구조적으로 차단.
+    WATCHDOG_TIMEOUT_SEC = 1200
+    watchdog_log = open(output_dir / "watchdog_stackdump.log", "a")
+    faulthandler.dump_traceback_later(WATCHDOG_TIMEOUT_SEC, file=watchdog_log, exit=True)
+
+    # --- 배치 지문 로깅: hang 발생 시 이 파일의 마지막 줄이 "범인 배치"의 신원이 된다 ---
+    batch_fingerprint_path = output_dir / "batch_fingerprint.log"
 
     resume_info = f"체크포인트 {resume_from}" if resume_from else "처음부터"
 
@@ -402,6 +442,15 @@ def train(config):
 
         for step, batch in enumerate(dataloader):
 
+            with open(batch_fingerprint_path, "a") as f:
+                t_ids_shape = tuple(batch["teacher_input_ids"].shape) if "teacher_input_ids" in batch else None
+                t_grid_shape = tuple(batch["teacher_image_grid_thw"].shape) if "teacher_image_grid_thw" in batch else None
+                f.write(
+                    f"{datetime.now().strftime('%H:%M:%S')},global_step={global_step},micro_step={step},"
+                    f"student_ids={tuple(batch['input_ids'].shape)},teacher_ids={t_ids_shape},"
+                    f"teacher_grid={t_grid_shape},frame_token={batch.get('frame_token')}\n"
+                )
+
             with accelerator.accumulate(student):
 
                 input_ids      = batch["input_ids"]
@@ -411,11 +460,24 @@ def train(config):
                 labels         = batch["labels"]
                 q_len          = batch["q_len"]
 
-                teacher_input_ids      = batch["teacher_input_ids"]
-                teacher_attention_mask = batch["teacher_attention_mask"]
-                teacher_pixel_values   = batch["teacher_pixel_values"]
-                teacher_image_grid_thw = batch["teacher_image_grid_thw"]
-                teacher_q_len          = batch["teacher_q_len"]
+                # temporal_k>1일 때만 dataloader가 teacher_* 필드(멀티프레임)를 만든다.
+                # temporal_k==1(+L_spatial 단독 ablation 등)이면 그 필드 자체가 없으므로
+                # student와 완전히 동일한 단일 프레임 배치를 teacher에도 그대로 넣는다 —
+                # 원래 hazard-KD 버전도 teacher/student에 동일 배치를 넘겨 학습했던 검증된 패턴.
+                # 이렇게 하면 GPU forward뿐 아니라 dataloader의 이미지 로딩+토큰화 비용까지
+                # (temporal_k=1로 두면 애초에 발생하지 않으므로) 함께 절약된다.
+                if config["temporal_k"] > 1:
+                    teacher_input_ids      = batch["teacher_input_ids"]
+                    teacher_attention_mask = batch["teacher_attention_mask"]
+                    teacher_pixel_values   = batch["teacher_pixel_values"]
+                    teacher_image_grid_thw = batch["teacher_image_grid_thw"]
+                    teacher_q_len          = batch["teacher_q_len"]
+                else:
+                    teacher_input_ids      = input_ids
+                    teacher_attention_mask = attention_mask
+                    teacher_pixel_values   = pixel_values
+                    teacher_image_grid_thw = image_grid_thw
+                    teacher_q_len          = q_len
 
                 with torch.no_grad():
                     t_out = teacher(
@@ -459,12 +521,35 @@ def train(config):
 
                 if accelerator.sync_gradients:
                     accelerator.clip_grad_norm_(
-                        list(student.parameters()) + list(temporal_criterion.parameters()), 1.0
+                        list(student.parameters())
+                        + list(temporal_criterion.parameters())
+                        + list(spatial_criterion.parameters()),
+                        1.0,
                     )
+
+                    # L_spatial 정체 진단 때 썼던 것과 동일한 grad 흐름 모니터링을
+                    # 본 학습에도 주기적으로 남겨 "projection이 정렬을 전담하고
+                    # student backbone은 안 배우는" 퇴화 여부를 방어할 수 있게 한다.
+                    if (global_step + 1) % config["log_every"] == 0:
+                        vision_lora_grad = None
+                        for name, p in accelerator.unwrap_model(student).named_parameters():
+                            if f"visual.blocks.{config['spatial_layer_idx']}" in name and "lora" in name and p.grad is not None:
+                                vision_lora_grad = p.grad.norm().item()
+                                break
+                        spatial_proj_grad = accelerator.unwrap_model(spatial_criterion).proj.weight.grad
+                        spatial_proj_grad = spatial_proj_grad.norm().item() if spatial_proj_grad is not None else None
+                        print(
+                            f"    [grad check] vision_lora(layer{config['spatial_layer_idx']})="
+                            f"{vision_lora_grad} spatial_proj={spatial_proj_grad}"
+                        )
 
                 optimizer.step()
                 scheduler.step()
                 optimizer.zero_grad()
+
+                # 이 micro-step이 무사히 끝났으므로 watchdog 타이머 리셋
+                faulthandler.cancel_dump_traceback_later()
+                faulthandler.dump_traceback_later(WATCHDOG_TIMEOUT_SEC, file=watchdog_log, exit=True)
 
             epoch_losses["total"]    += loss_total.item()
             epoch_losses["task"]     += loss_task.item()
@@ -491,7 +576,7 @@ def train(config):
 
                 if global_step % config["save_every_steps"] == 0:
                     _save_checkpoint(
-                        accelerator, student, temporal_criterion, processor,
+                        accelerator, student, temporal_criterion, spatial_criterion, processor,
                         output_dir, global_step, epoch,
                         epoch_losses, epoch_steps, config,
                     )
@@ -503,11 +588,14 @@ def train(config):
             f"(task={avg['task']:.3f} spatial={avg['spatial']:.3f} temporal={avg['temporal']:.3f})\n"
         )
         _save_checkpoint(
-            accelerator, student, temporal_criterion, processor,
+            accelerator, student, temporal_criterion, spatial_criterion, processor,
             output_dir, global_step, epoch,
             epoch_losses, epoch_steps, config,
             name=f"epoch_{epoch}",
         )
+
+    faulthandler.cancel_dump_traceback_later()
+    watchdog_log.close()
 
     print("\nStage 3 Distillation 완료!")
     last_ckpt = output_dir / ("epoch_" + str(config["num_epochs"]))
@@ -519,7 +607,7 @@ def train(config):
 # =============================================================================
 
 def _save_checkpoint(
-    accelerator, model, temporal_criterion, processor,
+    accelerator, model, temporal_criterion, spatial_criterion, processor,
     output_dir, global_step, epoch,
     epoch_losses, epoch_steps, config,
     name=None,
@@ -534,6 +622,9 @@ def _save_checkpoint(
 
     unwrapped_temporal = accelerator.unwrap_model(temporal_criterion)
     torch.save(unwrapped_temporal.state_dict(), save_path / "temporal_proj.pt")
+
+    unwrapped_spatial = accelerator.unwrap_model(spatial_criterion)
+    torch.save(unwrapped_spatial.state_dict(), save_path / "spatial_proj.pt")
 
     avg = {k: v / max(1, epoch_steps) for k, v in epoch_losses.items()}
     torch.save({

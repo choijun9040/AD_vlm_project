@@ -42,7 +42,7 @@ CONFIG = {
     "teacher_base":       "Qwen/Qwen2.5-VL-7B-Instruct",
     "teacher_lora":       "checkpoints/teacher_lora/epoch_1",
     "student_base":       "Qwen/Qwen2.5-VL-3B-Instruct",
-    "output_dir":         "checkpoints/student_kd_only_2",
+    "output_dir":         "checkpoints/student_kd_only_v2",
 
     # Resume
     "resume_from":        None,
@@ -51,6 +51,12 @@ CONFIG = {
     "lora_rank":          16,
     "lora_alpha":         32,
     "lora_dropout":       0.05,
+    # v1(student_kd_only)은 vision attention LoRA 없이(LLM 7개 모듈만) 학습되어
+    # train_distillation.py(L_spatial/L_temporal, vision attn LoRA 포함)와 trainable
+    # 모듈 집합이 달랐다 — 5-way ablation의 순수성을 위해 이 플래그 하나만 추가해
+    # v2로 재학습한다(다른 설정은 전부 동결). v1은 보존해 "vision attn LoRA 단독
+    # 효과"를 v1 vs v2 비교로 분리 보고하는 부록 실험으로 활용.
+    "lora_target_vision_attn": True,
 
     # 학습
     "num_epochs":         1,
@@ -175,15 +181,19 @@ def build_student(config):
             config["student_base"],
             torch_dtype=torch.bfloat16,
         )
+        target_modules = [
+            "q_proj", "k_proj", "v_proj", "o_proj",
+            "gate_proj", "up_proj", "down_proj",
+        ]
+        if config.get("lora_target_vision_attn", False):
+            # vision attention(qkv/proj) — train_distillation.py와 동일 확장
+            target_modules += ["qkv", "proj"]
         lora_cfg = LoraConfig(
             task_type=TaskType.CAUSAL_LM,
             r=config["lora_rank"],
             lora_alpha=config["lora_alpha"],
             lora_dropout=config["lora_dropout"],
-            target_modules=[
-                "q_proj", "k_proj", "v_proj", "o_proj",
-                "gate_proj", "up_proj", "down_proj",
-            ],
+            target_modules=target_modules,
             bias="none",
         )
         student = get_peft_model(base, lora_cfg)

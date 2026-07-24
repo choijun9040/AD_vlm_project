@@ -1,6 +1,5 @@
 scripts/check*.py
 CLAUDE.md
-data_unbalance.txt
 
 # Python bytecode cache
 __pycache__/

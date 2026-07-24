@@ -92,7 +92,7 @@ def _get_temporal_frame_tokens(frame_token, scene_frame_order, frame_to_scene, k
     return window
 
 
-def _build_teacher_inputs(processor, frame_image_paths, question, answer, temporal_k, teacher_max_length):
+def _build_teacher_inputs(processor, frame_image_paths, question, answer, temporal_k, teacher_max_length, sample_id=None):
     """teacher용 멀티프레임(K장, 시간순, 마지막=현재 프레임) 텍스트+이미지 토큰화.
 
     student 쪽 단일 이미지 토큰화(DriveLMDataset/NuScenesQADataset.__getitem__)와 동일한
@@ -111,12 +111,18 @@ def _build_teacher_inputs(processor, frame_image_paths, question, answer, tempor
     )
     text_full = text_q + answer
 
+    # padding 없이 자연 길이로 토큰화 — 실측 분포(평균 515, p99 717)가 max_length(1600)
+    # 보다 훨씬 짧아서 전역 고정 패딩은 낭비가 크다(batch_size=2 랜덤 페어링 시뮬레이션
+    # 결과 평균 길이가 고정값의 33% 수준). 실제 배치 단위 패딩은 collate_fn에서
+    # pad_token_id로 "이 배치의 최대 길이"에 맞춰 처리한다.
+    # max_length/truncation은 안전망으로만 유지 — 실측 최댓값(K=2 기준 1546)을
+    # 넘는 값으로 설정해두면 정상적인 경우 전혀 발동하지 않는다.
     max_len = teacher_max_length or (640 + (temporal_k - 1) * 260)
     inputs = processor(
         text=[text_full],
         images=images,
         return_tensors="pt",
-        padding="max_length",
+        padding=False,
         max_length=max_len,
         truncation=True,
     )
@@ -130,6 +136,17 @@ def _build_teacher_inputs(processor, frame_image_paths, question, answer, tempor
     visual_len = (inputs["input_ids"][0] == image_token_id).sum().item()
 
     q_len = visual_len + q_text_len - temporal_k
+
+    # padding이 없으므로 "생성된 길이가 max_length에 도달"했는지로 truncation을 판정
+    # (이미지 토큰이 잘리면 모델 forward에서 즉시 크래시하지만, 질문/답변 텍스트만
+    # 잘리는 경우는 조용히 넘어가므로 여기서 명시적으로 로그를 남긴다).
+    if inputs["input_ids"].shape[1] >= max_len:
+        warn_tag = f" (sample={sample_id})" if sample_id else ""
+        print(
+            f"[WARN] teacher 입력 truncation 발생{warn_tag}: "
+            f"max_length={max_len}에 도달, 질문/답변이 잘렸을 수 있음",
+            flush=True,
+        )
 
     return {
         "teacher_input_ids":      inputs["input_ids"].squeeze(0),
@@ -311,6 +328,7 @@ class DriveLMDataset(Dataset):
                 item.update(_build_teacher_inputs(
                     self.processor, frame_paths, s["question"], s["answer"],
                     self.temporal_k, self.teacher_max_length,
+                    sample_id=s["frame_token"],
                 ))
 
             return item
@@ -472,6 +490,7 @@ class NuScenesQADataset(Dataset):
                 item.update(_build_teacher_inputs(
                     self.processor, frame_paths, s["question"], s["answer"],
                     self.temporal_k, self.teacher_max_length,
+                    sample_id=s["sample_token"],
                 ))
 
             return item
@@ -625,12 +644,17 @@ def create_unified_dataloader(
         replacement=True,
     )
 
+    # temporal_k>1일 때만 teacher_input_ids가 존재하므로, 그때만 pad_token_id가 필요
+    pad_token_id = None
+    if temporal_k > 1 and processor is not None:
+        pad_token_id = processor.tokenizer.pad_token_id
+
     dataloader = DataLoader(
         combined,
         batch_size=batch_size,
         sampler=sampler,
         num_workers=num_workers,
-        collate_fn=collate_fn,
+        collate_fn=make_collate_fn(pad_token_id),
         pin_memory=True,
         drop_last=True,
     )
@@ -648,50 +672,83 @@ def create_unified_dataloader(
 # 5. Collate Function
 # =============================================================================
 
-def collate_fn(batch):
+def make_collate_fn(pad_token_id=None):
+    """collate_fn을 만드는 팩토리.
+
+    teacher_input_ids/teacher_attention_mask는 이제 _build_teacher_inputs에서
+    padding 없이 자연 길이로 나오므로(전역 고정 패딩 대신 배치 단위 동적 패딩으로
+    연산 낭비를 줄이기 위함), 배치로 묶이는 시점에 pad_token_id를 알아야 오른쪽
+    패딩을 맞춰 stack할 수 있다 — temporal_k=1인 기존 호출부(train_kd_only.py,
+    train_baseline.py)는 teacher_input_ids 자체가 없어 pad_token_id 없이도
+    그대로 동작(하위 호환 유지).
     """
-    processor 없는 raw 모드(구조 확인용)와
-    processor 있는 tensor 모드 모두 처리.
-    """
-    # tensor 필드와 string 필드 분리
-    tensor_keys = ["input_ids", "attention_mask", "pixel_values",
-                   "image_grid_thw", "labels", "q_len"]
-    string_keys = ["source", "task", "frame_token",
-                   "question", "answer", "image_path"]
-    # teacher_*: temporal_k>1일 때만 존재. input_ids/attention_mask/q_len은 샘플당 1행이라
-    # stack, pixel_values/image_grid_thw는 샘플당 K행이라 cat으로 배치 결합해야 함
-    # (torch.stack하면 (B,K,3) 3차원이 되어 vision tower의 grid_thw unpacking이 깨짐).
-    teacher_stack_keys = ["teacher_input_ids", "teacher_attention_mask", "teacher_q_len"]
-    teacher_cat_keys   = ["teacher_pixel_values", "teacher_image_grid_thw"]
 
-    collated = {}
+    def collate_fn(batch):
+        """
+        processor 없는 raw 모드(구조 확인용)와
+        processor 있는 tensor 모드 모두 처리.
+        """
+        # tensor 필드와 string 필드 분리
+        tensor_keys = ["input_ids", "attention_mask", "pixel_values",
+                       "image_grid_thw", "labels", "q_len"]
+        string_keys = ["source", "task", "frame_token",
+                       "question", "answer", "image_path"]
+        # teacher_q_len은 샘플당 스칼라라 그대로 stack, pixel_values/image_grid_thw는
+        # 샘플당 K행이라 cat으로 배치 결합해야 함(torch.stack하면 (B,K,3) 3차원이 되어
+        # vision tower의 grid_thw unpacking이 깨짐). teacher_input_ids/attention_mask는
+        # 아래에서 배치 내 최대 길이로 동적 패딩 후 별도 처리.
+        teacher_scalar_keys = ["teacher_q_len"]
+        teacher_cat_keys    = ["teacher_pixel_values", "teacher_image_grid_thw"]
 
-    for key in tensor_keys:
-        if key in batch[0]:
-            collated[key] = torch.stack([item[key] for item in batch])
+        collated = {}
 
-    for key in teacher_stack_keys:
-        if key in batch[0]:
-            collated[key] = torch.stack([item[key] for item in batch])
+        for key in tensor_keys:
+            if key in batch[0]:
+                collated[key] = torch.stack([item[key] for item in batch])
 
-    for key in teacher_cat_keys:
-        if key in batch[0]:
-            collated[key] = torch.cat([item[key] for item in batch], dim=0)
+        for key in teacher_scalar_keys:
+            if key in batch[0]:
+                collated[key] = torch.stack([item[key] for item in batch])
 
-    # hazard_score는 float 또는 tensor 모두 처리
-    if "hazard_score" in batch[0]:
-        collated["hazard_score"] = torch.tensor(
-            [item["hazard_score"] if not isinstance(item["hazard_score"], torch.Tensor)
-             else item["hazard_score"].item()
-             for item in batch],
-            dtype=torch.float32,
-        )
+        for key in teacher_cat_keys:
+            if key in batch[0]:
+                collated[key] = torch.cat([item[key] for item in batch], dim=0)
 
-    for key in string_keys:
-        if key in batch[0]:
-            collated[key] = [item[key] for item in batch]
+        if "teacher_input_ids" in batch[0]:
+            assert pad_token_id is not None, "temporal_k>1인데 pad_token_id가 없어 동적 패딩 불가"
+            ids_list  = [item["teacher_input_ids"] for item in batch]
+            mask_list = [item["teacher_attention_mask"] for item in batch]
+            batch_max_len = max(ids.shape[0] for ids in ids_list)
 
-    return collated
+            padded_ids, padded_masks = [], []
+            for ids, mask in zip(ids_list, mask_list):
+                pad_len = batch_max_len - ids.shape[0]
+                if pad_len > 0:
+                    # 오른쪽 패딩 — teacher_q_len은 왼쪽 기준 절대 인덱스라 영향 없음
+                    ids  = torch.cat([ids,  torch.full((pad_len,), pad_token_id, dtype=ids.dtype)])
+                    mask = torch.cat([mask, torch.zeros(pad_len, dtype=mask.dtype)])
+                padded_ids.append(ids)
+                padded_masks.append(mask)
+
+            collated["teacher_input_ids"]      = torch.stack(padded_ids)
+            collated["teacher_attention_mask"] = torch.stack(padded_masks)
+
+        # hazard_score는 float 또는 tensor 모두 처리
+        if "hazard_score" in batch[0]:
+            collated["hazard_score"] = torch.tensor(
+                [item["hazard_score"] if not isinstance(item["hazard_score"], torch.Tensor)
+                 else item["hazard_score"].item()
+                 for item in batch],
+                dtype=torch.float32,
+            )
+
+        for key in string_keys:
+            if key in batch[0]:
+                collated[key] = [item[key] for item in batch]
+
+        return collated
+
+    return collate_fn
 
 
 # =============================================================================
