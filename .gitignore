@@ -8,6 +8,8 @@ __pycache__/
 # large/generated data & model artifacts (see CLAUDE.md)
 checkpoints/
 data/
+external/
+logs/
 
 # local-only Claude Code settings
 .claude/settings.local.json
