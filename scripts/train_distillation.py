@@ -29,6 +29,7 @@ Resume:
     checkpoints/student_distill_3/step_1000/
 """
 
+import argparse
 import faulthandler
 import json
 import math
@@ -641,5 +642,53 @@ def _save_checkpoint(
 # 실행
 # =============================================================================
 
+# =============================================================================
+# Ablation variant — CONFIG의 output_dir/lambda_*/temporal_k만 갈아끼운다.
+# baseline_v2/kd_only_v2처럼 스크립트를 물리적으로 복제하지 않는 이유: 세 변형의
+# 유일한 차이가 이 4개 값뿐이라 파일을 복제하면 (과거 vision_attn_lora 건처럼)
+# 한쪽만 고치고 다른 쪽을 깜빡하는 ablation-fairness 버그가 재발하기 쉽다.
+# =============================================================================
+VARIANTS = {
+    # Full: L_task + L_spatial + L_temporal (CONFIG 기본값과 동일 — 하위 호환)
+    "full": {
+        "output_dir":      "checkpoints/student_full",
+        "lambda_spatial":  1.0,
+        "lambda_temporal": 1.0,
+        "temporal_k":      2,
+    },
+    # L_spatial 단독. L_temporal이 0으로 죽으므로 teacher 멀티프레임 입력 자체가
+    # 불필요 — temporal_k=1로 낮추면 dataloader가 teacher_* 필드를 만들지 않아
+    # 이미지 로딩+토큰화 비용까지 함께 절약된다 (student loop 469번째 줄 분기 참고).
+    "spatial": {
+        "output_dir":      "checkpoints/student_spatial",
+        "lambda_spatial":  1.0,
+        "lambda_temporal": 0.0,
+        "temporal_k":      1,
+    },
+    # L_temporal 단독. teacher 멀티프레임 문맥이 그대로 필요하므로 temporal_k는
+    # Full과 동일하게 2를 유지한다.
+    "temporal": {
+        "output_dir":      "checkpoints/student_temporal",
+        "lambda_spatial":  0.0,
+        "lambda_temporal": 1.0,
+        "temporal_k":      2,
+    },
+}
+
+
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--variant", choices=list(VARIANTS.keys()), default="full",
+        help="ablation 변형: full(L_spatial+L_temporal) / spatial(L_spatial만) / temporal(L_temporal만)",
+    )
+    args = parser.parse_args()
+
+    CONFIG.update(VARIANTS[args.variant])
+    print(
+        f"[variant={args.variant}] output_dir={CONFIG['output_dir']} "
+        f"lambda_spatial={CONFIG['lambda_spatial']} lambda_temporal={CONFIG['lambda_temporal']} "
+        f"temporal_k={CONFIG['temporal_k']}"
+    )
+
     train(CONFIG)

@@ -1,0 +1,33 @@
+{
+  "checkpoint": "checkpoints/student_spatial/epoch_1",
+  "total": 11309,
+  "correct": 5813,
+  "accuracy": 0.5140153859757715,
+  "by_type": {
+    "count": {
+      "correct": 234,
+      "total": 2212,
+      "accuracy": 0.1057866184448463
+    },
+    "exist": {
+      "correct": 2692,
+      "total": 3308,
+      "accuracy": 0.8137847642079806
+    },
+    "object": {
+      "correct": 893,
+      "total": 2359,
+      "accuracy": 0.3785502331496397
+    },
+    "comparison": {
+      "correct": 1123,
+      "total": 1780,
+      "accuracy": 0.6308988764044944
+    },
+    "status": {
+      "correct": 871,
+      "total": 1650,
+      "accuracy": 0.5278787878787878
+    }
+  }
+}

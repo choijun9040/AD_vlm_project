@@ -42,7 +42,7 @@ CONFIG = {
     "teacher_base":       "Qwen/Qwen2.5-VL-7B-Instruct",
     "teacher_lora":       "checkpoints/teacher_lora/epoch_1",
     "student_base":       "Qwen/Qwen2.5-VL-3B-Instruct",
-    "output_dir":         "checkpoints/student_kd_only_v2",
+    "output_dir":         "checkpoints/student_kd_only_v4",
 
     # Resume
     "resume_from":        None,
@@ -66,10 +66,26 @@ CONFIG = {
     "warmup_ratio":       0.05,
 
     # 손실 가중치
+    # v2(lambda_kd=1.0, T=4.0)는 NuScenes-QA val 정확도 1.78%로 붕괴(다른 4개 변형은
+    # 50~52%대) — EOS 확률을 직접 찍어보니 정답 토큰 자체는 정상 확신도로 맞히지만
+    # EOS 확률이 학습 끝까지 rank 수백~수십만 위에 머물러 "멈춤"을 학습 못 함.
+    # v3(lambda_kd만 0.3으로 축소, T=4.0 유지)도 손실 크기 비율은 개선됐지만
+    # (task 0.940 vs 0.3*kd 0.815) 여전히 baseline_v2가 이미 EOS를 깔끔히 배운
+    # 동일 스텝(step_5000)에서 EOS가 전혀 학습되지 않아 동일하게 실패 — lambda_kd
+    # 축소만으로는 근본 원인을 못 건드림이 확인됨.
+    # 진짜 원인은 kd_temperature였다: teacher forward를 직접 찍어보면 T=1(원본
+    # 확률)에서는 EOS 확률이 0.24~0.97(대부분 1위)로 정상인데, UniformKDLoss가
+    # 쓰는 T=4로 나눈 뒤 소프트맥스(152K 토큰 vocab 전체에 적용)하면 EOS 확률이
+    # 0.0004~0.0016 수준(1~2위는 유지하되 2·3위와 사실상 동률)까지 뭉개짐 — Hinton
+    # 원조 KD의 T=2~4는 1000클래스 기준이라, 152K짜리 vocab에 그대로 쓰면 target이
+    # 사실상 균등분포에 가깝게 퍼져버려 "여기서 반드시 멈춰라"는 신호 자체가
+    # 사라진다. v4는 이 근본 원인(T)을 낮추고 lambda_kd는 표준값 1.0으로 되돌림 —
+    # T=1.5면 T^2 스케일링도 16배(T=4)에서 2.25배로 줄어 손실 크기 자체도 예전만큼
+    # 압도적이지 않을 것으로 기대.
     "lambda_kd":          1.0,
 
     # KD 설정
-    "kd_temperature":     4.0,
+    "kd_temperature":     1.5,
 
     # 데이터
     "drivelm_json":       "data/QA_dataset_nus/v1_0_train_nus.json",

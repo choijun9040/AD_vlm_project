@@ -1,0 +1,33 @@
+{
+  "checkpoint": "checkpoints/student_temporal/epoch_1",
+  "total": 11309,
+  "correct": 5806,
+  "accuracy": 0.5133964099389866,
+  "by_type": {
+    "count": {
+      "correct": 171,
+      "total": 2212,
+      "accuracy": 0.07730560578661845
+    },
+    "exist": {
+      "correct": 2685,
+      "total": 3308,
+      "accuracy": 0.8116686819830713
+    },
+    "object": {
+      "correct": 941,
+      "total": 2359,
+      "accuracy": 0.39889783806697754
+    },
+    "comparison": {
+      "correct": 1147,
+      "total": 1780,
+      "accuracy": 0.6443820224719101
+    },
+    "status": {
+      "correct": 862,
+      "total": 1650,
+      "accuracy": 0.5224242424242425
+    }
+  }
+}

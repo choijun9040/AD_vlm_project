@@ -1,0 +1,33 @@
+{
+  "checkpoint": "checkpoints/student_full/epoch_1",
+  "total": 11309,
+  "correct": 5846,
+  "accuracy": 0.5169334158634715,
+  "by_type": {
+    "count": {
+      "correct": 165,
+      "total": 2212,
+      "accuracy": 0.07459312839059674
+    },
+    "exist": {
+      "correct": 2652,
+      "total": 3308,
+      "accuracy": 0.8016928657799275
+    },
+    "object": {
+      "correct": 1035,
+      "total": 2359,
+      "accuracy": 0.4387452310300975
+    },
+    "comparison": {
+      "correct": 1152,
+      "total": 1780,
+      "accuracy": 0.647191011235955
+    },
+    "status": {
+      "correct": 842,
+      "total": 1650,
+      "accuracy": 0.5103030303030303
+    }
+  }
+}
