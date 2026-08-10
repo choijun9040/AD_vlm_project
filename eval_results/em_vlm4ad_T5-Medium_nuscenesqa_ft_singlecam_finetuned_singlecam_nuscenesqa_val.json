@@ -1,0 +1,35 @@
+{
+  "model": "EM-VLM4AD-T5-Medium_nuscenesqa_ft_singlecam",
+  "lm": "T5-Base",
+  "eval_mode": "finetuned",
+  "total": 11309,
+  "correct": 6116,
+  "accuracy": 0.5408082058537448,
+  "by_type": {
+    "count": {
+      "correct": 406,
+      "total": 2212,
+      "accuracy": 0.18354430379746836
+    },
+    "exist": {
+      "correct": 2663,
+      "total": 3308,
+      "accuracy": 0.8050181378476421
+    },
+    "object": {
+      "correct": 1006,
+      "total": 2359,
+      "accuracy": 0.4264518863925392
+    },
+    "comparison": {
+      "correct": 1208,
+      "total": 1780,
+      "accuracy": 0.6786516853932584
+    },
+    "status": {
+      "correct": 833,
+      "total": 1650,
+      "accuracy": 0.5048484848484849
+    }
+  }
+}

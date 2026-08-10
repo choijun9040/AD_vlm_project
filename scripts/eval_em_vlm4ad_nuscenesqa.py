@@ -80,16 +80,22 @@ def load_em_vlm4ad(model_name: str, lm: str, device: str):
 
 
 @torch.no_grad()
-def generate_answer(model, tokenizer, image_paths_dict: dict, question: str, device: str) -> str:
+def generate_answer(model, tokenizer, image_paths_dict: dict, question: str, device: str,
+                     single_camera: bool = False, max_length: int = 512) -> str:
     q_text = f"Question: {question} Answer:"
 
-    img_paths = [str(image_paths_dict[cam]) for cam in CAMERA_ORDER if cam in image_paths_dict]
-    imgs = torch.stack([IMG_TRANSFORM(read_image(p).float()) for p in img_paths], dim=0)
+    if single_camera:
+        # 같은 파일을 6번 read/transform하는 대신 한 번만 처리하고 텐서를 복제한다.
+        img = IMG_TRANSFORM(read_image(str(image_paths_dict["CAM_FRONT"])).float())
+        imgs = img.unsqueeze(0).repeat(len(CAMERA_ORDER), 1, 1, 1)
+    else:
+        img_paths = [str(image_paths_dict[cam]) for cam in CAMERA_ORDER if cam in image_paths_dict]
+        imgs = torch.stack([IMG_TRANSFORM(read_image(p).float()) for p in img_paths], dim=0)
     imgs = imgs.unsqueeze(0).to(device)  # (1, 6, C, H, W)
 
     enc = tokenizer([q_text], padding=True, return_tensors="pt").input_ids.to(device)
 
-    out_ids = model.generate(enc, imgs)
+    out_ids = model.generate(enc, imgs, max_length=max_length)
     return tokenizer.decode(out_ids[0], skip_special_tokens=True).strip()
 
 
@@ -105,6 +111,10 @@ def main():
     parser.add_argument("--limit", type=int, default=None, help="디버깅/스모크 테스트용 샘플 수 제한")
     parser.add_argument("--log_every", type=int, default=200)
     parser.add_argument("--out_dir", default="eval_results")
+    parser.add_argument("--single_camera", action="store_true",
+                         help="CAM_FRONT 1장만 6번 복제 (우리 student와 시각 정보량 통제)")
+    parser.add_argument("--max_length", type=int, default=512,
+                         help="generate() max_length — 우리 student eval의 max_new_tokens=16과 맞추려면 16으로 설정")
     args = parser.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -133,7 +143,8 @@ def main():
 
     for i, s in enumerate(samples):
         image_paths_dict = token_to_images[s["sample_token"]]
-        pred = generate_answer(model, tokenizer, image_paths_dict, s["question"], device)
+        pred = generate_answer(model, tokenizer, image_paths_dict, s["question"], device,
+                                single_camera=args.single_camera, max_length=args.max_length)
         gt = s["answer"]
         is_correct = normalize(pred) == normalize(gt)
 
@@ -174,7 +185,8 @@ def main():
     }
     out_dir = Path(args.out_dir)
     out_dir.mkdir(exist_ok=True)
-    out_path = out_dir / f"em_vlm4ad_{args.model_name}_{args.eval_mode}_nuscenesqa_val.json"
+    cam_tag = "_singlecam" if args.single_camera else ""
+    out_path = out_dir / f"em_vlm4ad_{args.model_name}_{args.eval_mode}{cam_tag}_nuscenesqa_val.json"
     out_path.write_text(json.dumps(result, indent=2, ensure_ascii=False))
     print(f"\n결과 저장: {out_path}")
 

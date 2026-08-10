@@ -57,15 +57,21 @@ class NuScenesQAForEMVLM4AD(Dataset):
     train_distillation.py의 NuScenesQADataset과 동일한 필터링 원칙(token_to_images에
     존재하는 sample_token만 사용)을 따르므로, 우리 student가 학습 때 본 것과 같은
     NuScenes-QA train 서브셋(54,607개)을 그대로 사용하게 된다.
+
+    `single_camera=True`면 6개 서로 다른 카메라 뷰 대신 CAM_FRONT 1장을 6번 복제해
+    채운다 — 텐서 shape(모델 아키텍처가 요구하는 6-view 입력)은 유지하면서, 우리
+    student(CAM_FRONT 1개만 봄)와 시각 정보량을 맞춰 공정 비교하기 위함.
     """
 
-    def __init__(self, json_path, token_to_images, tokenizer):
+    def __init__(self, json_path, token_to_images, tokenizer, single_camera=False):
         with open(json_path) as f:
             data = json.load(f)
         self.samples = [q for q in data["questions"] if q["sample_token"] in token_to_images]
         self.token_to_images = token_to_images
         self.tokenizer = tokenizer
-        print(f"[NuScenesQAForEMVLM4AD] 매핑 가능: {len(self.samples)}/{len(data['questions'])}")
+        self.single_camera = single_camera
+        print(f"[NuScenesQAForEMVLM4AD] 매핑 가능: {len(self.samples)}/{len(data['questions'])} "
+              f"(single_camera={single_camera})")
 
     def __len__(self):
         return len(self.samples)
@@ -73,8 +79,13 @@ class NuScenesQAForEMVLM4AD(Dataset):
     def __getitem__(self, idx):
         s = self.samples[idx]
         image_paths_dict = self.token_to_images[s["sample_token"]]
-        img_paths = [str(image_paths_dict[cam]) for cam in CAMERA_ORDER if cam in image_paths_dict]
-        imgs = torch.stack([IMG_TRANSFORM(read_image(p).float()) for p in img_paths], dim=0)
+        if self.single_camera:
+            # 같은 파일을 6번 read/transform하는 대신 한 번만 처리하고 텐서를 복제한다.
+            img = IMG_TRANSFORM(read_image(str(image_paths_dict["CAM_FRONT"])).float())
+            imgs = img.unsqueeze(0).repeat(len(CAMERA_ORDER), 1, 1, 1)
+        else:
+            img_paths = [str(image_paths_dict[cam]) for cam in CAMERA_ORDER if cam in image_paths_dict]
+            imgs = torch.stack([IMG_TRANSFORM(read_image(p).float()) for p in img_paths], dim=0)
         q_text = f"Question: {s['question']} Answer:"
         return q_text, imgs, s["answer"]
 
@@ -108,10 +119,13 @@ def main():
     parser.add_argument("--num-workers", type=int, default=4)
     parser.add_argument("--log-every", type=int, default=100)
     parser.add_argument("--out-name", default=None, help="저장 폴더명 (기본: {model-name}_nuscenesqa_ft)")
+    parser.add_argument("--single_camera", action="store_true",
+                         help="CAM_FRONT 1장만 6번 복제해서 사용 (우리 student와 시각 정보량 통제)")
     args = parser.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    out_name = args.out_name or f"{args.model_name}_nuscenesqa_ft"
+    default_suffix = "_nuscenesqa_ft_singlecam" if args.single_camera else "_nuscenesqa_ft"
+    out_name = args.out_name or f"{args.model_name}{default_suffix}"
     out_dir = EM_VLM4AD_ROOT / "multi_frame_results" / out_name
     out_dir.mkdir(parents=True, exist_ok=True)
 
@@ -125,7 +139,8 @@ def main():
 
     print("[데이터 준비] NuScenes-QA train (DriveLM train 이미지와 매핑, 우리 student와 동일 서브셋)")
     token_to_images = build_token_to_images(DRIVELM_TRAIN_JSON)
-    train_ds = NuScenesQAForEMVLM4AD(NUSCENESQA_TRAIN_JSON, token_to_images, tokenizer)
+    train_ds = NuScenesQAForEMVLM4AD(NUSCENESQA_TRAIN_JSON, token_to_images, tokenizer,
+                                      single_camera=args.single_camera)
     train_loader = DataLoader(
         train_ds, batch_size=args.batch_size, shuffle=True,
         collate_fn=train_ds.collate_fn, num_workers=args.num_workers,
