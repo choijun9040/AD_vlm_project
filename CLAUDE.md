@@ -387,9 +387,18 @@ constraint worth knowing before touching evaluation code:
   (51.69 / 51.40 / 51.34%) is NOT statistically supported** — every variant was
   trained once with no seed control, so a 0.35pp spread is indistinguishable from
   seed noise. Do not write "Full edges out the single-loss ablations"; write that
-  the three are indistinguishable on overall accuracy. Only the larger, repeatable
-  gaps carry weight: Full's `object` lead (43.87% vs 37–40%) — consistent with L_spatial's patch-alignment objective helping
-  object recognition specifically. `student_baseline_v2` (no distillation at
+  the three are indistinguishable on overall accuracy.
+
+  **Correction (2026-09-14)**: this passage used to say "only the larger, *repeatable*
+  gaps carry weight" about Full's `object` lead. **"repeatable" was unfounded** — that
+  measurement was never repeated either. It is the same single-seed, n=1 observation as
+  the 0.35pp spread, just a wider margin. Seed-variance measurement was deliberately
+  dropped (5 variants × 3 seeds ≈ 774 h ≈ 32 days; see `thesis_outline_20260910.md` §7),
+  so no gap in this table gets a confidence interval. The correct phrasing for Full's
+  `object` lead (43.87% vs 37–40%): the margin is far wider than the 0.35pp overall
+  spread and its direction matches L_align's patch-alignment objective, **but it is
+  still a single-seed observation and must not be written as a ranking claim**. Report
+  it as a directional observation, not as evidence that Full is better. `student_baseline_v2` (no distillation at
   all) is a strong baseline (50.30%), so the feature-KD gain over pure task
   fine-tuning is real but modest (~1–1.4pp). KD-only is the clear worst
   performer, especially on `exist` (67.68% vs ~80% for every other variant)

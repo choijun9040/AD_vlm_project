@@ -41,6 +41,25 @@ TARGETS = [
      "위험 구성 · 본 연구 학생과 동일 아키텍처"),
     ("qwen2vl_7b_awq", "Qwen/Qwen2-VL-7B-Instruct-AWQ", "위험 구성 · 공식"),
     ("llava15_7b_awq", "ybelkada/llava-1.5-7b-hf-awq", "위험 구성 · 다른 계열(LLaVA)"),
+    # 2026-09-14 확대 — 위험 구성 27개 중 **디스크가 감당하는 것 전부**를 실측한다.
+    # 30B/32B/72B/235B는 4bit로도 8GB를 넘어 제외했다(그 사실 자체를 논문에 명시).
+    # 목적: "위험 구성 27개"라는 config 집계를 **실측 여유 표**로 격상해 C2·C3을 닫는다.
+    ("qwen25vl_7b_awq", "AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ",
+     "위험 구성 · 본 연구 교사와 동일 아키텍처"),
+    ("internvl3_8b_awq", "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ",
+     "위험 구성 · 다른 계열(InternVL3)"),
+    ("phi35v_awq", "Isotr0py/Phi-3.5-vision-instruct-AWQ",
+     "위험 구성 · 다른 계열(Phi-3.5-vision)"),
+    ("qwen2vl_7b_awq_pc", "p-christ/Qwen2-VL-7B-Instruct-AWQ",
+     "위험 구성 · 공식 재배포본 (같은 가중치면 같은 값이 나와야 한다 — 절차 점검)"),
+    # --- 대형 (디스크가 나면 자동 진행, 안 나면 자동 건너뜀) ---
+    # 27개 중 남은 18개는 대부분 30B 이상이다. --min_free_gb 가드가 각 모델 직전에
+    # 여유를 확인하고 부족하면 **이유를 남기고 건너뛴다**. 논문에는 "측정한 N개"와
+    # "디스크로 측정하지 못한 M개"를 함께 적는다.
+    ("qwen3vl_30b_awq", "QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ", "위험 구성 · 대형"),
+    ("qwen3vl_32b_awq", "QuantTrio/Qwen3-VL-32B-Instruct-AWQ", "위험 구성 · 대형"),
+    ("qwen25vl_32b_awq", "AngelSlim/Qwen2.5-VL-32B-Instruct-AWQ", "위험 구성 · 대형"),
+    ("qwen2vl_72b_awq", "Qwen/Qwen2-VL-72B-Instruct-AWQ", "위험 구성 · 공식 대형"),
 ]
 
 VISION_ATTRS = ("visual", "vision_model", "vision_tower", "vision_encoder")
@@ -171,6 +190,9 @@ def main():
     ap.add_argument("--limit", type=int, default=100)
     ap.add_argument("--max_pixels", type=int, default=1440000, help="원본 해상도 조건")
     ap.add_argument("--out", default="eval_results/other_vlm_families_profile.json")
+    ap.add_argument("--min_free_gb", type=float, default=0.0,
+                    help="이 값보다 여유 디스크가 적으면 해당 모델을 건너뛴다(이유를 기록). "
+                         "대형 위험 구성을 '자원이 나면 자동 진행'시키기 위한 가드다.")
     ap.add_argument("--cleanup", action="store_true",
                     help="모델별 프로파일 후 HF 캐시를 지운다 (디스크가 빠듯할 때)")
     args = ap.parse_args()
@@ -187,6 +209,16 @@ def main():
     for tag, repo, note in TARGETS:
         if tag in results:
             print(f"[{tag}] 이미 완료 — 건너뜀"); continue
+        if args.min_free_gb > 0:
+            import shutil as _sh
+            free_gb = _sh.disk_usage("/workspace").free / 2**30
+            if free_gb < args.min_free_gb:
+                print(f"[{tag}] 디스크 부족으로 건너뜀 "
+                      f"(여유 {free_gb:.1f} GB < 필요 {args.min_free_gb:.0f} GB)")
+                results[tag] = {"repo": repo, "note": note,
+                                "skipped": f"디스크 부족 (여유 {free_gb:.1f} GB)"}
+                out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
+                continue
         try:
             results[tag] = profile(tag, repo, note, paths, args.max_pixels)
             out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
