@@ -26,6 +26,10 @@ from accelerate import Accelerator
 # 같은 scripts/ 폴더의 dataloader.py에서 import
 import sys
 sys.path.append(str(Path(__file__).parent))
+# peft의 LoRA dispatcher가 AWQ 지원 여부를 확인하느라 awq를 import하는데,
+# 이 환경의 autoawq는 transformers 4.49에 없는 qwen3를 참조해 깨진다.
+import awq_compat  # noqa: E402
+awq_compat.patch()
 from dataloader import create_unified_dataloader, build_token_to_images
 
 from datetime import datetime

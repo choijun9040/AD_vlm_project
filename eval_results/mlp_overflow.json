@@ -1,0 +1,73 @@
+{
+  "checkpoint": "checkpoints/student_baseline_v2/epoch_1",
+  "scale": 3.0,
+  "max_pixels": 1440000,
+  "runs": {
+    "none": {
+      "mode": "none",
+      "collapse_rate": 0.944,
+      "n_bad": 236,
+      "n": 250,
+      "first_inf_stage": {
+        "norm2": 0,
+        "gate": 0,
+        "up": 0,
+        "product": 0,
+        "down": 236,
+        "block": 0
+      },
+      "stage_max_p50": {
+        "norm2": 31.03125,
+        "gate": 64.5625,
+        "up": 76.3125,
+        "product": 4588.0,
+        "down": 63200.0,
+        "block": 63264.0
+      }
+    },
+    "fixB": {
+      "mode": "fixB",
+      "collapse_rate": 0.948,
+      "n_bad": 237,
+      "n": 250,
+      "first_inf_stage": {
+        "norm2": 0,
+        "gate": 0,
+        "up": 0,
+        "product": 0,
+        "down": 237,
+        "block": 0
+      },
+      "stage_max_p50": {
+        "norm2": 31.03125,
+        "gate": 64.5625,
+        "up": 76.3125,
+        "product": 4588.0,
+        "down": 63360.0,
+        "block": 21184.0
+      }
+    },
+    "fixA": {
+      "mode": "fixA",
+      "collapse_rate": 0.0,
+      "n_bad": 0,
+      "n": 250,
+      "first_inf_stage": {
+        "norm2": 0,
+        "gate": 0,
+        "up": 0,
+        "product": 0,
+        "down": 0,
+        "block": 0
+      },
+      "stage_max_p50": {
+        "norm2": 31.03125,
+        "gate": 64.5625,
+        "up": 76.3125,
+        "product": 1530.0,
+        "down": 24800.0,
+        "block": 24832.0
+      }
+    }
+  }
+}

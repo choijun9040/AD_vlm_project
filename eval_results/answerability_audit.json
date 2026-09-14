@@ -1,0 +1,72 @@
+{
+  "n_total": 11309,
+  "overall": {
+    "불가시 (ego 후방)": {
+      "n": 821,
+      "ratio": 0.07259704660005306,
+      "majority_prior_acc": 0.14859926918392205,
+      "majority_answer": "car"
+    },
+    "부분가시 (ego 전방측면)": {
+      "n": 505,
+      "ratio": 0.044654699796622156,
+      "majority_prior_acc": 0.1801980198019802,
+      "majority_answer": "pedestrian"
+    },
+    "가시 (ego 전방)": {
+      "n": 465,
+      "ratio": 0.041117693872137234,
+      "majority_prior_acc": 0.18064516129032257,
+      "majority_answer": "car"
+    },
+    "판정불가 (객체 기준만)": {
+      "n": 5199,
+      "ratio": 0.4597223450349279,
+      "majority_prior_acc": 0.2762069628774764,
+      "majority_answer": "yes"
+    },
+    "방향 무관": {
+      "n": 4319,
+      "ratio": 0.38190821469625963,
+      "majority_prior_acc": 0.2806205140078722,
+      "majority_answer": "yes"
+    }
+  },
+  "by_template_type": {
+    "comparison": {
+      "n": 1780,
+      "n_invisible": 0,
+      "invisible_ratio": 0.0,
+      "invisible_majority_prior": 0.0,
+      "invisible_majority_answer": null
+    },
+    "count": {
+      "n": 2212,
+      "n_invisible": 75,
+      "invisible_ratio": 0.033905967450271246,
+      "invisible_majority_prior": 0.18666666666666668,
+      "invisible_majority_answer": "4"
+    },
+    "exist": {
+      "n": 3308,
+      "n_invisible": 129,
+      "invisible_ratio": 0.03899637243047158,
+      "invisible_majority_prior": 0.5193798449612403,
+      "invisible_majority_answer": "no"
+    },
+    "object": {
+      "n": 2359,
+      "n_invisible": 427,
+      "invisible_ratio": 0.18100890207715134,
+      "invisible_majority_prior": 0.2857142857142857,
+      "invisible_majority_answer": "car"
+    },
+    "status": {
+      "n": 1650,
+      "n_invisible": 190,
+      "invisible_ratio": 0.11515151515151516,
+      "invisible_majority_prior": 0.25263157894736843,
+      "invisible_majority_answer": "parked"
+    }
+  }
+}

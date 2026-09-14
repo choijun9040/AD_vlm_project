@@ -3,13 +3,13 @@ Stage 3: Driving-Aware Distillation (Resume 지원)
 ===================================================
 Teacher(Qwen2.5-VL-7B LoRA FT) -> Student(Qwen2.5-VL-3B) 증류.
 
-L_total = L_task + lambda_spatial * L_spatial + lambda_temporal * L_temporal
+L_total = L_task + lambda_align * L_align + lambda_atc * L_atc
 
-- L_spatial: teacher/student vision encoder 중간 block(둘 다 depth=32, hidden=1280으로
+- L_align: teacher/student vision encoder 중간 block(둘 다 depth=32, hidden=1280으로
   동일 아키텍처)의 patch-level hidden state를 코사인 손실로 정렬해 "어디에 있는지"
   (공간 정보)를 보존. attention map 대신 hidden state를 쓰는 이유는 attention map
   기반 시도에서 스케일이 0.0004 수준까지 죽어 사실상 무의미했기 때문.
-- L_temporal ("대안 2", TAM 없음): teacher에게만 과거 프레임을 포함한 K장 멀티프레임을
+- L_atc ("대안 2", TAM 없음): teacher에게만 과거 프레임을 포함한 K장 멀티프레임을
   입력해 시간적으로 맥락화된 이해를 만들고, student는 여전히 현재 프레임 1장만 보면서
   teacher의 답변 직전 hidden state(=이해)를 흉내내도록 함. Student는 배포 시에도
   프레임당 1회 추론만 하면 되는 구조를 그대로 유지.
@@ -45,6 +45,10 @@ from peft import LoraConfig, get_peft_model, TaskType, PeftModel
 from accelerate import Accelerator
 
 sys.path.append(str(Path(__file__).parent))
+# peft의 LoRA dispatcher가 AWQ 지원 여부를 확인하느라 awq를 import하는데,
+# 이 환경의 autoawq는 transformers 4.49에 없는 qwen3를 참조해 깨진다.
+import awq_compat  # noqa: E402
+awq_compat.patch()
 from dataloader import create_unified_dataloader
 
 TEACHER_HIDDEN_SIZE = 3584  # Qwen2.5-VL-7B LLM hidden_size
@@ -73,7 +77,7 @@ CONFIG = {
     "lora_dropout":       0.05,
     # vision attention(qkv/proj)도 LoRA 대상에 포함할지. gate/up/down_proj는 이름이 같아서
     # 이미 vision MLP에도 LoRA가 걸리고 있음(의도치 않은 기존 동작) — attention도 열어줘야
-    # L_spatial의 그래디언트가 패치 간 정보 재분배(attention)까지 갱신할 수 있음.
+    # L_align의 그래디언트가 패치 간 정보 재분배(attention)까지 갱신할 수 있음.
     "lora_target_vision_attn": True,
 
     # 학습
@@ -84,16 +88,16 @@ CONFIG = {
     "warmup_ratio":       0.05,
 
     # 손실 가중치
-    "lambda_spatial":     1.0,
-    "lambda_temporal":    1.0,
+    "lambda_align":     1.0,
+    "lambda_atc":    1.0,
 
-    # L_spatial: teacher/student 공통 vision block index (fullatt_block_indexes=[7,15,23,31]
+    # L_align: teacher/student 공통 vision block index (fullatt_block_indexes=[7,15,23,31]
     # 중 하나 — 전체attention이라 패치 간 전역 문맥 반영, merger 직전(31)보다 덜 추상화됨)
-    "spatial_layer_idx":  23,
+    "align_layer_idx":  23,
 
-    # L_temporal: teacher에게 줄 프레임 수(현재 포함). temporal_k=1이면 teacher도 student와
+    # L_atc: teacher에게 줄 프레임 수(현재 포함). temporal_k=1이면 teacher도 student와
     # 완전히 동일한 단일 프레임만 보게 되어(dataloader가 teacher_* 필드 자체를 생성하지 않음),
-    # +L_spatial 단독 ablation 시 이 값을 1로 낮추면 데이터 파이프라인(이미지 로딩+토큰화)과
+    # +L_align 단독 ablation 시 이 값을 1로 낮추면 데이터 파이프라인(이미지 로딩+토큰화)과
     # teacher forward 비용을 함께 줄일 수 있다. 키프레임 평균 간격이 약 3.1초로 성긴 편이라
     # K를 크게 늘리는 것보다 K=2(직전 프레임 1개)로 시작해 A5 ablation에서 K를 늘려본다.
     "temporal_k":         2,
@@ -117,6 +121,17 @@ CONFIG = {
     "hazard_oversample":      True,
     "hazard_oversample_beta": 0.5,
 
+    # 조기 종료 — None이면 1 epoch 완주. 값을 주면 그 optimizer step에서 멈춘다.
+    # **LR 스케줄(total_steps/warmup)은 건드리지 않는다**: 5,000 스텝짜리 스윕을
+    # 기존 27,037 스텝 실행의 step_5000 체크포인트와 직접 비교하려면 그 지점까지의
+    # 학습률 궤적이 완전히 같아야 하기 때문이다.
+    "max_steps":          None,
+
+    # 난수 시드 — None이면 고정하지 않는다(기존 5-way 실행이 그랬다).
+    # λ 스윕처럼 하나의 값만 바꿔 비교할 때는 반드시 고정해서 데이터 순서와
+    # LoRA 초기화가 실행 간에 동일하도록 만든다.
+    "seed":               None,
+
     # 로깅/저장
     "log_every":          50,
     "save_every_steps":   1000,
@@ -127,20 +142,20 @@ CONFIG = {
 # 1. Loss 함수
 # =============================================================================
 
-class SpatialFeatureKDLoss(nn.Module):
+class FeatureAlignKDLoss(nn.Module):
     """
-    L_spatial: 공간 정보 보존 Feature KD.
+    L_align: 공간 정보 보존 Feature KD.
 
     teacher/student vision encoder는 depth=32, hidden_size=1280으로 아키텍처는 완전히
     동일(가중치 값은 다름)하지만, 초기 학습 관찰 결과 차원이 같다고 두 feature 공간이
     선형으로 정렬돼 있는 건 아니었다(projection 없이 450 step 동안 loss가 0.437→0.438로
-    정체 — task/temporal은 같은 구간에 각각 47%/13% 감소). L_temporal의 학습 가능한
+    정체 — task/temporal은 같은 구간에 각각 47%/13% 감소). L_atc의 학습 가능한
     projection과 동일한 패턴을 적용해 "공간 정렬"이라는 일을 rank-16 vision LoRA
     델타에서 분리시킨다 — LoRA는 표현 조정, projection은 정렬을 전담. 추론 시에는
     두 projection 모두 제거되므로 배포 모델 크기에는 영향 없음.
     attention map(스케일 0.0004 수준으로 죽음) 대신 hidden state를 쓰는 이유는 기존과 동일.
 
-    teacher는 L_temporal용으로 K개 프레임을 입력받으므로, vision block 출력에는 K개
+    teacher는 L_atc용으로 K개 프레임을 입력받으므로, vision block 출력에는 K개
     이미지의 패치가 모두 섞여 있다 — 이 중 "현재 프레임"(각 샘플의 마지막 이미지)에
     해당하는 패치만 offset으로 슬라이싱해서 student(단일 프레임)와 비교한다.
     """
@@ -150,7 +165,7 @@ class SpatialFeatureKDLoss(nn.Module):
         self.layer_idx = layer_idx
         self._captured = {}
         self._hooks = []
-        # student 쪽 패치를 teacher 쪽으로 정렬 (L_temporal의 proj(h_S)->h_T와 동일 방향)
+        # student 쪽 패치를 teacher 쪽으로 정렬 (L_atc의 proj(h_S)->h_T와 동일 방향)
         self.proj = nn.Linear(hidden_size, hidden_size)
 
     def register_hooks(self, teacher_model, student_model):
@@ -213,9 +228,9 @@ class SpatialFeatureKDLoss(nn.Module):
         return torch.stack(losses).mean()
 
 
-class TemporalContextKDLoss(nn.Module):
+class AsymmetricTemporalKDLoss(nn.Module):
     """
-    L_temporal ("대안 2", TAM 없음): teacher는 과거 K-1개 프레임 + 현재 프레임을 보고,
+    L_atc ("대안 2", TAM 없음): teacher는 과거 K-1개 프레임 + 현재 프레임을 보고,
     student는 현재 프레임 1장만 본다. 둘 다 "답변 생성 직전" 위치(q_len-1)의 마지막
     decoder layer hidden state를 뽑아, teacher(시간적으로 맥락화된 이해) 쪽으로
     student(단일 프레임 이해)가 정렬되도록 학습 가능한 projection + 코사인 손실을 건다.
@@ -237,6 +252,31 @@ class TemporalContextKDLoss(nn.Module):
         s_proj = self.proj(s_vec.float())
         cos = F.cosine_similarity(s_proj, t_vec.float(), dim=-1)
         return (1 - cos).mean()
+
+
+# --- 하위 호환 alias ---------------------------------------------------------
+# 2026-09-14 명칭 통일(L_spatial→L_align, L_temporal→L_atc) 이전에 작성된
+# 드라이버·분석 스크립트가 구 이름으로 이 클래스들을 참조한다. 같은 객체를 가리키므로
+# 구 이름으로 monkeypatch해도 정상 동작한다. 새 코드에서는 쓰지 말 것.
+SpatialFeatureKDLoss = FeatureAlignKDLoss
+TemporalContextKDLoss = AsymmetricTemporalKDLoss
+
+# CONFIG 구 키 → 신 키 매핑. train() 진입 시 정규화한다.
+_LEGACY_CONFIG_KEYS = {
+    "lambda_spatial": "lambda_align",
+    "lambda_temporal": "lambda_atc",
+    "spatial_layer_idx": "align_layer_idx",
+}
+
+
+def _normalize_config(config):
+    """구 키가 들어오면 신 키로 옮긴다(신 키가 이미 있으면 그대로 둔다)."""
+    for old, new in _LEGACY_CONFIG_KEYS.items():
+        if old in config:
+            if new not in config or config.get(new) is None:
+                config[new] = config[old]
+            print(f"  [호환] CONFIG '{old}' → '{new}'로 처리")
+    return config
 
 
 # =============================================================================
@@ -323,6 +363,14 @@ def build_student(config):
 # =============================================================================
 
 def train(config):
+    _normalize_config(config)
+    if config.get("seed") is not None:
+        # 데이터 순서(WeightedRandomSampler)와 LoRA 초기화까지 고정 — λ 스윕에서
+        # λ 이외의 변수가 실행마다 달라지는 것을 막는다
+        from accelerate.utils import set_seed
+        set_seed(config["seed"])
+        print(f"[seed] {config['seed']}로 고정")
+
 
     accelerator = Accelerator(
         gradient_accumulation_steps=config["grad_accum_steps"],
@@ -351,32 +399,32 @@ def train(config):
         teacher_max_length=config["teacher_max_length"],
     )
 
-    spatial_criterion = SpatialFeatureKDLoss(
-        layer_idx=config["spatial_layer_idx"], hidden_size=VISION_HIDDEN_SIZE,
+    align_criterion = FeatureAlignKDLoss(
+        layer_idx=config["align_layer_idx"], hidden_size=VISION_HIDDEN_SIZE,
     ).to(accelerator.device)
-    temporal_criterion = TemporalContextKDLoss(
+    atc_criterion = AsymmetricTemporalKDLoss(
         teacher_hidden=TEACHER_HIDDEN_SIZE, student_hidden=STUDENT_HIDDEN_SIZE,
     ).to(accelerator.device)
 
     resume_from = config.get("resume_from")
     if resume_from and (Path(resume_from) / "temporal_proj.pt").exists():
         state = torch.load(Path(resume_from) / "temporal_proj.pt", map_location="cpu")
-        temporal_criterion.load_state_dict(state)
+        atc_criterion.load_state_dict(state)
         print(f"  temporal_proj 가중치 로드 완료 (resume): {resume_from}")
     elif resume_from:
         print(f"  경고: {resume_from}에 temporal_proj.pt가 없어 projection을 새로 초기화합니다")
 
     if resume_from and (Path(resume_from) / "spatial_proj.pt").exists():
         state = torch.load(Path(resume_from) / "spatial_proj.pt", map_location="cpu")
-        spatial_criterion.load_state_dict(state)
+        align_criterion.load_state_dict(state)
         print(f"  spatial_proj 가중치 로드 완료 (resume): {resume_from}")
     elif resume_from:
         print(f"  경고: {resume_from}에 spatial_proj.pt가 없어 projection을 새로 초기화합니다")
 
     optimizer = torch.optim.AdamW(
         list(filter(lambda p: p.requires_grad, student.parameters()))
-        + list(temporal_criterion.parameters())
-        + list(spatial_criterion.parameters()),
+        + list(atc_criterion.parameters())
+        + list(align_criterion.parameters()),
         lr=config["learning_rate"],
         weight_decay=0.01,
     )
@@ -392,12 +440,12 @@ def train(config):
 
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda)
 
-    student, temporal_criterion, spatial_criterion, optimizer, dataloader, scheduler = accelerator.prepare(
-        student, temporal_criterion, spatial_criterion, optimizer, dataloader, scheduler
+    student, atc_criterion, align_criterion, optimizer, dataloader, scheduler = accelerator.prepare(
+        student, atc_criterion, align_criterion, optimizer, dataloader, scheduler
     )
 
     # vision block hook은 accelerator.prepare로 모델이 최종 배치된 뒤 등록
-    spatial_criterion.register_hooks(teacher, student)
+    align_criterion.register_hooks(teacher, student)
 
     output_dir = Path(config["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -428,17 +476,19 @@ def train(config):
     print(f"  total_steps:       {total_steps}")
     print(f"  warmup_steps:      {warmup_steps}")
     print(f"  learning_rate:     {config['learning_rate']}")
-    print(f"  lambda_spatial:    {config['lambda_spatial']}")
-    print(f"  lambda_temporal:   {config['lambda_temporal']}")
-    print(f"  spatial_layer_idx: {config['spatial_layer_idx']}")
+    print(f"  lambda_align:      {config['lambda_align']}")
+    print(f"  lambda_atc:        {config['lambda_atc']}")
+    print(f"  align_layer_idx:   {config['align_layer_idx']}")
     print(f"  temporal_k:        {config['temporal_k']}")
     print("=" * 60 + "\n")
 
     global_step = 0
+    max_steps   = config.get("max_steps")
+    stop_early  = False
 
     for epoch in range(1, config["num_epochs"] + 1):
         student.train()
-        epoch_losses = {"total": 0.0, "task": 0.0, "spatial": 0.0, "temporal": 0.0}
+        epoch_losses = {"total": 0.0, "task": 0.0, "align": 0.0, "atc": 0.0}
         epoch_steps  = 0
 
         for step, batch in enumerate(dataloader):
@@ -462,7 +512,7 @@ def train(config):
                 q_len          = batch["q_len"]
 
                 # temporal_k>1일 때만 dataloader가 teacher_* 필드(멀티프레임)를 만든다.
-                # temporal_k==1(+L_spatial 단독 ablation 등)이면 그 필드 자체가 없으므로
+                # temporal_k==1(+L_align 단독 ablation 등)이면 그 필드 자체가 없으므로
                 # student와 완전히 동일한 단일 프레임 배치를 teacher에도 그대로 넣는다 —
                 # 원래 hazard-KD 버전도 teacher/student에 동일 배치를 넘겨 학습했던 검증된 패턴.
                 # 이렇게 하면 GPU forward뿐 아니라 dataloader의 이미지 로딩+토큰화 비용까지
@@ -499,13 +549,13 @@ def train(config):
                 )
 
                 loss_task = s_out.loss
-                loss_spatial = spatial_criterion(
+                loss_align = align_criterion(
                     teacher_image_grid_thw=teacher_image_grid_thw,
                     student_image_grid_thw=image_grid_thw,
                     temporal_k=config["temporal_k"],
                     batch_size=config["batch_size"],
                 )
-                loss_temporal = temporal_criterion(
+                loss_atc = atc_criterion(
                     teacher_hidden_states=t_out.hidden_states[-1],
                     student_hidden_states=s_out.hidden_states[-1],
                     teacher_q_len=teacher_q_len,
@@ -513,34 +563,34 @@ def train(config):
                 )
                 loss_total = (
                     loss_task
-                    + config["lambda_spatial"] * loss_spatial
-                    + config["lambda_temporal"] * loss_temporal
+                    + config["lambda_align"] * loss_align
+                    + config["lambda_atc"] * loss_atc
                 )
 
                 accelerator.backward(loss_total)
-                spatial_criterion.clear()
+                align_criterion.clear()
 
                 if accelerator.sync_gradients:
                     accelerator.clip_grad_norm_(
                         list(student.parameters())
-                        + list(temporal_criterion.parameters())
-                        + list(spatial_criterion.parameters()),
+                        + list(atc_criterion.parameters())
+                        + list(align_criterion.parameters()),
                         1.0,
                     )
 
-                    # L_spatial 정체 진단 때 썼던 것과 동일한 grad 흐름 모니터링을
+                    # L_align 정체 진단 때 썼던 것과 동일한 grad 흐름 모니터링을
                     # 본 학습에도 주기적으로 남겨 "projection이 정렬을 전담하고
                     # student backbone은 안 배우는" 퇴화 여부를 방어할 수 있게 한다.
                     if (global_step + 1) % config["log_every"] == 0:
                         vision_lora_grad = None
                         for name, p in accelerator.unwrap_model(student).named_parameters():
-                            if f"visual.blocks.{config['spatial_layer_idx']}" in name and "lora" in name and p.grad is not None:
+                            if f"visual.blocks.{config['align_layer_idx']}" in name and "lora" in name and p.grad is not None:
                                 vision_lora_grad = p.grad.norm().item()
                                 break
-                        spatial_proj_grad = accelerator.unwrap_model(spatial_criterion).proj.weight.grad
+                        spatial_proj_grad = accelerator.unwrap_model(align_criterion).proj.weight.grad
                         spatial_proj_grad = spatial_proj_grad.norm().item() if spatial_proj_grad is not None else None
                         print(
-                            f"    [grad check] vision_lora(layer{config['spatial_layer_idx']})="
+                            f"    [grad check] vision_lora(layer{config['align_layer_idx']})="
                             f"{vision_lora_grad} spatial_proj={spatial_proj_grad}"
                         )
 
@@ -554,8 +604,8 @@ def train(config):
 
             epoch_losses["total"]    += loss_total.item()
             epoch_losses["task"]     += loss_task.item()
-            epoch_losses["spatial"]  += loss_spatial.item()
-            epoch_losses["temporal"] += loss_temporal.item()
+            epoch_losses["align"]    += loss_align.item()
+            epoch_losses["atc"]      += loss_atc.item()
             epoch_steps += 1
 
             if accelerator.sync_gradients:
@@ -570,26 +620,47 @@ def train(config):
                         f"[Epoch {epoch}/{config['num_epochs']}] "
                         f"step {global_step}/{total_steps} | "
                         f"loss {avg['total']:.4f} "
-                        f"(task={avg['task']:.3f} spatial={avg['spatial']:.3f} temporal={avg['temporal']:.3f}) | "
+                        f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f}) | "
                         f"lr {lr_now:.2e} | "
                         f"DriveLM {drivelm_cnt}/{config['batch_size']}"
                     )
 
                 if global_step % config["save_every_steps"] == 0:
                     _save_checkpoint(
-                        accelerator, student, temporal_criterion, spatial_criterion, processor,
+                        accelerator, student, atc_criterion, align_criterion, processor,
                         output_dir, global_step, epoch,
                         epoch_losses, epoch_steps, config,
                     )
+
+                if max_steps and global_step >= max_steps:
+                    stop_early = True
+                    break
+
+        if stop_early:
+            # epoch_N으로 저장하면 1 epoch을 완주한 것으로 오해되므로 step_N만 남긴다
+            if global_step % config["save_every_steps"] != 0:
+                _save_checkpoint(
+                    accelerator, student, atc_criterion, align_criterion, processor,
+                    output_dir, global_step, epoch,
+                    epoch_losses, epoch_steps, config,
+                    name=f"step_{global_step}",
+                )
+            avg = {k: v / max(1, epoch_steps) for k, v in epoch_losses.items()}
+            print(
+                f"\n[max_steps={max_steps} 도달, 조기 종료] "
+                f"avg_loss={avg['total']:.4f} "
+                f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f})\n"
+            )
+            break
 
         avg = {k: v / max(1, epoch_steps) for k, v in epoch_losses.items()}
         print(
             f"\n[Epoch {epoch} 완료] "
             f"avg_loss={avg['total']:.4f} "
-            f"(task={avg['task']:.3f} spatial={avg['spatial']:.3f} temporal={avg['temporal']:.3f})\n"
+            f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f})\n"
         )
         _save_checkpoint(
-            accelerator, student, temporal_criterion, spatial_criterion, processor,
+            accelerator, student, atc_criterion, align_criterion, processor,
             output_dir, global_step, epoch,
             epoch_losses, epoch_steps, config,
             name=f"epoch_{epoch}",
@@ -599,7 +670,8 @@ def train(config):
     watchdog_log.close()
 
     print("\nStage 3 Distillation 완료!")
-    last_ckpt = output_dir / ("epoch_" + str(config["num_epochs"]))
+    last_ckpt = (output_dir / f"step_{global_step}" if stop_early
+                 else output_dir / ("epoch_" + str(config["num_epochs"])))
     print("최종 체크포인트: " + str(last_ckpt))
 
 
@@ -608,7 +680,7 @@ def train(config):
 # =============================================================================
 
 def _save_checkpoint(
-    accelerator, model, temporal_criterion, spatial_criterion, processor,
+    accelerator, model, atc_criterion, align_criterion, processor,
     output_dir, global_step, epoch,
     epoch_losses, epoch_steps, config,
     name=None,
@@ -621,10 +693,10 @@ def _save_checkpoint(
     unwrapped.save_pretrained(save_path)
     processor.save_pretrained(save_path)
 
-    unwrapped_temporal = accelerator.unwrap_model(temporal_criterion)
+    unwrapped_temporal = accelerator.unwrap_model(atc_criterion)
     torch.save(unwrapped_temporal.state_dict(), save_path / "temporal_proj.pt")
 
-    unwrapped_spatial = accelerator.unwrap_model(spatial_criterion)
+    unwrapped_spatial = accelerator.unwrap_model(align_criterion)
     torch.save(unwrapped_spatial.state_dict(), save_path / "spatial_proj.pt")
 
     avg = {k: v / max(1, epoch_steps) for k, v in epoch_losses.items()}
@@ -649,28 +721,28 @@ def _save_checkpoint(
 # 한쪽만 고치고 다른 쪽을 깜빡하는 ablation-fairness 버그가 재발하기 쉽다.
 # =============================================================================
 VARIANTS = {
-    # Full: L_task + L_spatial + L_temporal (CONFIG 기본값과 동일 — 하위 호환)
+    # Full: L_task + L_align + L_atc (CONFIG 기본값과 동일 — 하위 호환)
     "full": {
         "output_dir":      "checkpoints/student_full",
-        "lambda_spatial":  1.0,
-        "lambda_temporal": 1.0,
+        "lambda_align":    1.0,
+        "lambda_atc":      1.0,
         "temporal_k":      2,
     },
-    # L_spatial 단독. L_temporal이 0으로 죽으므로 teacher 멀티프레임 입력 자체가
+    # L_align 단독. L_atc이 0으로 죽으므로 teacher 멀티프레임 입력 자체가
     # 불필요 — temporal_k=1로 낮추면 dataloader가 teacher_* 필드를 만들지 않아
     # 이미지 로딩+토큰화 비용까지 함께 절약된다 (student loop 469번째 줄 분기 참고).
     "spatial": {
         "output_dir":      "checkpoints/student_spatial",
-        "lambda_spatial":  1.0,
-        "lambda_temporal": 0.0,
+        "lambda_align":    1.0,
+        "lambda_atc":      0.0,
         "temporal_k":      1,
     },
-    # L_temporal 단독. teacher 멀티프레임 문맥이 그대로 필요하므로 temporal_k는
+    # L_atc 단독. teacher 멀티프레임 문맥이 그대로 필요하므로 temporal_k는
     # Full과 동일하게 2를 유지한다.
     "temporal": {
         "output_dir":      "checkpoints/student_temporal",
-        "lambda_spatial":  0.0,
-        "lambda_temporal": 1.0,
+        "lambda_align":    0.0,
+        "lambda_atc":      1.0,
         "temporal_k":      2,
     },
 }
@@ -680,15 +752,29 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--variant", choices=list(VARIANTS.keys()), default="full",
-        help="ablation 변형: full(L_spatial+L_temporal) / spatial(L_spatial만) / temporal(L_temporal만)",
+        help="ablation 변형: full(L_align+L_atc) / spatial(L_align만) / temporal(L_atc만)",
     )
+    parser.add_argument("--lambda_align", "--lambda_spatial", dest="lambda_align",
+                        type=float, default=None,
+                        help="VARIANTS 값을 덮어쓴다 (λ 스윕용). --lambda_spatial은 구명 alias")
+    parser.add_argument("--lambda_atc", "--lambda_temporal", dest="lambda_atc",
+                        type=float, default=None, help="--lambda_temporal은 구명 alias")
+    parser.add_argument("--output_dir", default=None, help="체크포인트 출력 경로 덮어쓰기")
+    parser.add_argument("--max_steps", type=int, default=None,
+                        help="이 optimizer step에서 조기 종료 (LR 스케줄은 그대로 유지)")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="데이터 순서·LoRA 초기화 고정. λ 스윕처럼 한 변수만 비교할 때 필수")
     args = parser.parse_args()
 
     CONFIG.update(VARIANTS[args.variant])
+    for key in ("lambda_align", "lambda_atc", "output_dir", "max_steps", "seed"):
+        if getattr(args, key) is not None:
+            CONFIG[key] = getattr(args, key)
     print(
         f"[variant={args.variant}] output_dir={CONFIG['output_dir']} "
-        f"lambda_spatial={CONFIG['lambda_spatial']} lambda_temporal={CONFIG['lambda_temporal']} "
-        f"temporal_k={CONFIG['temporal_k']}"
+        f"lambda_align={CONFIG['lambda_align']} lambda_atc={CONFIG['lambda_atc']} "
+        f"temporal_k={CONFIG['temporal_k']} "
+        f"max_steps={CONFIG['max_steps']} seed={CONFIG['seed']}"
     )
 
     train(CONFIG)

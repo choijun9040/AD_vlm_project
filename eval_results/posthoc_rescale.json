@@ -1,0 +1,22 @@
+{
+  "checkpoint": "checkpoints/student_baseline_v2/epoch_1",
+  "scale": 3.0,
+  "collapse": {
+    "무개입": {
+      "nan_rate": 0.944,
+      "nan": 236,
+      "n": 250,
+      "blk31_p50": 63264.0
+    },
+    "1/3 리스케일": {
+      "nan_rate": 0.948,
+      "nan": 237,
+      "n": 250,
+      "blk31_p50": 21184.0
+    }
+  },
+  "accuracy": {
+    "무개입": 0.5333333333333333,
+    "1/3 리스케일": 0.54
+  }
+}

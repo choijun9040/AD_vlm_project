@@ -26,7 +26,7 @@ from torch.utils.data import Dataset, DataLoader, ConcatDataset, WeightedRandomS
 
 
 # =============================================================================
-# 0. 시간적 맥락(L_temporal)용 프레임 순서 유틸리티
+# 0. 시간적 맥락(L_atc)용 프레임 순서 유틸리티
 # =============================================================================
 
 _CAM_FRONT_TS_PATTERN = re.compile(r"__CAM_FRONT__(\d+)\.jpg")
@@ -191,7 +191,7 @@ class DriveLMDataset(Dataset):
         hazard_labels: dict = None,  # {frame_token: score} Stage 2 이후 사용
         processor=None,
         use_camera: str = "CAM_FRONT",  # 단일 뷰 사용 시
-        temporal_k: int = 1,             # L_temporal용: teacher에게 줄 프레임 수 (1=기존 동작)
+        temporal_k: int = 1,             # L_atc용: teacher에게 줄 프레임 수 (1=기존 동작)
         scene_frame_order: dict = None,  # {scene_token: [frame_token,...]} 시간순
         frame_to_scene: dict = None,     # {frame_token: scene_token}
         token_to_images: dict = None,    # {frame_token: {cam: abs_path}} 과거 프레임 조회용
@@ -378,7 +378,7 @@ class NuScenesQADataset(Dataset):
         token_to_images: dict,  # {sample_token: {cam: abs_path}}
         processor=None,
         use_camera: str = "CAM_FRONT",
-        temporal_k: int = 1,             # L_temporal용: teacher에게 줄 프레임 수 (1=기존 동작)
+        temporal_k: int = 1,             # L_atc용: teacher에게 줄 프레임 수 (1=기존 동작)
         scene_frame_order: dict = None,  # {scene_token: [frame_token,...]} 시간순
         frame_to_scene: dict = None,     # {frame_token: scene_token}
         teacher_max_length: int = None,  # teacher 토큰화 max_length (None이면 자동 계산)
@@ -549,7 +549,7 @@ def create_unified_dataloader(
     use_camera:      str   = "CAM_FRONT",
     hazard_oversample:      bool  = False,  # DriveLM 내 희귀 위험도 샘플 오버샘플링
     hazard_oversample_beta: float = 0.5,    # 1.0=완전 역빈도, 0.0=오버샘플링 없음
-    temporal_k:      int   = 1,             # L_temporal용: teacher에게 줄 프레임 수 (1=기존 동작, 끔)
+    temporal_k:      int   = 1,             # L_atc용: teacher에게 줄 프레임 수 (1=기존 동작, 끔)
     teacher_max_length: int = None,         # teacher 토큰화 max_length (None이면 자동 계산)
 ) -> DataLoader:
     """

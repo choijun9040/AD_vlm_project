@@ -1,0 +1,2958 @@
+{
+  "n_checked": 281,
+  "rows": [
+    {
+      "repo": "Qwen/Qwen2.5-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "max_pixels": 12845056,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-VL-32B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-8B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-VL-3B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "QuantTrio/Qwen3-VL-32B-Instruct-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-4B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-30B-A3B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-2B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2.5-VL-72B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "QuantTrio/Qwen3-VL-235B-A22B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "QuantTrio/Qwen3-VL-30B-A3B-Thinking-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-4B-Instruct-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-32B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-2B-Instruct-AWQ",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-8B-Thinking-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "LifetimeMistake/Qwen3-VL-Embedding-2B-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 4096,
+      "max_pixels": 1310720,
+      "size": {
+        "longest_edge": 1310720,
+        "shortest_edge": 4096
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-8B-Instruct-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "MLliu6/Qwen3-VL-8B-Instruct-AWQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Vishva007/Qwen3-VL-8B-Instruct-W4A16-AutoRound-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "model.visual.deepstack_merger_list",
+        "model.visual.blocks",
+        "model.visual.merger.linear_fc1",
+        "lm_head",
+        "model.visual.merger.linear_fc2"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "PointerHQ/Qwen2.5-VL-72B-Instruct-Pointer-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "QuantTrio/Qwen3-VL-235B-A22B-Thinking-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-72B-Instruct-AWQ",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "quant-mind/Huihui-Qwen3-VL-8B-Instruct-abliterated-AWQ-int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "QuantTrio/Qwen3-VL-32B-Thinking-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "gonuit/Qwen3-VL-Embedding-8B-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 4096,
+      "max_pixels": 1310720,
+      "size": {
+        "longest_edge": 1310720,
+        "shortest_edge": 4096
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-32B-Thinking-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "JinRiYao2001/Huihui-Qwen3-VL-30B-A3B-Instruct-abliterated-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "np-deploys/Step3-VL-10B-AWQ-4bit",
+      "arch": "StepVLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "MLliu6/Qwen3-VL-4B-Instruct-AWQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "dark-side-of-the-code/Qwen3-VL-30B-A3B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-72B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "sahilchachra/Mage-VL-AWQ",
+      "arch": "MageVLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 4000000,
+      "size": {
+        "longest_edge": 4000000,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "sahilchachra/LFM2.5-VL-3B-AWQ",
+      "arch": "Lfm2VlForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-2B-Instruct-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "nemozxy123/Huihui-Qwen3-VL-4B-Instruct-abliterated-AWQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-32B-Instruct-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "mattbucci/Qwen3.6-VL-REAP-26B-A3B-AWQ",
+      "arch": "Qwen3_5MoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-32B-Thinking-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-4B-Thinking-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-4B-Thinking-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-2B-Thinking-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-72B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "MLliu6/Qwen3-VL-2B-Instruct-AWQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-8B-Thinking-AWQ-8bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-30B-A3B-Instruct-AWQ-8bit",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "QuantTrio/Step3-VL-10B-AWQ",
+      "arch": "StepVLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_model.transformer.resblocks.0.",
+        "attn.qkv_proj",
+        "attn.out_proj",
+        "vit_large_projector",
+        "model.layers.0."
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "zyoNoob/Qwen2.5-VL-3B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "cyankiwi/Step3-VL-10B-AWQ-4bit",
+      "arch": "StepVLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/ERNIE-4.5-VL-28B-A3B-Thinking-AWQ-4bit",
+      "arch": "Ernie4_5_VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 4816896,
+      "size": {
+        "height": 224,
+        "width": 224
+      }
+    },
+    {
+      "repo": "dicksonhk/Qwen2.5-VL-7B-Instruct-AWQ-mlx-4Bit",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "claris153/JoyAI-VL-Interaction-Preview-AWQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Vishva007/Qwen3-VL-4B-Instruct-W4A16-AutoRound-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "model.visual.blocks",
+        "model.visual.merger.linear_fc1",
+        "model.visual.deepstack_merger_list",
+        "lm_head",
+        "model.visual.merger.linear_fc2"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "cyankiwi/Qwen3-VL-30B-A3B-Thinking-AWQ-4bit",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "jart25/Qwen3-VL-30B-A3B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "nemozxy123/Huihui-Qwen3-VL-8B-Instruct-abliterated-AWQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "sitatech/Qwen3-VL-8B-Instruct-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "simaai/Qwen3-VL-8B-Instruct-GPTQ-Safetensors",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "h2oai/Qwen3-VL-2B-Instruct-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "max_pixels": 12845056,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-2B-Instruct-GPTQ-Int8",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 8,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "hfl/Qwen2.5-VL-3B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "MLliu6/Qwen3-VL-4B-Instruct-GPTQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "groxaxo/Qwen3.6-35B-A3B-Heretic-REAP-0.30-GPTQ-Pro-vLLM",
+      "arch": "Qwen3_5MoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "hfl/Qwen2.5-VL-7B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-7B-Instruct-GPTQ-Int8",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 8,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "max_pixels": 12845056,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-7B-Instruct-GPTQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "moonmoon-purkait/Qwen3.5-VL-4B-GPTQ-Int8",
+      "arch": "Qwen3_5ForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 8,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-72B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "Qwen/Qwen2-VL-72B-Instruct-GPTQ-Int8",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 8,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "MLliu6/Qwen3-VL-2B-Instruct-GPTQ-W4A16",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "reinforce20001/Qwen3-VL-32B-Instruct-Heretic-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "lihongjie007/Qwen3-VL-Embedding-2B-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 4096,
+      "max_pixels": 1310720,
+      "size": {
+        "longest_edge": 1310720,
+        "shortest_edge": 4096
+      }
+    },
+    {
+      "repo": "ilia-dybal/Qwen-2.5-VL-3b-Instruct-4WA16-GPTQ-Culinary",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Vishva007/Qwen3-VL-8B-Instruct-W4A16-AutoRound-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "LosCV29/Qwen3-VL-32B-Instruct-GPTQ-W4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "wanzhenchn/Qwen2.5-VL-7B-Instruct-gptqmodel-int8",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 8,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "groxaxo/Qwen3.6-27B-abliterated-v2-GPTQ-Pro-FOEM-4bit-g128-preserve-vl",
+      "arch": "Qwen3_5ForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "simaai/Qwen2.5-VL-7B-Instruct-GPTQ-Safetensors",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "np-deploys/Qwen3-VL-8B-Instruct-W4A16-AutoRound-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "aonaon/Qwen3-VL-8B-Instruct-4bit-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "sitatech/Qwen2.5-VL-7B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "h2oai/Qwen2-VL-2B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "Vishva007/Qwen3-VL-4B-Instruct-W4A16-AutoRound-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "felixnguyen33/Qwen2.5-VL-7B-Instruct-GPTQ-INT4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "simaai/Qwen2.5-VL-3B-Instruct-GPTQ-Safetensors",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "simaai/Qwen3-VL-2B-Instruct-GPTQ-Safetensors",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "felixnguyen33/Qwen2.5-VL-3B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Vishva007/Qwen3-VL-2B-Instruct-W4A16-AutoRound-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-32B-Instruct-GPTQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "hfl/Qwen2.5-VL-3B-Instruct-GPTQ-Int3",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 3,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "pramjana/Qwen3-VL-4B-Instruct-4bit-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "wanzhenchn/Qwen2.5-VL-7B-Instruct-gptqmodel-int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "nonoskygt/Qwen3-VL-30B-A3B-Thinking-abliterated-GPTQ-INT4",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Azaz666/Qwen2.5-VL-3B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "lm_head"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "hfl/Qwen2.5-VL-7B-Instruct-GPTQ-Int3",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 3,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-GPTQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "mediainbox/MiMo-VL-7B-RL-2508-gptq-q4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "pramjana/Qwen3-VL-4B-Thinking-4bit-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-72B-Instruct-GPTQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "billatsectorflow/Qwen2-VL-7B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "max_pixels": 12845056,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "felixnguyen33/Qwen2.5-VL-32B-Instruct-GPTQ-Int4-W4A16-G128",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "podupopulus/Qwen3-VL-8B-v15-4-bit-GPTQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "model.visual.merger.linear_fc1",
+        "model.visual.merger.linear_fc2",
+        "model.visual.deepstack_merger_list",
+        "lm_head",
+        "model.visual.blocks"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "CalamitousFelicitousness/Qwen2-VL-72B-Instruct-GPTQ-Int4-tpfix",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 1003520,
+      "size": {
+        "max_pixels": 1003520,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "reinforce20001/Qwen3-VL-32B-Thinking-Heretic-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "np-deploys/Qwen3-VL-4B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-32B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "ellensu/Qwen3-VL-8B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Vishva007/Qwen3-VL-2B-Instruct-W4A16-AutoRound-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "model.visual.blocks",
+        "model.visual.deepstack_merger_list",
+        "lm_head",
+        "model.visual.merger.linear_fc2",
+        "model.visual.merger.linear_fc1"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "remodlai/Qwen3-VL-30B-A3B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Dashuai2/Qwen3-VL-8B-Instruct-W4A16-AutoRound-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "model.visual.deepstack_merger_list",
+        "model.visual.blocks",
+        "model.visual.merger.linear_fc1",
+        "lm_head",
+        "model.visual.merger.linear_fc2"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "FenomAI/Qwen3-VL-4B-Instruct-AWQ-4bit",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-3B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "CYF200127/Qwen3-VL-32B-Instruct-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "xxxSHADOWxxx/Qwen3-VL-30B-A3B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "ticoAg/Qwen3-VL-30B-A3B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-72B-Instruct-AWQ-fix",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "p-christ/Qwen2-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "max_pixels": 12845056,
+        "min_pixels": 3136
+      }
+    },
+    {
+      "repo": "Saktsant/Qwen3-VL-4B-Instruct-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "gsting/Qwen3-VL-235B-A22B-Instruct-AWQ",
+      "arch": "Qwen3VLMoeForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual",
+        "mlp.gate"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "zyoNoob/Qwen2.5-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "ajhinh/qwen2.5-vl-3b-instruct-full-sft-awq",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "dicksonhk/Qwen2.5-VL-3B-Instruct-AWQ-mlx-fp16",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "abhishekchohan/Qwen3-VL-32B-Instruct-AWQ",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "huypl53/Qwen3-VL-4B-Instruct-AWQ-INT4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-7B-Instruct-AWQ-2",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "cyankiwi/InternVL3_5-38B-AWQ-4bit",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/InternVL3_5-8B-AWQ-8bit",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/InternVL3_5-8B-AWQ-4bit",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/InternVL3_5-14B-AWQ-4bit",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/InternVL3_5-38B-AWQ-8bit",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "cyankiwi/InternVL3_5-14B-AWQ-8bit",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "hsmin92/internvl35-4b-awq-w4a16-g128",
+      "arch": "InternVLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "hsmin92/internvl35-8b-awq-w4a16-g128",
+      "arch": "InternVLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ",
+      "arch": "InternVLChatModel",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_model",
+        "mlp1"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": 448
+    },
+    {
+      "repo": "sergeipetrov/InternVL2-8B-AWQ-qconfig",
+      "arch": "InternVLChatModel",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": 448
+    },
+    {
+      "repo": "rootonchair/InternVL2_5-4B-AWQ",
+      "arch": "InternVLChatModel",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_model",
+        "mlp1",
+        "lm_head"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Azaz666/InternVL2_5-4B-AWQ-INT4",
+      "arch": "InternVLChatModel",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_model",
+        "mlp1",
+        "lm_head"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "ybelkada/llava-1.5-7b-hf-awq",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_tower",
+        "multi_modal_projector"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "casperhansen/llava-v1.6-mistral-7b-hf-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "mesolitica/llava-v1.6-34b-hf-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "mesolitica/llava-v1.6-vicuna-13b-hf-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "kaiwangrv/llava-v1.5-7b-awq",
+      "arch": "LlavaLlamaForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "circulus/llava-v1.6-mistral-7b-awq",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "hiiamsid/llava-v1.6-mistral-7b-hf-AWQ",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "nicocambrian/llava-v1.6-vicuna-13b-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "nnethercott/llava-v1.5-7b-gpt4OCR-hf-AWQ",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "zhenxuan/llava-v1.6-mistral-7b-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "casperhansen/llama3-llava-next-8b-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "lurker18/Llava_v1.6_mistral_7B_hf_AWQ_4bit",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "nicocambrian/llava-v1.6-34b-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "andretisch/llava-saiga-8b-awq",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "lurker18/Llava_next_72B_HF_AWQ_4bit",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "amaan784/Llama3-LLaVA-NeXT-8B-AWQ-W4A16-substation",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "lurker18/Llava_next_110B_HF_AWQ_4bit",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "hivata/llama3-llava-next-8b-hf-AWQ",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "circulus/llava-3-ko-8b-awq",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "lurker18/Llama3_llava_next_8B_HF_AWQ_4bit",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "lurker18/Llava_v1.6_vicuna_13B_HF_AWQ_4bit",
+      "arch": "LlavaNextForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "shortest_edge": 336
+      }
+    },
+    {
+      "repo": "rcagueros/llava15__awq__V_P",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "rcagueros/llava15__awq__V",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "rcagueros/llava15__awq__P",
+      "arch": "LlavaForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Isotr0py/Phi-3.5-vision-instruct-AWQ",
+      "arch": "Phi3VForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_embed_tokens"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "RichardErkhov/muhtasham_-_Phi-3.5-vision-instruct_20240917_025100-awq",
+      "arch": "Phi3VForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_embed_tokens"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "lurker18/Phi_3.5_Vision_Instruct_AWQ_4bit",
+      "arch": "Phi3VForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_embed_tokens"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "lurker18/Phi_3_Vision_128k_Instruct_AWQ_4bit",
+      "arch": "Phi3VForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_embed_tokens"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "RichardErkhov/muhtasham_-_Phi-3.5-vision-instruct_20240915_223241-awq",
+      "arch": "Phi3VForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_embed_tokens"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "RichardErkhov/muhtasham_-_Phi-3.5-vision-instruct_20240916_205629-awq",
+      "arch": "Phi3VForCausalLM",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "vision_embed_tokens"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "to-be/Qwen2-VL-7B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2VLForConditionalGeneration",
+      "torch_dtype": "float16",
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "max_pixels": 12845056,
+        "min_pixels": 3136,
+        "shortest_edge": 1000,
+        "longest_edge": 2000
+      }
+    },
+    {
+      "repo": "reinforce20001/Qwen3-VL-2B-Instruct-Heretic-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "xiuufa/Qwen3-VL-8B-Instruct-GPTQ-Int4",
+      "arch": "Qwen3VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": {
+        "longest_edge": 16777216,
+        "shortest_edge": 65536
+      }
+    },
+    {
+      "repo": "Azaz666/Qwen2.5-VL-7B-Instruct-GPTQ-Int4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "gptq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "openbmb/MiniCPM-V-4_5-AWQ",
+      "arch": "MiniCPMV",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "openbmb/MiniCPM-V-4.6-AWQ",
+      "arch": "MiniCPMV4_6ForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "in_proj_b",
+        "in_proj_a",
+        "model.vision_tower",
+        "model.merger",
+        "lm_head"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "openbmb/MiniCPM-V-4.6-Thinking-AWQ",
+      "arch": "MiniCPMV4_6ForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "in_proj_b",
+        "in_proj_a",
+        "model.vision_tower",
+        "model.merger",
+        "lm_head"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "openbmb/MiniCPM-V-4-AWQ",
+      "arch": "MiniCPMV",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "jfiekdjdk/MiniCPM-V-2_6-awq",
+      "arch": "MiniCPMV",
+      "torch_dtype": "float16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "remodlai/qwen-2.5-vl-7b-instruct-awq",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "amaan784/Qwen2.5-VL-7B-AWQ-W4A16-substation",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "JerodLee/Qwen2.5-VL-32B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": null
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-72B-Instruct-AWQ-2",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Azaz666/Qwen2.5-VL-3B-Instruct-AWQ-INT4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "ajhinh/Qwen2.5-VL-3B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-72B-Instruct-AWQ-2-4-gpu",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "joedonino/Qwen2.5-VL-3B-Instruct-awq",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "compressed-tensors",
+      "bits": null,
+      "vision_excluded": false,
+      "modules_to_not_convert": [],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Vanbitcase/Qwen2.5-VL-7B-Instruct-AWQ",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Azaz666/Qwen2.5-VL-7B-Instruct-AWQ-INT4",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": null,
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": null,
+      "max_pixels": null,
+      "size": null
+    },
+    {
+      "repo": "Benasd/Qwen2.5-VL-3B-Instruct-AWQ-2",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "circulus/Qwen2.5-VL-7B-ko-awq",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "rippertnt/Qwen2.5-VL-3B-ko-awq",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "circulus/Qwen2.5-VL-3B-ko-awq",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 12845056,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    },
+    {
+      "repo": "Dinh/Qwen2.5-VL-7b-AWQ-4bit-custom-final",
+      "arch": "Qwen2_5_VLForConditionalGeneration",
+      "torch_dtype": "bfloat16",
+      "quant_method": "awq",
+      "bits": 4,
+      "vision_excluded": true,
+      "modules_to_not_convert": [
+        "visual"
+      ],
+      "min_pixels": 3136,
+      "max_pixels": 262144,
+      "size": {
+        "longest_edge": 12845056,
+        "shortest_edge": 3136
+      }
+    }
+  ]
+}

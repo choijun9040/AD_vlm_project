@@ -1,0 +1,7 @@
+{
+  "model": "teacher_7B_LoRA",
+  "category": "count",
+  "total": 2212,
+  "correct": 236,
+  "accuracy": 0.10669077757685352
+}

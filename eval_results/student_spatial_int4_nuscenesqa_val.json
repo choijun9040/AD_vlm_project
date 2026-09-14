@@ -1,0 +1,34 @@
+{
+  "model": "checkpoints_awq/student_spatial",
+  "precision": "int4_awq",
+  "total": 11309,
+  "correct": 5747,
+  "accuracy": 0.5081793262003714,
+  "by_type": {
+    "count": {
+      "correct": 228,
+      "total": 2212,
+      "accuracy": 0.10307414104882459
+    },
+    "exist": {
+      "correct": 2655,
+      "total": 3308,
+      "accuracy": 0.8025997581620314
+    },
+    "object": {
+      "correct": 915,
+      "total": 2359,
+      "accuracy": 0.3878762187367529
+    },
+    "comparison": {
+      "correct": 1171,
+      "total": 1780,
+      "accuracy": 0.6578651685393259
+    },
+    "status": {
+      "correct": 778,
+      "total": 1650,
+      "accuracy": 0.4715151515151515
+    }
+  }
+}

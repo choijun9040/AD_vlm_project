@@ -1,0 +1,34 @@
+{
+  "model": "checkpoints_awq/student_full",
+  "precision": "int4_awq",
+  "total": 11309,
+  "correct": 5836,
+  "accuracy": 0.5160491643823504,
+  "by_type": {
+    "count": {
+      "correct": 174,
+      "total": 2212,
+      "accuracy": 0.07866184448462929
+    },
+    "exist": {
+      "correct": 2641,
+      "total": 3308,
+      "accuracy": 0.7983675937122128
+    },
+    "object": {
+      "correct": 1045,
+      "total": 2359,
+      "accuracy": 0.4429843153878762
+    },
+    "comparison": {
+      "correct": 1134,
+      "total": 1780,
+      "accuracy": 0.6370786516853932
+    },
+    "status": {
+      "correct": 842,
+      "total": 1650,
+      "accuracy": 0.5103030303030303
+    }
+  }
+}

@@ -30,6 +30,10 @@ from peft import LoraConfig, get_peft_model, TaskType, PeftModel
 from accelerate import Accelerator
 
 sys.path.append(str(Path(__file__).parent))
+# peft의 LoRA dispatcher가 AWQ 지원 여부를 확인하느라 awq를 import하는데,
+# 이 환경의 autoawq는 transformers 4.49에 없는 qwen3를 참조해 깨진다.
+import awq_compat  # noqa: E402
+awq_compat.patch()
 from dataloader import create_unified_dataloader
 
 
@@ -52,7 +56,7 @@ CONFIG = {
     "lora_alpha":         32,
     "lora_dropout":       0.05,
     # v1(student_kd_only)은 vision attention LoRA 없이(LLM 7개 모듈만) 학습되어
-    # train_distillation.py(L_spatial/L_temporal, vision attn LoRA 포함)와 trainable
+    # train_distillation.py(L_align/L_atc, vision attn LoRA 포함)와 trainable
     # 모듈 집합이 달랐다 — 5-way ablation의 순수성을 위해 이 플래그 하나만 추가해
     # v2로 재학습한다(다른 설정은 전부 동결). v1은 보존해 "vision attn LoRA 단독
     # 효과"를 v1 vs v2 비교로 분리 보고하는 부록 실험으로 활용.

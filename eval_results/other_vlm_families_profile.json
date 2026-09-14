@@ -1,0 +1,24 @@
+{
+  "smolvlm_instruct": {
+    "repo": "HuggingFaceTB/SmolVLM-Instruct",
+    "note": "다른 계열 (Idefics3)",
+    "depth": 27,
+    "n_images": 100,
+    "last_block_p50": 1288.0,
+    "last_block_p95": 1304.0,
+    "prev_block_p50": 172.0,
+    "headroom_p50": 50.857142857142854,
+    "headroom_p95": 50.23312883435583
+  },
+  "qwen2vl_2b_awq": {
+    "repo": "Qwen/Qwen2-VL-2B-Instruct-AWQ",
+    "note": "공식 위험 구성 (fp16 + 비전 제외)",
+    "depth": 32,
+    "n_images": 100,
+    "last_block_p50": 16896.0,
+    "last_block_p95": 17664.0,
+    "prev_block_p50": 122.0,
+    "headroom_p50": 3.8768939393939394,
+    "headroom_p95": 3.7083333333333335
+  }
+}

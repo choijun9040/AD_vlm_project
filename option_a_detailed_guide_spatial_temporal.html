@@ -1,0 +1,1087 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option A — 자율주행 특화 VLM 증류 + 엣지 최적화 통합 파이프라인 상세 가이드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&family=JetBrains+Mono:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #08090d;
+  --surface: #0f1117;
+  --surface2: #161822;
+  --surface3: #1c1f2e;
+  --border: #252840;
+  --border-light: #333660;
+  --text: #d8daf0;
+  --text-dim: #7c7fa8;
+  --text-bright: #eef0ff;
+  --indigo: #6366f1;
+  --indigo-dim: #4f46e5;
+  --violet: #8b5cf6;
+  --emerald: #34d399;
+  --emerald-dim: rgba(52,211,153,0.12);
+  --amber: #fbbf24;
+  --amber-dim: rgba(251,191,36,0.10);
+  --rose: #fb7185;
+  --rose-dim: rgba(251,113,133,0.10);
+  --cyan: #22d3ee;
+  --cyan-dim: rgba(34,211,238,0.10);
+  --sky: #38bdf8;
+  --orange: #fb923c;
+  --orange-dim: rgba(251,146,60,0.10);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 400;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+}
+.grain {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:0.025; pointer-events:none; z-index:9999;
+}
+.wrap { max-width:900px; margin:0 auto; padding:56px 24px 120px; }
+
+/* ===== HERO ===== */
+.hero { text-align:center; margin-bottom:64px; position:relative; }
+.hero::after {
+  content:''; position:absolute; top:-60px; left:50%; transform:translateX(-50%);
+  width:500px; height:500px;
+  background: radial-gradient(ellipse, rgba(99,102,241,0.08) 0%, rgba(139,92,246,0.04) 40%, transparent 70%);
+  pointer-events:none;
+}
+.tag-line {
+  display:inline-block;
+  font-family:'JetBrains Mono', monospace;
+  font-size:10.5px; letter-spacing:2.5px; text-transform:uppercase;
+  color:var(--indigo);
+  border:1px solid var(--border-light);
+  padding:5px 16px; border-radius:16px;
+  margin-bottom:20px;
+}
+.hero h1 {
+  font-family:'DM Serif Display', serif;
+  font-size:36px; line-height:1.25; font-weight:400;
+  background: linear-gradient(135deg, var(--text-bright) 20%, var(--violet) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  margin-bottom:14px; letter-spacing:-0.3px;
+}
+.hero .sub { font-size:14px; color:var(--text-dim); font-weight:300; max-width:560px; margin:0 auto; }
+
+/* ===== TOC ===== */
+.toc {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:24px 28px;
+  margin-bottom:56px;
+}
+.toc-title {
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--text-dim); margin-bottom:14px;
+}
+.toc-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 24px; }
+.toc-item {
+  font-size:13px; color:var(--text-dim); font-weight:300;
+  padding:4px 0;
+  transition: color 0.15s;
+}
+.toc-item:hover { color:var(--indigo); }
+.toc-item span {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; color:var(--indigo); margin-right:8px;
+}
+@media(max-width:600px){ .toc-grid{grid-template-columns:1fr;} .hero h1{font-size:26px;} }
+
+/* ===== SECTION ===== */
+.sec { margin-bottom:52px; }
+.sec-head {
+  display:flex; align-items:center; gap:12px;
+  margin-bottom:20px; padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.sec-num {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; font-weight:600;
+  color:var(--bg);
+  background:var(--indigo);
+  min-width:26px; height:26px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:7px; flex-shrink:0;
+}
+.sec-title { font-size:19px; font-weight:700; letter-spacing:-0.2px; }
+
+.prose { font-size:14px; line-height:1.85; font-weight:300; color:var(--text); }
+.prose strong { font-weight:700; color:var(--text-bright); }
+.prose em { font-style:normal; color:var(--violet); font-weight:500; }
+.prose code {
+  font-family:'JetBrains Mono', monospace;
+  font-size:12.5px; background:var(--surface2);
+  padding:2px 7px; border-radius:4px;
+  color:var(--emerald);
+}
+
+/* ===== CARDS ===== */
+.cards { display:grid; grid-template-columns:1fr; gap:12px; margin:18px 0; }
+.cards-2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:18px 0; }
+@media(max-width:640px){ .cards-2{grid-template-columns:1fr;} }
+
+.card {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px 22px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.card:hover { border-color:var(--border-light); box-shadow:0 0 20px rgba(99,102,241,0.04); }
+.card-tag {
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  margin-bottom:7px; display:block;
+}
+.card-tag.emerald{color:var(--emerald)} .card-tag.amber{color:var(--amber)}
+.card-tag.rose{color:var(--rose)} .card-tag.cyan{color:var(--cyan)}
+.card-tag.violet{color:var(--violet)} .card-tag.orange{color:var(--orange)}
+.card-tag.sky{color:var(--sky)} .card-tag.indigo{color:var(--indigo)}
+
+.card h3 { font-size:15px; font-weight:700; margin-bottom:8px; line-height:1.4; color:var(--text-bright); }
+.card p { font-size:13px; color:var(--text-dim); line-height:1.75; font-weight:300; }
+.card p strong { color:var(--text); font-weight:600; }
+
+/* ===== PIPELINE DIAGRAM ===== */
+.pipeline {
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:28px;
+  margin:20px 0;
+  overflow-x:auto;
+}
+.pipe-row {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-bottom:14px;
+  flex-wrap:wrap;
+}
+.pipe-row:last-child { margin-bottom:0; }
+.pipe-box {
+  padding:8px 14px;
+  border-radius:8px;
+  font-size:12px;
+  font-weight:500;
+  white-space:nowrap;
+  border:1px solid;
+}
+.pipe-box.teacher { background:rgba(139,92,246,0.1); border-color:rgba(139,92,246,0.3); color:var(--violet); }
+.pipe-box.student { background:rgba(52,211,153,0.1); border-color:rgba(52,211,153,0.3); color:var(--emerald); }
+.pipe-box.data { background:rgba(56,189,248,0.08); border-color:rgba(56,189,248,0.25); color:var(--sky); }
+.pipe-box.optim { background:rgba(251,191,36,0.08); border-color:rgba(251,191,36,0.25); color:var(--amber); }
+.pipe-box.deploy { background:rgba(251,113,133,0.08); border-color:rgba(251,113,133,0.25); color:var(--rose); }
+.pipe-arrow {
+  font-family:'JetBrains Mono', monospace;
+  font-size:14px; color:var(--text-dim);
+}
+.pipe-label {
+  font-family:'JetBrains Mono', monospace;
+  font-size:10px; letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--text-dim);
+  min-width:80px;
+  flex-shrink:0;
+}
+
+/* ===== TABLE ===== */
+.table-wrap {
+  overflow-x:auto;
+  margin:18px 0;
+  border-radius:12px;
+  border:1px solid var(--border);
+}
+table { width:100%; border-collapse:collapse; font-size:12.5px; }
+th {
+  background:var(--surface2);
+  padding:11px 14px;
+  text-align:left;
+  font-weight:600;
+  font-size:10.5px;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  color:var(--text-dim);
+  border-bottom:1px solid var(--border);
+}
+td {
+  padding:11px 14px;
+  border-bottom:1px solid var(--border);
+  font-weight:300;
+  vertical-align:top;
+}
+tr:last-child td { border-bottom:none; }
+.badge-sm {
+  display:inline-block;
+  font-family:'JetBrains Mono', monospace;
+  font-size:9.5px; padding:2px 7px; border-radius:4px; font-weight:600;
+}
+.b-emerald{background:var(--emerald-dim);color:var(--emerald)}
+.b-amber{background:var(--amber-dim);color:var(--amber)}
+.b-rose{background:var(--rose-dim);color:var(--rose)}
+.b-cyan{background:var(--cyan-dim);color:var(--cyan)}
+.b-orange{background:var(--orange-dim);color:var(--orange)}
+
+/* ===== CODE BLOCK ===== */
+.code-block {
+  background:var(--surface2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  padding:18px 20px;
+  margin:16px 0;
+  font-family:'JetBrains Mono', monospace;
+  font-size:12px;
+  line-height:1.7;
+  color:var(--emerald);
+  overflow-x:auto;
+  white-space:pre;
+}
+.code-block .comment { color:var(--text-dim); }
+.code-block .keyword { color:var(--violet); }
+.code-block .string { color:var(--amber); }
+
+/* ===== NOTE ===== */
+.note {
+  border-left:3px solid var(--indigo);
+  background:rgba(99,102,241,0.05);
+  padding:14px 18px;
+  border-radius:0 10px 10px 0;
+  margin:18px 0;
+  font-size:13px;
+  color:var(--text-dim);
+  line-height:1.75;
+}
+.note strong { color:var(--violet); }
+.note.warn { border-left-color:var(--amber); background:rgba(251,191,36,0.04); }
+.note.warn strong { color:var(--amber); }
+.note.success { border-left-color:var(--emerald); background:rgba(52,211,153,0.04); }
+.note.success strong { color:var(--emerald); }
+
+/* ===== DIVIDER ===== */
+.divider {
+  height:1px;
+  background:linear-gradient(to right, transparent, var(--border), transparent);
+  margin:48px 0;
+}
+
+/* ===== STEP LIST ===== */
+.steps { margin:18px 0; }
+.step {
+  display:flex; gap:14px;
+  margin-bottom:18px;
+}
+.step-num {
+  font-family:'JetBrains Mono', monospace;
+  font-size:11px; font-weight:600;
+  color:var(--indigo);
+  background:rgba(99,102,241,0.1);
+  min-width:28px; height:28px;
+  display:flex; align-items:center; justify-content:center;
+  border-radius:8px; flex-shrink:0;
+  margin-top:2px;
+}
+.step-content h4 {
+  font-size:14px; font-weight:700; margin-bottom:4px; color:var(--text-bright);
+}
+.step-content p {
+  font-size:13px; color:var(--text-dim); line-height:1.75; font-weight:300;
+}
+.step-content p strong { color:var(--text); font-weight:600; }
+
+.footer {
+  text-align:center;
+  margin-top:72px;
+  font-size:11px;
+  color:var(--text-dim);
+  font-weight:300;
+}
+</style>
+</head>
+<body>
+<div class="grain"></div>
+<div class="wrap">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="tag-line">Option A — Deep Dive Guide (Revised)</div>
+  <h1>공간·시간 Feature 증류 기반<br>경량 자율주행 VLM + 엣지 배포</h1>
+  <p class="sub">Spatio-Temporal Feature Distillation from Large VLM to Lightweight VLM, with End-to-End Edge Deployment on Jetson Orin Nano</p>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-title">목차</div>
+  <div class="toc-grid">
+    <div class="toc-item"><span>01</span>연구 동기 및 핵심 Gap 분석</div>
+    <div class="toc-item"><span>06</span>증류 손실 함수 상세 설계</div>
+    <div class="toc-item"><span>02</span>연구 질문 (RQ) 정립</div>
+    <div class="toc-item"><span>07</span>양자화 및 Jetson 배포 전략</div>
+    <div class="toc-item"><span>03</span>전체 파이프라인 아키텍처</div>
+    <div class="toc-item"><span>08</span>실험 설계 및 평가 프로토콜</div>
+    <div class="toc-item"><span>04</span>데이터셋 구성 전략</div>
+    <div class="toc-item"><span>09</span>Ablation Study 설계</div>
+    <div class="toc-item"><span>05</span>Teacher / Student 모델 선정</div>
+    <div class="toc-item"><span>10</span>예상 기여점 및 한계점</div>
+  </div>
+</div>
+
+<!-- ========== 현재 진행 상황 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num" style="background:var(--emerald)">★</div>
+    <div class="sec-title">현재 진행 상황 (2026.08 기준)</div>
+  </div>
+
+  <div class="note success" style="margin-bottom:20px;">
+    <strong>5-way ablation 학습·평가 전부 완료.</strong> Full(Ours)이 NuScenes-QA val(11,309개) exact-match
+    <strong>51.69%</strong>로 5개 변형 중 1위 — 단일 손실(+L_spatial 51.40% / +L_temporal 51.34%)보다도
+    근소 우위, Baseline(no KD, 50.30%) 대비 feature-KD 순이득 확인, KD only(균등 출력 KD, 46.74%)는
+    최하위로 "feature-KD가 output-KD보다 낫다"는 핵심 가설을 뒷받침. 카테고리별로는 <code>object</code>에서
+    Full이 확실히 우세(43.87%)해 L_spatial의 패치 정렬 효과와 정합.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>단계</th>
+        <th>계획</th>
+        <th>실제</th>
+        <th>상태</th>
+      </tr>
+      <tr>
+        <td><strong>Stage 1: Teacher FT</strong></td>
+        <td>Qwen2.5-VL-7B Full FT</td>
+        <td>Qwen2.5-VL-7B <strong>LoRA FT</strong> (A100 1장, 1 epoch, avg_loss 0.54)</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2: Baseline</strong></td>
+        <td>No Distillation baseline</td>
+        <td>v1(vision attn LoRA 없음, 보존) → <strong>v2 재학습 완료</strong>(vision attn LoRA 포함, avg_loss 0.5574). NuScenes-QA val <strong>50.30%</strong> — 5개 중 4위지만 feature-KD 대비 격차는 1~1.4pp로 작음</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2: KD only (Output KD)</strong></td>
+        <td>균등 가중 출력 KD baseline</td>
+        <td>v2(λ_kd=1.0, T=4.0) 완료했으나 val <strong>1.78%로 EOS 붕괴</strong> 발견 — 정답 토큰은 정상 확신도로 맞히지만 EOS 확률이 rank 수십만 위에 머묾. teacher forced-logit 프로빙으로 <strong>152K vocab에 Hinton식 T=4를 그대로 적용하면 target이 균등분포로 뭉개짐</strong>을 규명(T=1: EOS p 0.24~0.97 → T=4: 0.0004~0.0016). λ_kd만 낮춘 v3는 가설 기각으로 폐기. <strong>v4(T=1.5, λ_kd=1.0)</strong>로 근본 수정, EOS 정상화 확인 후 val <strong>46.74%</strong> 달성(5개 중 최하위지만 붕괴 이전 대비 정상 범위)</td>
+        <td><span class="badge-sm b-emerald">✅ 완료 (v2→v3→v4)</span></td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2: Full (Ours)</strong></td>
+        <td>L_task + λ_s·L_spatial + λ_t·L_temporal</td>
+        <td>K=2, λ_s=λ_t=1.0, spatial projection(1280→1280) 포함, 동적 패딩 적용. avg_loss <strong>0.9173</strong>(task=0.581 spatial=0.276 temporal=0.061), 실측 소요 63.2시간. val <strong>51.69%</strong> — 5-way 1위</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2: + L_spatial 단독</strong></td>
+        <td>공간 정보 보존 Feature KD</td>
+        <td><code>--variant spatial</code>(temporal_k=1, λ_t=0)로 완료. avg_loss <strong>0.8634</strong>(task=0.579 spatial=0.284), 소요 52.0시간. val <strong>51.40%</strong>, <code>status</code> 카테고리 1위(52.79%)</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>Stage 2: + L_temporal 단독</strong></td>
+        <td>시간적 맥락 압축 KD</td>
+        <td><code>--variant temporal</code>(temporal_k=2, λ_s=0)로 완료. avg_loss <strong>0.6569</strong>(task=0.595 temporal=0.062), 소요 62.6시간. val <strong>51.34%</strong>, <code>exist</code> 카테고리 1위(81.17%)</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>평가 인프라 + 5-way 공정성 감사</strong></td>
+        <td>held-out 평가셋 + 스크립트</td>
+        <td>5개 체크포인트 전부 NuScenes-QA val 11,309개 평가 완료(회당 ~1.2~1.3h). 데이터/LoRA/optimizer/평가 프로토콜 동일함을 로그 대조로 직접 확인 — 유일한 caveat는 kd_only의 T/λ가 v2→v4 디버깅 중 val 샘플로 정성 진단됐다는 점(accuracy 기반 탐색은 아니었고, 그래도 kd_only가 최하위라 결론은 오히려 보수적으로 강화됨)</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>SOTA 비교 (EM-VLM4AD)</strong></td>
+        <td>동일 데이터 FT 후 직접 비교</td>
+        <td>1차 시도에서 EM-VLM4AD가 6카메라뷰+<code>max_length=512</code>로 우리 student보다 유리한 조건임을 발견해 평가 중단 → <code>--single_camera</code>(CAM_FRONT 1장 6-slot 복제)/<code>--max_length 16</code>으로 통제 재실행(부수적으로 6배 중복 이미지 read 비효율도 발견해 수정, eval 속도 8배 향상). 통제된 최종 결과 <strong>54.08%</strong> — Full(51.69%)보다 높으나 teacher 압축이라는 이 연구의 방법론 자체와는 다른 축이라 5-way 표에는 별도 참고 항목으로만 기록</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>CODA-LM (제2 정량축)</strong></td>
+        <td>zero-shot 코너케이스 일반화</td>
+        <td>데이터 구조 조사 완료(Train 4,884/Val 4,384/Test 500/Mini 50, HuggingFace <code>KaiChen1998/coda-lm</code>). QA가 전부 자유서술형이라 <strong>공식 채점이 GPT-4o judge(OpenAI API) 필수</strong>임을 확인 — 로컬 대안 없음, 현재 환경엔 API 키 미설정. 표준가 기준 예상 비용 Mini ~$4 / Test ~$40 / Val ~$350(Batch API 50%↓) 산출 후 진행 방식 결정 대기</td>
+        <td><span class="badge-sm b-amber">⏳ 결정 대기</span></td>
+      </tr>
+      <tr>
+        <td><strong>Stage 3: 양자화+배포</strong></td>
+        <td>AWQ INT4 → Jetson Orin Nano</td>
+        <td>Stage 2(5-way 전체) 완료로 착수 가능 상태 — 아직 미시작</td>
+        <td><span class="badge-sm b-amber">⏳ 대기</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="note warn">
+    <strong>계획 대비 주요 변경사항</strong><br><br>
+    <strong>① 핵심 증류 손실:</strong> <strong>공간·시간 Feature 증류(L_spatial + L_temporal)</strong>를 핵심 기여로 확정. L_spatial은 attention map MSE의 스케일 문제(0.0004 수준)를 <strong>cosine similarity 기반 손실</strong>로 해결 — 스케일과 무관하게 0~2 범위가 보장되어 L_task와 균형 조정 가능.<br><br>
+    <strong>② L_temporal 비대칭 설계:</strong> Teacher만 멀티프레임(과거 K프레임)을 보고, Student는 단일 프레임만 입력받아 Teacher의 시간적 이해를 모방. Student의 추론 비용이 늘지 않아 <strong>엣지 배포 목표와 정합</strong>.<br><br>
+    <strong>③ Teacher FT 방식:</strong> Full Fine-tuning → LoRA FT (A100 1장 환경). loss 0.54로 충분한 성능 달성.<br><br>
+    <strong>④ Student 모델 크기:</strong> 3B 단일 실험 (0.5B/1B/1.8B 스케일링은 시간 관계상 제외). ⑤ <strong>배포 타겟:</strong> Jetson AGX Orin → <strong>Jetson Orin Nano (8GB)</strong>.<br><br>
+    <strong>⑥ 평가 축 확정:</strong> DriveLM은 공식 val/test 정답을 비공개(q_only)하며 챌린지 리더보드도 2024.6 마감·후속 대회 없음이 확인됨. 이에 따라 <strong>NuScenes-QA val(11,309개, scene-level held-out)을 메인 정량 평가축</strong>으로, CODA-LM을 제2 정량축(zero-shot)으로 확정. DriveLM val(q_only)은 정성 비교에만 사용.<br><br>
+    <strong>⑦ KD-only 하이퍼파라미터 재보정 (신규):</strong> Hinton식 KD temperature(T=2~4)는 ~1,000클래스 기준 설계라, 152K 토큰 vocab에 그대로 적용하면 target 분포가 균등분포로 뭉개져 EOS 학습이 붕괴함을 확인. <code>kd_temperature</code>를 <strong>4.0 → 1.5</strong>로 낮춰 해결 — 대형 vocab을 가진 VLM에 output-KD를 적용할 때 일반적으로 유의해야 할 지점으로 논문에 기술 가치 있음.<br><br>
+    <strong>⑧ SOTA 비교 프로토콜 통제 (신규):</strong> EM-VLM4AD 원 저자 설정(6카메라뷰, max_length=512)이 우리 student(단일뷰, max_new_tokens=16)보다 입력 정보량·생성 여유가 유리함을 발견 — <code>--single_camera</code>/<code>--max_length</code> 통제 옵션을 추가해 공정 비교로 재실행.
+  </div>
+
+  <div class="note success">
+    <strong>현재 ablation study 진행 현황:</strong><br>
+    ✅ A1 (증류 구성요소) — Baseline / KD only / +L_spatial / +L_temporal / Full 5단계 <strong>전부 완료</strong>, NuScenes-QA val 결과 확보<br>
+    ✅ A3 (Feature KD 레이어 선택) — 현재 layer 23(후반부) 기준 확정, 다른 레이어 비교는 미실시<br>
+    ✅ A4, A5 (Temporal 정렬 대상, 시간 프레임 수 K) — K=2로 확정 진행, K∈{3,4} 비교는 미실시<br>
+    🔄 A6 (λ 민감도) — spatial/temporal은 on/off(λ=1 vs 0) 수준만 검증됨(중간값 0.1/0.5/2.0 스윕 미실시). 단, kd_only는 EOS 붕괴 디버깅 과정에서 λ_kd∈{1.0, 0.3, 1.0}·T∈{4.0, 1.5} 실질적 민감도 탐색을 거쳤음<br>
+    ❌ A7 (이종 아키텍처) — 시간 관계상 제외
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== SECTION 1 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">1</div>
+    <div class="sec-title">연구 동기 및 핵심 Gap 분석</div>
+  </div>
+  
+  <div class="prose">
+    현재 자율주행 VLM 연구는 <strong>세 가지 접근법</strong>이 존재하는데, 각각 명확한 한계가 있습니다.
+  </div>
+  
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag rose">접근법 ①: 대형 VLM 직접 사용 → 추론 시 제거</div>
+      <h3>DiMA (CVPR 2025), VLM-AD (CoRL 2025), RSD (2025)</h3>
+      <p>
+        대형 VLM(7B+)을 teacher로 사용하여 vision planner에 지식을 증류하고, <strong>추론 시에는 VLM을 완전히 제거</strong>합니다. DiMA의 경우 MLLM의 중간 feature와 surrogate task를 통해 vision planner를 강화하고, VLM-AD는 VLM이 생성한 자연어 추론을 보조 학습 신호로 활용합니다. RSD는 위험 의미 증류를 통해 BEV 표현을 강화합니다.<br><br>
+        <strong>한계:</strong> 추론 시 자연어 출력 능력이 완전히 사라짐. 장면 설명, VQA, 위험 상황에 대한 자연어 설명 등 언어 기반 상호작용이 불가능.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag amber">접근법 ②: 처음부터 경량 VLM 설계</div>
+      <h3>EM-VLM4AD (2024), PeLiC-VLM (2026), MiniDrive (2024)</h3>
+      <p>
+        경량 LLM 백본(T5-Base 235M, 또는 268M 급)에 직접 자율주행 데이터를 학습시킵니다. PeLiC-VLM은 AGX Orin에서 43ms 추론을 달성했고, EM-VLM4AD는 메모리를 10배 절감했습니다.<br><br>
+        <strong>한계:</strong> 대형 VLM이 가진 풍부한 세계 지식(world knowledge)과 추론 능력을 체계적으로 전이받지 못함. 작은 모델을 처음부터 학습하므로 long-tail 시나리오에서의 일반화 능력이 제한적.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag cyan">접근법 ③: 산업계 — 대규모 증류 후 차량 탑재</div>
+      <h3>Li Auto VLA (2025), Waymo Foundation Model (2025)</h3>
+      <p>
+        Li Auto는 32B VL 모델을 3.6B로 증류하여 차량에 탑재하고, Waymo는 Teacher-Student 구조로 대형 모델의 능력을 온보드 모델로 전이합니다. 이들은 사내 대규모 데이터와 수천 GPU-hours를 활용합니다.<br><br>
+        <strong>한계:</strong> 학술 환경에서 재현 불가능한 규모. 논문으로 공개된 방법론이 제한적.
+      </p>
+    </div>
+  </div>
+
+  <div class="note success">
+    <strong>본 연구가 채우는 Gap:</strong> 접근법 ①과 ②의 교집합에 위치합니다. 대형 VLM의 풍부한 지식을 <em>자율주행 도메인에 특화된 증류 전략</em>으로 소형 VLM에 전이하되, Student가 여전히 완전한 VLM이므로 추론 시에도 자연어 기반 장면 이해·VQA·위험 설명이 가능합니다. 동시에 접근법 ③의 아이디어를 학술적으로 재현 가능한 규모(0.5B–2B, 단일 A100)로 축소하여 체계적으로 연구합니다.
+  </div>
+</div>
+
+<!-- ========== SECTION 2 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">2</div>
+    <div class="sec-title">연구 질문 (RQ) 정립</div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag violet">RQ1 — 증류 전략의 효과</div>
+      <h3>공간·시간 Feature 증류는 출력(logit) KD보다 얼마나 효과적인가?</h3>
+      <p>
+        공간 정보 보존 증류(Spatial-Preserving Feature KD)와 시간적 맥락 압축 증류(Temporal Context KD) 각각이 표준 출력 KD 대비 자율주행 VQA, 장면 캡셔닝, 위험 장면 대응 성능에서 어느 정도의 이득을 가져오는지를 정량적으로 검증합니다. 특히 <strong>"어디에 있는가"(spatial)와 "어떻게 변하는가"(temporal)</strong>라는 자율주행 고유의 요구가 출력 분포 모방만으로는 전이되지 않음을 보이는 것이 핵심입니다.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag violet">RQ2 — 모델 크기 vs 성능 임계점</div>
+      <h3>자율주행 VLM의 critical size threshold는 어디인가?</h3>
+      <p>
+        Teacher(7B) → Student(3B → 1.8B → 1B → 0.5B)로 크기를 줄여갈 때, 각 태스크별 성능 저하 곡선의 형태를 분석합니다. 특히 <strong>위험 상황 탐지</strong>는 어느 크기에서 급격히 무너지는지, <strong>일반 VQA</strong>는 상대적으로 어느 크기까지 견디는지 등 태스크별 민감도 차이를 규명합니다.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag violet">RQ3 — 엣지 실시간 실현 가능성</div>
+      <h3>증류 + 양자화된 VLM이 Jetson Orin Nano에서 실시간 추론 가능한가?</h3>
+      <p>
+        INT4/INT8 양자화와 TensorRT 최적화 후, <strong>목표 latency(≤100ms/frame, 즉 ≥10 FPS)</strong>를 달성할 수 있는 최대 모델 크기는 무엇인지, 그때의 성능 저하는 어느 수준인지를 검증합니다. 양자화에 의한 성능 손실과 증류에 의한 성능 보존 효과의 상호작용도 분석합니다.
+      </p>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== SECTION 3 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">3</div>
+    <div class="sec-title">전체 파이프라인 아키텍처</div>
+  </div>
+
+  <div class="prose" style="margin-bottom:16px;">
+    전체 연구는 <strong>3단계 파이프라인</strong>으로 구성됩니다. 각 단계가 독립적으로 평가 가능하면서도, 전체가 end-to-end로 연결됩니다.
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-row">
+      <div class="pipe-label">Stage 1</div>
+      <div class="pipe-box data">DriveLM + NuScenes-QA</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box teacher">Teacher VLM <strong>LoRA</strong> Fine-tuning (7B)</div>
+    </div>
+    <div class="pipe-row">
+      <div class="pipe-label">Stage 2</div>
+      <div class="pipe-box teacher">Teacher (Frozen, 멀티프레임 입력)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box student">Spatio-Temporal Distillation<br><span style="font-size:11px">L_task + λ_s·L_spatial + λ_t·L_temporal</span></div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box student">Student VLM (3B, 단일 프레임 추론)</div>
+    </div>
+    <div class="pipe-row">
+      <div class="pipe-label">Stage 3</div>
+      <div class="pipe-box student">Student VLM (FP16)</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box optim">AWQ INT4 양자화 → llama.cpp</div>
+      <div class="pipe-arrow">→</div>
+      <div class="pipe-box deploy">Jetson Orin Nano 배포 · 벤치마크</div>
+    </div>
+  </div>
+
+  <div class="note warn">
+    <strong>실제 구현 변경사항:</strong> Teacher는 <em>LoRA Fine-tuning</em>으로 학습했습니다 (A100 1장 환경 제약). 증류 손실은 <em>공간·시간 Feature 증류(L_spatial + L_temporal)</em>로 구성하며, L_spatial은 cosine 정규화로 스케일 문제를 해결하고 L_temporal은 비대칭 구조(Teacher 멀티프레임 / Student 단일 프레임)로 설계했습니다. 배포 타겟은 Jetson AGX Orin → <em>Jetson Orin Nano (8GB)</em>로 변경했습니다.
+  </div>
+
+  <div class="note">
+    <strong>핵심 설계 원칙:</strong> Student는 추론 시에도 완전한 VLM으로 동작하며, <strong>단일 프레임만 입력받습니다</strong>. 학습 시에만 Teacher가 멀티프레임을 보고 시간적 맥락을 전이하므로, 배포 후 Student의 추론 비용은 단일 프레임 VLM과 동일합니다. DiMA와 달리 언어 이해/생성 능력을 유지하는 것과 함께 본 연구의 핵심 차별점입니다.
+  </div>
+</div>
+
+<!-- ========== SECTION 4 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">4</div>
+    <div class="sec-title">데이터셋 구성 전략</div>
+  </div>
+
+  <div class="prose" style="margin-bottom:16px;">
+    3개 데이터셋을 사용하며, 각각이 파이프라인의 서로 다른 단계에서 고유한 역할을 수행합니다.
+  </div>
+
+  <!-- Overview Table -->
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>데이터셋</th>
+        <th>규모</th>
+        <th>역할</th>
+        <th>사용 단계</th>
+      </tr>
+      <tr>
+        <td><strong>DriveLM-nuScenes (train)</strong></td>
+        <td>~4K 키프레임, 696 scene, Graph VQA</td>
+        <td><span class="badge-sm b-emerald">학습 메인</span></td>
+        <td>Stage 1 · 2 (학습 전용)</td>
+      </tr>
+      <tr>
+        <td><strong>DriveLM val (q_only)</strong></td>
+        <td>799 키프레임 (질문만, 정답 비공개)</td>
+        <td><span class="badge-sm b-amber">정성 비교</span></td>
+        <td>Stage 3 (side-by-side 사례 제시)</td>
+      </tr>
+      <tr>
+        <td><strong>NuScenes-QA</strong></td>
+        <td>train 54,607개(학습) / <strong>val 11,309개(평가)</strong></td>
+        <td><span class="badge-sm b-cyan">학습 보조 + 메인 정량 평가축</span></td>
+        <td>Stage 1 · 2 (train) · 3 (val)</td>
+      </tr>
+      <tr>
+        <td><strong>CODA-LM</strong></td>
+        <td>~10K 이미지, 코너케이스 (정답 주석 공개)</td>
+        <td><span class="badge-sm b-rose">제2 정량 평가축 (zero-shot)</span></td>
+        <td>Stage 3 (평가 전용)</td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- Stage-by-stage dataset usage cards -->
+  <div class="cards-2">
+    <div class="card">
+      <div class="card-tag emerald">Stage 1 — Teacher LoRA Fine-tuning</div>
+      <h3>DriveLM (메인) + NuScenes-QA (보강)</h3>
+      <p>
+        <strong>DriveLM:</strong> Perception → Prediction → Planning Graph VQA로 Teacher가 자율주행 추론 체계를 학습하는 메인 데이터.<br><br>
+        <strong>NuScenes-QA:</strong> 460K QA 쌍의 규모로 학습 데이터를 보강. 존재·개수·상태·관계 등 세분화된 3D VQA를 포함하여 Teacher의 공간 이해력 강화.<br><br>
+        <strong>학습 방식:</strong> A100 1장 환경에서 <em>LoRA Fine-tuning</em> 수행 (1 epoch, avg_loss 0.54). <code>WeightedRandomSampler</code>로 DriveLM:NuScenes-QA = 4:6 비율 샘플링.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag amber">DriveLM의 구조적 특성 활용</div>
+      <h3>Patch 구조 + 시간 순서 구조가 L_spatial·L_temporal의 소스</h3>
+      <p>
+        <strong>공간(patch) 구조:</strong> 현재 프레임(CAM_FRONT) 이미지가 vision encoder에서 patch 단위 feature로 표현됨 — 이 patch-level 공간 구조가 L_spatial의 증류 소스. 배포 환경(전방 카메라 단일 뷰)과의 정합성을 위해 멀티뷰(6방향 카메라)는 사용하지 않고, 멀티뷰 확장은 future work로 남김.<br><br>
+        <strong>시간 순서:</strong> <code>scene_token → key_frames</code> 구조가 시간 순서를 보존 (키프레임 간격 평균 약 3.1초) — 과거 K−1프레임 + 현재 프레임 시퀀스를 구성해 L_temporal의 Teacher 멀티프레임 입력으로 활용.<br><br>
+        새로운 데이터 수집 없이, 기존 데이터에 이미 존재하지만 활용되지 않던 구조를 증류 신호로 전환하는 접근입니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag cyan">Stage 2 — Spatio-Temporal Distillation (2개 데이터 동시 사용)</div>
+      <h3>통합 DataLoader에서 3가지 Loss에 각각 매핑</h3>
+      <p>
+        하나의 DataLoader에서 배치를 뽑되, DriveLM 샘플은 scene 내 시간 순서 정보(과거 프레임)를 함께 제공합니다.<br><br>
+        <strong>DriveLM + NuScenes-QA → <code>L_task</code></strong> (ground truth 직접 학습: VQA cross-entropy, 모든 실험 공통)<br>
+        <strong>현재 프레임(CAM_FRONT) patch feature → <code>L_spatial</code></strong> (Teacher vision encoder 중간층 feature를 cosine 손실로 모방 — 스케일 문제 해결)<br>
+        <strong>DriveLM scene 시퀀스 → <code>L_temporal</code></strong> (Teacher만 과거 K프레임 입력, Student는 단일 프레임으로 Teacher hidden state 정렬 — 비대칭 구조)<br><br>
+        <strong>점진적 ablation:</strong> ① Baseline(L_task) ② KD only(L_task+L_kd) ③ +L_spatial ④ +L_temporal ⑤ Full(L_task+L_spatial+L_temporal)
+      </p>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag rose">Stage 3 — 평가 (최종 확정 구성)</div>
+      <h3>메인 정량 · 제2 정량 · 정성 비교의 3축 체계</h3>
+      <p>
+        <strong>메인 정량축 — NuScenes-QA val (11,309개):</strong> nuScenes 공식 train/val이 scene 단위로 분리되어 있어 5개 모델 모두에게 진짜 held-out. 정답이 짧은 폐집합 문자열(yes/no·객체명·상태·숫자)이므로 공통 정규화 후 exact-match Accuracy를 전체 + 카테고리별(exist/object/status/count/comparison)로 측정. <strong>공간 관계 유형에서 L_spatial 효과, 상태·이동 유형에서 L_temporal 효과</strong>를 직접 확인. bootstrap 신뢰구간 + 모델 쌍별 유의성 검정 병행.<br><br>
+        <strong>제2 정량축 — CODA-LM (zero-shot):</strong> 학습 도메인(nuScenes)과 완전히 분리된 코너케이스(도로 위 이물질, 전복 차량 등)에서 General/Regional Perception + Driving Suggestion 정량 평가. 텍스트 지표(BLEU/CIDEr)를 기본으로 하고, judge 기반 프로토콜은 비용/재현성을 검토 후 병기. 단일 평가축 의존을 줄이고 일반화 주장을 뒷받침.<br><br>
+        <strong>정성 비교 — DriveLM val (q_only, 799 키프레임):</strong> 정답이 비공개이므로 채점은 불가하지만, 동일 질문에 대한 5개 모델의 답변을 side-by-side로 제시하는 정성적 사례 분석에 활용 (비용 거의 0).
+      </p>
+    </div>
+  </div>
+
+  <div class="note warn">
+    <strong>DriveLM 공식 평가 불가 사유 (확인 완료):</strong> DriveLM은 val/test의 정답을 공개하지 않으며(배포 파일명부터 <code>v1_1_val_nus_q_only.json</code>), 공식 채점 경로였던 CVPR 2024 Autonomous Grand Challenge 리더보드는 2024년 6월 마감·후속 대회 없음이 확인됨. EM-VLM4AD 등 선행 논문들의 "DriveLM 점수"도 대부분 저자 자체 train split 분할 점수이며, 해당 split의 scene은 본 연구의 학습 데이터에 이미 포함되어 재사용 불가. 이에 따라 위 3축 체계로 평가를 확정.
+  </div>
+
+  <div class="note">
+    <strong>핵심:</strong> DriveLM train은 학습의 핵심 축(L_task + L_spatial patch feature + L_temporal 시퀀스 소스), NuScenes-QA는 학습 보조이자 <strong>메인 정량 평가축(val, scene-level held-out)</strong>, CODA-LM은 zero-shot 제2 정량축, DriveLM val(q_only)은 정성 비교. 학습·평가가 nuScenes 공식 scene split을 그대로 따르므로 L_temporal의 시퀀스 학습에도 train/val 오염이 없음.
+  </div>
+</div>
+
+<!-- ========== SECTION 5 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">5</div>
+    <div class="sec-title">Teacher / Student 모델 선정</div>
+  </div>
+
+  <div class="cards-2">
+    <div class="card">
+      <div class="card-tag violet">Teacher 모델</div>
+      <h3>Qwen2.5-VL-7B</h3>
+      <p>
+        <strong>선정 이유:</strong><br>
+        • 오픈소스 VLM 중 최고 수준의 시각 이해 능력<br>
+        • 멀티이미지/비디오 입력 네이티브 지원<br>
+        • Dynamic resolution 처리로 다양한 해상도 대응<br>
+        • Qwen 계열 내 크기 변형(0.5B/3B/7B/72B)이 있어 Student와 아키텍처 일관성 유지 가능<br><br>
+        <strong>학습 방식:</strong> Full Fine-tuning (성능 상한 극대화. A100 80GB × 2–4장 필요)<br>
+        <strong>대안:</strong> LLaVA-v1.5-7B (더 많은 선행연구 호환), InternVL2-8B
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag emerald">Student 모델 — 실제 선택</div>
+      <h3>Qwen2.5-VL-3B <span style="color:var(--emerald);font-size:12px">✅ 채택</span></h3>
+      <p>
+        <strong>① Qwen2.5-VL-3B</strong> — Teacher와 동일 아키텍처. 가장 효율적인 증류 <span style="color:var(--emerald)">← 현재 사용</span><br><br>
+        <strong>Qwen2.5-VL-0.5B는 존재하지 않음</strong> — VL 계열은 3B/7B/72B만 제공. 텍스트 전용 Qwen2.5에만 0.5B 존재.<br><br>
+        <strong>AWQ INT4 양자화 후 예상 크기:</strong> 약 2.0GB → Jetson Orin Nano 8GB에서 동작 가능<br><br>
+        <strong>스케일링 실험 (미실시):</strong> 시간 관계상 3B 단일 모델로 진행. 추후 확장 연구로 남김.
+      </p>
+    </div>
+  </div>
+
+  <div class="note warn">
+    <strong>아키텍처 일관성 vs 다양성 트레이드오프:</strong> Qwen2.5 계열끼리 증류하면 아키텍처가 동일해 feature-level KD가 수월하지만, 논문의 일반성을 보이려면 이종 아키텍처(Qwen→Moondream) 간 증류도 실험에 포함해야 합니다. 최소 2개 이상의 Student 아키텍처를 사용할 것을 권장합니다.
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== SECTION 6 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">6</div>
+    <div class="sec-title">증류 손실 함수 상세 설계</div>
+  </div>
+
+  <div class="prose" style="margin-bottom:16px;">
+    전체 손실은 <strong>3가지 항</strong>으로 구성됩니다. L_spatial과 L_temporal이 본 연구의 핵심 기여입니다.
+  </div>
+
+  <div class="note warn">
+    <strong>구현 손실 함수:</strong><br>
+    <code>L_total = L_task + λ_s · L_spatial + λ_t · L_temporal</code><br><br>
+    L_spatial: attention map MSE의 스케일 문제(0.0004 수준)를 <strong>cosine similarity 기반으로 설계하여 해결</strong><br>
+    L_temporal: TAM 풀 스펙 대신 <strong>비대칭 구조(Teacher 멀티프레임 / Student 단일 프레임)로 설계</strong> — Student 추론 비용 불변
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag emerald">Loss ① — Spatial-Preserving Feature KD (핵심 기여 1)</div>
+      <h3>공간 정보 보존 Feature 증류 (Cosine + 경량 정렬 head)</h3>
+      <p>
+        <strong>핵심 아이디어:</strong> 자율주행에서는 "무엇이 있는지"만큼 "어디에 있는지"가 중요합니다. 현재 프레임(CAM_FRONT)에 대한 Teacher vision encoder의 patch-level feature를 Student가 모방하도록 손실을 설계하되, 기존 MSE의 스케일 소실 문제를 cosine 기반으로 해결합니다.<br><br>
+        <strong>기존 문제와 해결:</strong><br>
+        <code>MSE(A_T, A_S) ≈ 0.0004</code> — L_task(~0.6) 대비 기여가 사실상 0<br>
+        → <code>L_spatial = 1 − cos(h_T, proj_s(h_S))</code> — 항상 0~2 범위 보장, λ_s 튜닝만으로 균형 조정 가능<br><br>
+        <strong>구체적 방법:</strong><br>
+        1) Teacher(7B)와 Student(3B)의 vision encoder 중간층(layer 23)에서 forward hook으로 hidden state 추출 — Qwen2.5-VL 계열은 3B/7B가 동일한 vision encoder 구조(hidden dim 1280, depth 32)를 공유하므로 동일 인덱스에서 추출<br>
+        2) <strong>경량 정렬 head</strong> <code>proj_s: nn.Linear(1280, 1280)</code>를 Student 쪽에 추가 (학습 가능, 추론 시 제거) — 차원이 같아도 독립적으로 사전학습된 두 인코더의 feature 공간이 선형 정렬되어 있다는 보장이 없어, "공간 정렬"은 projection이 전담하고 LoRA는 "표현 조정"에 집중하도록 역할 분담 (FitNets 계열 feature-KD의 표준 설계). 이때 Student vision tower의 학습 경로는 <strong>vision attention(qkv/proj)에 확장 적용한 LoRA</strong>(<code>lora_target_vision_attn=True</code>)가 담당 — 기본 LoRA target은 LLM 모듈 기준이므로 vision 쪽은 명시적 확장이 필요<br>
+        3) 패치(토큰) 단위 cosine similarity를 최대화 — Teacher가 멀티프레임을 입력받아도 vision encoder는 이미지를 독립 처리하므로, 현재 프레임의 feature만 슬라이싱해 비교<br><br>
+        <strong>실증 관찰:</strong> projection 없이 직접 정렬 시 loss가 450스텝 동안 정체(0.438→0.437)했으나, 정렬 head 추가 후 뚜렷한 가속 하강(1.000→0.956, 350스텝)을 확인 — 동일 아키텍처 계열이라도 feature 공간의 선형 정렬 장치가 필요함을 실험적으로 확인. vision LoRA와 projection 양쪽 그래디언트가 모두 nonzero로 유지되어 한쪽에 일이 쏠리는 퇴화 없음.<br><br>
+        <strong>직관:</strong> 출력 KD는 "최종 답"만 모방시키지만, feature KD는 "장면을 보는 방식"(객체의 위치 관계 표현)을 전이합니다. 배포 환경(전방 카메라)과의 정합성을 위해 단일 뷰로 설계하며, 멀티뷰(6방향) 확장은 future work.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-tag emerald">Loss ② — Temporal Context KD (핵심 기여 2)</div>
+      <h3>시간적 맥락 압축 증류 (비대칭 Teacher-Student 구조)</h3>
+      <p>
+        <strong>핵심 아이디어:</strong> Teacher는 학습 시 과거 K개 프레임을 함께 보고 시간적 맥락(차량 이동 방향, 보행자 궤적)을 이해합니다. Student는 <strong>단일 프레임만 입력받으면서도</strong> Teacher의 멀티프레임 이해를 모방하도록 학습합니다.<br><br>
+        <strong>비대칭 구조:</strong><br>
+        <code>Teacher 입력: (frame_{t-K+1}, ..., frame_t)  →  h_T^{multi}</code><br>
+        <code>Student 입력: frame_t (단일)              →  h_S^{single}</code><br>
+        <code>L_temporal = 1 − cos(h_T^{multi}, proj(h_S^{single}))</code><br><br>
+        LLM hidden dim은 3B(2048)와 7B(3584)가 다르므로, <strong>학습 가능한 projection layer(2048→3584)</strong>로 정렬합니다 (추론 시 제거). L_spatial의 정렬 head(1280→1280)가 "동일 차원 간 공간 정렬"을 담당한다면, 이쪽은 "차원 변환 + 정렬"을 함께 수행하는 구조입니다.<br><br>
+        <strong>왜 비대칭인가:</strong><br>
+        1) Student 추론 비용 불변 — Jetson 배포 시 단일 프레임 추론 속도 유지 (TAM 모듈, 멀티프레임 버퍼 불필요)<br>
+        2) Teacher 추론은 학습 시에만 발생하므로 배포 성능에 무관<br>
+        3) "단일 프레임만 보고도 시간적 맥락을 추론하는 Student"라는 스토리가 경량화 논문 취지와 정합<br><br>
+        <strong>데이터 구성:</strong> DriveLM의 scene_token → key_frames 시간 순서 구조(키프레임 간격 평균 약 3.1초)를 활용해 (과거 K−1프레임 + 현재 프레임) 시퀀스 구성. K=2부터 시작해 A5 ablation으로 K 민감도 검증.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-tag sky">Loss ③ — Standard Task Loss</div>
+      <h3>기본 태스크 손실 (Ground Truth 기반)</h3>
+      <p>
+        Student는 Teacher 모방만이 아닌, ground truth에 대한 직접 학습도 병행합니다.<br><br>
+        <code>L_task = L_VQA(cross-entropy)</code><br><br>
+        VQA는 auto-regressive language modeling loss를 사용합니다. 정답 토큰 이전 구간(질문+이미지)은 -100으로 마스킹하여 답변 토큰에서만 loss가 계산됩니다.
+      </p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>실제 적용 손실 함수:</strong><br>
+    <code>L_total = L_task + λ_s · L_spatial + λ_t · L_temporal</code><br><br>
+    초기 설정: <code>λ_s=1.0, λ_t=1.0</code> (cosine 기반이라 0~2 범위 보장, A6 ablation으로 민감도 검증)<br>
+    projection: L_spatial 정렬 head <code>1280→1280</code>(약 1.6M) + L_temporal projection <code>2048→3584</code>(약 7.3M) — 둘 다 학습 가능하며 <strong>추론 시 제거되어 배포 모델 크기 불변</strong><br>
+    Teacher 입력 길이: <strong>동적 패딩</strong> — 배치 시점(collate)에 배치 내 최장 길이로 패딩 (K=2 기준 배치 평균 약 526 토큰, 고정 패딩 대비 스텝당 시간 약 18% 단축). <code>max_length=1600</code>은 안전망으로만 유지 (truncation 실측 0건)<br><br>
+    <strong>ablation 실험별 CONFIG:</strong> 단독 실험은 동일 스크립트에서 설정만 변경 —
+    +L_spatial(<code>temporal_k=1, λ_s=1.0, λ_t=0</code>: Teacher가 Student와 동일한 단일 프레임 입력, 데이터 파이프라인 비용도 절약) /
+    +L_temporal(<code>temporal_k=2, λ_s=0, λ_t=1.0</code>) /
+    Full(<code>temporal_k=2, λ_s=1.0, λ_t=1.0</code>)
+  </div>
+</div>
+
+<!-- ========== SECTION 7 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">7</div>
+    <div class="sec-title">양자화 및 Jetson 배포 전략</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">7a</div>
+      <div class="step-content">
+        <h4>Post-Training Quantization (PTQ)</h4>
+        <p>
+          증류 완료된 Student VLM(FP16)에 <strong>AWQ (Activation-Aware Weight Quantization)</strong>를 적용하여 INT4로 양자화합니다. AWQ는 MIT HAN Lab에서 개발한 방법으로, 활성화 기반의 중요도를 고려하여 양자화 오류를 최소화합니다. <strong>Jetson에서 TinyChat과 함께 사용 실적이 검증</strong>되어 있어 가장 안전한 선택입니다.<br><br>
+          <strong>비교군:</strong> GPTQ INT4 (더 높은 압축률, 느린 양자화 속도), FP16 baseline (양자화 없음), INT8 (중간 지점)
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7b</div>
+      <div class="step-content">
+        <h4>TensorRT 변환 (선택적)</h4>
+        <p>
+          Vision Encoder(ViT) 부분은 TensorRT로 변환하면 추가적인 속도 이득을 얻을 수 있습니다. LLM 부분은 TensorRT-LLM을 사용하거나, vLLM/llama.cpp 등의 최적화된 추론 엔진을 활용합니다.<br><br>
+          <strong>주의:</strong> VLM의 Vision Encoder와 LLM을 분리 최적화한 뒤 다시 연결하는 과정에서 정확도 손실이 발생할 수 있으므로, 변환 전후 성능 비교 필수.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7c</div>
+      <div class="step-content">
+        <h4>Jetson Orin Nano 배포 환경</h4>
+        <p>
+          <strong>하드웨어:</strong> Jetson Orin Nano 8GB — GPU 1024 CUDA cores, 40 TOPS (INT8), 8GB LPDDR5 (unified memory)<br>
+          <strong>소프트웨어:</strong> JetPack 6.x, CUDA 12.x<br>
+          <strong>추론 프레임워크:</strong><br>
+          • <strong>llama.cpp (GGUF 포맷)</strong> — 가장 현실적. AWQ INT4 → GGUF 변환 후 CPU/GPU 혼합 추론<br>
+          • <strong>MLC-LLM</strong> — VLM 지원, Orin Nano 호환<br><br>
+          <strong>AWQ INT4 후 예상 크기:</strong> 3B 모델 약 2.0GB → 8GB 통합 메모리에서 여유 있게 동작
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7d</div>
+      <div class="step-content">
+        <h4>벤치마크 측정 항목</h4>
+        <p>
+          <strong>Latency:</strong> TTFT (Time-to-First-Token), Token generation rate (tokens/sec), 전체 응답 시간 (ms/frame)<br>
+          <strong>Memory:</strong> GPU 메모리 점유 (GB), peak memory<br>
+          <strong>Throughput:</strong> FPS (1초에 처리 가능한 프레임 수)<br>
+          <strong>Power:</strong> 전력 소모 (W) — Jetson의 여러 power mode(15W/30W/50W/MAXN) 별 비교<br><br>
+          각 항목은 <strong>100회 이상 반복 측정 후 평균 ± 표준편차</strong>로 보고. warm-up 10회는 제외.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== SECTION 8 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">8</div>
+    <div class="sec-title">실험 설계 및 평가 프로토콜</div>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>실험</th>
+        <th>목적</th>
+        <th>비교 대상</th>
+        <th>상태</th>
+      </tr>
+      <tr>
+        <td><strong>Exp 1. 증류 전략 비교 (5-way ablation)</strong></td>
+        <td>공간·시간 증류 vs 출력 KD</td>
+        <td>NuScenes-QA val(11,309개, scene-level held-out)에서 ① Baseline(50.30%) ② KD only(46.74%) ③ +L_spatial(51.40%) ④ +L_temporal(51.34%) ⑤ Full(51.69%, 1위) 전부 완료. bootstrap 신뢰구간 + 쌍별 유의성 검정은 아직 미실시</td>
+        <td><span class="badge-sm b-emerald">✅ 5-way 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>Exp 2. 카테고리별 세분화 평가</strong></td>
+        <td>손실 항별 효과의 근원 분석</td>
+        <td>NuScenes-QA val 카테고리(exist/object/status/count/comparison)별 분리 측정 완료 — Full은 <code>object</code> 1위(43.87%), +L_spatial은 <code>count</code> 1위(10.58%), +L_temporal은 <code>exist</code> 1위(81.17%)</td>
+        <td><span class="badge-sm b-emerald">✅ 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>Exp 3. Zero-shot 일반화 (CODA-LM)</strong></td>
+        <td>도메인 밖 코너케이스 강건성</td>
+        <td>데이터/포맷 조사 완료. 공식 채점이 GPT-4o judge(OpenAI API) 필수임을 확인 — API 키·비용 결정 대기(스플릿별 예상 $4~$350)</td>
+        <td><span class="badge-sm b-amber">⏳ 결정 대기</span></td>
+      </tr>
+      <tr>
+        <td><strong>Exp 4. 양자화 영향 분석</strong></td>
+        <td>양자화 전후 성능 비교</td>
+        <td>FP16 vs INT4 (AWQ) — NuScenes-QA val 동일 프로토콜로 측정</td>
+        <td><span class="badge-sm b-amber">⏳ 대기</span></td>
+      </tr>
+      <tr>
+        <td><strong>Exp 5. Jetson 실시간 벤치마크</strong></td>
+        <td>엣지 디바이스 실행 가능성</td>
+        <td>Orin Nano에서 FPS/latency/memory 측정</td>
+        <td><span class="badge-sm b-amber">⏳ 대기</span></td>
+      </tr>
+      <tr>
+        <td><strong>Exp 6. 기존 경량 VLM 비교 (3겹 구조)</strong></td>
+        <td>SOTA 대비 위치 검증</td>
+        <td><strong>① 직접 비교:</strong> EM-VLM4AD를 동일 데이터(NuScenes-QA train 54,607개)로 FT, 카메라뷰/생성길이를 통제(<code>--single_camera</code>/<code>--max_length 16</code>)한 뒤 동일 평가셋에서 <strong>54.08%</strong> 확보(Full 51.69%보다 높음 — 아키텍처가 다른 별도 참고축으로 취급) <strong>② 간접 비교:</strong> MiniDrive 등 재현 불가 모델은 논문 보고 점수 인용 예정(미착수) <strong>③ 효율성 비교:</strong> Params/Memory/FPS/Latency 직접 측정 — 미착수</td>
+        <td><span class="badge-sm b-emerald">✅ ① 완료 / ②③ 대기</span></td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-tag cyan">평가 메트릭 상세</div>
+      <h3>평가 축별 메트릭 매핑</h3>
+      <p>
+        <strong>NuScenes-QA val (메인):</strong> 공통 정규화 후 exact-match Accuracy — 전체 + 카테고리별(macro 병기), bootstrap 95% 신뢰구간, 모델 쌍별 유의성 검정<br>
+        <strong>CODA-LM (제2 정량):</strong> General/Regional Perception + Driving Suggestion — 텍스트 지표(BLEU-4, CIDEr) 기본, judge 프로토콜은 비용/재현성 검토 후 병기<br>
+        <strong>DriveLM val q_only (정성):</strong> 동일 질문에 대한 5개 모델 답변 side-by-side 사례 분석<br>
+        <strong>효율:</strong> FPS, Latency (ms), Memory (GB), Params (M), FLOPs (G)<br>
+        <strong>종합:</strong> 파레토 곡선 (Accuracy vs Latency, Accuracy vs Params)
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== SECTION 9 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">9</div>
+    <div class="sec-title">Ablation Study 설계</div>
+  </div>
+
+  <div class="prose" style="margin-bottom:16px;">
+    핵심 기여(L_spatial + L_temporal 공간·시간 Feature 증류)를 검증하기 위한 ablation을 수행합니다. <strong>동일한 Student(Qwen2.5-VL-3B)와 동일한 데이터</strong>에서 수행하여 공정 비교를 보장합니다.
+  </div>
+
+  <div class="note warn">
+    <strong>Ablation 공정성 확보 (재학습 결정):</strong> adapter_config 확인 결과 Baseline·KD only(v1)는 vision attention LoRA 없이(LLM 계열 7개 모듈만) 학습되어, 신규 실험들과 trainable 모듈 집합이 달랐음. 이 혼입을 제거하기 위해 <strong>두 baseline을 vision attention(qkv/proj) LoRA 포함 설정으로 재학습(v2)</strong> — 변경은 LoRA 확장 플래그 하나뿐이며 나머지 하이퍼파라미터는 동결. 5-way 표는 v2 기준으로 작성하고, <strong>v1 체크포인트는 보존하여 v1 vs v2 비교로 "vision attn LoRA 단독 효과"를 분리 보고</strong>(부록) — 손실 설계 효과와 용량 효과의 분해가 가능해짐.
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <tr>
+        <th>Ablation</th>
+        <th>변인</th>
+        <th>검증 내용</th>
+        <th>상태</th>
+      </tr>
+      <tr>
+        <td><strong>A1. 증류 구성요소</strong></td>
+        <td>손실 항 점진적 추가</td>
+        <td>Baseline → KD only → +L_spatial → +L_temporal → Full 5단계 비교로 각 손실 항의 개별 기여 측정 — §4-2 5-way 최종 결과 참고</td>
+        <td><span class="badge-sm b-emerald">✅ 5단계 전부 완료</span></td>
+      </tr>
+      <tr>
+        <td><strong>A3. Feature KD 레이어 선택</strong></td>
+        <td>레이어 매핑 위치 (초반/중반/후반)</td>
+        <td>L_spatial의 hidden state 추출 레이어에 따른 성능 변화 — 현재 layer 23(후반부) 사용, 초반/중반 레이어와 비교</td>
+        <td><span class="badge-sm b-amber">⏳ 계획</span></td>
+      </tr>
+      <tr>
+        <td><strong>A4. Temporal 정렬 대상</strong></td>
+        <td>마지막 hidden state vs 중간층</td>
+        <td>Teacher 멀티프레임 표현의 어느 위치를 정렬 대상으로 삼을지 검증</td>
+        <td><span class="badge-sm b-amber">⏳ 계획</span></td>
+      </tr>
+      <tr>
+        <td><strong>A5. 시간 프레임 수 K</strong></td>
+        <td>K ∈ {2, 3, 4}</td>
+        <td>Teacher가 보는 과거 프레임 수에 따른 성능-학습비용 트레이드오프</td>
+        <td><span class="badge-sm b-amber">⏳ 계획</span></td>
+      </tr>
+      <tr>
+        <td><strong>A6. λ 가중치 민감도</strong></td>
+        <td>λ_s, λ_t ∈ {0.1, 0.5, 1.0, 2.0}</td>
+        <td>공간/시간 손실 비중에 따른 성능 변화 — 초기값 λ_s=λ_t=1.0</td>
+        <td><span class="badge-sm b-amber">⏳ 계획</span></td>
+      </tr>
+      <tr>
+        <td><strong>A7. 이종 아키텍처</strong></td>
+        <td>Qwen → 타 계열 Student</td>
+        <td>시간 관계상 제외 — 향후 연구</td>
+        <td><span class="badge-sm b-rose">제외</span></td>
+      </tr>
+    </table>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ========== SECTION 10 ========== -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">10</div>
+    <div class="sec-title">예상 기여점 및 한계점</div>
+  </div>
+
+  <div class="cards-2">
+    <div class="card">
+      <div class="card-tag emerald">예상 기여점</div>
+      <h3>학술적 기여 3가지</h3>
+      <p>
+        <strong>C1. Scale-Robust Spatial Feature KD</strong> — attention map MSE의 스케일 소실 문제를 cosine 손실로, 동일 차원 인코더 간 feature 공간 불일치를 경량 정렬 head(1280→1280, 추론 시 제거)로 해결한 공간 정보 보존 증류 제안. 동일 아키텍처 계열(Qwen2.5-VL 3B/7B)조차 feature 공간이 선형 정렬되어 있지 않다는 실증 관찰 포함.<br><br>
+        <strong>C2. Asymmetric Temporal Context KD</strong> — Teacher만 멀티프레임을 보고 Student는 단일 프레임으로 시간적 맥락을 모방하는 비대칭 증류 구조 제안. Student 추론 비용을 늘리지 않으면서 시간적 이해를 전이하여 엣지 배포와 정합.<br><br>
+        <strong>C3. End-to-End 엣지 배포 파이프라인</strong> — 증류된 3B Student를 AWQ INT4 양자화 후 Jetson Orin Nano에 배포하는 실용적 파이프라인 제시. 7B Teacher 대비 약 3.5x 경량화로 엣지 실시간 추론 가능성 입증.
+      </p>
+    </div>
+    <div class="card">
+      <div class="card-tag rose">예상 한계점</div>
+      <h3>논문에서 솔직히 논의할 사항</h3>
+      <p>
+        <strong>L1.</strong> DriveLM-nuScenes 규모 한계 (~4K 키프레임). 대규모 데이터에서의 효과는 추가 검증 필요<br><br>
+        <strong>L2.</strong> Teacher LoRA FT 사용 — Full FT 대비 성능 상한 제약 가능성<br><br>
+        <strong>L3.</strong> Student 단일 크기(3B)만 실험 — 크기별 성능 임계점 분석 미수행<br><br>
+        <strong>L4.</strong> L_temporal의 시간 간격이 DriveLM 키프레임 간격(평균 약 3.1초)에 의존 — 간격이 성겨 급정거 직전 등 세밀한 시간 역학은 포착이 어려우며, 더 촘촘한 프레임 시퀀스에서의 효과는 미검증<br><br>
+        <strong>L5.</strong> DriveLM 공식 val/test 정답 비공개 + 챌린지 리더보드 마감으로 DriveLM 벤치마크 직접 채점 불가 — NuScenes-QA val을 메인 정량축으로 대체했으며, 선행 논문들과의 비교는 프로토콜 차이를 명시한 간접 비교(+동일 조건 재학습 직접 비교)로 수행<br><br>
+        <strong>L6.</strong> Open-loop 평가만 수행. Closed-loop (CARLA 등)은 future work<br><br>
+        <strong>L7.</strong> 단일 센서(카메라)만 사용. LiDAR 통합은 범위 외
+      </p>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>투고 전략:</strong> 핵심 결과가 나오면 워크숍 논문(NeurIPS/ICML AD Workshop, CVPR WAD 등)에 먼저 투고하여 피드백을 받고, 보완 후 메인 학회(ECCV, AAAI, ICCV)에 투고하는 전략을 추천합니다. Drive-KD (2026)나 EvoDriveVLA (2026)이 등장하고 있으므로, 빠르게 실험을 완료하는 것이 중요합니다.
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- BONUS: 구현 시작 가이드 -->
+<div class="sec">
+  <div class="sec-head">
+    <div class="sec-num">★</div>
+    <div class="sec-title">구현 시작 가이드 — 첫 2주 Action Plan</div>
+  </div>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">D1</div>
+      <div class="step-content">
+        <h4>Day 1–3: L_spatial 구현</h4>
+        <p>
+          Teacher/Student vision encoder layer 23에 forward hook을 걸어 patch-level hidden state 추출 (Qwen2.5-VL 계열은 vision encoder가 동일: dim 1280, depth 32). <strong>경량 정렬 head(1280→1280)</strong>를 Student 쪽에 추가해 <code>1 − cos(h_T, proj_s(h_S))</code> 손실 구현 — 차원이 같아도 독립 사전학습된 feature 공간은 선형 정렬되어 있지 않음이 실험으로 확인됨(정렬 head 없이는 loss 정체). 소규모 스모크로 하강 추세와 grad 정상 여부 검증.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">D2</div>
+      <div class="step-content">
+        <h4>Day 4–6: L_temporal 데이터 파이프라인</h4>
+        <p>
+          DataLoader 확장 — DriveLM <code>scene_token → key_frames</code> 시간 순서로 (과거 K−1프레임 + 현재 프레임) 시퀀스 구성 (K=2부터). Teacher 멀티프레임 입력 포맷 구성 및 메모리 사용량 측정. Student는 기존 단일 프레임 입력 유지.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">D3</div>
+      <div class="step-content">
+        <h4>Day 7–9: +L_spatial 학습 실행</h4>
+        <p>
+          <code>temporal_k=1, λ_s=1.0, λ_t=0</code>으로 학습 — Teacher가 Student와 동일한 단일 프레임 입력을 사용하므로 멀티프레임 데이터 파이프라인 비용 없이 1 epoch 학습 (~26–30시간 예상). 기존 Baseline/KD only와 동일한 하이퍼파라미터(effective batch 16, lr 2e-5) 유지하여 공정 비교 보장.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">D4</div>
+      <div class="step-content">
+        <h4>Day 10–12: +L_temporal 및 Full 학습 실행</h4>
+        <p>
+          <code>temporal_k=2, λ_s=0, λ_t=1.0</code>(+L_temporal), 이어서 <code>temporal_k=2, λ_s=1.0, λ_t=1.0</code>(Full) 학습. Teacher 멀티프레임 forward는 <strong>동적 패딩</strong>(배치 내 최장 길이, max_length=1600 안전망)으로 수행하여 스텝당 시간을 절감하고, truncation 경고 발생 여부를 모니터링.
+        </p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">D5</div>
+      <div class="step-content">
+        <h4>Day 13–14: 5-way 평가 + SOTA 직접 비교</h4>
+        <p>
+          Baseline / KD only / +L_spatial / +L_temporal / Full 5개 모델을 <strong>NuScenes-QA val 11,309개</strong>(모델당 약 2.6시간)에서 평가 — 전체 + 카테고리별(exist/object/status/count/comparison) exact-match Accuracy로 <strong>어떤 손실이 어떤 능력을 개선했는지</strong> 매핑. 병렬로 EM-VLM4AD를 동일 데이터로 FT 후 같은 평가셋에서 zero-shot/FT 평가. 이후 CODA-LM zero-shot → AWQ INT4 양자화 → Jetson 배포로 진행.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer">
+  Option A Deep Dive — 자율주행 특화 VLM 증류 + 엣지 최적화 통합 파이프라인 · Research Guide 2026 · 최종 업데이트: 2026.08
+</div>
+
+</div>
+</body>
+</html>

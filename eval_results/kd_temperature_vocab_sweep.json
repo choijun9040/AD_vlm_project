@@ -1,0 +1,159 @@
+{
+  "n_samples": 40,
+  "eos_id": 151645,
+  "vocab_sizes": [
+    1000,
+    10000,
+    100000,
+    "full"
+  ],
+  "temperatures": [
+    1.0,
+    1.5,
+    2.0,
+    4.0,
+    8.0
+  ],
+  "results": {
+    "1000|1.0": {
+      "p_eos_median": 0.9474315047264099,
+      "rank_median": 1,
+      "ratio_to_best_median": 35.25121373460572,
+      "vocab": 1000,
+      "n": 40
+    },
+    "1000|1.5": {
+      "p_eos_median": 0.507586658000946,
+      "rank_median": 1,
+      "ratio_to_best_median": 10.7510132069606,
+      "vocab": 1000,
+      "n": 40
+    },
+    "1000|2.0": {
+      "p_eos_median": 0.17550860345363617,
+      "rank_median": 1,
+      "ratio_to_best_median": 5.937273564456049,
+      "vocab": 1000,
+      "n": 40
+    },
+    "1000|4.0": {
+      "p_eos_median": 0.016441842541098595,
+      "rank_median": 1,
+      "ratio_to_best_median": 2.436652210401146,
+      "vocab": 1000,
+      "n": 40
+    },
+    "1000|8.0": {
+      "p_eos_median": 0.004104696214199066,
+      "rank_median": 1,
+      "ratio_to_best_median": 1.5609780268223703,
+      "vocab": 1000,
+      "n": 40
+    },
+    "10000|1.0": {
+      "p_eos_median": 0.9333275556564331,
+      "rank_median": 1,
+      "ratio_to_best_median": 35.2512142131971,
+      "vocab": 10000,
+      "n": 40
+    },
+    "10000|1.5": {
+      "p_eos_median": 0.3486074209213257,
+      "rank_median": 1,
+      "ratio_to_best_median": 10.751013030098044,
+      "vocab": 10000,
+      "n": 40
+    },
+    "10000|2.0": {
+      "p_eos_median": 0.07042061537504196,
+      "rank_median": 1,
+      "ratio_to_best_median": 5.937273148700711,
+      "vocab": 10000,
+      "n": 40
+    },
+    "10000|4.0": {
+      "p_eos_median": 0.002894503530114889,
+      "rank_median": 1,
+      "ratio_to_best_median": 2.4366521019120015,
+      "vocab": 10000,
+      "n": 40
+    },
+    "10000|8.0": {
+      "p_eos_median": 0.000543734640814364,
+      "rank_median": 1,
+      "ratio_to_best_median": 1.5609779390948229,
+      "vocab": 10000,
+      "n": 40
+    },
+    "100000|1.0": {
+      "p_eos_median": 0.9229704737663269,
+      "rank_median": 1,
+      "ratio_to_best_median": 35.25121189697081,
+      "vocab": 100000,
+      "n": 40
+    },
+    "100000|1.5": {
+      "p_eos_median": 0.2594672441482544,
+      "rank_median": 1,
+      "ratio_to_best_median": 10.751013417652446,
+      "vocab": 100000,
+      "n": 40
+    },
+    "100000|2.0": {
+      "p_eos_median": 0.030688418075442314,
+      "rank_median": 1,
+      "ratio_to_best_median": 5.937273374343428,
+      "vocab": 100000,
+      "n": 40
+    },
+    "100000|4.0": {
+      "p_eos_median": 0.0006364157889038324,
+      "rank_median": 1,
+      "ratio_to_best_median": 2.436652254819654,
+      "vocab": 100000,
+      "n": 40
+    },
+    "100000|8.0": {
+      "p_eos_median": 8.184748730855063e-05,
+      "rank_median": 1,
+      "ratio_to_best_median": 1.560977898590959,
+      "vocab": 100000,
+      "n": 40
+    },
+    "None|1.0": {
+      "p_eos_median": 0.922839879989624,
+      "rank_median": 1,
+      "ratio_to_best_median": 35.2512143496289,
+      "vocab": 152064,
+      "n": 40
+    },
+    "None|1.5": {
+      "p_eos_median": 0.25522664189338684,
+      "rank_median": 1,
+      "ratio_to_best_median": 10.751013483088274,
+      "vocab": 152064,
+      "n": 40
+    },
+    "None|2.0": {
+      "p_eos_median": 0.029044240713119507,
+      "rank_median": 1,
+      "ratio_to_best_median": 5.937273281049551,
+      "vocab": 152064,
+      "n": 40
+    },
+    "None|4.0": {
+      "p_eos_median": 0.0005348582053557038,
+      "rank_median": 1,
+      "ratio_to_best_median": 2.4366522207361827,
+      "vocab": 152064,
+      "n": 40
+    },
+    "None|8.0": {
+      "p_eos_median": 6.205706449691206e-05,
+      "rank_median": 1,
+      "ratio_to_best_median": 1.5609779383411027,
+      "vocab": 152064,
+      "n": 40
+    }
+  }
+}
