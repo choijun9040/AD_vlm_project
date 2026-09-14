@@ -1,5 +1,4 @@
 scripts/check*.py
-CLAUDE.md
 
 # Python bytecode cache
 __pycache__/
