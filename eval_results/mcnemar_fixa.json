@@ -1,0 +1,46 @@
+{
+  "a": "eval_results/posthoc_none_predictions.jsonl",
+  "b": "eval_results/posthoc_fixa_predictions.jsonl",
+  "n_items": 11309,
+  "acc_a": 0.5029622424617561,
+  "acc_b": 0.5002210628702803,
+  "diff_pp": -0.2741179591475795,
+  "a_only": 356,
+  "b_only": 325,
+  "n_discordant": 681,
+  "chi2": 1.3215859030837005,
+  "p": 0.25030762891163627,
+  "significant": false,
+  "by_template": {
+    "comparison": {
+      "n": 1780,
+      "diff_pp": 0.3370786516853963,
+      "n_discordant": 148,
+      "p": 0.6810743911297944
+    },
+    "count": {
+      "n": 2212,
+      "diff_pp": -1.0397830018083185,
+      "n_discordant": 77,
+      "p": 0.012171501347889664
+    },
+    "exist": {
+      "n": 3308,
+      "diff_pp": -0.5743651753325252,
+      "n_discordant": 131,
+      "p": 0.11579587487387691
+    },
+    "object": {
+      "n": 2359,
+      "diff_pp": -0.04239084357778866,
+      "n_discordant": 197,
+      "p": 1.0
+    },
+    "status": {
+      "n": 1650,
+      "diff_pp": 0.363636363636366,
+      "n_discordant": 128,
+      "p": 0.6585313664984049
+    }
+  }
+}

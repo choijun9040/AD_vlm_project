@@ -1,0 +1,9 @@
+{
+  "checkpoint": "checkpoints/student_baseline_v2/epoch_1",
+  "scale": 3.0,
+  "collapse": {},
+  "accuracy": {
+    "무개입": 0.5029622424617561,
+    "fixA 곱 1/3": 0.5002210628702803
+  }
+}

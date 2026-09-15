@@ -1,0 +1,27 @@
+{
+  "onnx": "onnx/tower_baseline_v2_native.onnx",
+  "n_images": 50,
+  "trt": "10.13.3.9",
+  "modes": {
+    "fp32": {
+      "nan_rate": 0.0,
+      "absmax_p50": 49.07615089416504,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 2760.278076171875,
+      "build_log": "logs/trt_build_fp32.log"
+    },
+    "fp16": {
+      "nan_rate": 0.94,
+      "absmax_p50": 23.6953125,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 1384.984375,
+      "build_log": "logs/trt_build_fp16.log"
+    },
+    "strict": {
+      "failed": "RuntimeError: [strict] 엔진 빌드 실패 — 로그: logs/trt_build_strict.log",
+      "build_log": "logs/trt_build_strict.log"
+    }
+  }
+}

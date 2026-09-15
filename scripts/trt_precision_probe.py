@@ -71,24 +71,39 @@ def build(onnx_path, mode, workspace_gb=24, log_path=None):
                 layer.precision = trt.float16
     print(f"  [{mode}] 빌드 중 (레이어 {network.num_layers}개) …", flush=True)
     plan = builder.build_serialized_network(network, cfg)
-    if plan is None:
-        raise SystemExit(f"[{mode}] 엔진 빌드 실패")
     if log_path:
-        Path(log_path).write_text("\n".join(lines))
+        Path(log_path).write_text("\n".join(lines))   # 실패해도 로그는 남긴다
+    if plan is None:
+        raise RuntimeError(f"[{mode}] 엔진 빌드 실패 — 로그: {log_path}")
     rt = trt.Runtime(logger)
     return rt.deserialize_cuda_engine(plan), lines
 
 
 def layer_precisions(lines):
-    """빌드 로그에서 레이어별 배치 정밀도를 긁는다."""
-    pat = re.compile(r"(\S+).*?Tactic.*?(Float|Half|Int8)", re.I)
-    prec = {}
+    """빌드 로그의 "Engine Layer Information"에서 텐서 정밀도를 센다.
+
+    주의: 파싱 단계의 `[FLOAT]` 표기는 **ONNX 그래프의 dtype**이지 엔진이 고른
+    정밀도가 아니다. 실제 배치는 로그 끝의 Engine Layer Information에
+    `Half[...]` / `Float[...]` 형태로 나온다.
+
+    또 하나: TRT는 대부분을 `Myelin` 노드 하나로 융합하므로 **개별 레이어 정밀도가
+    보이지 않을 수 있다.** 그때는 Total Weights Memory로 판단한다 — fp16이면
+    fp32의 절반이다(실측: 2.7 GB → 1.45 GB).
+    """
+    prec, weights_mb = {"Half": 0, "Float": 0, "Int8": 0}, None
+    in_eli = False
     for l in lines:
-        if "Layer(" in l or "running on" in l.lower() or "Tactic" in l:
-            m = re.search(r"(Half|Float|Int8)", l)
+        if "Engine Layer Information" in l:
+            in_eli = True
+            continue
+        if "Total Weights Memory" in l:
+            m = re.search(r"(\d+)\s*bytes", l)
             if m:
-                name = l.split("]")[-1].strip()[:90]
-                prec.setdefault(m.group(1), []).append(name)
+                weights_mb = int(m.group(1)) / 2**20
+        if in_eli and l.startswith("Layer("):
+            for t in ("Half", "Float", "Int8"):
+                prec[t] += len(re.findall(rf"\b{t}\[", l))
+    prec["_weights_mb"] = weights_mb
     return prec
 
 
@@ -146,16 +161,27 @@ def main():
     for mode in args.modes.split(","):
         mode = mode.strip()
         logp = f"logs/trt_build_{mode}.log"
-        eng, lines = build(args.onnx, mode, args.workspace_gb, logp)
+        try:
+            eng, lines = build(args.onnx, mode, args.workspace_gb, logp)
+        except Exception as e:
+            # 한 조건이 실패해도 나머지는 계속한다. 특히 strict는 TRT 10.12부터
+            # layer.precision이 deprecated(강타입으로 대체)라 실패할 수 있는데,
+            # **관행 조건이 이미 붕괴를 재현하면 strict는 없어도 결론이 선다.**
+            print(f"  [{mode}] 실패 — {type(e).__name__}: {str(e)[:120]}")
+            res["modes"][mode] = {"failed": f"{type(e).__name__}: {str(e)[:200]}",
+                                  "build_log": logp}
+            continue
         prec = layer_precisions(lines)
         nan_rate, absmax = run(eng, inputs)
-        n_half = len(prec.get("Half", [])); n_float = len(prec.get("Float", []))
+        n_half, n_float = prec.get("Half", 0), prec.get("Float", 0)
+        wmb = prec.get("_weights_mb")
         print(f"  [{mode}] 붕괴 {nan_rate*100:.1f}%   유한 max 중앙값 "
               f"{absmax if absmax is None else f'{absmax:,.0f}'}   "
-              f"레이어 Half {n_half} / Float {n_float}   로그 {logp}")
+              f"텐서 Half {n_half} / Float {n_float}   "
+              f"가중치 {wmb:,.0f} MiB" if wmb else "" + f"   로그 {logp}")
         res["modes"][mode] = {"nan_rate": nan_rate, "absmax_p50": absmax,
-                              "n_half": n_half, "n_float": n_float,
-                              "build_log": logp}
+                              "n_half_tensors": n_half, "n_float_tensors": n_float,
+                              "weights_mib": wmb, "build_log": logp}
         del eng
 
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
@@ -163,7 +189,7 @@ def main():
 
     m = res["modes"]
     print("\n" + "=" * 64)
-    if "fp16" in m and "strict" in m:
+    if "nan_rate" in m.get("fp16", {}) and "nan_rate" in m.get("strict", {}):
         a, b = m["fp16"]["nan_rate"], m["strict"]["nan_rate"]
         if b > 0.5 and a < 0.1:
             print("판정: **엄격에서만 붕괴** — TensorRT 기본 정책이 오버플로를 회피한다.")
@@ -175,6 +201,14 @@ def main():
         else:
             print("판정: **둘 다 안전** — fp16 경로가 만들어지지 않았을 수 있다.")
             print("  빌드 로그에서 마지막 블록 레이어의 정밀도를 직접 확인할 것.")
+    elif "nan_rate" in m.get("fp16", {}):
+        a = m["fp16"]["nan_rate"]
+        if a > 0.5:
+            print("판정: **관행 설정(--fp16)에서 붕괴가 재현된다.** 빌더의 레이어별")
+            print("  정밀도 선택이 이 오버플로를 막지 못한다. strict 조건은 '관행에서")
+            print("  안전할 때'만 필요했으므로 빌드 실패해도 결론에 영향이 없다.")
+        else:
+            print("판정: 관행 설정에서 안전 — strict가 필요하나 빌드하지 못했다.")
     print("A100 PyTorch 기준값: baseline_v2 원본 해상도 94.8% 붕괴")
     print("=" * 64)
 
