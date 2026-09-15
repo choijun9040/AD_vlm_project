@@ -7,11 +7,14 @@
 
 ## 제목
 
-**지식 증류가 비전-언어 모델의 fp16 표현 범위 여유에 미치는 영향:
-자율주행 VLM 사례 연구**
+*Feature Alignment Shapes Representable-Range Headroom
+in Distilled Vision-Language Models*
 
-*Effect of Knowledge Distillation on fp16 Representable-Range Headroom
-in Vision-Language Models: An Autonomous Driving Case Study*
+> **제목 정리 (2026-09-15).** 이 문서는 학회 원고를 재구성하며 떼어 낸 **학위 논문
+> 5·6장 초안**이므로 학위 논문 제목을 단다. 이전에는 학술대회 제목이 붙어 있었는데,
+> 그 제목은 같은 날 교체되었다(구: 「지식 증류가 …여유에 미치는 영향」 →
+> 신: 「표준 압축 지표가 포착하지 못하는 저정밀 배포 실패…」). 학술대회와 학위
+> 논문의 무게중심이 다른 것은 의도된 것이다 — 근거는 `paper_positioning_ksae2026.md` §1.
 
 저자: ○○○¹ · ○○○¹  |  ¹○○대학교 ○○공학과
 
