@@ -35,8 +35,14 @@
 import argparse
 import json
 import math
+import re
 import sys
 from pathlib import Path
+
+# 자기정정·폐기 서술은 **옛 값을 일부러 인용**한다. 그런 줄은 구값 검사에서 면제한다.
+# (이 목록이 없으면 "이전 판은 1.03배였다" 같은 정직한 기록이 오류로 잡힌다.)
+STALE_EXEMPT = ("이전 판", "정정", "틀렸", "폐기", "구:", "~~", "잘못", "아니라",
+                "낙관 배율", "옛 ", "→", "로 보인다", "모순", "뻔했다", "worst-of-N")
 
 # 메타로 취급할 키. `_meta` 안에 있든 최상위에 있든 찾는다.
 META_KEYS = ("max_pixels", "min_pixels", "n_images", "dtype", "limit",
@@ -96,6 +102,63 @@ def dig(doc, path):
     return cur
 
 
+def fmt(v, pattern):
+    """`{v:.2f}배` 같은 렌더 패턴을 실제 문자열로. 천단위 콤마는 `{v:,.0f}`."""
+    return pattern.format(v=v)
+
+
+def scan_docs(spec, value, claim):
+    """문서 본문에서 이 수치가 **올바른 표기로** 나오는지, **옛 표기가 남아 있지**
+    않은지 본다.
+
+    값 대조(JSON)와 조건 대조(_meta)로는 못 잡는 세 번째 종류의 오류를 잡는다:
+    **같은 수치가 네 문서에 흩어져 있어 한 곳만 고치고 나머지가 남는 것.**
+    2026-09-15에 Table 1을 고치면서 개요 다섯 곳을 놓쳤고, 그건 JSON만 보는
+    검사로는 원리적으로 잡히지 않는다.
+    """
+    files = spec.get("files", [])
+    renders = spec.get("render", ["{v}"])
+    stale = spec.get("stale", []) or []
+    exempt = tuple(STALE_EXEMPT) + tuple(spec.get("allow_if_line_has", []) or [])
+    problems, found_in = [], []
+
+    want = [fmt(value, r) for r in renders]
+    skip_after = spec.get("skip_sections", ["## 작성 메모"])
+    for f in files:
+        path = Path(f)
+        if not path.exists():
+            problems.append(f"  **문서 없음**: {f}")
+            continue
+        lines = path.read_text().splitlines()
+        # 변경 이력 절(작성 메모 등)은 옛 값을 일부러 인용하므로 통째로 제외한다
+        cut = len(lines)
+        for i, l in enumerate(lines):
+            if any(l.startswith(h) for h in skip_after):
+                cut = i
+                break
+        if any(w in l for l in lines for w in want):
+            found_in.append(f)
+        for sv in stale:
+            bad = [fmt(sv, r) for r in renders]
+            for i, l in enumerate(lines[:cut], 1):
+                if not any(b in l for b in bad):
+                    continue
+                # 면제는 **같은 줄**에서만 본다. ±1줄까지 넓혔더니 바로 옆 줄의
+                # 정정 서술이 진짜 잔존을 덮어 **미탐 2건**이 생겼다(실측 2026-09-15).
+                # 반면 "올바른 값이 곁에 있으면 비교 서술"이라는 판단은 줄바꿈 때문에
+                # ±1줄이 필요하다 — 두 규칙의 창을 다르게 준다.
+                win = "\n".join(lines[max(0, i - 2): i + 1])
+                if any(x in l for x in exempt) or any(w in win for w in want):
+                    continue
+                problems.append(
+                    f"  **옛 값 잔존** {f}:{i} — '{[b for b in bad if b in l][0]}' "
+                    f"(현재 값 {want[0]})\n      {l.strip()[:96]}")
+    if files and not found_in:
+        problems.append(f"  · {claim}: 선언했으나 어느 문서에도 {want[0]}가 없다 "
+                        f"(문구가 바뀌었는지 확인)")
+    return problems
+
+
 def check_group(g, strict):
     name = g.get("id", "(무명)")
     where = g.get("where", "")
@@ -153,6 +216,11 @@ def check_group(g, strict):
         if abs(x - exp) > tol:
             print(f"  **값 불일치** {v['claim']}: 데이터 {x:.4g} ≠ 문서 {exp}")
             vbad += 1
+            continue
+        if v.get("docs"):
+            for msg in scan_docs(v["docs"], x, v["claim"]):
+                print(msg)
+                vbad += 1
     if not problems and not vbad and not missing:
         print("  ✔ 조건 일치, 값 일치")
     return len(problems) + vbad + len(missing)

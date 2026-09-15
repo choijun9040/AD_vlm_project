@@ -16,6 +16,12 @@
       from: "eval_results/resolution_sweep/res_1440000.json::student_baseline_v2.passes.bfloat16.by_layer.31.p50"
       expr: "65504/x"
       expect: 0.88
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md, thesis_outline_20260910.md, paper_positioning_ksae2026.md]
+        render: ["{v:.2f}배", "{v:.2f}×"]
+        stale: [1.03]
+        # 8.x 부트스트랩의 '낙관 배율'도 1.03배라는 값을 쓴다 — 다른 양이다
+        allow_if_line_has: ["N=30", "낙관"]
     - claim: "baseline_v2 붕괴율%"
       from: "eval_results/resolution_sweep/res_1440000.json::student_baseline_v2.passes.float16.by_layer.31.n_finite"
       expr: "100*(1-x/250)"
@@ -25,16 +31,32 @@
       from: "eval_results/resolution_sweep/res_1440000.json::student_full.passes.bfloat16.by_layer.31.p50"
       expr: "65504/x"
       expect: 2.92
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md, thesis_outline_20260910.md, paper_positioning_ksae2026.md]
+        render: ["{v:.2f}배", "{v:.2f}×"]
+        stale: [2.90]
     - claim: "base_3b 여유"
       from: "eval_results/resolution_sweep/res_1440000.json::base_3b.passes.bfloat16.by_layer.31.p50"
       expr: "65504/x"
       expect: 0.95
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md, thesis_outline_20260910.md, paper_positioning_ksae2026.md]
+        render: ["{v:.2f}배", "{v:.2f}×"]
+        stale: [1.05]
     - claim: "baseline_v2 INT8 SNR"
       from: "eval_results/int8_quant_error_native.json::student_baseline_v2.by_layer.31.snr_tensor.p50"
       expect: 32.23
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md]
+        render: ["{v:.2f} dB", "{v:.2f} dB"]
+        stale: [31.17]
     - claim: "full INT8 SNR"
       from: "eval_results/int8_quant_error_native.json::student_full.by_layer.31.snr_tensor.p50"
       expect: 22.88
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md]
+        render: ["{v:.2f} dB"]
+        stale: [23.10]
     - claim: "baseline_v2 max/rms"
       from: "eval_results/int8_quant_error_native.json::student_baseline_v2.by_layer.31.ratio.p50"
       expect: 147.2
@@ -126,10 +148,18 @@
       from: "eval_results/lambda_sweep_activation_profile.json::sweep_align0.0.passes.bfloat16.by_layer.31.p50"
       expect: 36608
       tol: 1
+      docs:
+        files: [ksae2026_abstract.md]
+        render: ["{v:,.0f}"]
+        stale: [36480]
     - claim: "λ=2.0 blk31 p50 (Fig. 2와 같아야 함)"
       from: "eval_results/lambda_sweep_activation_profile.json::sweep_align2.0.passes.bfloat16.by_layer.31.p50"
       expect: 14208
       tol: 1
+      docs:
+        files: [ksae2026_abstract.md]
+        render: ["{v:,.0f}"]
+        stale: [14464]
     - claim: "fixA McNemar p"
       from: "eval_results/mcnemar_fixa.json::p"
       expect: 0.25
