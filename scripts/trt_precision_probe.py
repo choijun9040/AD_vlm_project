@@ -59,6 +59,13 @@ def build(onnx_path, mode, workspace_gb=24, log_path=None):
     cfg.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, workspace_gb << 30)
     if mode in ("fp16", "strict"):
         cfg.set_flag(trt.BuilderFlag.FP16)
+    if mode == "bf16":
+        # **가장 명백한 대안.** bf16은 지수부가 fp32와 같아 한계가 3.4e38이므로
+        # 이 오버플로가 원리상 일어나지 않는다. 심사에서 "그냥 bf16 쓰면 되지 않나"가
+        # 나올 질문이므로 붕괴율과 **지연시간**을 함께 재 답을 준비한다.
+        if not hasattr(trt.BuilderFlag, "BF16"):
+            raise RuntimeError("이 TensorRT 빌드에 BF16 플래그가 없다")
+        cfg.set_flag(trt.BuilderFlag.BF16)
     if mode == "strict":
         # fp16을 **강제**한다: 정밀도 제약을 그대로 지키고 TF32도 끈다
         cfg.set_flag(trt.BuilderFlag.OBEY_PRECISION_CONSTRAINTS)
@@ -123,10 +130,12 @@ def run(engine, inputs):
     d_in = cudart.cudaMalloc(nb_i)[1]
     d_out = cudart.cudaMalloc(nb_o)[1]
     stream = cudart.cudaStreamCreate()[1]
-    bad, maxes = 0, []
+    import time
+    bad, maxes, lat = 0, [], []
     for x in inputs:
         x = np.ascontiguousarray(x, dtype=i_dt)
         out = np.empty(o_shape, dtype=o_dt)
+        t0 = time.perf_counter()
         cudart.cudaMemcpyAsync(d_in, x.ctypes.data, x.nbytes,
                                cudart.cudaMemcpyKind.cudaMemcpyHostToDevice, stream)
         ctx.set_tensor_address(i_name, int(d_in))
@@ -135,19 +144,23 @@ def run(engine, inputs):
         cudart.cudaMemcpyAsync(out.ctypes.data, d_out, out.nbytes,
                                cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost, stream)
         cudart.cudaStreamSynchronize(stream)
+        lat.append((time.perf_counter() - t0) * 1000)
         if not np.isfinite(out).all():
             bad += 1
         fin = out[np.isfinite(out)]
         if fin.size:
             maxes.append(float(np.abs(fin).max()))
-    return bad / len(inputs), (float(np.median(maxes)) if maxes else None)
+    lat = sorted(lat)[2:]          # 처음 두 번은 워밍업으로 버린다
+    return (bad / len(inputs), (float(np.median(maxes)) if maxes else None),
+            {"p50": float(np.median(lat)), "p95": float(np.percentile(lat, 95))}
+            if lat else None)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--onnx", required=True)
     ap.add_argument("--npz", required=True, help="미리 전처리한 pixel_values 묶음")
-    ap.add_argument("--modes", default="fp32,fp16,strict")
+    ap.add_argument("--modes", default="fp32,fp16,bf16")
     ap.add_argument("--workspace_gb", type=int, default=24)
     ap.add_argument("--out", default="eval_results/trt_precision_probe.json")
     args = ap.parse_args()
@@ -172,16 +185,19 @@ def main():
                                   "build_log": logp}
             continue
         prec = layer_precisions(lines)
-        nan_rate, absmax = run(eng, inputs)
+        nan_rate, absmax, lat = run(eng, inputs)
         n_half, n_float = prec.get("Half", 0), prec.get("Float", 0)
         wmb = prec.get("_weights_mb")
         print(f"  [{mode}] 붕괴 {nan_rate*100:.1f}%   유한 max 중앙값 "
               f"{absmax if absmax is None else f'{absmax:,.0f}'}   "
               f"텐서 Half {n_half} / Float {n_float}   "
               f"가중치 {wmb:,.0f} MiB" if wmb else "" + f"   로그 {logp}")
+        if lat:
+            print(f"        지연 p50 {lat['p50']:.1f} ms / p95 {lat['p95']:.1f} ms")
         res["modes"][mode] = {"nan_rate": nan_rate, "absmax_p50": absmax,
                               "n_half_tensors": n_half, "n_float_tensors": n_float,
-                              "weights_mib": wmb, "build_log": logp}
+                              "weights_mib": wmb, "latency_ms": lat,
+                              "build_log": logp}
         del eng
 
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))

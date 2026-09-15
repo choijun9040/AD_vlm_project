@@ -1,0 +1,214 @@
+{
+  "target": "Qwen/Qwen2-VL-2B-Instruct-AWQ",
+  "dtype": "float16",
+  "max_pixels": 1440000,
+  "n_images": 30,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 11.59375,
+        "headroom": 5649.9407008086255,
+        "n_finite": 30
+      },
+      {
+        "block": 1,
+        "max_p50": 10.21875,
+        "headroom": 6410.177370030581,
+        "n_finite": 30
+      },
+      {
+        "block": 2,
+        "max_p50": 16.5,
+        "headroom": 3969.939393939394,
+        "n_finite": 30
+      },
+      {
+        "block": 3,
+        "max_p50": 22.375,
+        "headroom": 2927.5530726256984,
+        "n_finite": 30
+      },
+      {
+        "block": 4,
+        "max_p50": 23.75,
+        "headroom": 2758.063157894737,
+        "n_finite": 30
+      },
+      {
+        "block": 5,
+        "max_p50": 24.25,
+        "headroom": 2701.1958762886597,
+        "n_finite": 30
+      },
+      {
+        "block": 6,
+        "max_p50": 23.75,
+        "headroom": 2758.063157894737,
+        "n_finite": 30
+      },
+      {
+        "block": 7,
+        "max_p50": 24.625,
+        "headroom": 2660.060913705584,
+        "n_finite": 30
+      },
+      {
+        "block": 8,
+        "max_p50": 27.0,
+        "headroom": 2426.074074074074,
+        "n_finite": 30
+      },
+      {
+        "block": 9,
+        "max_p50": 31.5625,
+        "headroom": 2075.3742574257426,
+        "n_finite": 30
+      },
+      {
+        "block": 10,
+        "max_p50": 35.0,
+        "headroom": 1871.5428571428572,
+        "n_finite": 30
+      },
+      {
+        "block": 11,
+        "max_p50": 44.875,
+        "headroom": 1459.699164345404,
+        "n_finite": 30
+      },
+      {
+        "block": 12,
+        "max_p50": 51.875,
+        "headroom": 1262.7277108433734,
+        "n_finite": 30
+      },
+      {
+        "block": 13,
+        "max_p50": 57.25,
+        "headroom": 1144.174672489083,
+        "n_finite": 30
+      },
+      {
+        "block": 14,
+        "max_p50": 57.375,
+        "headroom": 1141.681917211329,
+        "n_finite": 30
+      },
+      {
+        "block": 15,
+        "max_p50": 57.5,
+        "headroom": 1139.2,
+        "n_finite": 30
+      },
+      {
+        "block": 16,
+        "max_p50": 58.125,
+        "headroom": 1126.9505376344086,
+        "n_finite": 30
+      },
+      {
+        "block": 17,
+        "max_p50": 57.75,
+        "headroom": 1134.2683982683982,
+        "n_finite": 30
+      },
+      {
+        "block": 18,
+        "max_p50": 70.0,
+        "headroom": 935.7714285714286,
+        "n_finite": 30
+      },
+      {
+        "block": 19,
+        "max_p50": 71.5,
+        "headroom": 916.1398601398602,
+        "n_finite": 30
+      },
+      {
+        "block": 20,
+        "max_p50": 72.0,
+        "headroom": 909.7777777777778,
+        "n_finite": 30
+      },
+      {
+        "block": 21,
+        "max_p50": 72.5,
+        "headroom": 903.5034482758621,
+        "n_finite": 30
+      },
+      {
+        "block": 22,
+        "max_p50": 72.25,
+        "headroom": 906.6297577854672,
+        "n_finite": 30
+      },
+      {
+        "block": 23,
+        "max_p50": 72.5,
+        "headroom": 903.5034482758621,
+        "n_finite": 30
+      },
+      {
+        "block": 24,
+        "max_p50": 86.0,
+        "headroom": 761.6744186046511,
+        "n_finite": 30
+      },
+      {
+        "block": 25,
+        "max_p50": 89.0,
+        "headroom": 736.0,
+        "n_finite": 30
+      },
+      {
+        "block": 26,
+        "max_p50": 94.5,
+        "headroom": 693.1640211640212,
+        "n_finite": 30
+      },
+      {
+        "block": 27,
+        "max_p50": 97.0,
+        "headroom": 675.2989690721649,
+        "n_finite": 30
+      },
+      {
+        "block": 28,
+        "max_p50": 96.0,
+        "headroom": 682.3333333333334,
+        "n_finite": 30
+      },
+      {
+        "block": 29,
+        "max_p50": 115.25,
+        "headroom": 568.3644251626898,
+        "n_finite": 30
+      },
+      {
+        "block": 30,
+        "max_p50": 122.25,
+        "headroom": 535.8200408997955,
+        "n_finite": 30
+      },
+      {
+        "block": 31,
+        "max_p50": 17088.0,
+        "headroom": 3.8333333333333335,
+        "n_finite": 30
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": 3.8333333333333335,
+    "bfloat16": 1.9835557116104868e+34,
+    "float32": 1.9913389513108613e+34
+  },
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "risky_blocks": []
+}

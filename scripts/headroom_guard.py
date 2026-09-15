@@ -8,7 +8,13 @@ headroom_guard — 저정밀 배포 전 표현 범위 여유를 진단하고 교
   diagnose : 층별 여유를 재고 위험 층을 자동 검출한다.
   fix      : 위험 층에 필요한 스케일을 자동 산출해 가중치를 교정하고, 교정 전후를 재측정한다.
 
-**두 dtype을 나눠 쓴다 (설계 원칙).** 활성 **크기**는 넘치지 않는 dtype(bf16)에서 재고,
+**형식부터 검토하게 한다 (설계 원칙 1).** 여유는 **형식마다 다른 값**이다 —
+같은 활성 74,752가 fp16(한계 65,504)에서는 넘치고 bf16(한계 3.4e38)에서는 한참 남는다.
+따라서 도구는 목표 dtype만 보지 않고 **모든 형식의 여유를 함께 보고**하고, 더 안전한
+형식이 있으면 **가중치를 고치기 전에 그쪽을 먼저 검토하라고 권고**한다. 가장 명백한
+대안을 제시하지 않으면 도구가 정직하지 않다.
+
+**두 dtype을 나눠 쓴다 (설계 원칙 2).** 활성 **크기**는 넘치지 않는 dtype(bf16)에서 재고,
 **붕괴**는 목표 dtype(fp16)에서 잰다. 목표 dtype에서 크기를 재면 이미 발산한 이미지의
 값이 inf/NaN이라 참값을 알 수 없고, 필요한 축소량을 **과소평가**한다
 (실측: 10장 중 8장이 발산한 상태로 풀어 목표 2.0배 대신 1.74배에 그쳤다).
@@ -52,6 +58,7 @@ MLP_PATTERNS = [
 
 # ---------------------------------------------------------------- 모델·타워
 def load_tower(checkpoint, base, dtype):
+    """우리 체크포인트(LoRA 병합) 경로."""
     from transformers import Qwen2_5_VLForConditionalGeneration
     from peft import PeftModel
     m = Qwen2_5_VLForConditionalGeneration.from_pretrained(
@@ -59,6 +66,82 @@ def load_tower(checkpoint, base, dtype):
     if checkpoint and checkpoint.lower() != "none":
         m = PeftModel.from_pretrained(m, checkpoint).merge_and_unload()
     return m.visual.eval().to("cuda")
+
+
+def load_tower_repo(repo, dtype, trust_remote_code=False):
+    """임의 HF 저장소 경로. `profile_other_vlm_families`의 견고한 로더를 재사용한다.
+
+    거기서 이미 해결한 것들이 필요하다 — config 중첩 구조 보정, 비전 타워 없는
+    모델 반환 방지, **가중치 미로드 검증**(키 규약이 다르면 from_pretrained가 경고만
+    찍고 랜덤 초기화 모델을 돌려준다).
+    """
+    import transformers as HF
+    from transformers import AutoConfig
+    from profile_other_vlm_families import (find_vision_tower, check_weights_loaded)
+
+    cfg = None
+    try:
+        cfg = AutoConfig.from_pretrained(repo, trust_remote_code=trust_remote_code)
+        if isinstance(getattr(cfg, "text_config", None), dict):
+            keys = ("hidden_size", "num_hidden_layers", "num_attention_heads")
+            if all(getattr(cfg, k, None) == cfg.text_config.get(k)
+                   for k in keys if k in cfg.text_config):
+                delattr(cfg, "text_config")
+    except Exception:
+        pass
+    order = [a for a in (getattr(cfg, "architectures", None) or [])
+             if getattr(HF, a, None) is not None]
+    order += ["AutoModelForVision2Seq", "AutoModelForImageTextToText", "AutoModel"]
+
+    last = None
+    for cn in order:
+        cls = getattr(HF, cn, None)
+        if cls is None:
+            continue
+        try:
+            kw = dict(torch_dtype=getattr(torch, dtype),
+                      trust_remote_code=trust_remote_code)
+            if cfg is not None and cn != "AutoModel":
+                kw["config"] = cfg
+            m = cls.from_pretrained(repo, **kw)
+            find_vision_tower(m)
+            check_weights_loaded(m, repo, cn)
+            print(f"  로더: {cn} → {type(m).__name__}")
+            return find_vision_tower(m).eval().to("cuda")
+        except Exception as e:
+            last = e
+    raise RuntimeError(f"로드 실패: {last}")
+
+
+def tower_forward(tower, pv, grid):
+    """계열마다 타워 시그니처가 다르다 — grid를 받는 쪽과 아닌 쪽.
+
+    실측(2026-09-15): SmolVLM(Idefics3) 프로세서는 pixel_values를
+    (B, num_tiles, C, H, W) 5-D로 내놓는데 `Idefics3VisionTransformer.forward`는
+    4-D를 기대해 `too many values to unpack (expected 4)`로 죽는다.
+    타일 축을 배치 축에 접어 넣는다 — 타워는 타일을 독립 이미지로 처리하므로
+    활성 크기 측정에는 영향이 없다.
+    """
+    if grid is None and pv.dim() == 5:
+        pv = pv.flatten(0, 1)
+    try:
+        out = tower(pv, grid) if grid is not None else tower(pv)
+    except TypeError:
+        out = tower(pv)
+    return out.last_hidden_state if hasattr(out, "last_hidden_state") else out
+
+
+def get_blocks(tower):
+    """계열마다 블록 리스트 이름이 다르다 — `blocks`(Qwen), `encoder.layers`(Idefics3/CLIP) 등.
+
+    실측(2026-09-15): `tower.blocks`를 하드코딩했더니 SmolVLM(Idefics3)에서
+    `'Idefics3VisionTransformer' object has no attribute 'blocks'`로 죽었다.
+    `profile_other_vlm_families.find_blocks`가 이미 이름·타입으로 찾으므로 재사용한다.
+    """
+    if hasattr(tower, "blocks"):
+        return tower.blocks
+    from profile_other_vlm_families import find_blocks
+    return find_blocks(tower)[1]
 
 
 def find_mlp_parts(block):
@@ -80,7 +163,7 @@ def profile(tower, cache, dtype, fmax_dtype=None):
     `fmax_dtype`을 주면 여유 계산의 분자를 그 dtype의 상한으로 쓴다
     (크기는 bf16에서 재고 여유는 fp16 기준으로 보고할 때).
     """
-    blocks = tower.blocks
+    blocks = get_blocks(tower)
     rec = {i: [] for i in range(len(blocks))}
     hs = []
 
@@ -96,7 +179,7 @@ def profile(tower, cache, dtype, fmax_dtype=None):
 
     nan = 0
     for pv, grid in cache:
-        out = tower(pv, grid)
+        out = tower_forward(tower, pv, grid)
         if not torch.isfinite(out).all():
             nan += 1
     for h in hs:
@@ -115,12 +198,17 @@ def profile(tower, cache, dtype, fmax_dtype=None):
 
 
 def build_cache(processor, paths, dtype):
+    """계열마다 grid_thw 유무가 다르므로 없으면 None을 넣는다."""
     cache = []
     for p in paths:
         enc = processor.image_processor(images=[Image.open(p).convert("RGB")],
                                         return_tensors="pt")
-        cache.append((enc["pixel_values"].to("cuda", getattr(torch, dtype)),
-                      enc["image_grid_thw"].to("cuda")))
+        pv = enc["pixel_values"]
+        if pv.dim() > 2 and pv.shape[0] == 1:
+            pv = pv[0] if pv.dim() == 3 else pv        # (1,N,D) → (N,D)
+        grid = enc.get("image_grid_thw")
+        cache.append((pv.to("cuda", getattr(torch, dtype)),
+                      grid.to("cuda") if grid is not None else None))
     return cache
 
 
@@ -134,7 +222,7 @@ def measure_branches(tower, cache, block_idx, dtype):
     (실측: 목표 2.0배를 지정했는데 1.70배가 나왔다). 두 분기를 분리해 재고
     `|r + f·m| ≤ target_max`를 f에 대해 풀어야 한다.
     """
-    blk = tower.blocks[block_idx]
+    blk = get_blocks(tower)[block_idx]
     buf = {}
 
     def h_mlp(_m, _i, out):
@@ -147,7 +235,7 @@ def measure_branches(tower, cache, block_idx, dtype):
     pairs = []
     for pv, grid in cache:
         buf.clear()
-        tower(pv, grid)
+        tower_forward(tower, pv, grid)
         if "mlp" not in buf or "out" not in buf:
             continue
         o, m = buf["out"].float(), buf["mlp"].float()
@@ -219,7 +307,7 @@ def apply_fix(tower, plan):
     """
     applied = []
     for item in plan:
-        blk = tower.blocks[item["block"]]
+        blk = get_blocks(tower)[item["block"]]
         pres, out_lin = find_mlp_parts(blk)
         if pres is None:
             applied.append({**item, "skipped": "MLP 구조를 인식하지 못함"})
@@ -242,6 +330,9 @@ def main():
     ap.add_argument("--checkpoint", default="checkpoints/student_baseline_v2/epoch_1",
                     help="'none'이면 사전학습 베이스")
     ap.add_argument("--base", default=BASE_3B)
+    ap.add_argument("--repo", default=None,
+                    help="임의 HF 저장소를 대상으로 한다 (--checkpoint 대신)")
+    ap.add_argument("--trust_remote_code", action="store_true")
     ap.add_argument("--dtype", default="float16", choices=list(FORMAT_MAX))
     ap.add_argument("--max_pixels", type=int, default=None,
                     help="미지정이면 **모델 기본 설정**을 쓴다 — 기본 경로에서의 위험을 보려면 그대로 둘 것")
@@ -263,8 +354,23 @@ def main():
         kw["max_pixels"] = args.max_pixels
     if args.min_pixels:
         kw["min_pixels"] = args.min_pixels
-    proc = AutoProcessor.from_pretrained(args.base, **kw)
+    src = args.repo or args.base
+    try:
+        proc = AutoProcessor.from_pretrained(
+            src, trust_remote_code=args.trust_remote_code, **kw)
+    except Exception:
+        # max_pixels 같은 인자를 받지 않는 계열이 있다(SmolVLM 등). 로드 후 주입한다.
+        proc = AutoProcessor.from_pretrained(
+            src, trust_remote_code=args.trust_remote_code)
+        for k, v in kw.items():
+            if hasattr(proc.image_processor, k):
+                setattr(proc.image_processor, k, v)
     ip = proc.image_processor
+    if not hasattr(ip, "max_pixels"):
+        # 고정 해상도 계열 — 해상도 인자가 의미 없다는 사실을 기록한다
+        print("  (이 계열의 image_processor에는 max_pixels가 없다 — 고정/자체 규칙)")
+        class _S: pass
+        ip = _S(); ip.max_pixels = -1; ip.min_pixels = -1
     print(f"[설정] dtype={args.dtype}  format_max={FORMAT_MAX[args.dtype]:,.0f}")
     print(f"        max_pixels={ip.max_pixels:,}  min_pixels={ip.min_pixels:,}"
           + ("  (모델 기본값)" if not args.max_pixels else ""))
@@ -278,15 +384,39 @@ def main():
 
     # 크기는 넘치지 않는 dtype에서, 붕괴는 목표 dtype에서 잰다 (docstring 참조)
     MAG = "bfloat16" if args.dtype == "float16" else args.dtype
-    tower = load_tower(args.checkpoint, args.base, MAG)
+    if args.repo:
+        tower = load_tower_repo(args.repo, MAG, args.trust_remote_code)
+    else:
+        tower = load_tower(args.checkpoint, args.base, MAG)
     cache_mag = build_cache(proc, paths, MAG)
+    if cache_mag[0][1] is None:
+        print("  (grid_thw 없음 — 타워를 grid 없이 호출한다)")
+    g0 = cache_mag[0][1]
     print(f"[형상] pixel_values={tuple(cache_mag[0][0].shape)}  "
-          f"grid={cache_mag[0][1].tolist()}")
+          f"grid={g0.tolist() if g0 is not None else '없음'}")
     print(f"[측정] 크기={MAG} (참값)  붕괴={args.dtype}\n")
 
     before, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
     risky = plan_fix(before, args.target_headroom,
                      tower=tower, cache=cache_mag, dtype=args.dtype)
+
+    # **가중치를 건드리기 전에 형식부터 검토하게 한다.**
+    # 여유는 형식마다 다른 값이다 — 같은 활성이 fp16에서는 넘치고 bf16에서는 한참 남는다.
+    # 가장 명백한 대안(bf16으로 빌드)을 도구가 먼저 제시하지 않으면 정직하지 않다.
+    last_mag = before[-1]["max_p50"]
+    alt = {dt: FORMAT_MAX[dt] / last_mag for dt in FORMAT_MAX if last_mag}
+    print(f"\n[형식별 여유] 마지막 블록 max|act| = {last_mag:,.0f}")
+    for dt, h in alt.items():
+        mark = "  ← 목표 dtype" if dt == args.dtype else ""
+        safe = "안전" if h >= args.target_headroom else "**위험**"
+        print(f"  {dt:<10} {h:>12,.2f}배  {safe}{mark}")
+    res_alt = {dt: h for dt, h in alt.items()}
+    safer = [dt for dt, h in alt.items()
+             if dt != args.dtype and h >= args.target_headroom]
+    if risky and safer:
+        print(f"\n  **권고: 가중치를 고치기 전에 {' 또는 '.join(safer)} 빌드를 먼저 검토할 것.**")
+        print(f"  {args.dtype}에서 위험한 것이지 모델이 잘못된 것이 아니다. 형식을 바꾸면")
+        print(f"  교정 없이 해결되며, 그 대가(지연시간·정확도)는 별도로 재야 한다.")
 
     # 붕괴는 목표 dtype으로 갈아끼워 잰다
     def collapse_in_target():
@@ -295,7 +425,7 @@ def main():
         n = 0
         with torch.no_grad():
             for pv, grid in c:
-                if not torch.isfinite(tower(pv, grid)).all():
+                if not torch.isfinite(tower_forward(tower, pv, grid)).all():
                     n += 1
         tower.to(getattr(torch, MAG))
         return n / len(c)
@@ -312,10 +442,12 @@ def main():
     print(f"\n[진단] 위험 블록 {len(risky)}개 (기준: 여유 < {args.target_headroom})")
     print(f"       현재 붕괴율 {nan_before*100:.1f}%  ({len(paths)}장)")
 
-    res = {"checkpoint": args.checkpoint, "dtype": args.dtype,
+    res = {"target": args.repo or args.checkpoint, "dtype": args.dtype,
            "max_pixels": ip.max_pixels, "n_images": len(paths),
            "target_headroom": args.target_headroom,
            "before": {"per_block": before, "nan_rate": nan_before},
+           "headroom_by_format": res_alt,
+           "safer_formats": safer,
            "risky_blocks": risky}
 
     if args.cmd == "fix":

@@ -1,0 +1,184 @@
+{
+  "target": "HuggingFaceTB/SmolVLM-Instruct",
+  "dtype": "float16",
+  "max_pixels": -1,
+  "n_images": 10,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 168.5,
+        "headroom": 388.74777448071217,
+        "n_finite": 10
+      },
+      {
+        "block": 1,
+        "max_p50": 167.0,
+        "headroom": 392.23952095808386,
+        "n_finite": 10
+      },
+      {
+        "block": 2,
+        "max_p50": 166.0,
+        "headroom": 394.6024096385542,
+        "n_finite": 10
+      },
+      {
+        "block": 3,
+        "max_p50": 164.0,
+        "headroom": 399.4146341463415,
+        "n_finite": 10
+      },
+      {
+        "block": 4,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 5,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 6,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 7,
+        "max_p50": 162.0,
+        "headroom": 404.34567901234567,
+        "n_finite": 10
+      },
+      {
+        "block": 8,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 9,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 10,
+        "max_p50": 164.0,
+        "headroom": 399.4146341463415,
+        "n_finite": 10
+      },
+      {
+        "block": 11,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 12,
+        "max_p50": 162.0,
+        "headroom": 404.34567901234567,
+        "n_finite": 10
+      },
+      {
+        "block": 13,
+        "max_p50": 162.0,
+        "headroom": 404.34567901234567,
+        "n_finite": 10
+      },
+      {
+        "block": 14,
+        "max_p50": 162.0,
+        "headroom": 404.34567901234567,
+        "n_finite": 10
+      },
+      {
+        "block": 15,
+        "max_p50": 163.0,
+        "headroom": 401.86503067484665,
+        "n_finite": 10
+      },
+      {
+        "block": 16,
+        "max_p50": 164.0,
+        "headroom": 399.4146341463415,
+        "n_finite": 10
+      },
+      {
+        "block": 17,
+        "max_p50": 166.0,
+        "headroom": 394.6024096385542,
+        "n_finite": 10
+      },
+      {
+        "block": 18,
+        "max_p50": 168.0,
+        "headroom": 389.9047619047619,
+        "n_finite": 10
+      },
+      {
+        "block": 19,
+        "max_p50": 169.0,
+        "headroom": 387.59763313609466,
+        "n_finite": 10
+      },
+      {
+        "block": 20,
+        "max_p50": 170.0,
+        "headroom": 385.3176470588235,
+        "n_finite": 10
+      },
+      {
+        "block": 21,
+        "max_p50": 170.0,
+        "headroom": 385.3176470588235,
+        "n_finite": 10
+      },
+      {
+        "block": 22,
+        "max_p50": 171.0,
+        "headroom": 383.0643274853801,
+        "n_finite": 10
+      },
+      {
+        "block": 23,
+        "max_p50": 171.0,
+        "headroom": 383.0643274853801,
+        "n_finite": 10
+      },
+      {
+        "block": 24,
+        "max_p50": 171.0,
+        "headroom": 383.0643274853801,
+        "n_finite": 10
+      },
+      {
+        "block": 25,
+        "max_p50": 172.5,
+        "headroom": 379.73333333333335,
+        "n_finite": 10
+      },
+      {
+        "block": 26,
+        "max_p50": 1276.0,
+        "headroom": 51.33542319749216,
+        "n_finite": 10
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": 51.33542319749216,
+    "bfloat16": 2.656347962382445e+35,
+    "float32": 2.666771159874608e+35
+  },
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "risky_blocks": []
+}
