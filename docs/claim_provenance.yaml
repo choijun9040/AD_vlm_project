@@ -99,10 +99,13 @@
       from: "eval_results/vision_tower_direct.json::AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ.last_block_p50"
       expect: 68096
       tol: 1
-    - claim: "조사한 저장소 수"
+    - claim: "설정을 읽을 수 있었던 저장소 수 (13.7%의 분모)"
       from: "eval_results/quantized_vlm_config_survey.json::rows"
       expr: "len(x)"
       expect: 197
+    - claim: "검색으로 얻은 후보 저장소 수"
+      from: "eval_results/quantized_vlm_config_survey.json::n_checked"
+      expect: 281
 
 - id: ksae_para4_lambda_fig2
   where: "ksae2026_abstract.md — 4번 문단 + Fig. 2 (λ 용량-반응 · 자기정렬 · fixA)"
