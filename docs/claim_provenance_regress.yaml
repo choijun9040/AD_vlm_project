@@ -1,0 +1,19 @@
+# **회귀 시험용 매니페스트 — 반드시 불합격해야 한다.**
+# 검사기가 항상 통과하면 쓸모가 없으므로, 2026-09-15에 실제로 있었던 결함 둘을
+# 재현해 둔다. 검사기를 고칠 때마다 이것으로 먼저 돌려 볼 것:
+#   python scripts/verify_claim_provenance.py \
+#       --manifest docs/claim_provenance_regress.yaml --strict
+#   → 종료코드 1, '조건 불일치: max_pixels' / 'n_images'가 나와야 정상
+# 회귀 시험 — 2026-09-15에 실제로 있었던 결함 둘을 재현한다. 반드시 **불합격**해야 한다.
+- id: regress_int8_resolution_mix
+  where: "결함 재현: Table 1의 INT8 열이 평가 해상도에서 왔던 상태"
+  sources:
+    - eval_results/resolution_sweep/res_1440000.json
+    - eval_results/int8_quant_error.json      # 평가 해상도(200,704) — 옛 상태
+  allow_differ:
+    n_images: "250 vs 200"
+- id: regress_lambda_source_mix
+  where: "결함 재현: 본문이 250장, Fig.2가 799장이던 상태 (n_images 미허용)"
+  sources:
+    - eval_results/lambda_sweep_activation_profile.json
+    - eval_results/align_target_profile.json

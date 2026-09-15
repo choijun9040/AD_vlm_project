@@ -1,0 +1,136 @@
+# 문서에 **함께 인용되는** 수치들의 출처 조건을 묶어 둔다.
+# scripts/verify_claim_provenance.py가 그룹 안의 _meta를 비교해 조건이 갈리면 보고한다.
+# 값이 맞는지(values)와 조건이 같은지(sources/allow_differ)는 다른 검사다 —
+# 2026-09-15에 나온 혼입 세 건은 모두 값 대조를 통과했고 조건 비교로만 잡혔다.
+
+- id: ksae_table1
+  where: "ksae2026_abstract.md — Table 1 (여유·붕괴율·max/rms·INT8 SNR)"
+  sources:
+    - eval_results/resolution_sweep/res_1440000.json
+    - eval_results/int8_quant_error_native.json
+  allow_differ:
+    n_images: "여유·붕괴 250장 / INT8 200장 — 표 제목에 명시함"
+    min_pixels: "두 실행 모두 3,136 (스윕 메타에만 기록)"
+  values:
+    - claim: "baseline_v2 여유"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_baseline_v2.passes.bfloat16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 0.88
+    - claim: "baseline_v2 붕괴율%"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_baseline_v2.passes.float16.by_layer.31.n_finite"
+      expr: "100*(1-x/250)"
+      expect: 94.8
+      tol: 0.05
+    - claim: "full 여유"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_full.passes.bfloat16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 2.92
+    - claim: "base_3b 여유"
+      from: "eval_results/resolution_sweep/res_1440000.json::base_3b.passes.bfloat16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 0.95
+    - claim: "baseline_v2 INT8 SNR"
+      from: "eval_results/int8_quant_error_native.json::student_baseline_v2.by_layer.31.snr_tensor.p50"
+      expect: 32.23
+    - claim: "full INT8 SNR"
+      from: "eval_results/int8_quant_error_native.json::student_full.by_layer.31.snr_tensor.p50"
+      expect: 22.88
+    - claim: "baseline_v2 max/rms"
+      from: "eval_results/int8_quant_error_native.json::student_baseline_v2.by_layer.31.ratio.p50"
+      expect: 147.2
+      tol: 0.05
+    - claim: "full max/rms"
+      from: "eval_results/int8_quant_error_native.json::student_full.by_layer.31.ratio.p50"
+      expect: 238.2
+      tol: 0.05
+
+- id: ksae_fig1_resolution
+  where: "ksae2026_abstract.md — Fig. 1 (해상도 × 활성 크기/붕괴율) + 본문 2번 문단"
+  sources:
+    - eval_results/resolution_sweep/res_100352.json
+    - eval_results/resolution_sweep/res_200704.json
+    - eval_results/resolution_sweep/res_401408.json
+    - eval_results/resolution_sweep/res_802816.json
+    - eval_results/resolution_sweep/res_1440000.json
+  allow_differ:
+    max_pixels: "해상도 축이 이 그림의 변수다 — 달라야 정상"
+    min_pixels: "해상도에 따라 프로세서가 다르게 잡는다"
+  # n_images는 반드시 같아야 한다 (다르면 곡선의 점마다 표본이 달라진다)
+
+- id: ksae_para3_deployment
+  where: "ksae2026_abstract.md — 3번 문단 (TensorRT · bf16 · 공개 저장소)"
+  sources:
+    - eval_results/trt_precision_bf16.json
+    - eval_results/gemm_fp16_bf16.json
+    - eval_results/vision_tower_direct.json
+    - eval_results/quantized_vlm_config_survey.json
+  allow_differ:
+    n_images: "TRT 50장 / 공개 타워 100장 / GEMM은 이미지와 무관 — 각 문장에 명시"
+    max_pixels: "TRT는 export된 그래프 고정(7,296 토큰), 공개 타워는 1,440,000 — 둘 다 원본 해상도"
+    dtype: "이 문단의 주제가 형식 비교다"
+    limit: "산출물마다 의미가 다름"
+  values:
+    - claim: "TRT fp16 붕괴율"
+      from: "eval_results/trt_precision_bf16.json::modes.fp16.nan_rate"
+      expr: "100*x"
+      expect: 94.0
+      tol: 0.05
+    - claim: "TRT bf16 붕괴율"
+      from: "eval_results/trt_precision_bf16.json::modes.bf16.nan_rate"
+      expr: "100*x"
+      expect: 0.0
+      tol: 0.05
+    - claim: "TRT fp16 지연 p50"
+      from: "eval_results/trt_precision_bf16.json::modes.fp16.latency_ms.p50"
+      expect: 139.7
+      tol: 0.05
+    - claim: "TRT bf16 지연 p50"
+      from: "eval_results/trt_precision_bf16.json::modes.bf16.latency_ms.p50"
+      expect: 197.4
+      tol: 0.05
+    - claim: "GEMM 기하평균 bf16/fp16"
+      from: "eval_results/gemm_fp16_bf16.json::geomean_bf16_over_fp16"
+      expect: 1.001
+      tol: 0.0005
+    - claim: "AngelSlim 3B-AWQ 여유"
+      from: "eval_results/vision_tower_direct.json::AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ.headroom_p50"
+      expect: 0.96
+    - claim: "AngelSlim 3B-AWQ blk31 p50"
+      from: "eval_results/vision_tower_direct.json::AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ.last_block_p50"
+      expect: 68096
+      tol: 1
+    - claim: "조사한 저장소 수"
+      from: "eval_results/quantized_vlm_config_survey.json::rows"
+      expr: "len(x)"
+      expect: 197
+
+- id: ksae_para4_lambda_fig2
+  where: "ksae2026_abstract.md — 4번 문단 + Fig. 2 (λ 용량-반응 · 자기정렬 · fixA)"
+  sources:
+    - eval_results/lambda_sweep_activation_profile.json   # Fig. 2가 읽는 파일
+    - eval_results/align_target_profile.json              # 자기정렬 51%의 출처
+    - eval_results/mcnemar_fixa.json                      # fixA 정확도 비용
+  allow_differ:
+    n_images: >-
+      λ 수치와 Fig. 2는 799장 실행에서, 자기정렬 51%는 aligntgt_base3b와
+      짝지은 250장 실행에서 온다. 짝지은 비교는 같은 실행 안에서만 유효하므로
+      합칠 수 없다. **본문의 λ 끝점은 반드시 799장 쪽을 쓴다(그림과 같아야 한다).**
+      2026-09-15 이전 판은 본문이 250장, 그림이 799장이어서 끝점이 어긋났다.
+    max_pixels: "λ·정렬 실행은 200,704, McNemar는 예측 파일 대조라 해상도 개념 없음"
+    min_pixels: "위와 같음"
+  values:
+    - claim: "λ=0 blk31 p50 (Fig. 2와 같아야 함)"
+      from: "eval_results/lambda_sweep_activation_profile.json::sweep_align0.0.passes.bfloat16.by_layer.31.p50"
+      expect: 36608
+      tol: 1
+    - claim: "λ=2.0 blk31 p50 (Fig. 2와 같아야 함)"
+      from: "eval_results/lambda_sweep_activation_profile.json::sweep_align2.0.passes.bfloat16.by_layer.31.p50"
+      expect: 14208
+      tol: 1
+    - claim: "fixA McNemar p"
+      from: "eval_results/mcnemar_fixa.json::p"
+      expect: 0.25
+      tol: 0.005
+    - claim: "fixA 문항 수"
+      from: "eval_results/mcnemar_fixa.json::n_items"
+      expect: 11309
