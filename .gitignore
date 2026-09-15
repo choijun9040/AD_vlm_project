@@ -12,6 +12,8 @@ external/
 logs/
 onnx/
 *.tgz
+trt_inputs.npz
+eval_results/posthoc_*_predictions.jsonl
 
 # local-only Claude Code settings
 .claude/settings.local.json

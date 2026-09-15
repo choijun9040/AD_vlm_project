@@ -94,12 +94,20 @@ def collapse_rate(model, cache, scale, mode="out"):
 
 @torch.no_grad()
 def qa_accuracy(model, processor, samples, token_to_images, scale, mode="out",
-                max_new_tokens=16):
-    """bf16에서 정확도 — 리스케일이 기능을 해치는지 본다."""
+                max_new_tokens=16, dump_path=None):
+    """bf16에서 정확도 — 리스케일이 기능을 해치는지 본다.
+
+    `dump_path`를 주면 문항별 정오를 JSONL로 남긴다. **짝지은 McNemar 검정에 필요하다.**
+    전체 정확도 차이만으로는 그것이 평가 표본 잡음과 구별되는지 알 수 없다 —
+    fixA의 -0.59%p는 11,309문항 중 67문항이고, 우리가 "구별 안 됨"이라 부르는
+    5-way의 0.35%p(40문항)의 1.7배에 불과하다. 두 조건에 같은 기준을 적용하려면
+    문항 단위로 재야 한다.
+    """
     hs = attach(model, scale, mode)
     dev = next(model.parameters()).device
     correct = 0
-    for s in samples:
+    df = open(dump_path, "w", encoding="utf-8") if dump_path else None
+    for i, s in enumerate(samples):
         img = str(token_to_images[s["sample_token"]]["CAM_FRONT"])
         msgs = [{"role": "user", "content": [{"type": "image", "image": img},
                                              {"type": "text", "text": s["question"]}]}]
@@ -110,7 +118,15 @@ def qa_accuracy(model, processor, samples, token_to_images, scale, mode="out",
                              pad_token_id=processor.tokenizer.pad_token_id)
         pred = processor.batch_decode(ids[:, inp["input_ids"].shape[1]:],
                                       skip_special_tokens=True)[0].strip()
-        correct += int(normalize(pred) == normalize(s["answer"]))
+        ok = int(normalize(pred) == normalize(s["answer"]))
+        correct += ok
+        if df:
+            df.write(json.dumps({"idx": i, "sample_token": s["sample_token"],
+                                 "template_type": s.get("template_type"),
+                                 "gt": s["answer"], "pred": pred,
+                                 "correct": bool(ok)}, ensure_ascii=False) + "\n")
+    if df:
+        df.close()
     for x in hs:
         x.remove()
     return correct / len(samples)
@@ -124,6 +140,10 @@ def main():
     ap.add_argument("--conds", default="none,fixb,fixa",
                     help="측정할 조건 (none/fixb/fixa 쉼표 구분)")
     ap.add_argument("--out", default="eval_results/posthoc_rescale.json")
+    ap.add_argument("--dump_predictions", action="store_true",
+                    help="조건별 문항 정오를 JSONL로 남긴다 (McNemar 검정용)")
+    ap.add_argument("--skip_collapse", action="store_true",
+                    help="붕괴율 측정을 건너뛰고 정확도만 잰다 (이미 측정했을 때)")
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -146,11 +166,14 @@ def main():
     keep = {"none": "무개입", "fixb": "fixB", "fixa": "fixA"}
     want = [keep[c.strip().lower()] for c in args.conds.split(",")]
     CONDS = [c for c in ALL_CONDS if any(c[0].startswith(w) for w in want)]
-    for label, sc, md in CONDS:
-        r = collapse_rate(model, cache, sc, md)
-        res["collapse"][label] = r
-        print(f"  [{label:16s}] fp16 붕괴 {r['nan']}/{r['n']} = {r['nan_rate']*100:5.1f}%   "
-              f"blk31 p50={r['blk31_p50'] or float('nan'):,.0f}", flush=True)
+    if args.skip_collapse:
+        print("  붕괴율 측정 건너뜀 (--skip_collapse)", flush=True)
+    else:
+        for label, sc, md in CONDS:
+            r = collapse_rate(model, cache, sc, md)
+            res["collapse"][label] = r
+            print(f"  [{label:16s}] fp16 붕괴 {r['nan']}/{r['n']} = {r['nan_rate']*100:5.1f}%   "
+                  f"blk31 p50={r['blk31_p50'] or float('nan'):,.0f}", flush=True)
     del cache
 
     # --- (ii) 정확도: 평가 해상도, bf16 ---
@@ -158,10 +181,16 @@ def main():
     ds = NuScenesQADataset(json_path=NUSCENESQA_VAL, token_to_images=tok, processor=None)
     samples = ds.samples[: args.n_qa]
     print(f"\n[정확도] NuScenes-QA val {len(samples)}문항 (bf16)", flush=True)
+    outdir = Path(args.out).parent
+    tagmap = {"무개입": "none", "fixB": "fixb", "fixA": "fixa"}
     for label, sc, md in CONDS:
-        a = qa_accuracy(model, proc_eval, samples, tok, sc, md)
+        dp = None
+        if args.dump_predictions:
+            short = next((v for k, v in tagmap.items() if label.startswith(k)), "cond")
+            dp = outdir / f"posthoc_{short}_predictions.jsonl"
+        a = qa_accuracy(model, proc_eval, samples, tok, sc, md, dump_path=dp)
         res["accuracy"][label] = a
-        print(f"  [{label:16s}] {a*100:.2f}%", flush=True)
+        print(f"  [{label:16s}] {a*100:.2f}%" + (f"  → {dp.name}" if dp else ""), flush=True)
 
     Path(args.out).write_text(json.dumps(res, indent=2, ensure_ascii=False))
     base_acc = res["accuracy"]["무개입"]
@@ -169,9 +198,10 @@ def main():
     print(f"{'조건':22s}{'붕괴율':>10}{'정확도':>10}{'Δ정확도':>10}")
     print("-" * 74)
     for label, _, _ in CONDS:
-        c = res["collapse"][label]["nan_rate"] * 100
+        cd = res["collapse"].get(label)
+        c = f"{cd['nan_rate']*100:>9.1f}%" if cd else f"{'—':>10}"
         a = res["accuracy"][label]
-        print(f"{label:22s}{c:>9.1f}%{a*100:>9.2f}%{(a-base_acc)*100:>+9.2f}pp")
+        print(f"{label:22s}{c}{a*100:>9.2f}%{(a-base_acc)*100:>+9.2f}pp")
     print("사전 등록된 해석: thesis_outline_20260910.md §6 '사후 리스케일 실험'")
     print("=" * 74)
     print(f"저장: {args.out}")
