@@ -1,0 +1,26 @@
+{
+  "AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ": {
+    "repo": "AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ",
+    "arch": "Qwen2_5_VLForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 68096.0,
+    "last_block_p95": 76800.0,
+    "last_block_worst": 86528.0,
+    "headroom_p50": 0.9619360902255639,
+    "headroom_p95": 0.8529166666666667,
+    "headroom_worst": 0.7570266272189349,
+    "loader": "vision_only_strict"
+  },
+  "AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ": {
+    "repo": "AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ",
+    "arch": "Qwen2_5_VLForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 37888.0,
+    "last_block_p95": 44544.0,
+    "last_block_worst": 50432.0,
+    "headroom_p50": 1.728885135135135,
+    "headroom_p95": 1.4705459770114941,
+    "headroom_worst": 1.2988578680203047,
+    "loader": "vision_only_strict"
+  }
+}

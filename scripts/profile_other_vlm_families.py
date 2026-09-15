@@ -19,6 +19,7 @@ Qwen2.5-VL 고유인지 계열 일반인지 확인한다. 학습 없이 비전 �
 import argparse
 import gc
 import json
+import math
 import sys
 import traceback
 from pathlib import Path
@@ -34,6 +35,15 @@ from profile_vision_activations import DRIVELM_VAL_JSON, FP16_MAX, percentile
 
 # (표시명, HF repo, 비고)
 TARGETS = [
+    # --- 2026-09-15 추가: 개발셋 밖 독립 표본 ---
+    # `headroom_guard`의 검증이 "양성 1개(그것도 우리가 개발 대상으로 삼은 체크포인트)
+    # + 음성 3개"뿐이라는 지적에 대응한다. 사전학습 기본 모델은 우리가 학습하지
+    # 않았으므로 **개발셋 밖 양성**이다. 둘 다 이미 캐시에 있어 다운로드가 없고,
+    # [keep] 태그가 붙은 것은 --cleanup이 지우지 않는다(파이프라인의 기본 모델이다).
+    ("base_3b", "Qwen/Qwen2.5-VL-3B-Instruct",
+     "사전학습 기본 모델 · 본 연구 학생의 베이스 — 개발셋 밖 양성 후보 [keep]"),
+    ("base_7b", "Qwen/Qwen2.5-VL-7B-Instruct",
+     "사전학습 기본 모델 · 본 연구 교사의 베이스 [keep]"),
     ("qwen2vl_2b_awq", "Qwen/Qwen2-VL-2B-Instruct-AWQ", "공식 위험 구성 (fp16 + 비전 제외)"),
     ("smolvlm_instruct", "HuggingFaceTB/SmolVLM-Instruct", "다른 계열 (Idefics3)"),
     # 위험 구성 추가 표본 — 디스크가 빠듯해 하나씩 받고 지운다(--cleanup)
@@ -264,6 +274,16 @@ def profile(tag, repo, note, image_paths, max_pixels):
         raise RuntimeError("마지막 블록 출력을 수집하지 못했다")
     med = lambda v: percentile(sorted(v), 0.5)
     p50, p95 = med(last_max), percentile(sorted(last_max), 0.95)
+    # **NaN/inf는 측정이 아니다** (2026-09-15). AngelSlim/Qwen2.5-VL-3B-INT4-AWQ에서
+    # from_pretrained가 키 규약 불일치로 비전 타워를 랜덤 초기화했는데
+    # check_weights_loaded의 휴리스틱(정규화 파라미터가 1.0인지)을 통과했고,
+    # bf16 활성이 NaN으로 나왔다. 그대로 두면 난수가 결과표에 실린다.
+    n_bad = sum(1 for v in last_max if not math.isfinite(v))
+    if n_bad:
+        raise RuntimeError(
+            f"bf16 활성에 비유한 값 {n_bad}/{len(last_max)}장 — bf16(상한 3.4e38)에서는 "
+            f"오버플로가 날 수 없으므로 가중치 적재를 의심해야 한다. 측정으로 쓰지 않는다. "
+            f"비전 타워만 strict로 올리는 scripts/probe_vision_tower_direct.py를 쓸 것")
     return {"repo": repo, "note": note, "depth": depth, "n_images": len(last_max),
             "last_block_p50": p50, "last_block_p95": p95,
             "prev_block_p50": med(prev_max) if prev_max else None,
@@ -302,6 +322,13 @@ def main():
             if free_gb < args.min_free_gb:
                 print(f"[{tag}] 디스크 부족으로 건너뜀 "
                       f"(여유 {free_gb:.1f} GB < 필요 {args.min_free_gb:.0f} GB)")
+                # **기존의 실패 기록을 덮어쓰지 않는다** (2026-09-15).
+                # 디스크 가드를 올려 재실행했더니 '시도했다가 실패'한 기록이
+                # '디스크 부족으로 건너뜀'으로 전부 덮여 사유가 날아갔다.
+                # 무엇을 못 쟀는지가 논문의 결과이므로 사유 보존이 중요하다.
+                if "failed" in results.get(tag, {}):
+                    print(f"       (이전 실패 기록 보존: {results[tag]['failed'][:60]})")
+                    continue
                 results[tag] = {"repo": repo, "note": note,
                                 "skipped": f"디스크 부족 (여유 {free_gb:.1f} GB)"}
                 out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
@@ -320,7 +347,7 @@ def main():
                             "failed": f"{type(e).__name__}: {str(e)[:200]}"}
             out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
         finally:
-            if args.cleanup:
+            if args.cleanup and "[keep]" not in note:
                 import shutil, os
                 cache = os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
                 d = Path(cache) / "hub" / ("models--" + repo.replace("/", "--"))

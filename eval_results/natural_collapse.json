@@ -1,0 +1,52 @@
+{
+  "base_3b": {
+    "repo": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "n_images": 100,
+    "collapse_rate": 0.7,
+    "n_nonfinite_blk": 70,
+    "blk_max_p50_fp16": 63648.0,
+    "resolution": "max_pixels=1,440,000",
+    "headroom_p50_bf16": 0.9619360902255639,
+    "headroom_p95_bf16": 0.8472682119205298
+  },
+  "base_7b": {
+    "repo": "Qwen/Qwen2.5-VL-7B-Instruct",
+    "n_images": 100,
+    "collapse_rate": 0.0,
+    "n_nonfinite_blk": 0,
+    "blk_max_p50_fp16": 37792.0,
+    "resolution": "max_pixels=1,440,000",
+    "headroom_p50_bf16": 1.728885135135135,
+    "headroom_p95_bf16": 1.4621428571428572
+  },
+  "qwen2vl_2b_awq": {
+    "repo": "Qwen/Qwen2-VL-2B-Instruct-AWQ",
+    "n_images": 100,
+    "collapse_rate": 0.0,
+    "n_nonfinite_blk": 0,
+    "blk_max_p50_fp16": 16800.0,
+    "resolution": "max_pixels=1,440,000",
+    "headroom_p50_bf16": 3.8768939393939394,
+    "headroom_p95_bf16": 3.7083333333333335
+  },
+  "qwen2vl_7b_awq": {
+    "repo": "Qwen/Qwen2-VL-7B-Instruct-AWQ",
+    "n_images": 100,
+    "collapse_rate": 0.0,
+    "n_nonfinite_blk": 0,
+    "blk_max_p50_fp16": 14528.0,
+    "resolution": "max_pixels=1,440,000",
+    "headroom_p50_bf16": 4.489035087719298,
+    "headroom_p95_bf16": 4.246887966804979
+  },
+  "smolvlm_instruct": {
+    "repo": "HuggingFaceTB/SmolVLM-Instruct",
+    "n_images": 100,
+    "collapse_rate": 0.0,
+    "n_nonfinite_blk": 0,
+    "blk_max_p50_fp16": 1288.0,
+    "resolution": "모델 기본값 (이 계열엔 max_pixels 설정이 없다)",
+    "headroom_p50_bf16": 50.857142857142854,
+    "headroom_p95_bf16": 50.23312883435583
+  }
+}
