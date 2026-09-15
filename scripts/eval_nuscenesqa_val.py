@@ -146,6 +146,13 @@ def main():
     parser.add_argument("--checkpoint", required=True,
                         help="예: checkpoints/student_baseline_v2/epoch_1 또는 checkpoints_awq/student_baseline_v2")
     parser.add_argument("--limit", type=int, default=None, help="디버깅/스모크 테스트용 샘플 수 제한")
+    # **--stride (2026-09-15 추가).** --limit N은 파일 앞쪽 N개를 자르는데, 문항이
+    # 장면별로 뭉쳐 있어 앞 1,000문항이 799 키프레임 중 **79장면만** 덮는다.
+    # 문항 수가 1,000이어도 독립 표본은 79이므로 이항 신뢰구간이 지나치게 좁아지고,
+    # 템플릿 분포도 치우친다(comparison 15.7% → 12.4%).
+    # --stride K는 K개마다 하나씩 뽑아 전체 키프레임에 고르게 퍼진 부분집합을 만든다.
+    parser.add_argument("--stride", type=int, default=None,
+                        help="K개마다 1문항씩 추출 (전체 키프레임에 고르게 퍼진 부분집합)")
     parser.add_argument("--max_new_tokens", type=int, default=16)
     parser.add_argument("--log_every", type=int, default=200)
     parser.add_argument("--out_dir", default="eval_results")
@@ -180,6 +187,11 @@ def main():
         processor=None,  # raw 모드 - generate를 직접 수행하므로 학습용 토큰화 불필요
     )
     samples = ds.samples
+    if args.stride:
+        samples = samples[:: args.stride]
+        scenes = len({x.get("sample_token") for x in samples})
+        print(f"[부분집합] stride={args.stride} → {len(samples)}문항, "
+              f"{scenes}개 키프레임 (전체 799)")
     if args.limit:
         samples = samples[: args.limit]
     print(f"평가 대상 샘플 수: {len(samples)}")
