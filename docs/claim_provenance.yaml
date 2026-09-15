@@ -57,6 +57,26 @@
         files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md]
         render: ["{v:.2f} dB"]
         stale: [23.10]
+    # 입도 선택이 주장의 강도를 바꾸므로 채널 단위 값도 고정해 둔다 (2026-09-15)
+    - claim: "baseline_v2 채널단위 SNR"
+      from: "eval_results/int8_quant_error_native.json::student_baseline_v2.by_layer.31.snr_channel.p50"
+      expect: 40.56
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md]
+        render: ["{v:.2f} dB"]
+    - claim: "spatial 채널단위 SNR (단조성이 깨지는 지점)"
+      from: "eval_results/int8_quant_error_native.json::student_spatial.by_layer.31.snr_channel.p50"
+      expect: 39.15
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md]
+        # 나열 안에서는 단위 없이 굵게만 쓴다 — 실제 표기를 그대로 적는다
+        render: ["**{v:.2f}**", "{v:.2f} dB"]
+    - claim: "full 채널단위 SNR"
+      from: "eval_results/int8_quant_error_native.json::student_full.by_layer.31.snr_channel.p50"
+      expect: 36.41
+      docs:
+        files: [ksae2026_abstract.md, thesis_ch5_ch6_draft.md]
+        render: ["{v:.2f} dB"]
     - claim: "baseline_v2 max/rms"
       from: "eval_results/int8_quant_error_native.json::student_baseline_v2.by_layer.31.ratio.p50"
       expect: 147.2
