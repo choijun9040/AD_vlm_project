@@ -61,7 +61,8 @@ def detect_precision(checkpoint_path: str) -> str:
 
 
 def load_model(checkpoint_path: str, precision: str, processor_from_checkpoint: bool = False,
-               dtype: str = "float16"):
+               dtype: str = "float16", max_pixels: int = None, min_pixels: int = None,
+               lora_dtype: str = "bfloat16"):
     # PEFT의 LoRA dispatcher도 AWQ 여부를 확인하느라 awq를 import하므로,
     # 정밀도와 무관하게 스텁을 먼저 꽂아둔다
     awq_compat.patch()
@@ -73,14 +74,19 @@ def load_model(checkpoint_path: str, precision: str, processor_from_checkpoint: 
         processor = AutoProcessor.from_pretrained(checkpoint_path)
     else:
         processor = AutoProcessor.from_pretrained(
-            STUDENT_BASE, max_pixels=MAX_PIXELS, min_pixels=MIN_PIXELS,
+            STUDENT_BASE,
+            max_pixels=max_pixels or MAX_PIXELS,
+            min_pixels=min_pixels if min_pixels is not None else MIN_PIXELS,
         )
     ip = processor.image_processor
     print(f"[processor] min_pixels={ip.min_pixels} max_pixels={ip.max_pixels}")
 
     if precision == "lora_bf16":
+        # **lora_dtype (2026-09-15 추가)** — LoRA 경로는 bf16 고정이었다.
+        # 배포 조건은 fp16이므로, 원본 해상도 정확도를 재려면 fp16으로도
+        # 돌 수 있어야 한다. 기본값은 기존 동작(bfloat16)을 유지한다.
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            STUDENT_BASE, torch_dtype=torch.bfloat16,
+            STUDENT_BASE, torch_dtype=getattr(torch, lora_dtype),
         )
         model = PeftModel.from_pretrained(base, checkpoint_path).to("cuda")
     else:
@@ -150,13 +156,20 @@ def main():
                         help="양자화 체크포인트를 로드할 dtype (비양자화 vision tower가 이 dtype으로 돈다)")
     parser.add_argument("--processor_from_checkpoint", action="store_true",
                         help="base 대신 체크포인트에 저장된 processor를 사용 (해상도 교란 재현용 대조군)")
+    parser.add_argument("--max_pixels", type=int, default=None,
+                        help="미지정이면 평가 해상도(256*28*28). 원본 해상도는 1440000")
+    parser.add_argument("--min_pixels", type=int, default=None)
+    parser.add_argument("--lora_dtype", choices=["float16", "bfloat16"], default="bfloat16",
+                        help="LoRA 경로의 기반 모델 dtype. 배포 조건(fp16)을 재려면 float16")
+    parser.add_argument("--tag", default=None, help="출력 파일명에 붙일 꼬리표")
     parser.add_argument("--print_samples", type=int, default=0,
                         help="처음 N개 예측을 stdout에도 출력")
     args = parser.parse_args()
 
     precision = detect_precision(args.checkpoint)
     print(f"[모델 로드] {args.checkpoint}  (precision={precision})")
-    model, processor = load_model(args.checkpoint, precision, args.processor_from_checkpoint, args.dtype)
+    model, processor = load_model(args.checkpoint, precision, args.processor_from_checkpoint,
+                                  args.dtype, args.max_pixels, args.min_pixels, args.lora_dtype)
 
     print("[데이터 준비] DriveLM val 이미지 매핑 구성 중...")
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)
@@ -181,6 +194,8 @@ def main():
         ckpt_tag += "_" + args.dtype
     if args.processor_from_checkpoint:
         ckpt_tag += "_ckptproc"
+    if args.tag:                          # 해상도·dtype 조건을 파일명에 남긴다
+        ckpt_tag += "_" + args.tag
     if args.limit:                       # 전체 실행 결과를 스모크 실행이 덮어쓰지 않도록
         ckpt_tag += f"_limit{args.limit}"
 

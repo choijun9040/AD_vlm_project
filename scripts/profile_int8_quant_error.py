@@ -133,6 +133,12 @@ def main():
     ap.add_argument("--log_every", type=int, default=100)
     ap.add_argument("--workers", type=int, default=16)
     ap.add_argument("--out", default="eval_results/int8_quant_error.json")
+    # 2026-09-15 추가. 초판은 평가 해상도(200,704)에서만 쟀는데, 여유·붕괴율은
+    # 원본 해상도(1,440,000)에서 쟀다. 그 둘을 한 표에 실으면 **조건이 다른 열이
+    # 섞인다** — 지표 역전 주장이 걸린 표이므로 같은 조건에서 다시 잰다.
+    ap.add_argument("--max_pixels", type=int, default=None,
+                    help="미지정이면 평가 해상도 기본값(profile_vision_activations.MAX_PIXELS)")
+    ap.add_argument("--min_pixels", type=int, default=None)
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -141,14 +147,17 @@ def main():
     paths = [str(v["CAM_FRONT"]) for v in token_to_images.values() if "CAM_FRONT" in v][: args.limit]
     print(f"대상 이미지: {len(paths)}장")
 
-    processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=MAX_PIXELS, min_pixels=MIN_PIXELS)
+    mxp = args.max_pixels or MAX_PIXELS
+    mnp = args.min_pixels if args.min_pixels is not None else MIN_PIXELS
+    print(f"[해상도] max_pixels={mxp:,}  min_pixels={mnp:,}")
+    processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=mxp, min_pixels=mnp)
     cache = build_pixel_cache(processor, paths, args.workers)
 
     out_path = Path(args.out)
     out_path.parent.mkdir(exist_ok=True)
     results = json.loads(out_path.read_text()) if out_path.exists() else {}
     results["_meta"] = {"n_images": len(paths), "layers": list(LAYERS),
-                        "max_pixels": MAX_PIXELS, "min_pixels": MIN_PIXELS}
+                        "max_pixels": mxp, "min_pixels": mnp}
 
     for name, base_id, adapter, note in MODELS:
         r = profile(name, base_id, adapter, cache, args.log_every)
