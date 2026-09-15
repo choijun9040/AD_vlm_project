@@ -169,6 +169,11 @@ def main():
     parser.add_argument("--lora_dtype", choices=["float16", "bfloat16"], default="bfloat16",
                         help="LoRA 경로의 기반 모델 dtype. 배포 조건(fp16)을 재려면 float16")
     parser.add_argument("--tag", default=None, help="출력 파일명에 붙일 꼬리표")
+    # **--vision_state (2026-09-15 추가).** headroom_guard fix가 저장한 교정된 비전
+    # 타워 state_dict를 얹는다. 도구가 산출한 가중치를 **그대로** 배포 조건에서
+    # 평가하기 위한 경로다 — 손으로 고른 배수가 아니라 도구의 출력을 검증한다.
+    parser.add_argument("--vision_state", default=None,
+                        help="교정된 비전 타워 state_dict(.pt) 경로")
     parser.add_argument("--print_samples", type=int, default=0,
                         help="처음 N개 예측을 stdout에도 출력")
     args = parser.parse_args()
@@ -177,6 +182,51 @@ def main():
     print(f"[모델 로드] {args.checkpoint}  (precision={precision})")
     model, processor = load_model(args.checkpoint, precision, args.processor_from_checkpoint,
                                   args.dtype, args.max_pixels, args.min_pixels, args.lora_dtype)
+
+    if args.vision_state:
+        # **LoRA를 먼저 병합한다 (2026-09-15 실측으로 잡음).** headroom_guard는
+        # merge_and_unload() 한 타워의 state_dict를 저장하므로 키가 평문
+        # (`patch_embed.proj.weight`)인데, 여기 모델은 PeftModel이라 타워 키가
+        # LoRA로 감싸여 있다(`patch_embed.proj.base_layer.weight`). 그대로 얹으면
+        # 643개가 어긋난다 — strict 검사가 이를 잡았다. 배포 시에도 병합본을
+        # 내보내므로 병합이 올바른 조건이기도 하다.
+        if hasattr(model, "merge_and_unload"):
+            model = model.merge_and_unload()
+            print("[교정] LoRA 병합 후 교정 가중치를 얹는다")
+        # 비전 타워를 찾는다. **속성 이름을 순차 적용하면 안 된다** (2026-09-15 실측):
+        # `model` 다음에 `visual`을 보면 Qwen2_5_VLForConditionalGeneration의
+        # `.model`(텍스트 모델)에 걸려 `embed_tokens.weight`가 나온다. 경로 후보를
+        # 통째로 시도해 **끝까지 성립하는 것**만 쓴다.
+        vt = None
+        for path in (("visual",), ("model", "visual"),
+                     ("base_model", "model", "visual"),
+                     ("base_model", "model", "model", "visual")):
+            o, ok = model, True
+            for a in path:
+                if not hasattr(o, a):
+                    ok = False
+                    break
+                o = getattr(o, a)
+            if ok and hasattr(o, "blocks"):
+                vt = o
+                print(f"[교정] 비전 타워 경로: model.{'.'.join(path)} "
+                      f"({type(o).__name__}, blocks={len(o.blocks)})")
+                break
+        if vt is None:
+            raise RuntimeError("비전 타워를 찾지 못했다 — --vision_state를 적용할 수 없다")
+        sd = torch.load(args.vision_state, map_location="cpu")
+        missing, unexpected = vt.load_state_dict(sd, strict=False)
+        pnames = {n for n, _ in vt.named_parameters()}
+        miss_param = [k for k in missing if k in pnames]
+        if miss_param or unexpected:
+            raise RuntimeError(
+                f"교정 가중치 적재 불일치 — 빠진 파라미터 {len(miss_param)}개"
+                f"{', 예: ' + miss_param[0] if miss_param else ''}, "
+                f"남은 키 {len(unexpected)}개"
+                f"{', 예: ' + unexpected[0] if unexpected else ''}")
+        vt.to(next(model.parameters()).dtype)
+        print(f"[교정] 비전 타워 가중치 교체: {args.vision_state} "
+              f"(파라미터 {len(pnames)}개 전부 적재)")
 
     print("[데이터 준비] DriveLM val 이미지 매핑 구성 중...")
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)

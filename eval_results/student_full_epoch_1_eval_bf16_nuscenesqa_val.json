@@ -1,0 +1,43 @@
+{
+  "checkpoint": "checkpoints/student_full/epoch_1",
+  "precision": "lora_bf16",
+  "dtype": "bfloat16",
+  "max_new_tokens": 16,
+  "total": 1029,
+  "correct": 525,
+  "accuracy": 0.5102040816326531,
+  "eos_diagnostics": {
+    "no_eos": 76,
+    "no_eos_rate": 0.0738581146744412,
+    "hit_cap": 76,
+    "hit_cap_rate": 0.0738581146744412,
+    "mean_gen_tokens": 3.6715257531584062
+  },
+  "by_type": {
+    "count": {
+      "correct": 15,
+      "total": 194,
+      "accuracy": 0.07731958762886598
+    },
+    "object": {
+      "correct": 86,
+      "total": 213,
+      "accuracy": 0.40375586854460094
+    },
+    "exist": {
+      "correct": 242,
+      "total": 298,
+      "accuracy": 0.8120805369127517
+    },
+    "comparison": {
+      "correct": 104,
+      "total": 162,
+      "accuracy": 0.6419753086419753
+    },
+    "status": {
+      "correct": 78,
+      "total": 162,
+      "accuracy": 0.48148148148148145
+    }
+  }
+}
