@@ -1,0 +1,43 @@
+{
+  "checkpoint": "checkpoints_awq/student_baseline_v2",
+  "precision": "4bit_awq",
+  "dtype": "bfloat16",
+  "max_new_tokens": 16,
+  "total": 11309,
+  "correct": 5462,
+  "accuracy": 0.4829781589884163,
+  "eos_diagnostics": {
+    "no_eos": 606,
+    "no_eos_rate": 0.053585639755946594,
+    "hit_cap": 606,
+    "hit_cap_rate": 0.053585639755946594,
+    "mean_gen_tokens": 3.9386329472101864
+  },
+  "by_type": {
+    "count": {
+      "correct": 173,
+      "total": 2212,
+      "accuracy": 0.07820976491862568
+    },
+    "exist": {
+      "correct": 2568,
+      "total": 3308,
+      "accuracy": 0.7762998790810157
+    },
+    "object": {
+      "correct": 803,
+      "total": 2359,
+      "accuracy": 0.3403984739296312
+    },
+    "comparison": {
+      "correct": 1116,
+      "total": 1780,
+      "accuracy": 0.6269662921348315
+    },
+    "status": {
+      "correct": 802,
+      "total": 1650,
+      "accuracy": 0.4860606060606061
+    }
+  }
+}

@@ -46,10 +46,13 @@ TARGETS = [
     # 목적: "위험 구성 27개"라는 config 집계를 **실측 여유 표**로 격상해 C2·C3을 닫는다.
     ("qwen25vl_7b_awq", "AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ",
      "위험 구성 · 본 연구 교사와 동일 아키텍처"),
+    # 아래 둘은 저장소의 커스텀 코드를 실행해야 로드된다(trust_remote_code).
+    # 비-Qwen 계열 표본이 SmolVLM 하나뿐이라 C2(계열 일반성)에 값져서 포함했다.
+    # **공식 저장소가 아니므로 임의 코드 실행 위험이 있다** — 이 둘에만 국소 허용한다.
     ("internvl3_8b_awq", "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ",
-     "위험 구성 · 다른 계열(InternVL3)"),
+     "위험 구성 · 다른 계열(InternVL3) [remote_code]"),
     ("phi35v_awq", "Isotr0py/Phi-3.5-vision-instruct-AWQ",
-     "위험 구성 · 다른 계열(Phi-3.5-vision)"),
+     "위험 구성 · 다른 계열(Phi-3.5-vision) [remote_code]"),
     ("qwen2vl_7b_awq_pc", "p-christ/Qwen2-VL-7B-Instruct-AWQ",
      "위험 구성 · 공식 재배포본 (같은 가중치면 같은 값이 나와야 한다 — 절차 점검)"),
     # --- 대형 (디스크가 나면 자동 진행, 안 나면 자동 건너뜀) ---
@@ -64,6 +67,33 @@ TARGETS = [
 
 VISION_ATTRS = ("visual", "vision_model", "vision_tower", "vision_encoder")
 BLOCK_HINTS = ("Block", "Layer")
+
+
+def check_weights_loaded(model, repo, cls_name, sample=24):
+    """가중치가 실제로 로드됐는지 확인한다.
+
+    **왜 필요한가 (2026-09-15 실측).** 새 transformers로 저장된 체크포인트는 키가
+    `model.visual.*` / `model.language_model.*`인데 4.49는 `visual.*` / `model.layers.*`를
+    기대한다. 이름이 안 맞으면 `from_pretrained`가 **경고만 찍고 랜덤 초기화된 모델을
+    돌려준다** — 로드는 "성공"하고 비전 타워도 찾아지므로, 확인하지 않으면 **의미 없는
+    난수를 활성값으로 측정하게 된다.**
+
+    판정: 비전 타워 파라미터 표본의 통계가 정상 초기화 분포와 구별되지 않으면 의심한다.
+    구체적으로 LayerNorm/RMSNorm weight는 사전학습되면 1.0에서 벗어나는데, 랜덤
+    초기화면 정확히 1.0이다.
+    """
+    tower = find_vision_tower(model)
+    norms = [(n, p) for n, p in tower.named_parameters()
+             if p.dim() == 1 and ("norm" in n.lower() or "ln" in n.lower())]
+    if not norms:
+        return
+    exact_one = sum(1 for _, p in norms[:sample]
+                    if bool((p.detach().float() == 1.0).all()))
+    if exact_one >= max(1, min(sample, len(norms)) // 2):
+        raise RuntimeError(
+            f"가중치 미로드 의심 — 비전 타워 norm 파라미터 {exact_one}개가 정확히 1.0이다. "
+            f"체크포인트 키 규약이 이 transformers 버전과 다를 가능성이 높다 "
+            f"({cls_name}, {repo}).")
 
 
 def find_vision_tower(model):
@@ -102,21 +132,76 @@ def profile(tag, repo, note, image_paths, max_pixels):
     from PIL import Image
 
     # AutoModel은 계열에 따라 **비전 타워가 없는 내부 모델**을 돌려준다
-    # (예: Qwen2-VL은 Qwen2VLModel = 텍스트 부분만). 생성용 래퍼부터 순서대로 시도한다.
+    # (예: Qwen2-VL은 Qwen2VLModel = 텍스트 부분만). 2026-09-15 실측: Qwen2.5-VL AWQ
+    # 저장본 4개가 이 함정에 걸려 "비전 타워를 찾지 못했다"로 전부 실패했다 —
+    # 앞의 Auto 클래스들이 등록돼 있지 않아 마지막 AutoModel이 텍스트 모델을 돌려준 것이다.
+    # 그래서 **config.architectures의 정확한 클래스를 먼저** 시도한다.
     import transformers as HF
+    from transformers import AutoConfig
+
+    trc = "[remote_code]" in note        # 이 태그에만 국소 허용
+    order, cfg = [], None
+    try:
+        cfg = AutoConfig.from_pretrained(repo, trust_remote_code=trc)
+        # 일부 AWQ 재저장본은 **더 새 transformers의 중첩 config 구조**로 쓰여 있다.
+        # 4.49의 Qwen2_5_VLConfig는 평면 구조(hidden_size가 최상위)인데 저장본에는
+        # `text_config` dict가 추가로 들어 있고, `get_text_config()`가 그 dict를
+        # 돌려주면 `GenerationConfig.from_model_config`가
+        # "'dict' object has no attribute 'to_dict'"로 죽는다. 그러면 상위 로더가
+        # 조용히 AutoModel(텍스트 전용)로 내려가 "비전 타워를 찾지 못했다"가 된다.
+        #
+        # 실측(AngelSlim/Qwen2.5-VL-3B-INT4-AWQ): 최상위 필드와 text_config의 값이
+        # **완전히 같고** 정상 저장본과도 일치한다. 즉 중복이므로 **제거하면 된다.**
+        # 값이 다르면 제거가 위험하므로 그때는 건드리지 않고 경고만 남긴다.
+        raw = getattr(cfg, "text_config", None)
+        if isinstance(raw, dict):
+            keys = ("hidden_size", "num_hidden_layers", "num_attention_heads",
+                    "intermediate_size", "vocab_size")
+            same = all(getattr(cfg, k, None) == raw.get(k) for k in keys if k in raw)
+            if same:
+                delattr(cfg, "text_config")
+                print("  config 보정: 중복된 text_config dict 제거 "
+                      "(최상위 필드와 값이 동일)", flush=True)
+            else:
+                print("  [경고] text_config가 dict인데 최상위와 값이 다르다 — "
+                      "건드리지 않는다", flush=True)
+        for arch in (getattr(cfg, "architectures", None) or []):
+            if getattr(HF, arch, None) is not None:
+                order.append(arch)
+    except Exception as e:
+        print(f"  config 읽기 실패(무시): {type(e).__name__}: {e}", flush=True)
+    order += ["AutoModelForVision2Seq", "AutoModelForImageTextToText", "AutoModel"]
+
     model = None
     last_err = None
-    for cls_name in ("AutoModelForVision2Seq", "AutoModelForImageTextToText", "AutoModel"):
+    for cls_name in order:
         cls = getattr(HF, cls_name, None)
         if cls is None:
             continue
         try:
-            model = cls.from_pretrained(repo, torch_dtype=torch.bfloat16,
-                                        trust_remote_code=False)
-            print(f"  로더: {cls_name} → {type(model).__name__}", flush=True)
-            break
+            kw = dict(torch_dtype=torch.bfloat16, trust_remote_code=trc)
+            if cfg is not None and cls_name not in ("AutoModel",):
+                kw["config"] = cfg          # 보정한 config를 쓴다
+            model = cls.from_pretrained(repo, **kw)
+            check_weights_loaded(model, repo, cls_name)
         except Exception as e:
             last_err = e
+            print(f"  로더 {cls_name} 실패: {type(e).__name__}: {str(e)[:120]}", flush=True)
+            continue
+        # 로드는 됐어도 비전 타워가 없으면 다음 후보로 넘어간다(텍스트 전용 모델 방지)
+        try:
+            find_vision_tower(model)
+        except AttributeError:
+            print(f"  로더 {cls_name} → {type(model).__name__}: 비전 타워 없음, 다음 후보",
+                  flush=True)
+            last_err = AttributeError(f"{cls_name}가 비전 타워 없는 모델을 반환")
+            del model
+            model = None
+            gc.collect()
+            continue
+        print(f"  로더: {cls_name} → {type(model).__name__}"
+              + ("  (trust_remote_code)" if trc else ""), flush=True)
+        break
     if model is None:
         raise RuntimeError(f"로드 실패: {last_err}")
     model = model.to("cuda").eval()
@@ -125,7 +210,7 @@ def profile(tag, repo, note, image_paths, max_pixels):
     depth = len(blocks)
     print(f"  비전 타워 블록: {bname} (depth={depth}, {type(blocks[0]).__name__})", flush=True)
 
-    proc = AutoProcessor.from_pretrained(repo)
+    proc = AutoProcessor.from_pretrained(repo, trust_remote_code=trc)
     if max_pixels and hasattr(proc, "image_processor") and hasattr(proc.image_processor, "max_pixels"):
         proc.image_processor.max_pixels = max_pixels
         proc.image_processor.min_pixels = 3136
@@ -207,7 +292,9 @@ def main():
     results = json.loads(out_path.read_text()) if out_path.exists() else {}
 
     for tag, repo, note in TARGETS:
-        if tag in results:
+        # **성공한 것만** 건너뛴다. 실패·건너뜀 기록이 있으면 재시도한다
+        # (로더를 고친 뒤 재실행할 수 있어야 한다).
+        if "headroom_p50" in results.get(tag, {}):
             print(f"[{tag}] 이미 완료 — 건너뜀"); continue
         if args.min_free_gb > 0:
             import shutil as _sh
@@ -225,8 +312,13 @@ def main():
             r = results[tag]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
                   f"fp16 여유={r['headroom_p50']:.2f}배 (p95 기준 {r['headroom_p95']:.2f}배)", flush=True)
-        except Exception:
+        except Exception as e:
             print(f"  [{tag}] 실패 — 건너뜀"); traceback.print_exc()
+            # 실패도 기록한다 — 안 그러면 "측정 안 함"과 "측정 실패"를 구분할 수 없고,
+            # 재실행 때 무엇이 남았는지도 알 수 없다.
+            results[tag] = {"repo": repo, "note": note,
+                            "failed": f"{type(e).__name__}: {str(e)[:200]}"}
+            out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
         finally:
             if args.cleanup:
                 import shutil, os
@@ -240,6 +332,8 @@ def main():
     print(f"{'모델':22s}{'depth':>7}{'마지막 블록 p50':>17}{'fp16 여유':>11}")
     print("-" * 78)
     for tag, r in results.items():
+        if "headroom_p50" not in r:
+            continue
         print(f"{tag:22s}{r['depth']:>7}{r['last_block_p50']:>17,.0f}{r['headroom_p50']:>10.2f}배")
     print("=" * 78)
     print(f"저장: {out_path}")

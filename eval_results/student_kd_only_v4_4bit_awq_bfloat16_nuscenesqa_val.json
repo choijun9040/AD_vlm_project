@@ -1,0 +1,43 @@
+{
+  "checkpoint": "checkpoints_awq/student_kd_only_v4",
+  "precision": "4bit_awq",
+  "dtype": "bfloat16",
+  "max_new_tokens": 16,
+  "total": 11309,
+  "correct": 5424,
+  "accuracy": 0.47961800336015564,
+  "eos_diagnostics": {
+    "no_eos": 233,
+    "no_eos_rate": 0.02060305951012468,
+    "hit_cap": 233,
+    "hit_cap_rate": 0.02060305951012468,
+    "mean_gen_tokens": 3.306304713060394
+  },
+  "by_type": {
+    "count": {
+      "correct": 229,
+      "total": 2212,
+      "accuracy": 0.1035262206148282
+    },
+    "exist": {
+      "correct": 2324,
+      "total": 3308,
+      "accuracy": 0.7025392986698912
+    },
+    "object": {
+      "correct": 899,
+      "total": 2359,
+      "accuracy": 0.3810936837643069
+    },
+    "comparison": {
+      "correct": 1150,
+      "total": 1780,
+      "accuracy": 0.6460674157303371
+    },
+    "status": {
+      "correct": 822,
+      "total": 1650,
+      "accuracy": 0.49818181818181817
+    }
+  }
+}

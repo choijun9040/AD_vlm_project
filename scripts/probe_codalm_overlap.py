@@ -64,10 +64,37 @@ def main():
     coda = sorted(Path(args.codalm_dir).glob("*.jpg"))
     print(f"[CODA-LM] {len(coda)}장")
 
+    # --- 양성 대조: 진짜 중복이라면 검출기가 잡는가 ---
+    # 이게 없으면 "0건"이 정말 없어서인지 **검출기가 작동을 안 해서인지** 구별할 수 없다.
+    # CODA-LM은 원본을 ~720p로 줄여 재인코딩했으므로 같은 변환을 학습 이미지에 가한다.
+    import io as _io
+    pc = []
+    for q in [str(x) for x in Path(args.codalm_dir).glob("*.jpg")][:1]:
+        pass  # 자리 표시 (아래에서 학습 이미지로 수행)
+
     tok = build_token_to_images(TRAIN_JSON)
     train = sorted({str(p) for v in tok.values() for p in v.values()})
     train = [p for p in train if Path(p).exists()]
     print(f"[DriveLM 학습] 전 카메라 {len(train)}장 (CAM_FRONT 외 5개 포함)")
+
+    print("[양성 대조] 720p 축소 + JPEG q95 재인코딩본을 원본과 대조", flush=True)
+    for q in train[:5]:
+        o = Image.open(q).convert("RGB")
+        w, h = o.size
+        sc = 720 / min(w, h)
+        sm = o.resize((int(w * sc), int(h * sc)), Image.LANCZOS)
+        b = _io.BytesIO(); sm.save(b, "JPEG", quality=95); b.seek(0)
+        r = Image.open(b)
+        hd = int(POP[np.bitwise_xor(dhash(o), dhash(r))].sum())
+        ha = int(POP[np.bitwise_xor(ahash(o), ahash(r))].sum())
+        cr = float(np.dot(thumb(o), thumb(r)))
+        hit = bool(min(hd, ha) <= args.hamming and cr >= args.corr)
+        pc.append({"image": Path(q).name, "hamming_d": hd, "hamming_a": ha,
+                   "corr": round(cr, 4), "detected": hit})
+        print(f"  해밍 d={hd} a={ha}  상관 {cr:.4f}  "
+              f"{'검출됨' if hit else '**놓침**'}")
+    if not all(x["detected"] for x in pc):
+        print("  ⚠ 검출기가 인위적 중복을 놓쳤다 — '0건'을 신뢰할 수 없다. 임계를 재검토할 것.")
 
     print("[해시] CODA-LM …", flush=True)
     c_d, c_a, c_t = [], [], []
@@ -144,6 +171,7 @@ def main():
            "best_corr": ({"max": float(corrs.max()), "p50": float(np.median(corrs)),
                           "min": float(corrs.min())} if corrs.size else None),
            "top_corr_pairs": top,
+           "positive_control": pc,
            "nearest_examples": best_rows[:10]}
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"저장: {args.out}")

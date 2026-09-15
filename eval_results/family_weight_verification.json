@@ -1,0 +1,32 @@
+{
+  "qwen2vl_2b_awq": {
+    "repo": "Qwen/Qwen2-VL-2B-Instruct-AWQ",
+    "recorded_headroom": 3.8768939393939394,
+    "loader": "Qwen2VLForConditionalGeneration",
+    "n_norm_params": 130,
+    "norm_exactly_one": 0,
+    "weight_std_sample": 0.01805,
+    "warned_newly_initialized": false,
+    "verdict": "정상 로드"
+  },
+  "smolvlm_instruct": {
+    "repo": "HuggingFaceTB/SmolVLM-Instruct",
+    "recorded_headroom": 50.857142857142854,
+    "loader": "Idefics3ForConditionalGeneration",
+    "n_norm_params": 110,
+    "norm_exactly_one": 0,
+    "weight_std_sample": 0.1368,
+    "warned_newly_initialized": false,
+    "verdict": "정상 로드"
+  },
+  "qwen2vl_7b_awq": {
+    "repo": "Qwen/Qwen2-VL-7B-Instruct-AWQ",
+    "recorded_headroom": 4.489035087719298,
+    "loader": "Qwen2VLForConditionalGeneration",
+    "n_norm_params": 130,
+    "norm_exactly_one": 0,
+    "weight_std_sample": 0.01794,
+    "warned_newly_initialized": false,
+    "verdict": "정상 로드"
+  }
+}

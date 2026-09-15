@@ -1,0 +1,43 @@
+{
+  "checkpoint": "checkpoints_awq/student_spatial",
+  "precision": "4bit_awq",
+  "dtype": "bfloat16",
+  "max_new_tokens": 16,
+  "total": 11309,
+  "correct": 5727,
+  "accuracy": 0.5064108232381289,
+  "eos_diagnostics": {
+    "no_eos": 938,
+    "no_eos_rate": 0.08294278892917145,
+    "hit_cap": 938,
+    "hit_cap_rate": 0.08294278892917145,
+    "mean_gen_tokens": 3.789636572641259
+  },
+  "by_type": {
+    "count": {
+      "correct": 193,
+      "total": 2212,
+      "accuracy": 0.08725135623869801
+    },
+    "exist": {
+      "correct": 2652,
+      "total": 3308,
+      "accuracy": 0.8016928657799275
+    },
+    "object": {
+      "correct": 925,
+      "total": 2359,
+      "accuracy": 0.3921153030945316
+    },
+    "comparison": {
+      "correct": 1162,
+      "total": 1780,
+      "accuracy": 0.6528089887640449
+    },
+    "status": {
+      "correct": 795,
+      "total": 1650,
+      "accuracy": 0.4818181818181818
+    }
+  }
+}

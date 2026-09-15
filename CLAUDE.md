@@ -101,13 +101,29 @@ the LLM decoder (`q/k/v/o_proj`, `gate/up/down_proj`) — a different trainable-
 module set than `train_distillation.py`, which breaks strict ablation
 fairness for the 5-way comparison. v2 adds the identical
 `lora_target_vision_attn=True` flag to `train_baseline.py`/`train_kd_only.py`
-(same flag, same default target-module extension as `train_distillation.py`;
-everything else — batch size, LR, warmup, LoRA rank/alpha, sampler config —
-stays frozen so exactly one variable changes) and writes to the `_v2`
-output dirs so v1 is never overwritten. **v1 is intentionally kept**, not
-because it's still used in the main 5-way table, but because v1-vs-v2 is
-itself a free control experiment isolating "vision-attention LoRA capacity
-alone" from "the spatial/temporal loss terms," reported as an appendix.
+(same flag, same default target-module extension as `train_distillation.py`)
+and writes to the `_v2` output dirs so v1 is never overwritten.
+
+**Correction (2026-09-15): v1 → v2 changes TWO variables, not one.** This passage
+used to claim "everything else stays frozen so exactly one variable changes." Diffing
+the two `training_state.pt` configs shows otherwise:
+
+| key | v1 | v2 |
+|---|---|---|
+| `lora_target_vision_attn` | absent (False) | **True** |
+| **`hazard_oversample`** | **absent (False)** | **True** |
+| `hazard_oversample_beta` | absent | 0.5 |
+
+`hazard_oversample` reweights the sampler inside the DriveLM subset, i.e. it changes
+the **data distribution** the model sees. So v1-vs-v2 is **not** a clean isolation of
+"vision-attention LoRA capacity" — any difference confounds LoRA capacity with data
+sampling. **v1 is still worth keeping**, but describe the comparison as
+"v1 vs v2 (two variables)" and do not attribute its effect to LoRA capacity alone.
+Isolating LoRA capacity would need a third run with `hazard_oversample=True` and
+`lora_target_vision_attn=False` (~51.6 h).
+
+`print_trainable_parameters()` at startup still distinguishes the module sets:
+37,152,768 (v1, LLM-only) vs 41,124,224 (v2, matches `train_distillation.py`).
 Verify the flag took effect via the printed `print_trainable_parameters()`
 count at startup: 37,152,768 (v1, LLM-only) vs 41,124,224 (v2, matches
 `train_distillation.py` exactly).
@@ -157,11 +173,31 @@ nothing downstream depends on them.
 **Also deleted on 2026-09-14**: `checkpoints/student_distill/` — a pre-`_v2`
 run whose `training_state.pt` still carried `lambda_hazard: 1.0`, i.e. the
 retired `HazardWeightedKDLoss` design; it appears in no comparison.
-`checkpoints_awq/` (16 GB) was **kept** — chapter 6's re-measurement with
-`torch_dtype` and `max_pixels` held fixed has not been run yet, and the only
-INT4 numbers on disk are the confounded ones. The v1 pair
-(`student_baseline`, `student_kd_only`) was also **kept**: the v1-vs-v2
-appendix control has no evaluation results yet.
+`checkpoints_awq/` (16 GB) was kept for chapter 6's re-measurement and **deleted on
+2026-09-15** once that run finished and all five `*_4bit_awq_bfloat16_*.json` results
+were on disk. Regenerating it means re-running the AWQ quantization from the LoRA
+checkpoints; nothing currently planned needs it. The v1 pair (`student_baseline`, `student_kd_only`) was also **kept**;
+their activation profile is queued (the accuracy comparison was dropped as
+appendix-level — what matters is whether vision-attention LoRA alone moves headroom).
+
+**INT4 re-measurement with the two confounders fixed (2026-09-15)** — load the same
+AWQ checkpoints with `--dtype bfloat16` and build the processor from base
+(`max_pixels` 200,704) instead of from the checkpoint. Tags get a `_bfloat16` suffix,
+so the confounded files are **not** overwritten and both can be shown side by side.
+
+| variant | INT4 confounded | **INT4 corrected** | bf16 original |
+|---|---|---|---|
+| `student_baseline_v2` | **1.39%** | **48.30%** | 50.30% |
+| `student_full` | 51.60% | 51.86% | 51.69% |
+| `student_spatial` | 50.82% | 50.64% | 51.40% |
+| `student_temporal` | **30.49%** | **50.31%** | 51.34% |
+| `student_kd_only_v4` | **32.99%** | **47.96%** | 46.74% |
+
+Fixing dtype and resolution alone restores 1.39% → 48.30% and 30.49% → 50.31%:
+the collapse was never about quantization. **Do not turn the "corrected minus
+original" column into a ranking claim** — each variant is n=1 and `student_full`'s
++0.17pp is inside noise. The supportable statement is "once the confounders are
+removed all five land in the 48–52% band and the catastrophic 1.39% disappears".
 
 The raw hazard-label distribution is heavily skewed (see
 `logs/hazard_labels.log`: 88.6% of DriveLM keyframes score 2–3, only 0.3%
@@ -450,9 +486,17 @@ constraint worth knowing before touching evaluation code:
   train set come from CODA2022 val set, while images of CODA-LM val and test sets come
   from CODA2022 test set"), and CODA itself was mined from three datasets — KITTI (309
   scenes), **nuScenes (134)**, and ONCE (1,057). So roughly 9% of the underlying scenes
-  are nuScenes. Whether those specific nuScenes scenes overlap the 696 DriveLM train
-  scenes we train on has **not** been checked; until it is, describe CODA-LM as
-  "largely domain-disjoint" rather than held-out by construction.
+  are nuScenes. **Checked on 2026-09-14** (`scripts/probe_codalm_overlap.py`): none of the
+  143 CODA-LM images duplicates any of the 24,432 DriveLM-train images (all six cameras).
+  Metadata could not answer this — the llava-format ids are bare serials
+  (`Mini_general_0`) — so the images themselves were compared: dHash+aHash to shortlist,
+  32x32 normalized correlation to confirm. 0 duplicates; best correlation 0.9077 against a
+  0.92 threshold; median 0.7880. The **positive control** is what makes this credible:
+  re-encoding a train image the way CODA-LM did (720p downscale + JPEG q95) still scores
+  hamming 0/0 and correlation 1.0000, so a genuine duplicate would be caught. Write
+  "no overlap with our training images, verified by image hashing" — but keep stating that
+  CODA itself draws ~9% from nuScenes, since what was verified is the absence of overlap
+  with *our* training set, not independence between the datasets.
   A 143-unique-image subset (CODA-LM llava-format Mini, English) is downloaded to
   `data/codalm_mini/` via `scripts/fetch_codalm_images.py` — note the raw Mini parquet
   has 193 rows but only 143 distinct images (the `general` and `suggestion` tasks share
