@@ -48,6 +48,11 @@ BASE_3B = "Qwen/Qwen2.5-VL-3B-Instruct"
 DRIVELM_VAL = "data/QA_dataset_nus/v1_1_val_nus_q_only.json"
 FORMAT_MAX = {"float16": 65504.0, "bfloat16": 3.3895e38, "float32": 3.4028e38}
 
+# 초과는 없으나 여유가 얇은 구간의 경계. 실측 전이가 최악 여유 1.00~1.05이고
+# 한 모델 안 이미지별 편차가 15~20%이므로, 표본 밖 이미지를 위해 1.25배를 둔다.
+# (게이트 보정 2026-09-15 — eval_results/gate_calibration.json)
+MARGINAL_HEADROOM = 1.25
+
 # 게이트형 MLP의 '곱 이전' 선형층과 '출력' 선형층 이름 후보.
 # 계열마다 다르므로 짝으로 둔다. (곱 이전이 둘이면 게이트형, 하나면 단순 MLP)
 MLP_PATTERNS = [
@@ -191,10 +196,28 @@ def profile(tower, cache, dtype, fmax_dtype=None):
     for i in range(len(blocks)):
         vals = [v for v in rec[i] if math.isfinite(v)]
         p50 = st.median(vals) if vals else float("nan")
-        per_block.append({"block": i, "max_p50": p50,
+        worst = max(vals) if vals else float("nan")
+        # **초과 비율** — 이미지별 max가 형식 상한을 넘는 비율.
+        # 게이트 보정(2026-09-15)에서 이 값이 실제 붕괴율을 250장·6개 모델 기준
+        # 평균 2.1%p(최대 6.4%p) 오차로 맞혔다. 임계값도 통계량 선택도 필요 없는
+        # **직접 추정치**이므로 도구의 1차 출력으로 쓴다.
+        exceed = (sum(1 for v in vals if v > fmax) + (len(rec[i]) - len(vals))) / \
+                 max(len(rec[i]), 1)
+        per_block.append({"block": i, "max_p50": p50, "max_worst": worst,
                           "headroom": (fmax / p50) if p50 and math.isfinite(p50) else None,
-                          "n_finite": len(vals)})
+                          "headroom_worst": (fmax / worst) if worst and math.isfinite(worst) else None,
+                          "exceed_rate": exceed,
+                          "n_finite": len(vals), "n_images": len(rec[i])})
     return per_block, nan / len(cache)
+
+
+def zero_obs_upper_bound(n, conf=0.95):
+    """N장에서 초과가 0건일 때 참 초과율의 95% 상한 = 1 - (1-conf)^(1/N).
+
+    한 번도 못 봤다고 0이 아니다. N=10이면 상한이 25.9%로, 넷 중 하나가 터지는
+    모델도 '안전'으로 통과시킬 수 있다. 도구 기본값을 100장으로 둔 근거다.
+    """
+    return 1.0 - (1.0 - conf) ** (1.0 / max(n, 1))
 
 
 def build_cache(processor, paths, dtype):
@@ -338,7 +361,9 @@ def main():
                     help="미지정이면 **모델 기본 설정**을 쓴다 — 기본 경로에서의 위험을 보려면 그대로 둘 것")
     ap.add_argument("--min_pixels", type=int, default=None)
     ap.add_argument("--image_dir", default=None, help="미지정이면 DriveLM val CAM_FRONT")
-    ap.add_argument("--limit", type=int, default=50)
+    ap.add_argument("--limit", type=int, default=100,
+                    help="측정 이미지 수. 기본 100장 — 초과 0건일 때 참 초과율의 "
+                         "95% 상한이 3.0%다(10장이면 25.9%로 너무 느슨하다)")
     ap.add_argument("--target_headroom", type=float, default=2.0,
                     help="이 값 미만인 블록을 위험으로 보고, fix에서는 이 값까지 끌어올린다")
     ap.add_argument("--verify", action="store_true", help="fix 후 재측정")
@@ -417,6 +442,35 @@ def main():
         print(f"\n  **권고: 가중치를 고치기 전에 {' 또는 '.join(safer)} 빌드를 먼저 검토할 것.**")
         print(f"  {args.dtype}에서 위험한 것이지 모델이 잘못된 것이 아니다. 형식을 바꾸면")
         print(f"  교정 없이 해결되며, 그 대가(지연시간·정확도)는 별도로 재야 한다.")
+
+    # ---- 판정 (2026-09-15 게이트 보정 결과 반영) ----
+    # 근거: eval_results/gate_calibration.json, detection_curve{,_fine}.json
+    #  - 전이는 **최악 여유 1.00~1.05**에서 일어난다(물리적 한계 1.0과 일치).
+    #    기존 임계값 2.0은 그 경계보다 1.91배 보수적이고, 20개 합성 점에서
+    #    오탐 7건·미탐 0건을 냈다.
+    #  - p50/p95/최악 세 통계량은 여백 비율이 1.043/1.043/1.045로 **사실상 동등**하다.
+    #    한 모델 안에서는 셋이 비례해 움직이기 때문이다. 최악을 쓰는 이유는 여백이
+    #    커서가 아니라 **임계값이 물리적 의미(형식 상한)를 갖기 때문**이다.
+    #  - 그래서 1차 판정은 임계값이 아니라 **초과 비율**로 한다.
+    lastb = before[-1]
+    exc, nimg = lastb["exceed_rate"], lastb.get("n_images", len(cache_mag))
+    ub = zero_obs_upper_bound(nimg)
+    hw = lastb.get("headroom_worst")
+    print(f"\n[판정] 마지막 블록 (기준: 초과 비율, {nimg}장)")
+    print(f"  초과 비율 {exc*100:.1f}%  ← 붕괴율 추정치 "
+          f"(실측 대조 평균 오차 2.1%p, 6개 모델)")
+    print(f"  여유  p50 {lastb['headroom']:.2f}배 · 최악 {hw:.2f}배" if hw else "")
+    if exc > 0:
+        print(f"  → **위험.** {nimg}장 중 {round(exc*nimg)}장이 이미 형식 상한을 넘는다.")
+    elif hw is not None and hw < MARGINAL_HEADROOM:
+        print(f"  → **경계.** 초과는 없으나 최악 여유가 {hw:.2f}배로 "
+              f"{MARGINAL_HEADROOM}배 미만이다. 표본 밖 이미지가 넘을 수 있다.")
+    else:
+        print(f"  → 안전. 다만 {nimg}장에서 0건이 관측됐을 뿐이므로 "
+              f"참 초과율의 95% 상한은 **{ub*100:.1f}%**다.")
+    if nimg < 100:
+        print(f"  ⚠ 표본 {nimg}장은 적다 — 상한 {ub*100:.1f}%. "
+              f"100장(3.0%) 이상을 권한다.")
 
     # 붕괴는 목표 dtype으로 갈아끼워 잰다
     def collapse_in_target():
