@@ -10,11 +10,10 @@
 
 ### 학술대회 (한국자동차공학회 추계학술대회)
 
-**「표준 압축 지표가 포착하지 못하는 저정밀 배포 실패:
-자율주행 비전-언어 모델의 fp16 표현 범위 여유」**
+**「자율주행 비전-언어 모델의 fp16 표현 범위 여유와 표준 압축 지표의 역전」**
 
-*A Deployment Failure Standard Compression Metrics Cannot See:
-fp16 Representable-Range Headroom in Vision-Language Models for Autonomous Driving*
+*fp16 Representable-Range Headroom and the Inversion of Standard Compression
+Metrics in Autonomous-Driving Vision-Language Models*
 
 > **2026-09-15 교체.** 구 제목 「지식 증류가 …여유에 미치는 영향: 자율주행 VLM
 > 사례 연구」를 폐기한다. 요약문을 핵심 기여 중심으로 재구성하면서 **제목과 본문의
@@ -25,6 +24,12 @@ fp16 Representable-Range Headroom in Vision-Language Models for Autonomous Drivi
 > 곧바로 논지의 제약이 된다. 반면 **지표 역전**(붕괴하는 모델이 INT8 SNR 31.17 대
 > 23.10 dB, 이상치 비율 153.1 대 168.0으로 **더 안전하다고 순위 매겨진다**)은
 > 논증이 아니라 산술이고, 스케일 불변성이라는 정의상의 귀결이므로 시드와 무관하다.
+>
+> **제목 형태 (2026-09-15 확정).** 콜론을 쓰지 않는다. 또 중간안이던 "포착하지
+> 못하는"을 **"역전"**으로 바꿨다 — 전자는 지표가 구별하지 못한다는 무능의 서술이고,
+> 실제 결과는 **순위가 반대**라는 더 강한 주장이다(INT8 SNR 31.17 대 23.10 dB,
+> 이상치 비율 153.1 대 168.0인데 붕괴율은 94.8% 대 0.0%). 제목은 논문의 가장 강하고
+> 검증 가능한 주장을 담아야 한다.
 >
 > 청중도 고려했다. 자동차공학회에서 실행 가능한 메시지는 *"지표가 경고해 주지
 > 않으니 배포 전에 이 값을 재라"*이지 *"증류 손실이 여유를 좌우한다"*가 아니다.

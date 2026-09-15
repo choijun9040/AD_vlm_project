@@ -10,14 +10,13 @@
 
 ## 제목 (맑은고딕 13.5)
 
-**표준 압축 지표가 포착하지 못하는 저정밀 배포 실패:
-자율주행 비전-언어 모델의 fp16 표현 범위 여유**
+**자율주행 비전-언어 모델의 fp16 표현 범위 여유와
+표준 압축 지표의 역전**
 
 ## English Title (Times New Roman 13.5)
 
-**A Deployment Failure Standard Compression Metrics Cannot See:
-fp16 Representable-Range Headroom in Vision-Language Models for
-Autonomous Driving**
+**fp16 Representable-Range Headroom and the Inversion of Standard
+Compression Metrics in Autonomous-Driving Vision-Language Models**
 
 ## 저자 (맑은고딕 10 / TNR 10)
 
@@ -141,8 +140,12 @@ magnitude (seed and LR schedule fixed, 5,000 steps, 250 images)
   근거: `eval_results/resolution_sweep/res_1440000.json`
 - **학술대회 제목 교체 (2026-09-15) — 학위 논문 제목은 그대로 둔다.**
   구: 「지식 증류가 …여유에 미치는 영향: 자율주행 VLM 사례 연구」
-  신: 「표준 압축 지표가 포착하지 못하는 저정밀 배포 실패: 자율주행 비전-언어 모델의
-      fp16 표현 범위 여유」
+  신: 「자율주행 비전-언어 모델의 fp16 표현 범위 여유와 표준 압축 지표의 역전」
+      *fp16 Representable-Range Headroom and the Inversion of Standard Compression
+      Metrics in Autonomous-Driving Vision-Language Models*
+  **콜론을 쓰지 않는다** — "와"로 두 축을 대등하게 묶었다. 그리고 "포착하지 못한다"를
+  **"역전"**으로 바꿨다. 전자는 무능(구별을 못 한다)이지만 실제 결과는 **순위가 반대**
+  라는 더 강한 주장이고, 제목은 논문의 가장 강하고 검증 가능한 주장을 담아야 한다.
   이유: 구 제목이 가리키는 기여(증류 손실이 여유를 좌우한다)는 **단일 시드**라
   논지 자리에 두면 방어가 약해진다. 가장 단단한 기여는 **지표 역전**이고 이는
   논증이 아니라 산술이다. 또 자동차공학회 청중에게 실행 가능한 메시지는

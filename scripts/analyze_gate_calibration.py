@@ -70,13 +70,21 @@ def natural_rows(path):
 
 
 def separation(rows, key):
-    """안전(붕괴 0)과 위험(붕괴 > 0)을 이 통계량이 얼마나 갈라놓는가."""
+    """안전(붕괴 0)과 위험(붕괴 > 0)을 이 통계량이 얼마나 갈라놓는가.
+
+    **여백은 비율로 잰다 (2026-09-15 정정).** 처음에는 절대 차이(안전 최소 −
+    위험 최대)로 쟀는데, 그러면 **값의 크기가 큰 통계량이 자동으로 유리**해진다.
+    실제로 p50이 +0.19로 1등이고 최악이 +0.17로 꼴찌였으나, 비율로 보면
+    1.184 대 1.193으로 순서가 뒤집힌다. 무차원 비교를 해야 한다.
+    """
     safe = [r[key] for r in rows if r.get(key) is not None and r["collapse_rate"] == 0]
     risky = [r[key] for r in rows if r.get(key) is not None and r["collapse_rate"] > 0]
     if not safe or not risky:
         return None
     return {"safe_min": min(safe), "risky_max": max(risky),
-            "margin": min(safe) - max(risky), "n_safe": len(safe), "n_risky": len(risky)}
+            "margin_abs": min(safe) - max(risky),
+            "margin_ratio": min(safe) / max(risky),
+            "n_safe": len(safe), "n_risky": len(risky)}
 
 
 def bootstrap_worst(per_image_max, sizes, trials=2000, seed=0):
@@ -120,19 +128,28 @@ def main():
 
     # ---- 1. 통계량 ----
     print("[1] 통계량 — 안전/위험 분리 여백 (클수록 좋은 예측자)")
-    print(f"  {'통계량':<8}{'위험 최대':>10}{'안전 최소':>10}{'여백':>9}  판정")
+    print(f"  {'통계량':<8}{'위험 최대':>10}{'안전 최소':>10}{'절대여백':>9}{'비율':>9}  판정")
     seps, best = {}, None
     for k in STATS:
         s = separation(allr, k)
         seps[k] = s
         if s is None:
             print(f"  {LABEL[k]:<8}{'—':>10}{'—':>10}{'—':>9}  (한쪽 없음)"); continue
-        verdict = "분리됨" if s["margin"] > 0 else "**겹침 — 이 통계량으로는 못 가른다**"
+        verdict = "분리됨" if s["margin_ratio"] > 1 else "**겹침 — 못 가른다**"
         print(f"  {LABEL[k]:<8}{s['risky_max']:>10.2f}{s['safe_min']:>10.2f}"
-              f"{s['margin']:>+9.2f}  {verdict}")
-        if s["margin"] > 0 and (best is None or s["margin"] > seps[best]["margin"]):
+              f"{s['margin_abs']:>+9.2f}{s['margin_ratio']:>9.3f}  {verdict}")
+        if s["margin_ratio"] > 1 and (
+                best is None or s["margin_ratio"] > seps[best]["margin_ratio"]):
             best = k
-    print(f"\n  → 채택: **{LABEL[best] if best else '없음'}**")
+    if best:
+        rs = sorted((seps[k]["margin_ratio"] for k in STATS if seps.get(k)))
+        spread = rs[-1] / rs[0] if rs else 1.0
+        print(f"\n  → 비율 기준 1위: **{LABEL[best]}** "
+              f"({seps[best]['margin_ratio']:.3f})")
+        if spread < 1.05:
+            print("     단, 세 통계량의 여백 비율이 5% 이내로 **사실상 동등**하다.")
+            print("     한 모델 안에서 MLP를 줄이면 세 통계량이 비례해 움직이므로")
+            print("     이 스윕으로는 통계량을 고를 수 없다. 아래 [4]가 답이다.")
 
     # ---- 2. 임계값 ----
     result = {"separation": seps, "best_statistic": best}
@@ -163,6 +180,48 @@ def main():
             print(f"    {n:>5}{v['median']:>13.3f}{v['p10']:>9.3f}{v['p90']:>9.3f}"
                   f"{v['optimism_median']:>10.2f}배{v['p_overestimate_20pct']*100:>14.1f}%")
     result["bootstrap"] = boots
+
+    # ---- 4. 초과 비율 — 스칼라 여유와 임계값을 아예 대체한다 ----
+    print("\n[4] 초과 비율 — 임계값 없이 붕괴율을 직접 추정한다")
+    print("  bf16에서 이미지별 max|act|가 format_max를 넘는 비율은 그 자체로")
+    print("  fp16 붕괴율의 추정치다. 임계값도 통계량 선택도 필요 없다.")
+    exc = []
+    rp = Path("eval_results/resolution_sweep/res_1440000.json")
+    if rp.exists():
+        d = json.loads(rp.read_text())
+        print(f"\n  {'모델':<22}{'초과 비율':>10}{'실제 붕괴율':>12}{'오차':>9}")
+        print("  " + "-" * 53)
+        for k, v in d.items():
+            if k == "_meta":
+                continue
+            b = v["passes"]["bfloat16"]["by_layer"]["31"]
+            f = v["passes"]["float16"]["by_layer"]["31"]
+            over, coll = b["over_fp16_rate"], 1 - f["n_finite"] / v["n_images"]
+            exc.append({"model": k, "exceed_rate": over, "collapse_rate": coll,
+                        "err": over - coll})
+            print(f"  {k:<22}{over*100:>9.1f}%{coll*100:>11.1f}%{(over-coll)*100:>+8.1f}%p")
+        if exc:
+            errs = [abs(e["err"]) for e in exc]
+            print("  " + "-" * 53)
+            print(f"  평균 절대 오차 {sum(errs)/len(errs)*100:.1f}%p, "
+                  f"최대 {max(errs)*100:.1f}%p  (250장, {len(exc)}개 모델)")
+    result["exceedance"] = exc
+
+    # 표본 수 — 부트스트랩이 아니라 이항 상한이 정확한 답이다
+    print("\n[5] 표본 수 — N장에서 초과가 0건일 때 참 초과율의 95% 상한")
+    print("  (한 번도 못 봤다고 0이 아니다. 1 − 0.05^(1/N) ≈ 3/N)")
+    print(f"  {'N':>6}{'95% 상한':>12}{'해석':>34}")
+    bound = {}
+    for n in (5, 10, 20, 30, 50, 100, 250, 500):
+        u = 1 - 0.05 ** (1.0 / n)
+        bound[n] = u
+        note = ("너무 적다 — 넷 중 하나가 터져도 통과" if u > 0.15 else
+                "실무 하한" if u > 0.05 else
+                "권장" if u > 0.02 else "충분")
+        print(f"  {n:>6}{u*100:>11.1f}%{note:>34}")
+    result["zero_observation_upper_bound_95"] = bound
+    print("\n  → 도구 기본값 권고: **100장**(상한 3.0%). 안전이 중요하면 250장(1.2%).")
+    print("     10장으로 '안전' 판정은 **참 초과율 26%까지 허용**하므로 쓰지 않는다.")
 
     Path(args.out).write_text(json.dumps(result, indent=2, ensure_ascii=False))
     print(f"\n저장: {args.out}")
