@@ -133,7 +133,9 @@ def main():
             ax.spines[side].set_visible(False)
     # 문구를 줄이고 위치를 낮춘다 (2026-09-16). 기존 "training / eval resolution"은
     # 세로로 서서 범례까지 올라가 위쪽이 잘렸다.
-    ax_b.text(EVAL_TOKENS * 0.94, 1, "training / eval",
+    # 시작 높이를 y=1 → 8로 올린다 (2026-09-16 2차). y=1이면 첫 글자 't'가 x축 선과
+    # y=0에 깔린 데이터 선(정렬 손실 변형들)에 겹쳐 잘려 보였다.
+    ax_b.text(EVAL_TOKENS * 0.94, 8, "training / eval",
               rotation=90, va="bottom", ha="right",
               fontsize=L["legend_fs"] - 0.5, color="#8a918c")
 
