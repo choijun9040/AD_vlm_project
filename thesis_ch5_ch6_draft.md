@@ -361,16 +361,18 @@ LoRA 적용 범위. **부족한 것은 수단이 아니라 측정이다.**
 
 1. Qwen Team, "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
 2. M. Sun, X. Chen, J. Z. Kolter, Z. Liu, "Massive Activations in Large Language
-   Models," arXiv:2402.17762, 2024.
+   Models," Conference on Language Modeling (COLM), 2024. (arXiv:2402.17762)
 3. A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, Y. Bengio,
    "FitNets: Hints for Thin Deep Nets," ICLR, 2015.
-4. C. Sima et al., "DriveLM: Driving with Graph Visual Question Answering,"
-   ECCV, 2024.
-5. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-modal
+4. C. Sima, K. Renz, K. Chitta, L. Chen, H. Zhang, C. Xie, J. Beisswenger,
+   P. Luo, A. Geiger, H. Li, "DriveLM: Driving with Graph Visual Question
+   Answering," ECCV, 2024. (Oral)
+5. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-Modal
    Visual Question Answering Benchmark for Autonomous Driving Scenario,"
-   AAAI, 2024.
-6. J. Lin, J. Tang, H. Tang, S. Yang, X. Dang, S. Han, "AWQ: Activation-aware
-   Weight Quantization for LLM Compression and Acceleration," MLSys, 2024.
+   Proc. AAAI Conf. on Artificial Intelligence, Vol.38, No.5, pp.4542-4550, 2024.
+6. J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, G. Xiao, X. Dang,
+   C. Gan, S. Han, "AWQ: Activation-aware Weight Quantization for On-Device LLM
+   Compression and Acceleration," MLSys, 2024. (Best Paper Award)
 7. J. H. Heo, S. Azizi, A. Fayyazi, M. Pedram, "CrAFT: Compression-Aware
    Fine-Tuning for Efficient Visual Task Adaptation," arXiv:2305.04526, 2023.
 8. L. Cheng et al., "Online Pseudo-average Shifting Attention (PASA) for Robust
@@ -380,9 +382,21 @@ LoRA 적용 범위. **부족한 것은 수단이 아니라 측정이다.**
    fp16 — vision_tower standardize overflows," GitHub Issue #40290, 2026-04-19.
    https://github.com/vllm-project/vllm/issues/40290
 
-> **서지 확인 메모 (2026-09-15).** 7·8·9는 원문을 직접 조회해 제목·저자·연도를
-> 확인했다. 1~6은 통용되는 서지이나 **학회 템플릿 이식 전에 원문으로 재확인할 것**
-> — 특히 4·5의 게재처와 6의 MLSys 연도.
+> **서지 확인 완료 (2026-09-16).** 1~9 전부 원문·게재처를 조회해 확인했다.
+> 고친 것 넷:
+> - **6 (AWQ)** — 가장 큰 오류였다. **arXiv판 제목과 MLSys 게재처를 섞어** 놓았다.
+>   MLSys 2024판 제목은 *"…for **On-Device** LLM Compression and Acceleration"*이고
+>   저자도 10인인데 6인만 적혀 있었다(arXiv v1 저자 목록). MLSys 2024 Best Paper.
+> - **5 (NuScenes-QA)** — 권·호·쪽을 보강(Vol.38, No.5, pp.4542-4550). AAAI
+>   수록본 제목은 "Multi-**M**odal"로 대문자다.
+> - **2 (Massive Activations)** — arXiv만 적었으나 **COLM 2024** 정식 게재본이 있다.
+> - **4 (DriveLM)** — "et al."을 전체 저자 10인으로 펴고 ECCV 2024 **Oral** 표기.
+>
+> 확인만 하고 그대로 둔 것:
+> - **1 (Qwen2.5-VL)** — arXiv:2502.13923, 2025-02-19 제출. 다만 arXiv 저자는
+>   **S. Bai 외 27인**이다. 기술 보고서를 "Qwen Team"으로 인용하는 것은 관행이므로
+>   유지하되, 학위 논문 심사 규정이 개인 저자를 요구하면 "S. Bai et al."로 바꾼다.
+> - **3 (FitNets)** — 저자 6인·ICLR 2015 모두 일치(arXiv:1412.6550).
 >
 > 인용 위치: 7은 §2 "미세조정과 압축 친화성", 8·9는 §2 각주 및 §7.2 "런타임 정책",
 > 2는 §2 "대형 활성", 3은 §2 "특징 정렬 증류".
@@ -393,7 +407,7 @@ LoRA 적용 범위. **부족한 것은 수단이 아니라 측정이다.**
 
 - [ ] 저자·소속·교신저자 기입
 - [ ] 학회 템플릿(한글/워드)에 이식, 분량 규정 확인 (전문연구발표 통상 2~10쪽)
-- [ ] 참고문헌 7·8의 정확한 서지사항 확보
+- [x] 참고문헌 1~9 서지 확인 완료 (2026-09-16) — 6(AWQ)에서 arXiv 제목과 MLSys 게재처 혼입을 바로잡음
 - [ ] **그림 1** — 계층별 활성 프로파일 (`figures/fig1_activation_profile_single.png`)
 - [ ] **그림 2** — 해상도 × 붕괴율 (`figures/fig2_resolution_collapse_single.png`)
 - [ ] **그림 3** — λ 용량-반응 (`figures/fig3_lambda_dose_response_single.png`)
