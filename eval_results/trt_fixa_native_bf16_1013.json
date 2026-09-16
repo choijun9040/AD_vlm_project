@@ -1,0 +1,19 @@
+{
+  "onnx": "onnx/tower_baseline_v2_native_fixa.onnx",
+  "n_images": 50,
+  "trt": "10.13.3.9",
+  "modes": {
+    "bf16": {
+      "nan_rate": 0.0,
+      "absmax_p50": 61.875,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 1384.9697265625,
+      "latency_ms": {
+        "p50": 205.5463632568717,
+        "p95": 206.55212020501494
+      },
+      "build_log": "logs/trt_build_bf16.log"
+    }
+  }
+}
