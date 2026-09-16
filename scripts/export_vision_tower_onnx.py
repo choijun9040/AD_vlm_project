@@ -204,6 +204,12 @@ def main():
     ap.add_argument("--tol", type=float, default=2e-3, help="원본 대비 허용 최대 오차")
     ap.add_argument("--fold", choices=["auto", "on", "off"], default="auto",
                     help="상수 접기. auto=마스크가 64 MiB를 넘으면 끔")
+    # **--vision_state (2026-09-16 추가).** headroom_guard fix가 저장한 교정 타워를
+    # 그대로 내보낸다. --fixa는 논문의 1/sqrt(3) 처방을 손으로 굳히는 경로이고,
+    # 이쪽은 **도구가 산출한 가중치 자체**를 배포 런타임까지 옮기는 경로다.
+    # PyTorch에서 1.36% → 50.73%를 만든 바로 그 파일을 쓴다.
+    ap.add_argument("--vision_state", default=None,
+                    help="교정된 비전 타워 state_dict(.pt). --fixa와 함께 쓰지 말 것")
     ap.add_argument("--fixa", type=float, default=0.0, metavar="SCALE",
                     help="마지막 블록에 fixA를 적용해 내보낸다. gate·up 가중치를 각각 "
                          "1/sqrt(SCALE)로 나눠 곱을 1/SCALE로 만든다(MLP에 bias가 없어 "
@@ -220,6 +226,22 @@ def main():
     if args.checkpoint.lower() != "none":
         model = PeftModel.from_pretrained(model, args.checkpoint).merge_and_unload()
     tower = model.visual.eval().to("cuda")
+
+    if args.vision_state:
+        if args.fixa:
+            raise SystemExit("--vision_state와 --fixa를 함께 쓸 수 없다")
+        sd = torch.load(args.vision_state, map_location="cpu")
+        missing, unexpected = tower.load_state_dict(sd, strict=False)
+        pnames = {n for n, _ in tower.named_parameters()}
+        miss_p = [k for k in missing if k in pnames]
+        if miss_p or unexpected:
+            raise RuntimeError(
+                f"교정 가중치 적재 불일치 — 빠진 파라미터 {len(miss_p)}개"
+                f"{', 예: ' + miss_p[0] if miss_p else ''}, "
+                f"남은 키 {len(unexpected)}개"
+                f"{', 예: ' + unexpected[0] if unexpected else ''}")
+        print(f"[교정] 도구 산출 가중치 적재: {args.vision_state} "
+              f"(파라미터 {len(pnames)}개 전부)")
 
     if args.fixa:
         import math as _math
