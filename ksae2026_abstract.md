@@ -125,8 +125,8 @@ the text.
 **Fig. 1** Last-block activation magnitude (a) and fp16 generation collapse rate
 (b) versus vision tokens per image, for five controlled variants and the
 pre-trained model. The dashed line in (a) is the fp16 limit (65,504); the
-vertical line marks the training and evaluation resolution. 1,836 tokens
-corresponds to the native 1,600x900 nuScenes frame.
+vertical line marks the training and evaluation resolution. 1,836 is the token
+budget for the native 1,600x900 nuScenes frame (1,824 tokens realized).
 
 파일: `figures/fig2_resolution_collapse_single.png`
 
@@ -170,6 +170,14 @@ magnitude (seed and LR schedule fixed, 5,000 steps, 250 images)
   **두 끝점의 역전은 채널 단위에서도 남는다**(붕괴 94.8% 40.56 dB 대 붕괴 0% 36.41 dB).
   깨진 것은 완벽한 단조성이지 역전 자체가 아니며, 스케일 불변성 논증은 영향받지 않는다.
   이 결함은 값·조건·문서 검사 **셋 다 통과한다** — 도메인 추론으로만 보이는 종류다.
+- **Fig. 1 캡션의 토큰 수 정정 (2026-09-16).** *"1,836 tokens corresponds to the
+  native 1,600x900 nuScenes frame"*는 부정확했다. **실현된 토큰 수는 1,824**다 —
+  1,600×900은 smart_resize로 1,596×896이 되고 패치가 64×114 = 7,296개, 2×2 병합 후
+  1,824다(`grid=[[1, 64, 114]]`, ONNX 입력 `pixel_values=(7296, 1176)`로 확인).
+  1,836은 `1,440,000 ÷ 28²`, 즉 **max_pixels 예산**이지 실현 토큰 수가 아니다.
+  그림 x축 값이 예산 단위이므로 축 자체는 맞고 캡션만 틀렸다.
+  → *"1,836 is the token budget for the native 1,600x900 nuScenes frame
+  (1,824 tokens realized)."*
 - **제출본(222.pdf) 검토 반영 (2026-09-16).**
   - **공개 저장소 문단을 제거했다** (제출본에서 의도적으로 뺀 것을 원본에도 반영).
     「우리가 만든 현상이 아니다」는 **사전학습 모델(0.95배/69.6%)과 TensorRT**
