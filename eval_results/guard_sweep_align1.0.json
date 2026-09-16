@@ -1,0 +1,342 @@
+{
+  "target": "checkpoints/sweep_align1.0/step_5000",
+  "dtype": "float16",
+  "max_pixels": 1440000,
+  "n_images": 100,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 14.125,
+        "max_worst": 15.3125,
+        "headroom": 4637.451327433629,
+        "headroom_worst": 4277.812244897959,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 1,
+        "max_p50": 20.5,
+        "max_worst": 22.25,
+        "headroom": 3195.317073170732,
+        "headroom_worst": 2944.0,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 2,
+        "max_p50": 25.1875,
+        "max_worst": 26.875,
+        "headroom": 2600.655086848635,
+        "headroom_worst": 2437.358139534884,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 3,
+        "max_p50": 29.375,
+        "max_worst": 31.625,
+        "headroom": 2229.923404255319,
+        "headroom_worst": 2071.2727272727275,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 4,
+        "max_p50": 31.4375,
+        "max_worst": 34.0,
+        "headroom": 2083.6262425447317,
+        "headroom_worst": 1926.5882352941176,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 5,
+        "max_p50": 34.0,
+        "max_worst": 35.75,
+        "headroom": 1926.5882352941176,
+        "headroom_worst": 1832.2797202797203,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 6,
+        "max_p50": 34.625,
+        "max_worst": 37.0,
+        "headroom": 1891.812274368231,
+        "headroom_worst": 1770.3783783783783,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 7,
+        "max_p50": 39.0,
+        "max_worst": 42.75,
+        "headroom": 1679.5897435897436,
+        "headroom_worst": 1532.2573099415204,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 8,
+        "max_p50": 41.875,
+        "max_worst": 45.5,
+        "headroom": 1564.2746268656717,
+        "headroom_worst": 1439.6483516483515,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 9,
+        "max_p50": 44.0,
+        "max_worst": 51.25,
+        "headroom": 1488.7272727272727,
+        "headroom_worst": 1278.1268292682928,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 10,
+        "max_p50": 46.0,
+        "max_worst": 53.0,
+        "headroom": 1424.0,
+        "headroom_worst": 1235.9245283018868,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 11,
+        "max_p50": 46.0,
+        "max_worst": 51.0,
+        "headroom": 1424.0,
+        "headroom_worst": 1284.3921568627452,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 12,
+        "max_p50": 46.0,
+        "max_worst": 49.0,
+        "headroom": 1424.0,
+        "headroom_worst": 1336.8163265306123,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 13,
+        "max_p50": 44.0,
+        "max_worst": 48.5,
+        "headroom": 1488.7272727272727,
+        "headroom_worst": 1350.5979381443299,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 14,
+        "max_p50": 43.0,
+        "max_worst": 48.5,
+        "headroom": 1523.3488372093022,
+        "headroom_worst": 1350.5979381443299,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 15,
+        "max_p50": 56.875,
+        "max_worst": 328.0,
+        "headroom": 1151.7186813186813,
+        "headroom_worst": 199.70731707317074,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 16,
+        "max_p50": 241.0,
+        "max_worst": 496.0,
+        "headroom": 271.8008298755187,
+        "headroom_worst": 132.06451612903226,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 17,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 18,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 19,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 20,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 21,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 22,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 23,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 24,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 25,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 26,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 27,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 28,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 29,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 30,
+        "max_p50": 8352.0,
+        "max_worst": 10624.0,
+        "headroom": 7.842911877394636,
+        "headroom_worst": 6.1656626506024095,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      },
+      {
+        "block": 31,
+        "max_p50": 28288.0,
+        "max_worst": 41728.0,
+        "headroom": 2.315610859728507,
+        "headroom_worst": 1.5697852760736197,
+        "exceed_rate": 0.0,
+        "n_finite": 100,
+        "n_images": 100
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": 2.315610859728507,
+    "bfloat16": 1.1982112556561085e+34,
+    "float32": 1.2029128959276017e+34
+  },
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "risky_blocks": []
+}
