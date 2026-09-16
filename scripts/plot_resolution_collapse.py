@@ -92,8 +92,11 @@ def main():
 
     # --- (a) 마지막 블록 활성 크기 ---
     ax_a.axhline(FP16_MAX, color="#b03a1f", lw=1.3 * L["lw_scale"], ls=(0, (5, 3)), zorder=1)
-    ax_a.text(tokens[-1], FP16_MAX * 0.93, "fp16 limit (65,504)",
-              fontsize=L["legend_fs"] + 0.5, color="#b03a1f", va="top", ha="right")
+    # 라벨을 **왼쪽 위**에 둔다 (2026-09-16). 오른쪽 아래(기존)는 Task CE only 곡선이
+    # 한계선을 가로지르는 바로 그 지점이라 글자가 곡선에 관통당했다 — 그림에서 가장
+    # 중요한 주석이 읽히지 않았다. 왼쪽 상단은 모든 곡선이 한계선 아래라 비어 있다.
+    ax_a.text(tokens[0], FP16_MAX * 1.04, "fp16 limit (65,504)",
+              fontsize=L["legend_fs"] + 0.5, color="#b03a1f", va="bottom", ha="left")
 
     for key, label_d, label_s, color, ls, lw, mk in SERIES:
         xs, ys = points(key, lambda e: e["passes"]["bfloat16"]["by_layer"][str(e["depth"] - 1)]["p50"])
@@ -128,8 +131,11 @@ def main():
         ax.set_axisbelow(True)
         for side in ("top", "right"):
             ax.spines[side].set_visible(False)
-    ax_b.text(EVAL_TOKENS * 0.94, 2, "training / eval resolution",
-              rotation=90, va="bottom", ha="right", fontsize=L["legend_fs"], color="#8a918c")
+    # 문구를 줄이고 위치를 낮춘다 (2026-09-16). 기존 "training / eval resolution"은
+    # 세로로 서서 범례까지 올라가 위쪽이 잘렸다.
+    ax_b.text(EVAL_TOKENS * 0.94, 1, "training / eval",
+              rotation=90, va="bottom", ha="right",
+              fontsize=L["legend_fs"] - 0.5, color="#8a918c")
 
     if L["legend_below"]:
         ax_b.legend(*ax_a.get_legend_handles_labels(), loc="upper center",
