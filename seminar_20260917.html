@@ -193,7 +193,8 @@ strong{font-weight:600}
   그런데 L<sub>spatial</sub>을 쓴 모델은 <strong>0%</strong>였습니다.</p>
 
   <div class="chart">
-    <div class="cap">비전 인코더 마지막 블록의 최대 활성값 · 원본 해상도 250장 · 빨간 선이 fp16 한계</div>
+    <div class="cap">비전 인코더 마지막 블록 — <b>이미지별 최대 활성값의 중앙값</b> ·
+    원본 해상도 250장 · 빨간 선이 fp16 한계(65,504)</div>
     <div class="row"><div class="nm">기준선 (task만)</div>
       <div class="track"><div class="bar over" style="width:93.4%"></div><div class="limit"></div></div>
       <div class="v">74,752</div></div>
@@ -216,7 +217,14 @@ strong{font-weight:600}
 
   <p><strong>표현 범위 여유 = <code>format_max ÷ max|activation|</code></strong>.
   1보다 크면 안전, 작으면 이미 초과입니다. 기준선 <span class="chip over">0.88×</span>
-  Full <span class="chip safe">2.92×</span> — 이미지 한 장 넣으면 나오는 값입니다.</p>
+  Full <span class="chip safe">2.92×</span> — 순전파 한 번이면 이미지 한 장의 값이 나옵니다.</p>
+
+  <div class="note"><b>막대 하나는 이미지 한 장이 아니라 250장의 요약입니다.</b>
+  이미지마다 최대 활성값을 구하면 250개의 값이 생기고, 막대는 그 <b>중앙값</b>입니다.
+  기준선의 경우 p95가 83,456, 250장 중 최악이 <b>88,576</b>입니다 — 분포 전체가 벽
+  오른쪽에 있습니다. Full은 최악이 31,616으로 분포 전체가 왼쪽입니다.
+  <b>붕괴는 이미지 단위로 전부 아니면 전무</b>이므로, 벽을 넘는 이미지의 비율이 곧
+  붕괴율입니다(기준선 94.8%).</div>
 
   <h3>왜 이쪽이 더 나은 논문인가</h3>
   <div class="tw"><table>
