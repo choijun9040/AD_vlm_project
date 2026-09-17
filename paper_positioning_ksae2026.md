@@ -43,8 +43,30 @@ Metrics in Autonomous-Driving Vision-Language Models*
 
 ### 석사 학위 논문
 
-*Feature Alignment Shapes Representable-Range Headroom
-in Distilled Vision-Language Models*
+**「자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단」**
+
+*Measuring and Diagnosing Representable-Range Headroom for Low-Precision
+Deployment of Autonomous-Driving Vision-Language Models*
+
+> **2026-09-17 교체.** 구 제목 *Feature Alignment Shapes Representable-Range Headroom
+> in Distilled Vision-Language Models*를 폐기한다.
+>
+> **이유 1 — §2가 4순위로 강등한 기여를 가리킨다.** `Shapes`가 말하는 것은
+> "손실 설계가 여유를 움직인다"(기여 4)인데, fixA(학습 없이 붕괴 제거)와
+> 자기 정렬(효과의 51% 재현)이 그 기여를 깎았고 §2는 그래서 논지의 축을 옮겼다.
+> 정렬 손실은 네 수단(λ·자기 정렬·fixA·형식 전환) 중 하나일 뿐이다.
+> **학술대회 제목에서 고친 문제를 학위 논문에 남겨 둘 이유가 없다.**
+>
+> **이유 2 — 2026-09-16 A안 채택으로 범위가 바뀌었다.** 사례 1(KD 온도)을 분리해
+> **fp16 표현 범위 초과 한 축**을 측정·진단으로 끝까지 파는 구성이 됐다
+> (`thesis_outline_20260910.md` §3). 새 제목은 그 범위와 정확히 맞는다.
+>
+> **학술대회와의 역할 분담.** 학술대회는 **"지표가 역전한다"**(발견),
+> 학위 논문은 **"그래서 무엇을 어떻게 재고 진단하는가"**(체계). 같은 연구의 두
+> 얼굴이며, 학위 논문이 배포 검증 파이프라인(6장)과 도구(7장)만큼 더 넓다.
+>
+> **용어.** *Representable-Range Headroom*은 본 연구가 만든 용어이므로 이 논문이
+> 1차 출처가 된다. 영문 제목에 그대로 둔다.
 
 > **2026-09-11 1차 확정 → 2026-09-14 어감 하향 확정.** INT8 실험 결과(§3)로
 > "표현 범위(절대 크기)"와 "동적 범위(이상치 비율)"가 분리되는 축이 데이터로 확인되어

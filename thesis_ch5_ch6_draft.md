@@ -7,11 +7,16 @@
 
 ## 제목
 
-*Feature Alignment Shapes Representable-Range Headroom
-in Distilled Vision-Language Models*
+**「자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단」**
 
-> **제목 정리 (2026-09-15).** 이 문서는 학회 원고를 재구성하며 떼어 낸 **학위 논문
-> 5·6장 초안**이므로 학위 논문 제목을 단다. 이전에는 학술대회 제목이 붙어 있었는데,
+*Measuring and Diagnosing Representable-Range Headroom for Low-Precision
+Deployment of Autonomous-Driving Vision-Language Models*
+
+> **제목·장 번호 정리 (2026-09-17).** 이 문서는 학회 원고를 재구성하며 떼어 낸
+> 학위 논문 본문 초안이다. **2026-09-16 A안 채택으로 사례 1이 분리되면서 장
+> 번호가 하나씩 당겨졌다** — 이 문서의 내용은 이제 **4장(수치 표현의 상실)과
+> 5장(따름정리)**에 해당한다(파일명의 `ch5_ch6`는 구 번호다).
+> 학위 논문 제목도 같은 날 교체됐다. 이전에는 학술대회 제목이 붙어 있었는데,
 > 그 제목은 같은 날 교체되었다(구: 「지식 증류가 …여유에 미치는 영향」 →
 > 신: 「자율주행 비전-언어 모델의 fp16 표현 범위 여유와 표준 압축 지표의
 > 역전」). 학술대회와 학위

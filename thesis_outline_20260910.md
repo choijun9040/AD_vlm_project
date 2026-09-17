@@ -20,6 +20,24 @@
 
 ---
 
+## 1.5 확정 제목 (2026-09-17)
+
+**「자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단」**
+
+*Measuring and Diagnosing Representable-Range Headroom for Low-Precision
+Deployment of Autonomous-Driving Vision-Language Models*
+
+**학술대회와의 역할 분담** — 같은 연구의 두 얼굴이며 제목이 그 차이를 말한다.
+
+| | 제목이 말하는 것 | 범위 |
+|---|---|---|
+| 학술대회 | 「…표현 범위 여유와 **표준 압축 지표의 역전**」 | 발견 (4장 일부) |
+| **학위 논문** | 「…**측정과 진단**」 | 체계 (4~7장 전체) |
+
+근거·폐기 이력: `paper_positioning_ksae2026.md` §1
+
+---
+
 ## 2. 단일 기여 진술
 
 > **압축된 주행 VLM을 저정밀로 배포할 때 표현 범위 초과로 인한 기능 상실이 일어나며,
@@ -1976,8 +1994,13 @@ hook 개입이 가중치 편집을 대신한다. (bias 관련 정정은 위 §5 
         제목이 **단일 시드 기여**(증류 손실 → 여유)를 논지 자리에 올리는 반면
         가장 단단한 기여는 **지표 역전**(산술, 시드 무관)이었다. 근거:
         `paper_positioning_ksae2026.md` §1
-      - 학위 논문: *Feature Alignment Shapes Representable-Range Headroom in
-        Distilled Vision-Language Models*
+      - 학위 논문: ~~*Feature Alignment Shapes Representable-Range Headroom in
+        Distilled Vision-Language Models*~~ → **2026-09-17 교체**:
+        「자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단」
+        *Measuring and Diagnosing Representable-Range Headroom for Low-Precision Deployment of Autonomous-Driving Vision-Language Models*
+        이유: `Shapes`가 §2에서 4순위로 강등된 기여(움직이는 수단)를 가리키고,
+        A안 채택(§3)으로 범위가 측정·진단 축으로 좁혀졌다. 학술대회는 "발견",
+        학위 논문은 "체계"로 역할을 나눈다. 근거: `paper_positioning_ksae2026.md` §1
       폐기: *Distillation Loss Design **Governs** …* — `Governs`는 (i) fixA(사후
       재스케일로 붕괴 94.4%→0.0%), (ii) B(자기 정렬이 효과의 51% 재현), (iii) 통계적으로
       뒷받침되지 않는 정확도 순서와 충돌한다. `Shapes`는 "형태를 만든다"이지 "혼자
