@@ -380,6 +380,9 @@ def main():
     ap.add_argument("--limit", type=int, default=100,
                     help="측정 이미지 수. 기본 100장 — 초과 0건일 때 참 초과율의 "
                          "95% 상한이 3.0%다(10장이면 25.9%로 너무 느슨하다)")
+    ap.add_argument("--available_formats", default=None,
+                    help="배포 대상이 실제로 지원하는 형식을 쉼표로. 예: float16,int8 "
+                         "(Jetson DLA는 bf16을 지원하지 않는다). 미지정이면 전부 가능으로 본다")
     ap.add_argument("--target_headroom", type=float, default=2.0,
                     help="이 값 미만인 블록을 위험으로 보고, fix에서는 이 값까지 끌어올린다")
     ap.add_argument("--verify", action="store_true", help="fix 후 재측정")
@@ -444,23 +447,54 @@ def main():
     # **가중치를 건드리기 전에 형식부터 검토하게 한다.**
     # 여유는 형식마다 다른 값이다 — 같은 활성이 fp16에서는 넘치고 bf16에서는 한참 남는다.
     # 가장 명백한 대안(bf16으로 빌드)을 도구가 먼저 제시하지 않으면 정직하지 않다.
+    #
+    # **다만 대안이 실제로 쓸 수 있을 때만 대안이다 (2026-09-17 추가).** 이전 판은
+    # 배포 대상이 그 형식을 지원하는지 묻지 않고 무조건 bf16을 권했다. Jetson Orin의
+    # DLA는 **FP16과 INT8만 지원하고 BF16을 지원하지 않으므로**, DLA 오프로드
+    # 배포에서는 그 권고가 **실행 불가능한 조언**이다. 그리고 바로 그런 대상에서
+    # 이 도구의 가치가 가장 크다 — 형식 전환이라는 탈출구가 없기 때문이다.
+    # 그래서 --available_formats로 대상의 지원 형식을 선언받는다.
+    #
     # 판정 기준과 같은 통계량(최악)을 쓴다 — 여기만 p50이면 표가 서로 어긋난다.
     last_mag = before[-1]["max_worst"]
     alt = {dt: FORMAT_MAX[dt] / last_mag for dt in FORMAT_MAX if last_mag}
+
+    if args.available_formats:
+        avail = {s.strip() for s in args.available_formats.split(",") if s.strip()}
+        unknown = avail - set(FORMAT_MAX)
+        if unknown:
+            print(f"  ⚠ 모르는 형식 {sorted(unknown)} — 무시한다. "
+                  f"아는 형식: {sorted(FORMAT_MAX)}")
+            avail &= set(FORMAT_MAX)
+        avail.add(args.dtype)          # 목표 dtype은 당연히 쓸 수 있다
+    else:
+        avail = set(FORMAT_MAX)
+
     print(f"\n[형식별 여유] 마지막 블록 max|act| = {last_mag:,.0f} (최악)")
     for dt, h in alt.items():
         mark = "  ← 목표 dtype" if dt == args.dtype else ""
+        if dt not in avail:
+            mark += "  (대상 미지원)"
         safe = "안전" if h >= args.target_headroom else "**위험**"
         # bf16/fp32는 여유가 1e30배를 넘어 자리수로 찍으면 표가 무너진다.
         hs = f"{h:,.2f}" if h < 1e6 else f"{h:.2e}"
         print(f"  {dt:<10} {hs:>12}배  {safe}{mark}")
-    res_alt = {dt: h for dt, h in alt.items()}
+    res_alt = {dt: {"headroom": h, "available": dt in avail} for dt, h in alt.items()}
     safer = [dt for dt, h in alt.items()
-             if dt != args.dtype and h >= args.target_headroom]
+             if dt != args.dtype and h >= args.target_headroom and dt in avail]
+    blocked = [dt for dt, h in alt.items()
+               if dt != args.dtype and h >= args.target_headroom and dt not in avail]
     if risky and safer:
         print(f"\n  **권고: 가중치를 고치기 전에 {' 또는 '.join(safer)} 빌드를 먼저 검토할 것.**")
         print(f"  {args.dtype}에서 위험한 것이지 모델이 잘못된 것이 아니다. 형식을 바꾸면")
         print(f"  교정 없이 해결되며, 그 대가(지연시간·정확도)는 별도로 재야 한다.")
+    elif risky and blocked:
+        print(f"\n  **형식 전환은 선택지가 아니다.** {' · '.join(blocked)}는 표현 범위로는")
+        print(f"  안전하나 **대상이 지원하지 않는다**(--available_formats). 남는 수단은")
+        print(f"  (i) 가중치 교정(fix), (ii) 배포 해상도 하향, (iii) 대상 변경뿐이다.")
+        print(f"  Jetson DLA가 대표적이다 — FP16·INT8만 지원하고 BF16이 없다.")
+    elif risky:
+        print(f"\n  **어떤 형식으로도 안전하지 않다.** 교정 또는 해상도 하향이 필요하다.")
 
     # ---- 판정 (2026-09-15 게이트 보정 결과 반영) ----
     # 근거: eval_results/gate_calibration.json, detection_curve{,_fine}.json
@@ -523,7 +557,9 @@ def main():
            "target_headroom": args.target_headroom,
            "before": {"per_block": before, "nan_rate": nan_before},
            "headroom_by_format": res_alt,
+           "available_formats": sorted(avail),
            "safer_formats": safer,
+           "blocked_formats": blocked,   # 표현 범위로는 안전하나 대상이 지원하지 않는 형식
            "risky_blocks": risky}
 
     if args.cmd == "fix":
