@@ -20,13 +20,13 @@ Compression Metrics in Autonomous-Driving Vision-Language Models**
 
 ## 저자 (맑은고딕 10 / TNR 10)
 
-○ ○ ○¹⁾ · ○ ○ ○*²⁾
-Gildong Hong¹⁾, Gilryong Hong*²⁾
+최 준 · 기 석 철\*
+Jun Choi · Seok-Cheol Kee\*
 
 ## 소속 (맑은고딕 8.5 / TNR 8.5)
 
-○○대학교 ○○공학과¹⁾ · ○○대학교 ○○공학과²⁾
-Department of ○○ Engineering, ○○ University¹⁾²⁾
+충북대학교 지능로봇공학과
+Department of Intelligent Systems and Robotics, Chungbuk National University
 
 ## Key words (TNR 9.0 / 휴먼명조 9.0) — 6개
 
@@ -34,9 +34,15 @@ Representable-Range Headroom(표현 범위 여유), Low-Precision Inference(저�
 Knowledge Distillation(지식증류), Vision-Language Model(시각-언어 모델),
 Model Compression(모델 경량화), Autonomous Driving(자율주행)
 
-## 교신저자 (휴먼명조 8.0)
+## 교신저자 · 사사 (휴먼명조 8.0)
 
-\* 교신저자, E-mail: ○○○@○○.ac.kr
+\* 교신저자, E-mail: sckee@chungbuk.ac.kr
+
+이 성과는 정부(과학기술정보통신부)의 재원으로 한국연구재단의 지원을 받아 수행된
+연구임(No. 2022R1A5A8026986)
+
+이 논문은 정부(과학기술정보통신부)의 재원으로 정보통신기획평가원의 지원을 받아
+수행된 지역지능화혁신인재양성사업임(IITP-2026-RS-2020-II201462)
 
 ---
 
@@ -105,9 +111,9 @@ dtype에서 재면 발산한 표본을 잃어 **같은 데이터에서 0.88배�
 ## Table 1 (본문 중 배치)
 
 **Table 1** Headroom, collapse rate, and standard compression metrics, all at
-native resolution (max_pixels 1,440,000). Headroom and collapse from 250 images;
-INT8 metrics from 200 images. SNR is per-tensor; per-channel SNR is reported in
-the text.
+native resolution (max_pixels 1,440,000). Headroom is the median-image value;
+headroom and collapse from 250 images, INT8 metrics from 200 images. SNR is
+per-tensor; per-channel SNR is reported in the text.
 
 | Variant | Headroom | Collapse | max/rms | INT8 SNR |
 |---|---|---|---|---|
@@ -155,6 +161,55 @@ resolution)
 > 본문 4번 문단(여유를 움직이는 수단)을 받는다. **분량이 모자라면 이 그림을 먼저
 > 뺀다** — 4번 문단의 수치(36,608 → 14,208 단조 감소)만으로도 주장이 서고,
 > Fig. 1과 Table 1은 논지에 직접 걸려 있어 뺄 수 없다.
+
+---
+
+## 제출본 수정 필요 항목 (2026-09-17)
+
+> 제출본 `최준_한국자동차공학회_2026추계학술대회.pdf`에 **아직 들어가지 않은 수정 셋**.
+> 마감 9/18. 위에서 아래 순으로 중요도가 낮아진다.
+
+### ① Fig. 2 캡션의 표본 수가 틀렸다 — 250 → **799**
+
+제출본: `(seed and LR schedule fixed, 5,000 steps, 250 images)`
+수정안: `(seed and LR schedule fixed, 5,000 steps, 799 images, evaluation resolution)`
+
+그림은 `plot_lambda_sweep.py`가 `lambda_sweep_activation_profile.json`
+(**n_images 799**)으로 그린다. 250장은 정렬 대상 ablation(`align_target_profile.json`)
+쪽 표본이다. **셋 중 유일하게 "틀린 값"이므로 반드시 고친다.**
+
+### ② 정렬 손실 모델의 "영향이 없다"를 검정으로 바꾼다
+
+제출본: 「정렬 손실을 쓴 학생은 같은 조건에서 **52.38%로 영향이 없다.**」
+수정안: 「정렬 손실을 쓴 학생은 같은 조건에서 52.38%이고, 오버플로가 없는
+bf16(**52.87%**)과 짝지은 검정에서 **구별되지 않는다(p=0.27)**.」
+
+제출본의 "영향이 없다"는 근거가 **붕괴형 출력 0개뿐**이다. NaN이 안 난다는 것과
+fp16이 정확도 손해를 안 본다는 것은 다른 주장인데, 후자를 뒷받침할 짝이 없었다.
+`student_full` @원본·bf16을 재서(52.87%, 544/1029) 2×2를 채웠다 — 불일치 13쌍
+(4 대 9), McNemar p=0.267, 출력 문자열 961/1029(93.4%) 완전 일치.
+
+### ③ ρ 값과 그 취약점을 명시한다
+
+제출본: 「다섯 변형에서 여유와 **완벽하게 역방향으로 순위 매긴다**.」
+수정안: 「… 완벽하게 역방향으로 순위 매긴다(**Spearman ρ = −1.000, 우연일 확률
+1/120**) … 여유 1.06배와 1.10배로 인접한 두 변형은 여유를 **중앙값 대신 최악값**으로
+재면 순서가 뒤집히나(ρ = −0.900), **여유 1배 미만 군과 2.9배 군 사이의 역전은
+두 통계량·두 표본 모두에서 유지된다.**」
+
+숫자를 요구받으면 답할 수 있어야 하고, −1.000이 얼마나 단단한지도 같이 밝혀야 한다.
+**+62자.** 지면이 빠듯하면 이 항목만 뒷문장 없이 `(ρ = −1.000)`으로 줄여도 된다.
+
+### 덤 — Table 1 캡션
+
+`Headroom and collapse from 250 images` → `Headroom is the median-image value;
+headroom and collapse from 250 images`. 값이 틀린 것은 아니고 **통계량을 병기**하는
+것이다(§3.5 규칙). 지면이 없으면 생략 가능.
+
+### 확인 결과 일치하는 것
+
+제목·영문 제목·Key words 6개·저자·소속·사사 2건·Fig. 1 캡션·Table 1의 모든 수치·
+본문 나머지 전체가 현재 문서와 일치한다. 위 셋 외에 고칠 곳은 없다.
 
 ---
 
@@ -253,6 +308,21 @@ resolution)
   조건에서 **1.36%**. 학습 차이는 49.95 대 52.38로 2.4%p뿐이다.
   **붕괴가 지우는 것이 48.6%p이고 그게 요점**이므로, 그렇게 쓰는 편이 정확하고 세다.
 - **본문 2,120자** (공백 제외). 2페이지 초과 시 자르는 순서는 아래 참조.
+- **제출본 PDF와의 대조 (2026-09-17).** `최준_한국자동차공학회_2026추계학술대회.pdf`를
+  현재 본문과 맞춰 본 결과, **양방향으로** 반영이 빠져 있었다.
+
+  **PDF에는 있는데 이 문서에 없던 것** — 채워 넣었다.
+  - 저자(최 준 · 기 석 철), 소속(충북대학교 지능로봇공학과), 교신저자 이메일.
+    이 문서는 `○ ○ ○` 자리표시자 그대로였다.
+  - **사사 두 건.** 한국연구재단(No. 2022R1A5A8026986)과 정보통신기획평가원
+    지역지능화혁신인재양성사업(IITP-2026-RS-2020-II201462). 이 문서에는 아예
+    없었으므로, 여기서 새 PDF를 만들면 **사사가 통째로 빠질 뻔했다.**
+
+  **이 문서에는 있는데 PDF에 없는 것** — PDF를 고쳐야 한다. 아래 「제출본 수정
+  필요 항목」 참조.
+- **Table 1 인쇄 캡션에도 통계량을 적었다 (2026-09-17).** 여유가 p50 기준임을
+  작업 주석에만 적어 두었는데, §3.5의 "통계량·표본을 항상 병기한다"는 캡션에도
+  적용된다. → `Headroom is the median-image value;`
 - **최종 확인에서 캡션 오류 둘을 잡았다 (2026-09-17).**
   - **Fig. 2 캡션의 표본 수가 틀렸다 — 250장이 아니라 799장.** 그림은
     `plot_lambda_sweep.py`가 `lambda_sweep_activation_profile.json`(**799장**)으로
