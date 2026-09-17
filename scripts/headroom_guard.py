@@ -375,9 +375,67 @@ def apply_fix(tower, plan):
 
 
 # ---------------------------------------------------------------- main
+def print_verdict(lastb, nimg):
+    """마지막 블록 판정을 찍는다.
+
+    **함수로 뺀 이유 (2026-09-17).** 세 분기 중 「경계」는 여유가 1.00~1.25 사이인
+    모델이 있어야 도는데 손에 있는 모델이 전부 그 밖이라, main 안에 두면 **한 번도
+    실행되지 않은 코드**가 문서에 "이렇게 출력된다"고 적히게 된다. 함수로 빼면
+    모델 없이 세 분기를 다 시험할 수 있다(`--selftest`).
+    """
+    exc = lastb["exceed_rate"]
+    hw = lastb.get("headroom_worst")
+    ub = zero_obs_upper_bound(nimg)
+    print(f"\n[판정] 마지막 블록 (기준: 초과 비율, {nimg}장)")
+    print(f"  초과 비율 {exc*100:.1f}%  ← 붕괴율 추정치 "
+          f"(실측 대조 평균 오차 2.1%p, 6개 모델)")
+    if hw:
+        print(f"  여유  p50 {lastb['headroom']:.2f}배 · 최악 {hw:.2f}배")
+    if exc > 0:
+        print(f"  → **위험.** {nimg}장 중 {round(exc*nimg)}장이 이미 형식 상한을 넘는다.")
+    elif hw is not None and hw < MARGINAL_HEADROOM:
+        print(f"  → **경계.** 초과는 없으나 최악 여유가 {hw:.2f}배로 "
+              f"{MARGINAL_HEADROOM}배 미만이다. 표본 밖 이미지가 넘을 수 있다.")
+        print(f"     ※ {MARGINAL_HEADROOM}는 **측정값이 아니라 설계 판단**이다 — "
+              f"실측 경계는 1.00~1.05(형식 상한)뿐이고,")
+        print(f"       거기에 모델 내 이미지별 편차 15~20%를 얹었다. "
+              f"1차 판정(초과 비율)에는 임계값이 없다.")
+    else:
+        print(f"  → 안전. 다만 {nimg}장에서 0건이 관측됐을 뿐이므로 "
+              f"참 초과율의 95% 상한은 **{ub*100:.1f}%**다.")
+    if nimg < 100:
+        print(f"  ⚠ 표본 {nimg}장은 적다 — 상한 {ub*100:.1f}%. "
+              f"100장(3.0%) 이상을 권한다.")
+
+
+def selftest():
+    """모델 없이 도는 스모크 시험 — 판정 세 분기와 배수 풀이를 확인한다 (O10 착수)."""
+    print("=" * 66)
+    for label, lastb, n in [
+        ("위험", {"exceed_rate": 0.95, "headroom": 0.86, "headroom_worst": 0.73}, 100),
+        ("경계", {"exceed_rate": 0.00, "headroom": 1.30, "headroom_worst": 1.12}, 100),
+        ("안전", {"exceed_rate": 0.00, "headroom": 2.92, "headroom_worst": 2.05}, 100),
+    ]:
+        print(f"\n── 분기 시험: {label} ──")
+        print_verdict(lastb, n)
+    print("\n" + "=" * 66)
+    # 배수 풀이 — 잔차가 목표를 넘으면 불가능으로 보고해야 한다
+    f, infeas, n = solve_factor([(100.0, 1000.0), (200.0, 900.0)], 32752.0)
+    assert f == 1.0 and infeas == 0, (f, infeas)
+    f, infeas, n = solve_factor([(40000.0, 1000.0)], 32752.0)
+    assert infeas == 1, (f, infeas)
+    print("solve_factor: 여유 충분 → f=1.0 · 잔차 초과 → infeasible 1  ✓")
+    # 0장 표본 상한
+    assert abs(zero_obs_upper_bound(100) - 0.0295) < 1e-3
+    assert abs(zero_obs_upper_bound(10) - 0.2589) < 1e-3
+    print("zero_obs_upper_bound: 100장 2.95% · 10장 25.89%  ✓")
+    print("\n스모크 시험 통과.")
+
+
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["diagnose", "fix"])
+    ap.add_argument("cmd", choices=["diagnose", "fix", "selftest"],
+                    help="selftest는 모델 없이 판정 분기·배수 풀이를 확인한다")
     ap.add_argument("--checkpoint", default="checkpoints/student_baseline_v2/epoch_1",
                     help="'none'이면 사전학습 베이스")
     ap.add_argument("--base", default=BASE_3B)
@@ -411,6 +469,8 @@ def main():
     ap.add_argument("--save_weights", default=None, help="교정된 비전 타워 state_dict 저장 경로")
     ap.add_argument("--out", default="eval_results/headroom_guard.json")
     args = ap.parse_args()
+    if args.cmd == "selftest":
+        selftest(); return
 
     awq_compat.patch()
     from transformers import AutoProcessor
@@ -538,27 +598,7 @@ def main():
     #  - 그래서 1차 판정은 임계값이 아니라 **초과 비율**로 한다.
     lastb = before[-1]
     exc, nimg = lastb["exceed_rate"], lastb.get("n_images", len(cache_mag))
-    ub = zero_obs_upper_bound(nimg)
-    hw = lastb.get("headroom_worst")
-    print(f"\n[판정] 마지막 블록 (기준: 초과 비율, {nimg}장)")
-    print(f"  초과 비율 {exc*100:.1f}%  ← 붕괴율 추정치 "
-          f"(실측 대조 평균 오차 2.1%p, 6개 모델)")
-    print(f"  여유  p50 {lastb['headroom']:.2f}배 · 최악 {hw:.2f}배" if hw else "")
-    if exc > 0:
-        print(f"  → **위험.** {nimg}장 중 {round(exc*nimg)}장이 이미 형식 상한을 넘는다.")
-    elif hw is not None and hw < MARGINAL_HEADROOM:
-        print(f"  → **경계.** 초과는 없으나 최악 여유가 {hw:.2f}배로 "
-              f"{MARGINAL_HEADROOM}배 미만이다. 표본 밖 이미지가 넘을 수 있다.")
-        print(f"     ※ {MARGINAL_HEADROOM}은 **측정값이 아니라 설계 판단**이다 — "
-              f"실측 경계는 1.00~1.05(형식 상한)뿐이고,")
-        print(f"       거기에 모델 내 이미지별 편차 15~20%를 얹었다. "
-              f"1차 판정(초과 비율)에는 임계값이 없다.")
-    else:
-        print(f"  → 안전. 다만 {nimg}장에서 0건이 관측됐을 뿐이므로 "
-              f"참 초과율의 95% 상한은 **{ub*100:.1f}%**다.")
-    if nimg < 100:
-        print(f"  ⚠ 표본 {nimg}장은 적다 — 상한 {ub*100:.1f}%. "
-              f"100장(3.0%) 이상을 권한다.")
+    print_verdict(lastb, nimg)
 
     # 붕괴는 목표 dtype으로 갈아끼워 잰다
     def collapse_in_target():

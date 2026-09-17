@@ -1422,6 +1422,13 @@ N=5에서 1.06배, N=30에서 1.03배) 표본 **안**의 편향만 말해 주므
   > 세 곳에 **"측정이 아니라 설계 판단"**을 명시한다. 1차 판정인 초과 비율에는
   > 임계값이 없으므로, 이 공시는 **보조 경고 한 줄에만** 걸린다.
 - 기본 `--limit`을 50 → **100**으로 올렸다
+- **판정부를 `print_verdict()`로 분리하고 `selftest` 명령을 넣었다 (2026-09-17).**
+  세 분기 중 **「경계」는 여유가 1.00~1.25인 모델이 있어야 도는데 손에 있는 모델이
+  전부 그 밖이라 한 번도 실행된 적이 없었다.** O4 공시를 그 분기에 넣고 나서야
+  발견했다 — **문서에 "이렇게 출력된다"고 적은 코드가 미실행 상태**였던 것이다.
+  `python scripts/headroom_guard.py selftest`가 모델 없이 세 분기와
+  `solve_factor`(여유 충분 → f=1.0 / 잔차 초과 → infeasible)·
+  `zero_obs_upper_bound`(100장 2.95% / 10장 25.89%)를 확인한다.
 
 산출물: `scripts/headroom_guard.py`
 결과: `eval_results/headroom_guard_baseline_v2.json`, `guard_qwen2vl_2b_awq.json`,
