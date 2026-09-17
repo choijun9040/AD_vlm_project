@@ -51,6 +51,13 @@ BASE_3B = "Qwen/Qwen2.5-VL-3B-Instruct"
 DRIVELM_VAL = "data/QA_dataset_nus/v1_1_val_nus_q_only.json"
 FORMAT_MAX = {"float16": 65504.0, "bfloat16": 3.3895e38, "float32": 3.4028e38}
 
+# **스케일을 쓰는 형식은 여유 개념이 그대로 적용되지 않는다.** INT8/INT4/fp8 추론은
+# 거의 항상 텐서·채널별 스케일 인자와 함께 쓰므로, 절대 크기가 형식 상한을 넘느냐는
+# 질문 자체가 성립하지 않는다(문제가 동적 범위 쪽으로 옮겨간다 — §8 경계 논의).
+# 그래도 **대상이 지원하는 형식으로는 선언할 수 있어야 한다** — DLA를 적으려면
+# "float16,int8"이 자연스러운 표기이기 때문이다. 받아 두되 여유 비교에서는 뺀다.
+SCALED_FORMATS = {"int8", "int4", "fp8", "fp8_e4m3", "fp8_e5m2"}
+
 # 초과는 없으나 여유가 얇은 구간의 경계. 실측 전이가 최악 여유 1.00~1.05이고
 # 한 모델 안 이미지별 편차가 15~20%이므로, 표본 밖 이미지를 위해 1.25배를 둔다.
 # (게이트 보정 2026-09-15 — eval_results/gate_calibration.json)
@@ -459,14 +466,18 @@ def main():
     last_mag = before[-1]["max_worst"]
     alt = {dt: FORMAT_MAX[dt] / last_mag for dt in FORMAT_MAX if last_mag}
 
+    scaled, unknown = set(), set()
     if args.available_formats:
-        avail = {s.strip() for s in args.available_formats.split(",") if s.strip()}
-        unknown = avail - set(FORMAT_MAX)
+        decl = {s.strip().lower() for s in args.available_formats.split(",") if s.strip()}
+        scaled = decl & SCALED_FORMATS
+        unknown = decl - set(FORMAT_MAX) - SCALED_FORMATS
         if unknown:
-            print(f"  ⚠ 모르는 형식 {sorted(unknown)} — 무시한다. "
-                  f"아는 형식: {sorted(FORMAT_MAX)}")
-            avail &= set(FORMAT_MAX)
-        avail.add(args.dtype)          # 목표 dtype은 당연히 쓸 수 있다
+            print(f"  ⚠ 모르는 형식 {sorted(unknown)} — 무시한다. 아는 형식: "
+                  f"{sorted(FORMAT_MAX)} + 스케일 형식 {sorted(SCALED_FORMATS)}")
+        if scaled:
+            print(f"  · 스케일 형식 {sorted(scaled)}은 여유 비교에서 뺀다 — "
+                  f"스케일 인자와 함께 쓰므로 절대 크기 문제가 성립하지 않는다.")
+        avail = (decl & set(FORMAT_MAX)) | {args.dtype}   # 목표 dtype은 당연히 쓸 수 있다
     else:
         avail = set(FORMAT_MAX)
 
@@ -493,6 +504,10 @@ def main():
         print(f"  안전하나 **대상이 지원하지 않는다**(--available_formats). 남는 수단은")
         print(f"  (i) 가중치 교정(fix), (ii) 배포 해상도 하향, (iii) 대상 변경뿐이다.")
         print(f"  Jetson DLA가 대표적이다 — FP16·INT8만 지원하고 BF16이 없다.")
+        if scaled:
+            print(f"  · {' · '.join(sorted(scaled))}도 대상이 지원하나 **이 도구가 답할 수 "
+                  f"있는 질문이 아니다** — 스케일 형식은 절대 크기가 아니라 동적 범위가")
+            print(f"    문제이므로 별도 양자화 오차 평가가 필요하다(§8 경계 논의).")
     elif risky:
         print(f"\n  **어떤 형식으로도 안전하지 않다.** 교정 또는 해상도 하향이 필요하다.")
 
@@ -558,6 +573,7 @@ def main():
            "before": {"per_block": before, "nan_rate": nan_before},
            "headroom_by_format": res_alt,
            "available_formats": sorted(avail),
+           "scaled_formats_declared": sorted(scaled),
            "safer_formats": safer,
            "blocked_formats": blocked,   # 표현 범위로는 안전하나 대상이 지원하지 않는 형식
            "risky_blocks": risky}
