@@ -70,17 +70,17 @@ Table 1 (본문 중 배치)
  Full              |  2.92x   |   0.0%   |  238.2  | 22.88 dB
 
 캡션 (영문):
-Table 1  Headroom, collapse rate, and standard compression metrics at native resolution (max_pixels 1,440,000). Headroom is the median-image value; headroom and collapse from 250 images, INT8 metrics from 200 images. SNR is per-tensor; per-channel SNR is reported in the text.
+Table 1  Headroom, collapse rate, and standard compression metrics, all at native resolution (max_pixels 1,440,000). Headroom is the median-image value with magnitude measured in bf16; collapse is observed in fp16. Headroom and collapse from 250 images, INT8 metrics from 200 images. SNR is per-tensor; per-channel SNR is reported in the text.
 
 ════════════════════════════════════════════════════════════════════
 Fig. 1  (하단 배치, 제목 영문) — figures/fig2_resolution_collapse_single.png
 ════════════════════════════════════════════════════════════════════
-Fig. 1  Last-block activation magnitude (a) and fp16 generation collapse rate (b) versus vision tokens per image, for five controlled variants and the pre-trained model. The dashed line in (a) is the fp16 limit (65,504); the vertical line marks the training and evaluation resolution. 1,836 is the token budget for the native 1,600x900 nuScenes frame (1,824 tokens realized).
+Fig. 1  Last-block activation magnitude (a) and fp16 generation collapse rate (b) versus vision tokens per image, for five controlled variants and the pre-trained model. (a) is the median over 250 images of the per-image max|activation|, measured in bf16; (b) is observed in fp16. The dashed line in (a) is the fp16 limit (65,504); the vertical line marks the training and evaluation resolution. 1,836 is the token budget for the native 1,600x900 nuScenes frame (1,824 tokens realized).
 
 ════════════════════════════════════════════════════════════════════
 Fig. 2  (하단 배치, 제목 영문) — figures/fig3_lambda_dose_response_single.png
 ════════════════════════════════════════════════════════════════════
-Fig. 2  Dose-response of alignment-loss weight on last-block activation magnitude (seed and LR schedule fixed, 5,000 steps, 799 images, evaluation resolution)
+Fig. 2  Dose-response of alignment-loss weight on last-block activation magnitude — median over 799 images of the per-image max|activation|, measured in bf16 (seed and LR schedule fixed, 5,000 steps, evaluation resolution)
 
 ════════════════════════════════════════════════════════════════════
 제출본 대비 바뀐 곳 — 이 셋만 확인하면 된다

@@ -111,9 +111,10 @@ dtype에서 재면 발산한 표본을 잃어 **같은 데이터에서 0.88배�
 ## Table 1 (본문 중 배치)
 
 **Table 1** Headroom, collapse rate, and standard compression metrics, all at
-native resolution (max_pixels 1,440,000). Headroom is the median-image value;
-headroom and collapse from 250 images, INT8 metrics from 200 images. SNR is
-per-tensor; per-channel SNR is reported in the text.
+native resolution (max_pixels 1,440,000). Headroom is the median-image value
+with magnitude measured in bf16; collapse is observed in fp16. Headroom and
+collapse from 250 images, INT8 metrics from 200 images. SNR is per-tensor;
+per-channel SNR is reported in the text.
 
 | Variant | Headroom | Collapse | max/rms | INT8 SNR |
 |---|---|---|---|---|
@@ -135,9 +136,11 @@ per-tensor; per-channel SNR is reported in the text.
 
 **Fig. 1** Last-block activation magnitude (a) and fp16 generation collapse rate
 (b) versus vision tokens per image, for five controlled variants and the
-pre-trained model. The dashed line in (a) is the fp16 limit (65,504); the
-vertical line marks the training and evaluation resolution. 1,836 is the token
-budget for the native 1,600x900 nuScenes frame (1,824 tokens realized).
+pre-trained model. (a) is the median over 250 images of the per-image
+max|activation|, measured in bf16; (b) is observed in fp16. The dashed line in
+(a) is the fp16 limit (65,504); the vertical line marks the training and
+evaluation resolution. 1,836 is the token budget for the native 1,600x900
+nuScenes frame (1,824 tokens realized).
 
 파일: `figures/fig2_resolution_collapse_single.png`
 
@@ -153,8 +156,8 @@ budget for the native 1,600x900 nuScenes frame (1,824 tokens realized).
 ## Fig. 2 (요약문 하단 배치, 제목 영문)
 
 **Fig. 2** Dose-response of alignment-loss weight on last-block activation
-magnitude (seed and LR schedule fixed, 5,000 steps, 799 images, evaluation
-resolution)
+magnitude — median over 799 images of the per-image max|activation|, measured
+in bf16 (seed and LR schedule fixed, 5,000 steps, evaluation resolution)
 
 파일: `figures/fig3_lambda_dose_response_single.png`
 
@@ -200,11 +203,23 @@ fp16이 정확도 손해를 안 본다는 것은 다른 주장인데, 후자를 
 숫자를 요구받으면 답할 수 있어야 하고, −1.000이 얼마나 단단한지도 같이 밝혀야 한다.
 **+62자.** 지면이 빠듯하면 이 항목만 뒷문장 없이 `(ρ = −1.000)`으로 줄여도 된다.
 
-### 덤 — Table 1 캡션
+### ④ 캡션 셋 모두에 통계량·측정 dtype을 넣는다
 
-`Headroom and collapse from 250 images` → `Headroom is the median-image value;
-headroom and collapse from 250 images`. 값이 틀린 것은 아니고 **통계량을 병기**하는
-것이다(§3.5 규칙). 지면이 없으면 생략 가능.
+제출본의 캡션 어디에도 **활성값이 무엇의 요약이고 어느 dtype에서 잰 값인지**가 없다.
+그림 스크립트를 확인하면 Fig. 1(a)와 Fig. 2 모두 `passes["bfloat16"]…["p50"]`,
+즉 **bf16에서 잰 이미지별 최대의 중앙값**이다. 적지 않으면 *"250장 중 최대"*나
+*"fp16 값"*으로 읽힌다.
+
+| 캡션 | 추가할 문구 |
+|---|---|
+| Table 1 | `Headroom is the median-image value **with magnitude measured in bf16; collapse is observed in fp16.**` |
+| Fig. 1 | `**(a) is the median over 250 images of the per-image max\|activation\|, measured in bf16; (b) is observed in fp16.**` |
+| Fig. 2 | `— **median over 799 images of the per-image max\|activation\|, measured in bf16**` |
+
+**왜 dtype이 중요한가.** fp16에서 재면 기준선은 250장 중 **13장만 유한**하고, 살아남은
+13장으로 중앙값을 내면 63,552 — **여유 1.03배로 "안전"해 보인다.** 같은 데이터에서
+0.88배가 1.03배가 되는 생존 편향이며, 본문 6문단이 이 함정을 지적한다. 캡션이
+측정 dtype을 밝히지 않으면 **본문과 표가 서로 다른 것을 말하는 것처럼 읽힌다.**
 
 ### 확인 결과 일치하는 것
 
