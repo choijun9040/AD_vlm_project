@@ -1910,9 +1910,19 @@ hook 개입이 가중치 편집을 대신한다. (bias 관련 정정은 위 §5 
 | `sweep_align*/step_{1000~4000}` | 3.3 GB | 미참조 (λ 스윕은 `step_5000`만 씀) | 재학습 필요 — **다만 어디서도 참조하지 않는다** |
 
 **지우지 않은 것과 이유.**
-- `onnx/tower_baseline_v2_native{,_fixa}.onnx(.data)` 5.4 GB — **Orin 보드 작업에
-  필요하다**(`orin_pkg/README.md`가 ONNX 세 개를 보드로 옮기라고 지시). 오히려
-  `tower_full_native.onnx`가 없어 **보드 이관 전에 다시 내보내야 한다**(약 10분).
+- `onnx/*.onnx(.data)` — **Orin 보드 작업에 필요하다**(`orin_pkg/README.md`가 ONNX
+  세 개를 보드로 옮기라고 지시). 정리 중 `tower_full_native`가 빠져 있음을 발견해
+  **2026-09-17에 다시 내보냈다**(원본 대비 최대 오차 0.000e+00, ONNX 런타임 코사인
+  중앙값 0.999999). 이제 셋이 모두 있고, 세 그래프의 입력 형상이 동일하다
+  (`pixel_values=(7296, 1176)`, `grid=[[1, 64, 114]]`, 비전 토큰 1,824).
+
+  | ONNX | 역할 | A100 fp16 기준값 |
+  |---|---|---|
+  | `tower_baseline_v2_native` | 붕괴하는 쪽 | 94.0% 붕괴 |
+  | `tower_full_native` | 붕괴 안 하는 쪽 | 0.0% |
+  | `tower_baseline_v2_native_fixa` | 처방 검증 | 0.0% (교정 후) |
+
+  보드로 옮길 때 **`.onnx`와 `.onnx.data`를 같은 디렉터리에** 둘 것. 셋 합쳐 8.1 GB.
 - `checkpoints/student_*` 전부 — 학습에 각 9.5~51시간이 들어간 대체 불가 자산.
 - `checkpoints/student_{baseline,kd_only}`(v1, 1.9 GB) — 측정은 끝났으나
   (`eval_results/v1_vs_v2_profile.json`) 재학습 비용이 커서 남긴다.
