@@ -1898,6 +1898,29 @@ hook 개입이 가중치 편집을 대신한다. (bias 관련 정정은 위 §5 
 
 ---
 
+## 6.5 디스크 정리 기록 (2026-09-17)
+
+여유가 9.5 GB까지 줄어 **재생성 가능한 산출물만** 지웠다. 결과는 전부
+`eval_results/`에 기록돼 있다. **9.5 GB → 21 GB.**
+
+| 지운 것 | 크기 | 결과 기록 위치 | 재생성 |
+|---|---|---|---|
+| `/venv/trt2` (TRT 10.16) | 6.4 GB | `trt_fixa_native_1016.json` | `pip install tensorrt-cu12==10.16.1.11 cuda-python ml_dtypes numpy onnx`, 3분 |
+| `trt_inputs.npz` (50장 전처리) | 1.6 GB | — (입력 캐시) | `scripts/prep_trt_inputs.py`, 2분 |
+| `sweep_align*/step_{1000~4000}` | 3.3 GB | 미참조 (λ 스윕은 `step_5000`만 씀) | 재학습 필요 — **다만 어디서도 참조하지 않는다** |
+
+**지우지 않은 것과 이유.**
+- `onnx/tower_baseline_v2_native{,_fixa}.onnx(.data)` 5.4 GB — **Orin 보드 작업에
+  필요하다**(`orin_pkg/README.md`가 ONNX 세 개를 보드로 옮기라고 지시). 오히려
+  `tower_full_native.onnx`가 없어 **보드 이관 전에 다시 내보내야 한다**(약 10분).
+- `checkpoints/student_*` 전부 — 학습에 각 9.5~51시간이 들어간 대체 불가 자산.
+- `checkpoints/student_{baseline,kd_only}`(v1, 1.9 GB) — 측정은 끝났으나
+  (`eval_results/v1_vs_v2_profile.json`) 재학습 비용이 커서 남긴다.
+- `checkpoints/baseline_v2_fixa_native_tower.pt` 1.3 GB — 도구가 산출한 교정
+  가중치. Orin에서 처방을 검증할 때 그대로 쓴다.
+
+---
+
 ## 7. 남은 할 일
 
 ### 보류 — 자원이 확보되면 진행 (2026-09-14 결정)
