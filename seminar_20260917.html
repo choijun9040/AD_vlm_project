@@ -269,8 +269,10 @@ strong{font-weight:600}
       <tr class="hi2"><td>Full</td><td class="n">2.92×</td><td class="n">0.0%</td><td class="n"><strong>22.88 dB</strong></td><td>“가장 위험”</td></tr>
     </tbody>
   </table></div>
-  <p>다섯 변형에서 순위가 완벽하게 뒤집힙니다 — <strong>Spearman ρ = −1.000</strong>.
-  공개 모델 3계열(Qwen2-VL 2B·7B, SmolVLM)에서도 <strong>ρ = −1.000</strong>으로 재현됩니다.</p>
+  <p>다섯 변형에서 순위가 완벽하게 뒤집힙니다 — <strong>Spearman ρ = −1.000</strong>,
+  우연일 확률 1/120. 공개 모델 3계열(Qwen2-VL 2B·7B, SmolVLM)에서도 <strong>같은 방향</strong>이
+  관찰되나, n=3에서는 완전 역전이 우연히 나올 확률이 1/6이라 그 자체로는 근거가 되지 못합니다.
+  계열을 넘어 성립하는 근거는 측정이 아니라 아래의 <b>산술</b>입니다.</p>
   <div class="note"><b>왜 그런가.</b> SNR과 이상치 비율은 <b>스케일 불변량</b>입니다 —
   모든 값을 10배로 키워도 값이 같습니다. 그런데 fp16 붕괴는 <b>절대 크기</b> 문제입니다.
   두 축이 <b>수학적으로 직교</b>합니다. 우연이 아니라 정의상의 귀결입니다.</div>
@@ -484,7 +486,7 @@ strong{font-weight:600}
     <thead><tr><th>#</th><th>한계</th><th>상태</th></tr></thead>
     <tbody>
       <tr class="hi"><td class="n">0</td><td>단일 실패 양식</td><td><strong>미해소 — 사례를 하나로 좁힌 선택의 대가</strong></td></tr>
-      <tr><td class="n">1</td><td>단일 모델 계열</td><td>절반 해소 — 지표 역전은 3계열 재현</td></tr>
+      <tr><td class="n">1</td><td>단일 모델 계열</td><td>절반 해소 — 지표 역전은 3계열에서 같은 방향 관찰</td></tr>
       <tr class="hi2"><td class="n">2</td><td>게이트 보정의 합성 교란</td><td><strong>해소</strong> — λ 스윕 4점이 합성 경계 재현</td></tr>
       <tr class="hi"><td class="n">3</td><td>처방의 수명</td><td><strong>미해소 — 측정으로 승격</strong></td></tr>
       <tr><td class="n">4</td><td>실기기 검증 범위</td><td>보드 대기</td></tr>
