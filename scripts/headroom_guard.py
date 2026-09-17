@@ -298,15 +298,28 @@ def plan_fix(per_block, target, tower=None, cache=None, dtype="float16"):
     """여유가 target 미만인 블록과 필요한 MLP 축소 배수를 산출한다.
 
     tower/cache가 주어지면 잔차를 분리해 정확히 풀고, 없으면 근사값을 쓴다.
+
+    **트리거는 최악 여유다 (2026-09-17 변경).** 이전에는 p50 여유로 걸었는데,
+    게이트 보정(§7.4)이 **최악 통계량을 써야 한다**고 결론냈음에도 코드가 p50을
+    보고 있어 문서와 어긋나 있었다. 최악을 쓰는 이유는 여백이 커서가 아니라
+    **임계값이 물리적 의미(형식 상한 1.0)를 가져 모델 간에 옮겨 가기 때문**이다.
+    λ=0.0 체크포인트가 그 필요성을 실증한다 — p50 여유 1.14로 한계 위처럼
+    보이는데 최악이 0.87이라 11%가 붕괴한다. **p50만 보면 놓친다.**
+
+    축소 배수 자체는 이 변경의 영향을 받지 않는다. `solve_factor()`가 이미
+    모든 이미지에 대해 부등식을 풀기 때문이다(최악 기준 해).
     """
     fmax = FORMAT_MAX[dtype]
     target_max = fmax / target
     plan = []
     for b in per_block:
-        h = b["headroom"]
+        h = b.get("headroom_worst")
+        if h is None:                       # 구 형식 기록과의 호환
+            h = b["headroom"]
         if h is None or h >= target:
             continue
-        item = {"block": b["block"], "headroom": h}
+        item = {"block": b["block"], "headroom": h,
+                "headroom_p50": b.get("headroom")}
         if tower is not None and cache is not None:
             pairs = measure_branches(tower, cache, b["block"], dtype)
             f, infeas, n = solve_factor(pairs, target_max)
@@ -431,13 +444,16 @@ def main():
     # **가중치를 건드리기 전에 형식부터 검토하게 한다.**
     # 여유는 형식마다 다른 값이다 — 같은 활성이 fp16에서는 넘치고 bf16에서는 한참 남는다.
     # 가장 명백한 대안(bf16으로 빌드)을 도구가 먼저 제시하지 않으면 정직하지 않다.
-    last_mag = before[-1]["max_p50"]
+    # 판정 기준과 같은 통계량(최악)을 쓴다 — 여기만 p50이면 표가 서로 어긋난다.
+    last_mag = before[-1]["max_worst"]
     alt = {dt: FORMAT_MAX[dt] / last_mag for dt in FORMAT_MAX if last_mag}
-    print(f"\n[형식별 여유] 마지막 블록 max|act| = {last_mag:,.0f}")
+    print(f"\n[형식별 여유] 마지막 블록 max|act| = {last_mag:,.0f} (최악)")
     for dt, h in alt.items():
         mark = "  ← 목표 dtype" if dt == args.dtype else ""
         safe = "안전" if h >= args.target_headroom else "**위험**"
-        print(f"  {dt:<10} {h:>12,.2f}배  {safe}{mark}")
+        # bf16/fp32는 여유가 1e30배를 넘어 자리수로 찍으면 표가 무너진다.
+        hs = f"{h:,.2f}" if h < 1e6 else f"{h:.2e}"
+        print(f"  {dt:<10} {hs:>12}배  {safe}{mark}")
     res_alt = {dt: h for dt, h in alt.items()}
     safer = [dt for dt, h in alt.items()
              if dt != args.dtype and h >= args.target_headroom]
@@ -449,8 +465,9 @@ def main():
     # ---- 판정 (2026-09-15 게이트 보정 결과 반영) ----
     # 근거: eval_results/gate_calibration.json, detection_curve{,_fine}.json
     #  - 전이는 **최악 여유 1.00~1.05**에서 일어난다(물리적 한계 1.0과 일치).
-    #    기존 임계값 2.0은 그 경계보다 1.91배 보수적이고, 20개 합성 점에서
-    #    오탐 7건·미탐 0건을 냈다.
+    #    기존 임계값 2.0은 그 경계보다 1.91배 보수적이고(2.00 / 1.049), 20개 합성
+    #    점에서 **오탐 8건·미탐 0건**을 냈다(최악 여유 기준. 2026-09-17 이전 판은
+    #    p50으로 판정해 오탐 7건이었다 — 게이트를 최악으로 통일하면서 재계산했다).
     #  - p50/p95/최악 세 통계량은 여백 비율이 1.043/1.043/1.045로 **사실상 동등**하다.
     #    한 모델 안에서는 셋이 비례해 움직이기 때문이다. 최악을 쓰는 이유는 여백이
     #    커서가 아니라 **임계값이 물리적 의미(형식 상한)를 갖기 때문**이다.
@@ -489,14 +506,16 @@ def main():
 
     nan_before = collapse_in_target()
 
-    print(f"{'blk':>4}{'max|act| p50':>15}{'여유':>9}")
+    print(f"{'blk':>4}{'max|act| 최악':>15}{'여유(최악)':>11}")
     for b in before:
-        if b["headroom"] is None:
-            print(f"{b['block']:>4}{'(비유한)':>15}{'—':>9}")
-        elif b["headroom"] < args.target_headroom or b["block"] >= len(before) - 3:
-            mark = "  ← 위험" if b["headroom"] < args.target_headroom else ""
-            print(f"{b['block']:>4}{b['max_p50']:>15,.0f}{b['headroom']:>8.2f}배{mark}")
-    print(f"\n[진단] 위험 블록 {len(risky)}개 (기준: 여유 < {args.target_headroom})")
+        hw = b.get("headroom_worst")
+        if hw is None:
+            print(f"{b['block']:>4}{'(비유한)':>15}{'—':>11}")
+        elif hw < args.target_headroom or b["block"] >= len(before) - 3:
+            mark = "  ← 위험" if hw < args.target_headroom else ""
+            print(f"{b['block']:>4}{b['max_worst']:>15,.0f}{hw:>10.2f}배{mark}")
+    print(f"\n[진단] 위험 블록 {len(risky)}개 "
+          f"(기준: **최악** 여유 < {args.target_headroom})")
     print(f"       현재 붕괴율 {nan_before*100:.1f}%  ({len(paths)}장)")
 
     res = {"target": args.repo or args.checkpoint, "dtype": args.dtype,

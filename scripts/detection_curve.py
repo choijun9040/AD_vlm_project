@@ -200,7 +200,9 @@ def main():
         rows.append({"factor": f, "headroom_p50": h50, "headroom_p95": h95,
                      "headroom_worst": hworst, "collapse_rate": collapse,
                      "n_images": len(finite),
-                     "verdict_at_2.0": "위험" if h50 < 2.0 else "안전",
+                     # 게이트는 **최악 여유** 기준이다 (2026-09-17, headroom_guard와 통일).
+                     # 이전 판은 h50으로 판정해 도구 구현·§7.4 서술과 어긋나 있었다.
+                     "verdict_at_2.0": "위험" if hworst < 2.0 else "안전",
                      "max_p50": pct(sm, 0.50), "max_worst": sm[-1],
                      # **이미지별 값을 남긴다 (2026-09-15 추가).** 게이트를 p50에서
                      # 최악으로 바꾸면 "몇 장을 봐야 그 최악이 믿을 만한가"가 곧바로

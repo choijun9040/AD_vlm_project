@@ -1,169 +1,181 @@
 {
-  "checkpoint": "checkpoints/student_baseline_v2/epoch_1",
-  "max_pixels": 12845056,
-  "n_images": 100,
-  "factors": [
-    1.0,
-    0.85,
-    0.72,
-    0.62,
-    0.55,
-    0.48,
-    0.42,
-    0.36,
-    0.3,
-    0.24,
-    0.18
-  ],
-  "rows": [
-    {
-      "factor": 1.0,
-      "headroom_p50": 0.8762842465753424,
-      "headroom_p95": 0.7848926380368099,
-      "headroom_worst": 0.7525735294117647,
-      "collapse_rate": 0.95,
-      "n_images": 100,
-      "verdict_at_2.0": "위험",
-      "max_p50": 74752.0,
-      "max_worst": 87040.0
-    },
-    {
-      "factor": 0.85,
-      "headroom_p50": 1.0276104417670682,
-      "headroom_p95": 0.9204136690647482,
-      "headroom_worst": 0.8823275862068966,
-      "collapse_rate": 0.42000000000000004,
-      "n_images": 100,
-      "verdict_at_2.0": "위험",
-      "max_p50": 63744.0,
-      "max_worst": 74240.0
-    },
-    {
-      "factor": 0.72,
-      "headroom_p50": 1.2184523809523808,
-      "headroom_p95": 1.0888297872340424,
-      "headroom_worst": 1.0486680327868851,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "위험",
-      "max_p50": 53760.0,
-      "max_worst": 62464.0
-    },
-    {
-      "factor": 0.62,
-      "headroom_p50": 1.4059065934065933,
-      "headroom_p95": 1.2604679802955665,
-      "headroom_worst": 1.2184523809523808,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "위험",
-      "max_p50": 46592.0,
-      "max_worst": 53760.0
-    },
-    {
-      "factor": 0.55,
-      "headroom_p50": 1.5892857142857142,
-      "headroom_p95": 1.4215277777777777,
-      "headroom_worst": 1.3683155080213905,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "위험",
-      "max_p50": 41216.0,
-      "max_worst": 47872.0
-    },
-    {
-      "factor": 0.48,
-      "headroom_p50": 1.8276785714285715,
-      "headroom_p95": 1.6297770700636942,
-      "headroom_worst": 1.5697852760736197,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "위험",
-      "max_p50": 35840.0,
-      "max_worst": 41728.0
-    },
-    {
-      "factor": 0.42,
-      "headroom_p50": 2.0802845528455283,
-      "headroom_p95": 1.8677007299270072,
-      "headroom_worst": 1.7893356643356644,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "안전",
-      "max_p50": 31488.0,
-      "max_worst": 36608.0
-    },
-    {
-      "factor": 0.36,
-      "headroom_p50": 2.425355450236967,
-      "headroom_p95": 2.177659574468085,
-      "headroom_worst": 2.0887755102040817,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "안전",
-      "max_p50": 27008.0,
-      "max_worst": 31360.0
-    },
-    {
-      "factor": 0.3,
-      "headroom_p50": 2.9242857142857144,
-      "headroom_p95": 2.610969387755102,
-      "headroom_worst": 2.508578431372549,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "안전",
-      "max_p50": 22400.0,
-      "max_worst": 26112.0
-    },
-    {
-      "factor": 0.24,
-      "headroom_p50": 3.655357142857143,
-      "headroom_p95": 3.2595541401273884,
-      "headroom_worst": 3.1395705521472395,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "안전",
-      "max_p50": 17920.0,
-      "max_worst": 20864.0
-    },
-    {
-      "factor": 0.18,
-      "headroom_p50": 4.850710900473934,
-      "headroom_p95": 4.35531914893617,
-      "headroom_worst": 4.177551020408163,
-      "collapse_rate": 0.0,
-      "n_images": 100,
-      "verdict_at_2.0": "안전",
-      "max_p50": 13504.0,
-      "max_worst": 15680.0
-    }
-  ],
-  "confusion_at_2.0": {
-    "TP": 2,
-    "FP": 4,
-    "TN": 5,
-    "FN": 0
+ "checkpoint": "checkpoints/student_baseline_v2/epoch_1",
+ "max_pixels": 12845056,
+ "n_images": 100,
+ "factors": [
+  1.0,
+  0.85,
+  0.72,
+  0.62,
+  0.55,
+  0.48,
+  0.42,
+  0.36,
+  0.3,
+  0.24,
+  0.18
+ ],
+ "rows": [
+  {
+   "factor": 1.0,
+   "headroom_p50": 0.8762842465753424,
+   "headroom_p95": 0.7848926380368099,
+   "headroom_worst": 0.7525735294117647,
+   "collapse_rate": 0.95,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 74752.0,
+   "max_worst": 87040.0,
+   "verdict_basis": "headroom_worst"
   },
-  "summary": {
-    "last_collapsing": {
-      "factor": 0.85,
-      "headroom_p50": 1.0276104417670682,
-      "headroom_p95": 0.9204136690647482,
-      "headroom_worst": 0.8823275862068966,
-      "collapse_rate": 0.42000000000000004
-    },
-    "first_safe": {
-      "factor": 0.72,
-      "headroom_p50": 1.2184523809523808,
-      "headroom_p95": 1.0888297872340424,
-      "headroom_worst": 1.0486680327868851,
-      "collapse_rate": 0.0
-    },
-    "best_statistic": {
-      "name": "headroom_p50",
-      "margin": 0.19084193918531267,
-      "safe_min": 1.2184523809523808,
-      "risky_max": 1.0276104417670682
-    }
+  {
+   "factor": 0.85,
+   "headroom_p50": 1.0276104417670682,
+   "headroom_p95": 0.9204136690647482,
+   "headroom_worst": 0.8823275862068966,
+   "collapse_rate": 0.42000000000000004,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 63744.0,
+   "max_worst": 74240.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.72,
+   "headroom_p50": 1.2184523809523808,
+   "headroom_p95": 1.0888297872340424,
+   "headroom_worst": 1.0486680327868851,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 53760.0,
+   "max_worst": 62464.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.62,
+   "headroom_p50": 1.4059065934065933,
+   "headroom_p95": 1.2604679802955665,
+   "headroom_worst": 1.2184523809523808,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 46592.0,
+   "max_worst": 53760.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.55,
+   "headroom_p50": 1.5892857142857142,
+   "headroom_p95": 1.4215277777777777,
+   "headroom_worst": 1.3683155080213905,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 41216.0,
+   "max_worst": 47872.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.48,
+   "headroom_p50": 1.8276785714285715,
+   "headroom_p95": 1.6297770700636942,
+   "headroom_worst": 1.5697852760736197,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 35840.0,
+   "max_worst": 41728.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.42,
+   "headroom_p50": 2.0802845528455283,
+   "headroom_p95": 1.8677007299270072,
+   "headroom_worst": 1.7893356643356644,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "위험",
+   "max_p50": 31488.0,
+   "max_worst": 36608.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.36,
+   "headroom_p50": 2.425355450236967,
+   "headroom_p95": 2.177659574468085,
+   "headroom_worst": 2.0887755102040817,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "안전",
+   "max_p50": 27008.0,
+   "max_worst": 31360.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.3,
+   "headroom_p50": 2.9242857142857144,
+   "headroom_p95": 2.610969387755102,
+   "headroom_worst": 2.508578431372549,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "안전",
+   "max_p50": 22400.0,
+   "max_worst": 26112.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.24,
+   "headroom_p50": 3.655357142857143,
+   "headroom_p95": 3.2595541401273884,
+   "headroom_worst": 3.1395705521472395,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "안전",
+   "max_p50": 17920.0,
+   "max_worst": 20864.0,
+   "verdict_basis": "headroom_worst"
+  },
+  {
+   "factor": 0.18,
+   "headroom_p50": 4.850710900473934,
+   "headroom_p95": 4.35531914893617,
+   "headroom_worst": 4.177551020408163,
+   "collapse_rate": 0.0,
+   "n_images": 100,
+   "verdict_at_2.0": "안전",
+   "max_p50": 13504.0,
+   "max_worst": 15680.0,
+   "verdict_basis": "headroom_worst"
   }
+ ],
+ "confusion_at_2.0": {
+  "TP": 2,
+  "FP": 5,
+  "TN": 4,
+  "FN": 0
+ },
+ "summary": {
+  "last_collapsing": {
+   "factor": 0.85,
+   "headroom_p50": 1.0276104417670682,
+   "headroom_p95": 0.9204136690647482,
+   "headroom_worst": 0.8823275862068966,
+   "collapse_rate": 0.42000000000000004
+  },
+  "first_safe": {
+   "factor": 0.72,
+   "headroom_p50": 1.2184523809523808,
+   "headroom_p95": 1.0888297872340424,
+   "headroom_worst": 1.0486680327868851,
+   "collapse_rate": 0.0
+  },
+  "best_statistic": {
+   "name": "headroom_p50",
+   "margin": 0.19084193918531267,
+   "safe_min": 1.2184523809523808,
+   "risky_max": 1.0276104417670682
+  }
+ },
+ "confusion_basis": "headroom_worst (2026-09-17 재계산 — 이전 값은 headroom_p50 기준)"
 }
