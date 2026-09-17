@@ -226,6 +226,90 @@ def check_group(g, strict):
     return len(problems) + vbad + len(missing)
 
 
+# ---------------------------------------------------------------------------
+# 불변식 — 값이 서로 어긋나면 **둘 중 하나는 틀렸다** (O5, 2026-09-17)
+#
+# 개별 값이 맞는지는 위의 매니페스트가 본다. 여기서 보는 것은 **값들 사이의 관계**다.
+# 관계가 깨지면 값 하나가 아니라 측정 자체를 의심해야 한다.
+# ---------------------------------------------------------------------------
+
+def inv_headroom_vs_exceed(_):
+    """여유 < 1  ⟺  초과율 > 0.
+
+    여유는 `format_max ÷ max|activation|`이므로 1보다 작다는 것은 **정의상**
+    그 값이 상한을 넘었다는 뜻이다. 따라서 초과율이 0일 수 없다. 어긋나면
+    두 값을 **다른 통계량·다른 dtype·다른 표본**에서 잰 것이다.
+    """
+    bad = []
+    for path in sorted(Path("eval_results").glob("headroom_guard*.json")) + \
+                sorted(Path("eval_results").glob("guard_*.json")):
+        d = load_json(str(path))
+        if not isinstance(d, dict):
+            continue
+        blocks = (d.get("before") or {}).get("per_block") or d.get("per_block") or []
+        for b in blocks:
+            if not isinstance(b, dict):
+                continue
+            hw, ex = b.get("headroom_worst"), b.get("exceed_rate")
+            if hw is None or ex is None:
+                continue
+            if (hw < 1.0) != (ex > 0.0):
+                bad.append(f"{path.name} blk{b.get('block')}: "
+                           f"최악 여유 {hw:.3f} · 초과율 {ex*100:.1f}%")
+    return bad
+
+
+def inv_nonfinite_means_failure(_):
+    """bf16 활성이 비유한이면 **적재 실패**로 기록돼 있어야 한다.
+
+    bf16 상한은 3.4e38이라 정상 모델의 활성이 여기를 넘을 수 없다. 넘었다면
+    측정값이 아니라 **가중치가 랜덤 초기화된 것**이다(2026-09-14 AngelSlim AWQ 사례).
+    """
+    bad = []
+    d = load_json("eval_results/other_vlm_families_profile.json")
+    if not isinstance(d, dict):
+        return bad
+    for name, rec in d.items():
+        if not isinstance(rec, dict):
+            continue
+        passes = rec.get("passes") or {}
+        bf = passes.get("bfloat16") or {}
+        for lid, L in (bf.get("by_layer") or {}).items():
+            v = L.get("p50")
+            if v is None:
+                continue
+            if not math.isfinite(v) or v > 3.4e38:
+                if not rec.get("failed"):
+                    bad.append(f"{name} L{lid}: bf16 p50={v} 인데 failed 기록이 없다")
+    return bad
+
+
+INVARIANTS = [
+    ("여유<1 ⟺ 초과율>0", inv_headroom_vs_exceed),
+    ("bf16 비유한 ⇒ 적재 실패 기록", inv_nonfinite_means_failure),
+]
+
+
+def check_invariants():
+    print(f"\n{'='*78}\n[불변식] 값들 사이의 관계\n{'='*78}")
+    n_bad = 0
+    for name, fn in INVARIANTS:
+        try:
+            bad = fn(None)
+        except Exception as e:                      # 검사기가 죽어 침묵하면 안 된다
+            print(f"  ⚠ {name}: 검사 자체가 실패했다 — {type(e).__name__}: {e}")
+            n_bad += 1
+            continue
+        if bad:
+            print(f"  ✗ {name} — {len(bad)}건")
+            for b in bad[:10]:
+                print(f"      {b}")
+            n_bad += len(bad)
+        else:
+            print(f"  ✓ {name}")
+    return n_bad
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default="docs/claim_provenance.yaml")
@@ -243,6 +327,7 @@ def main():
         print("pyyaml이 없어 JSON으로 읽는다"); groups = json.loads(mpath.read_text())
 
     total = sum(check_group(g, args.strict) for g in groups)
+    total += check_invariants()
     print(f"\n{'='*78}")
     print(f"문제 {total}건" if total else "문제 없음 — 모든 그룹이 같은 조건이고 값도 일치한다")
     print("=" * 78)

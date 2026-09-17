@@ -61,6 +61,11 @@ SCALED_FORMATS = {"int8", "int4", "fp8", "fp8_e4m3", "fp8_e5m2"}
 # 초과는 없으나 여유가 얇은 구간의 경계. 실측 전이가 최악 여유 1.00~1.05이고
 # 한 모델 안 이미지별 편차가 15~20%이므로, 표본 밖 이미지를 위해 1.25배를 둔다.
 # (게이트 보정 2026-09-15 — eval_results/gate_calibration.json)
+# **이 값은 측정이 아니라 설계 판단이다 (O4 공시).** 관측된 경계는 1.00~1.05(형식
+# 상한 그 자체)뿐이다. 1.25는 거기에 "표본 밖 이미지가 넘을 수 있다"는 여유분을 얹은
+# 것으로, 초판의 2.0보다 논거가 낫지만 **종류는 같다.** 1차 판정인 초과 비율에는
+# 임계값이 없으므로 이 상수는 **보조 경고 한 줄에만** 쓰인다. 출력·--help·§7.2에
+# 같은 문구를 적어 둔다.
 MARGINAL_HEADROOM = 1.25
 
 # 게이트형 MLP의 '곱 이전' 선형층과 '출력' 선형층 이름 후보.
@@ -385,13 +390,23 @@ def main():
     ap.add_argument("--min_pixels", type=int, default=None)
     ap.add_argument("--image_dir", default=None, help="미지정이면 DriveLM val CAM_FRONT")
     ap.add_argument("--limit", type=int, default=100,
+                    # argparse가 help에 %-포맷을 적용하므로 리터럴 %는 %%로 쓴다.
+                    # (이것 때문에 --help가 ValueError로 죽고 있었다 — 2026-09-17 수정)
                     help="측정 이미지 수. 기본 100장 — 초과 0건일 때 참 초과율의 "
-                         "95% 상한이 3.0%다(10장이면 25.9%로 너무 느슨하다)")
+                         "95%% 상한이 3.0%%다(10장이면 25.9%%로 너무 느슨하다)")
     ap.add_argument("--available_formats", default=None,
                     help="배포 대상이 실제로 지원하는 형식을 쉼표로. 예: float16,int8 "
                          "(Jetson DLA는 bf16을 지원하지 않는다). 미지정이면 전부 가능으로 본다")
     ap.add_argument("--target_headroom", type=float, default=2.0,
-                    help="이 값 미만인 블록을 위험으로 보고, fix에서는 이 값까지 끌어올린다")
+                    # 2.0은 실측 경계(최악 1.00~1.05)보다 1.91배 보수적이다. 20개 합성
+                    # 점에서 오탐 8건·미탐 0건. 1차 판정은 초과 비율로 하므로 이 값은
+                    # **교정 목표치**로만 쓰인다. 보조 경고의 1.25와 함께 둘 다
+                    # **측정이 아니라 설계 판단**이다(§7.2 O4 공시).
+                    help="이 값 미만인 블록을 위험으로 보고, fix에서는 이 값까지 "
+                         "끌어올린다. **측정값이 아니라 설계 판단이다** — 실측 경계는 "
+                         "최악 여유 1.00~1.05(형식 상한)이고 2.0은 그보다 1.91배 "
+                         "보수적이다(합성 20점에서 오탐 8·미탐 0). 1차 판정은 임계값 "
+                         "없는 초과 비율로 하므로 이 값은 교정 목표치로만 쓰인다")
     ap.add_argument("--verify", action="store_true", help="fix 후 재측정")
     ap.add_argument("--save_weights", default=None, help="교정된 비전 타워 state_dict 저장 경로")
     ap.add_argument("--out", default="eval_results/headroom_guard.json")
@@ -534,6 +549,10 @@ def main():
     elif hw is not None and hw < MARGINAL_HEADROOM:
         print(f"  → **경계.** 초과는 없으나 최악 여유가 {hw:.2f}배로 "
               f"{MARGINAL_HEADROOM}배 미만이다. 표본 밖 이미지가 넘을 수 있다.")
+        print(f"     ※ {MARGINAL_HEADROOM}은 **측정값이 아니라 설계 판단**이다 — "
+              f"실측 경계는 1.00~1.05(형식 상한)뿐이고,")
+        print(f"       거기에 모델 내 이미지별 편차 15~20%를 얹었다. "
+              f"1차 판정(초과 비율)에는 임계값이 없다.")
     else:
         print(f"  → 안전. 다만 {nimg}장에서 0건이 관측됐을 뿐이므로 "
               f"참 초과율의 95% 상한은 **{ub*100:.1f}%**다.")

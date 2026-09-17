@@ -187,3 +187,147 @@
     - claim: "fixA 문항 수"
       from: "eval_results/mcnemar_fixa.json::n_items"
       expect: 11309
+
+# ---------------------------------------------------------------------------
+# O6 확장 (2026-09-17) — 요약문 본문의 정확도·붕괴율·짝지은 검정 수치
+#
+# 이전 매니페스트는 여유·SNR·TRT 위주였고 **정확도 계열이 통째로 빠져 있었다**.
+# 요약문이 인용하는 49.95 / 1.36 / 50.73 / 52.38 / 52.87과 두 McNemar가
+# 어디서 왔는지 검사기가 알지 못했다.
+# ---------------------------------------------------------------------------
+- id: 정확도 · 배포 조건
+  where: "요약문 2·5문단, 학위논문 §7.3"
+  sources:
+    - eval_results/student_baseline_v2_epoch_1_native_bf16_nuscenesqa_val.json
+    - eval_results/student_baseline_v2_epoch_1_native_fp16_nuscenesqa_val.json
+    - eval_results/student_baseline_v2_epoch_1_native_fp16_fixa_nuscenesqa_val.json
+    - eval_results/student_full_epoch_1_native_fp16_nuscenesqa_val.json
+    - eval_results/student_full_epoch_1_native_bf16_nuscenesqa_val.json
+  allow_differ:
+    checkpoint: "체크포인트와 dtype이 다른 것이 이 그룹의 요점이다 — 나머지(stride-11 1,029문항·원본 해상도·max_new_tokens 16)는 같다"
+    dtype: "위와 같다"
+    precision: "위와 같다"
+  values:
+    - claim: "baseline_v2 원본·bf16 정확도"
+      from: "eval_results/student_baseline_v2_epoch_1_native_bf16_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 49.95
+      tol: 0.01
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.2f}%"]}
+    - claim: "baseline_v2 원본·fp16 정확도 (붕괴)"
+      from: "eval_results/student_baseline_v2_epoch_1_native_fp16_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 1.36
+      tol: 0.01
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.2f}%"]}
+    - claim: "baseline_v2 원본·fp16 교정 정확도"
+      from: "eval_results/student_baseline_v2_epoch_1_native_fp16_fixa_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 50.73
+      tol: 0.01
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.2f}%"]}
+    - claim: "full 원본·fp16 정확도"
+      from: "eval_results/student_full_epoch_1_native_fp16_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 52.38
+      tol: 0.01
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.2f}%"]}
+    - claim: "full 원본·bf16 정확도 (2026-09-17 측정)"
+      from: "eval_results/student_full_epoch_1_native_bf16_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 52.87
+      tol: 0.01
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.2f}%"]}
+
+- id: 짝지은 검정 · 배포 조건
+  where: "요약문 2·5문단, 학위논문 §7.3③⑥"
+  sources:
+    - eval_results/mcnemar_fixa_native.json
+    - eval_results/mcnemar_full_native_dtype.json
+  allow_differ:
+    a: "비교 대상이 다른 것이 요점이다 — 둘 다 같은 1,029문항 짝이다"
+    b: "위와 같다"
+  values:
+    - claim: "교정 비용 McNemar p (교정 fp16 대 무교정 bf16, 원본)"
+      from: "eval_results/mcnemar_fixa_native.json::p"
+      expect: 0.34
+      tol: 0.005
+      # stale에 0.25를 넣지 않는다 — 그 값은 **다른 측정**(11,309문항·평가 해상도)이고
+      # 폐기가 아니라 조건이 다른 기록으로 공존한다. 폐기된 것은 −0.59%p 쪽이다.
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["p={v:.2f}"]}
+    - claim: "교정 비용 %p"
+      from: "eval_results/mcnemar_fixa_native.json::diff_pp"
+      expect: 0.78
+      tol: 0.005
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["+{v:.2f}%p"], stale: [-0.59]}
+    - claim: "교정 불일치 쌍"
+      from: "eval_results/mcnemar_fixa_native.json::n_discordant"
+      expect: 54
+    - claim: "full dtype McNemar p (fp16 대 bf16, 원본)"
+      from: "eval_results/mcnemar_full_native_dtype.json::p"
+      expect: 0.27
+      tol: 0.005
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["p={v:.2f}"]}
+    - claim: "full dtype 불일치 쌍"
+      from: "eval_results/mcnemar_full_native_dtype.json::n_discordant"
+      expect: 13
+
+- id: 붕괴율 · 해상도별
+  where: "요약문 2문단, Fig. 1, 학위논문 §7.3⑦"
+  sources:
+    - eval_results/resolution_sweep/res_1440000.json
+    - eval_results/resolution_sweep/res_200704.json
+  allow_differ:
+    max_pixels: "해상도가 다른 것이 이 그룹의 요점이다 — 나머지(250장·bf16 측정·fp16 붕괴)는 같다"
+    min_pixels: "위와 같다"
+  values:
+    - claim: "base_3b 원본 붕괴율%"
+      from: "eval_results/resolution_sweep/res_1440000.json::base_3b.passes.float16.by_layer.31.over_fp16_rate"
+      expr: "100*x"
+      expect: 69.6
+      tol: 0.05
+      docs: {files: [ksae2026_abstract.md], render: ["{v:.1f}%"]}
+    - claim: "baseline_v2 평가 해상도 붕괴율% (0%가 아니다)"
+      from: "eval_results/resolution_sweep/res_200704.json::student_baseline_v2.passes.float16.by_layer.31.over_fp16_rate"
+      expr: "100*x"
+      expect: 3.2
+      tol: 0.05
+      # stale에 0.0을 넣지 않는다 — "0.0%"는 TRT bf16 붕괴·full 붕괴 등에서 정상적으로
+      # 쓰이는 값이라 충돌한다. 이 주장의 폐기 표현("모든 변형이 0%")은 문장이므로
+      # audit_numbers.py 쪽에서 잡는다.
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.1f}%"]}
+    - claim: "temporal 여유 (p50)"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_temporal.passes.bfloat16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 1.06
+      tol: 0.005
+    - claim: "kd_only 여유 (p50)"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_kd_only_v4.passes.bfloat16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 1.10
+      tol: 0.005
+    - claim: "spatial 여유 (p50)"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_spatial.passes.bfloat16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 2.89
+      tol: 0.005
+    - claim: "fp16에서 재면 여유가 1.03으로 보인다 (측정 dtype 함정)"
+      from: "eval_results/resolution_sweep/res_1440000.json::student_baseline_v2.passes.float16.by_layer.31.p50"
+      expr: "65504/x"
+      expect: 1.03
+      tol: 0.005
+      docs: {files: [ksae2026_abstract.md, thesis_outline_20260910.md], render: ["{v:.2f}배"]}
+
+- id: 채널 849
+  where: "요약문 5문단, 학위논문 §4"
+  sources: [eval_results/channel849.json]
+  allow_differ: {}
+  values:
+    - claim: "blk31 849행 노름 / 중앙값"
+      from: "eval_results/channel849.json::depth_profile.31.ratio"
+      expect: 9.33
+      tol: 0.005
+      docs: {files: [ksae2026_abstract.md], render: ["{v:.2f}배"]}
+    - claim: "849가 최상위인 블록 수"
+      from: "eval_results/channel849.json::depth_profile.31.rank"
+      expect: 1

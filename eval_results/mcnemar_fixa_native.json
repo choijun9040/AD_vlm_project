@@ -1,0 +1,14 @@
+{
+  "a": "eval_results/student_baseline_v2_epoch_1_native_bf16_predictions.jsonl",
+  "b": "eval_results/student_baseline_v2_epoch_1_native_fp16_fixa_predictions.jsonl",
+  "n_items": 1029,
+  "acc_a": 0.49951409135082603,
+  "acc_b": 0.5072886297376094,
+  "diff_pp": 0.7774538386783325,
+  "a_only": 23,
+  "b_only": 31,
+  "n_discordant": 54,
+  "chi2": 0.9074074074074074,
+  "p": 0.34080324688608465,
+  "significant": false
+}
