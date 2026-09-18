@@ -461,7 +461,11 @@ def selftest():
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    # **allow_abbrev=False (2026-09-18).** 기본값은 긴 옵션의 **접두사 매칭**을
+    # 허용해서, `--target Qwen/...`가 `--target_headroom`에 조용히 들어가 버린다
+    # (오늘 실제로 당했다 — float 변환 실패로 겨우 드러났지 값이 숫자였다면
+    # **잘못된 임계값으로 조용히 돌았을 것이다**). 끄면 깨끗한 unrecognized 오류가 난다.
+    ap = argparse.ArgumentParser(allow_abbrev=False)
     ap.add_argument("cmd", choices=["diagnose", "fix", "selftest"],
                     help="selftest는 모델 없이 판정 분기·배수 풀이를 확인한다")
     ap.add_argument("--checkpoint", default="checkpoints/student_baseline_v2/epoch_1",

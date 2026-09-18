@@ -194,6 +194,24 @@ def retry_429(fn, tries=5, base=20):
             time.sleep(wait)
 
 
+def _first_tensor(out):
+    """타워 반환값에서 **LLM으로 넘어가는 텐서**를 꺼낸다.
+
+    계열마다 반환형이 다르다 — Qwen/MoonViT는 Tensor, Pixtral/CLIP/InternViT는
+    `BaseModelOutput*`, 일부는 tuple이다. ModelOutput이면 `last_hidden_state`를
+    쓴다(`pooler_output`은 CLS 하나라 우리가 보는 축이 아니다).
+    꺼내지 못하면 None을 돌려 NaN으로 남기고, **없는 값을 지어내지 않는다.**
+    """
+    if torch.is_tensor(out):
+        return out
+    lhs = getattr(out, "last_hidden_state", None)
+    if torch.is_tensor(lhs):
+        return lhs
+    if isinstance(out, (tuple, list)) and out and torch.is_tensor(out[0]):
+        return out[0]
+    return None
+
+
 def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
     from transformers import AutoConfig, AutoProcessor
     print(f"\n{'='*70}\n[{repo}]\n{'='*70}", flush=True)
@@ -272,7 +290,7 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
               f"Qwen 계열과 조건이 다르므로 나란히 비교하지 말 것", flush=True)
 
     blocks = get_blocks(tower)
-    maxes = []
+    maxes, tower_maxes = [], []
     with torch.no_grad():
         for p in paths:
             enc = ipx(images=[Image.open(p).convert("RGB")], return_tensors="pt")
@@ -284,14 +302,21 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             h = blocks[-1].register_forward_hook(
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
             if gk == "image_grid_hws":
-                tower(pv, grid)                  # MoonViT — forward(pixel_values, grid_hws)
+                out = tower(pv, grid)            # MoonViT — forward(pixel_values, grid_hws)
             elif "image_sizes" in enc:
                 # Pixtral 계열 — grid가 아니라 image_sizes를 요구한다
-                tower(pv, enc["image_sizes"].to("cuda"))
+                out = tower(pv, enc["image_sizes"].to("cuda"))
             else:
-                tower_forward(tower, pv, grid)
+                out = tower_forward(tower, pv, grid)
             h.remove()
             maxes.append(rec["t"].float().abs().max().item())
+            # **타워 반환값도 잰다 (2026-09-18 추가).** `blocks[-1]`만 보면
+            # 블록 뒤 연산이 크기를 키우는 계열에서 **안전으로 오판한다**
+            # (vLLM #40290의 Gemma 4: `(h − std_bias)`에서 std_bias가 53,760).
+            # 반대로 줄이는 계열(Qwen merger)에서는 타워 출력만 보면 과대평가한다.
+            # 그래서 **둘 다 기록하고 나쁜 쪽을 판정에 쓴다.**
+            ot = _first_tensor(out)
+            tower_maxes.append(ot.float().abs().max().item() if ot is not None else float("nan"))
 
     del tower
     gc.collect()
@@ -302,7 +327,19 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
     if nonfinite:
         raise RuntimeError(f"bf16에서 비유한 값 {nonfinite}/{len(maxes)}장 — "
                            "적재는 통과했으나 값이 이상하다. 측정으로 쓰지 않는다")
+
+    # 타워 출력 — 꺼내지 못한 계열은 None으로 남긴다(측정 실패와 0을 구분한다)
+    tv = sorted(v for v in tower_maxes if v == v and v != float("inf"))
+    tower = None
+    if tv:
+        tower = {"p50": pct(tv, 0.5), "worst": tv[-1],
+                 "headroom_p50": FP16_MAX / pct(tv, 0.5),
+                 "headroom_worst": FP16_MAX / tv[-1],
+                 "n_finite": len(tv), "n_images": len(tower_maxes),
+                 # 블록 대비 배율 — 1보다 크면 블록 뒤 연산이 **키운다**(Gemma형)
+                 "gain_vs_block_worst": tv[-1] / sm[-1] if sm[-1] else None}
     return {"repo": repo, "arch": arch, "n_images": len(maxes),
+            "tower_out": tower,
             "last_block_p50": pct(sm, 0.5), "last_block_p95": pct(sm, 0.95),
             "last_block_worst": sm[-1],
             "headroom_p50": FP16_MAX / pct(sm, 0.5),
@@ -312,7 +349,7 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
 
 
 def main():
-    ap = argparse.ArgumentParser()
+    ap = argparse.ArgumentParser(allow_abbrev=False)   # 접두사 매칭 금지 (headroom_guard와 동일 이유)
     ap.add_argument("--repos", nargs="+", required=True)
     ap.add_argument("--limit", type=int, default=100)
     ap.add_argument("--max_pixels", type=int, default=1440000)
@@ -336,6 +373,15 @@ def main():
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
                   f"여유 p50={r['headroom_p50']:.2f}배  "
                   f"p95={r['headroom_p95']:.2f}배  최악={r['headroom_worst']:.2f}배")
+            t = r.get("tower_out")
+            if t is None:
+                print("  타워 출력: **못 쟀다** — 반환형에서 텐서를 꺼내지 못했다")
+            else:
+                g = t["gain_vs_block_worst"]
+                verdict = ("**키운다 — 블록만 보면 오판**" if g and g > 1.05
+                           else "줄인다(블록 쪽이 나쁘다)" if g and g < 0.95 else "거의 같다")
+                print(f"  타워 출력  여유 최악={t['headroom_worst']:.2f}배  "
+                      f"블록 대비 {g:.3f}배 — {verdict}")
         except Exception as e:
             import traceback; traceback.print_exc()
             res[repo] = {"repo": repo, "failed": f"{type(e).__name__}: {str(e)[:250]}"}

@@ -28,7 +28,20 @@ import re
 from pathlib import Path
 
 import numpy as np
-import tensorrt as trt
+
+# **tensorrt import를 늦춘다 (2026-09-18).** 이 스크립트는 Orin 보드에서 돌지만
+# 인자 파싱과 `--help`는 개발기에서도 확인할 수 있어야 한다. 모듈 최상단에서
+# import하면 tensorrt 없는 곳에서 `--help`조차 `ModuleNotFoundError`로 죽어,
+# 보드에 올리기 전에 플래그 오타를 못 잡는다(O10에서 훑다 발견).
+trt = None
+
+
+def _load_trt():
+    """실제로 엔진을 만들 때만 tensorrt를 올린다."""
+    global trt
+    if trt is None:
+        import tensorrt as _trt
+        trt = _trt
 
 
 def build(onnx_path, mode, workspace_gb=24, log_path=None):
@@ -164,6 +177,7 @@ def main():
     ap.add_argument("--workspace_gb", type=int, default=24)
     ap.add_argument("--out", default="eval_results/trt_precision_probe.json")
     args = ap.parse_args()
+    _load_trt()          # 파싱이 끝난 뒤에 올린다 — --help는 여기 오지 않는다
 
     z = np.load(args.npz)
     inputs = [z[k] for k in sorted(z.files)]
