@@ -107,6 +107,64 @@ def get_blocks(tower):
     raise RuntimeError(f"블록 리스트를 못 찾았다: {type(tower).__name__}")
 
 
+def tower_out_max(out, exclude_ptrs=()):
+    """타워 반환값 안의 텐서들에 대한 max|·| 둘을 돌려준다.
+
+    `(전체 최대, 블록 텐서를 뺀 최대)`.
+
+    **둘이 필요하다.** 계열마다 반환 구성이 다르다.
+    - GLM-4.1V: `last_hidden_state`(downsample 직후) + `pooler_output`(**merger 통과**).
+      **LLM이 먹는 쪽은 pooler_output**이라, 첫 텐서만 집으면 merger를 놓친다.
+    - Qwen3-VL: `last_hidden_state`가 **블록 출력 그 자체**다(+ pooler_output,
+      deepstack_features). 전부의 최대를 잡으면 블록 값이 그대로 나와
+      **배율이 항상 1.0000**이 되고, merger에 대해 아무것도 말하지 못한다.
+
+    그래서 후킹해 둔 블록 출력과 **같은 저장소를 가리키는 텐서는 빼고** 한 번 더 센다.
+    - **전체 최대**는 안전 판정용이다 — 타워가 내놓는 값은 전부 표현돼야 한다.
+    - **블록 제외 최대**는 "블록 뒤 연산이 키우는가"에 답한다.
+
+    텐서를 하나도 못 찾으면 해당 값은 None — **0으로 지어내지 않는다.**
+    """
+    allm = postm = None
+    ex = set(exclude_ptrs)
+
+    def visit(o, depth=0):
+        nonlocal allm, postm
+        if depth > 3:
+            return
+        if torch.is_tensor(o):
+            if o.is_floating_point() and o.numel():
+                v = o.detach().float().abs().max().item()
+                allm = v if allm is None else max(allm, v)
+                if o.data_ptr() not in ex:
+                    postm = v if postm is None else max(postm, v)
+        elif isinstance(o, (tuple, list)):
+            for x in o:
+                visit(x, depth + 1)
+        elif isinstance(o, dict):
+            for x in o.values():
+                visit(x, depth + 1)
+        elif hasattr(o, "keys"):            # ModelOutput
+            for k in o.keys():
+                visit(o[k], depth + 1)
+
+    visit(out)
+    return allm, postm
+
+
+def _tower_stats(tmaxes, block_worst):
+    """타워 출력 통계. 못 잰 경우 None을 돌려 **측정 실패를 값으로 숨기지 않는다.**"""
+    tv = sorted(v for v in tmaxes if v == v and v != float("inf"))
+    if not tv:
+        return None
+    return {"p50": tv[len(tv)//2], "worst": tv[-1],
+            "headroom_p50": FP16_MAX / tv[len(tv)//2],
+            "headroom_worst": FP16_MAX / tv[-1],
+            "n_finite": len(tv), "n_images": len(tmaxes),
+            # >1이면 블록 뒤 연산이 **키운다**(Gemma형) — 블록만 보면 오판
+            "gain_vs_block_worst": tv[-1] / block_worst if block_worst else None}
+
+
 def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
     from transformers import AutoConfig, AutoImageProcessor
     print(f"\n{'='*70}\n[{repo}]\n{'='*70}", flush=True)
@@ -129,7 +187,7 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
         ipx.max_pixels = max_pixels; ipx.min_pixels = 3136
     blocks = get_blocks(tower)
 
-    maxes = []
+    maxes, tmaxes, pmaxes = [], [], []
     with torch.no_grad():
         for p in paths:
             enc = ipx(images=[Image.open(p).convert("RGB")], return_tensors="pt")
@@ -141,9 +199,14 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             rec = {}
             h = blocks[-1].register_forward_hook(
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
-            tower(pv, grid) if grid is not None else tower(pv)
+            out = tower(pv, grid) if grid is not None else tower(pv)
             h.remove()
             maxes.append(rec["t"].float().abs().max().item())
+            # 블록 뒤도 잰다 — GLM은 merger가 pooler_output에 들어 있고,
+            # Qwen3-VL은 last_hidden_state가 블록 출력 그 자체다(제외해야 뜻이 있다)
+            av, pv2 = tower_out_max(out, exclude_ptrs=(rec["t"].data_ptr(),))
+            tmaxes.append(av if av is not None else float("nan"))
+            pmaxes.append(pv2 if pv2 is not None else float("nan"))
     del tower; gc.collect(); torch.cuda.empty_cache()
 
     s = sorted(maxes)
@@ -155,7 +218,9 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             "last_block_p50": s[len(s)//2], "last_block_worst": s[-1],
             "headroom_p50": FP16_MAX / s[len(s)//2],
             "headroom_p95": FP16_MAX / s[int(len(s)*0.95)],
-            "headroom_worst": FP16_MAX / s[-1]}
+            "headroom_worst": FP16_MAX / s[-1],
+            "tower_out": _tower_stats(tmaxes, s[-1]),
+            "post_block": _tower_stats(pmaxes, s[-1])}
 
 
 def main():
@@ -181,6 +246,25 @@ def main():
             r = res[repo]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
                   f"여유 p50={r['headroom_p50']:.2f}배  최악={r['headroom_worst']:.2f}배", flush=True)
+            t = r.get("tower_out")
+            if t is None:
+                print("  타워 출력: **못 쟀다** — 반환값에서 텐서를 찾지 못했다", flush=True)
+            else:
+                worse = min(t["headroom_worst"], r["headroom_worst"])
+                print(f"  타워 반환 전체  여유 최악={t['headroom_worst']:.2f}배 "
+                      f"(블록 대비 {t['gain_vs_block_worst']:.4f}배)", flush=True)
+                pb = r.get("post_block")
+                if pb is None:
+                    print("  블록 뒤 연산: **반환값이 블록 텐서뿐** — 따로 잴 것이 없다",
+                          flush=True)
+                else:
+                    g = pb["gain_vs_block_worst"]
+                    v = ("**키운다 — 블록만 보면 오판**" if g > 1.05
+                         else "줄인다" if g < 0.95 else "거의 같다")
+                    print(f"  블록 뒤 연산만  여유 최악={pb['headroom_worst']:.2f}배  "
+                          f"블록 대비 {g:.4f}배 — {v}", flush=True)
+                    worse = min(worse, pb["headroom_worst"])
+                print(f"  → **판정 기준 여유 {worse:.2f}배** (가장 나쁜 쪽)", flush=True)
         except Exception as e:
             print(f"  실패: {type(e).__name__}: {str(e)[:160]}", flush=True)
             res[repo] = {"failed": f"{type(e).__name__}: {e}"}

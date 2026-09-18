@@ -1,0 +1,89 @@
+{
+  "zai-org/GLM-4.1V-9B-Thinking": {
+    "repo": "zai-org/GLM-4.1V-9B-Thinking",
+    "arch": "Glm4vForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 1712.0,
+    "last_block_worst": 1784.0,
+    "headroom_p50": 38.26168224299065,
+    "headroom_p95": 36.88288288288288,
+    "headroom_worst": 36.71748878923767,
+    "tower_out": {
+      "p50": 12.875,
+      "worst": 15.25,
+      "headroom_p50": 5087.689320388349,
+      "headroom_worst": 4295.3442622950815,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 0.008548206278026906
+    },
+    "post_block": {
+      "p50": 12.875,
+      "worst": 15.25,
+      "headroom_p50": 5087.689320388349,
+      "headroom_worst": 4295.3442622950815,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 0.008548206278026906
+    }
+  },
+  "QuantTrio/Qwen3-VL-32B-Instruct-AWQ": {
+    "repo": "QuantTrio/Qwen3-VL-32B-Instruct-AWQ",
+    "arch": "Qwen3VLForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 10752.0,
+    "last_block_worst": 11904.0,
+    "headroom_p50": 6.092261904761905,
+    "headroom_p95": 5.686111111111111,
+    "headroom_worst": 5.502688172043011,
+    "tower_out": {
+      "p50": 10752.0,
+      "worst": 11904.0,
+      "headroom_p50": 6.092261904761905,
+      "headroom_worst": 5.502688172043011,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 1.0
+    },
+    "post_block": {
+      "p50": 30.75,
+      "worst": 44.0,
+      "headroom_p50": 2130.211382113821,
+      "headroom_worst": 1488.7272727272727,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 0.003696236559139785
+    }
+  },
+  "QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ": {
+    "repo": "QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ",
+    "arch": "Qwen3VLMoeForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 1552.0,
+    "last_block_worst": 1888.0,
+    "headroom_p50": 42.20618556701031,
+    "headroom_p95": 36.71748878923767,
+    "headroom_worst": 34.69491525423729,
+    "tower_out": {
+      "p50": 1552.0,
+      "worst": 1888.0,
+      "headroom_p50": 42.20618556701031,
+      "headroom_worst": 34.69491525423729,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 1.0
+    },
+    "post_block": {
+      "p50": 13.1875,
+      "worst": 15.9375,
+      "headroom_p50": 4967.127962085308,
+      "headroom_worst": 4110.054901960784,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 0.008441472457627119
+    }
+  }
+}
