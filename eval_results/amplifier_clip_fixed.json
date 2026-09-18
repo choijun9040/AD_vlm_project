@@ -1,0 +1,34 @@
+{
+  "ybelkada/llava-1.5-7b-hf-awq": {
+    "proj": "fc2",
+    "n_blocks": 24,
+    "last_block": 23,
+    "last": {
+      "max": 1.3771979808807373,
+      "p50": 0.9372145533561707,
+      "max_over_p50": 1.4694585800170898,
+      "top_row": 565,
+      "out_features": 1024
+    },
+    "ratio_max": 3.5393941402435303,
+    "ratio_p50": 1.3767800331115723,
+    "dominant_row": 565,
+    "blocks_where_dominant": 10
+  },
+  "Isotr0py/Phi-3.5-vision-instruct-AWQ": {
+    "proj": "fc2",
+    "n_blocks": 24,
+    "last_block": 23,
+    "last": {
+      "max": 1.3409650325775146,
+      "p50": 0.9126071333885193,
+      "max_over_p50": 1.4693782329559326,
+      "top_row": 565,
+      "out_features": 1024
+    },
+    "ratio_max": 3.529585361480713,
+    "ratio_p50": 1.3651901483535767,
+    "dominant_row": 650,
+    "blocks_where_dominant": 13
+  }
+}

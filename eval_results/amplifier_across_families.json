@@ -1,0 +1,98 @@
+{
+  "Qwen/Qwen2.5-VL-3B-Instruct": {
+    "proj": "down_proj",
+    "n_blocks": 32,
+    "last_block": 31,
+    "last": {
+      "max": 13.332769393920898,
+      "p50": 1.4297417402267456,
+      "max_over_p50": 9.325299263000488,
+      "top_row": 849,
+      "out_features": 1280
+    },
+    "ratio_max": 9.325299263000488,
+    "ratio_p50": 2.0256688594818115,
+    "dominant_row": 849,
+    "blocks_where_dominant": 32
+  },
+  "mistral-community/pixtral-12b": {
+    "proj": "down_proj",
+    "n_blocks": 24,
+    "last_block": 23,
+    "last": {
+      "max": 1.2932565212249756,
+      "p50": 1.1771589517593384,
+      "max_over_p50": 1.0986251831054688,
+      "top_row": 64,
+      "out_features": 1024
+    },
+    "ratio_max": 2.8619093894958496,
+    "ratio_p50": 1.6564829349517822,
+    "dominant_row": 64,
+    "blocks_where_dominant": 24
+  },
+  "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ": {
+    "proj": "fc2",
+    "n_blocks": 24,
+    "last_block": 23,
+    "last": {
+      "max": 1.507972002029419,
+      "p50": 0.9494960308074951,
+      "max_over_p50": 1.588181495666504,
+      "top_row": 565,
+      "out_features": 1024
+    },
+    "ratio_max": 3.3828024864196777,
+    "ratio_p50": 1.440482258796692,
+    "dominant_row": 565,
+    "blocks_where_dominant": 11
+  },
+  "ybelkada/llava-1.5-7b-hf-awq": {
+    "proj": "out_proj",
+    "n_blocks": 24,
+    "last_block": 23,
+    "last": {
+      "max": 1.0744141340255737,
+      "p50": 0.5640304684638977,
+      "max_over_p50": 1.9048867225646973,
+      "top_row": 565,
+      "out_features": 1024
+    },
+    "ratio_max": 3.223673105239868,
+    "ratio_p50": 1.764678716659546,
+    "dominant_row": 565,
+    "blocks_where_dominant": 10
+  },
+  "Isotr0py/Phi-3.5-vision-instruct-AWQ": {
+    "proj": "out_proj",
+    "n_blocks": 24,
+    "last_block": 23,
+    "last": {
+      "max": 1.0464688539505005,
+      "p50": 0.5493639707565308,
+      "max_over_p50": 1.9048734903335571,
+      "top_row": 565,
+      "out_features": 1024
+    },
+    "ratio_max": 3.4718408584594727,
+    "ratio_p50": 1.6173659563064575,
+    "dominant_row": 650,
+    "blocks_where_dominant": 6
+  },
+  "Qwen/Qwen2-VL-2B-Instruct-AWQ": {
+    "proj": "fc2",
+    "n_blocks": 32,
+    "last_block": 31,
+    "last": {
+      "max": 31.644954681396484,
+      "p50": 2.137631416320801,
+      "max_over_p50": 14.803747177124023,
+      "top_row": 759,
+      "out_features": 1280
+    },
+    "ratio_max": 14.803747177124023,
+    "ratio_p50": 1.4002470970153809,
+    "dominant_row": 759,
+    "blocks_where_dominant": 16
+  }
+}
