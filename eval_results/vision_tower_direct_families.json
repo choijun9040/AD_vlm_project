@@ -1,0 +1,41 @@
+{
+  "ybelkada/llava-1.5-7b-hf-awq": {
+    "repo": "ybelkada/llava-1.5-7b-hf-awq",
+    "arch": "LlavaForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 204.0,
+    "last_block_p95": 220.0,
+    "last_block_worst": 225.0,
+    "headroom_p50": 321.0980392156863,
+    "headroom_p95": 297.74545454545455,
+    "headroom_worst": 291.12888888888887,
+    "loader": "vision_only_strict",
+    "processor_from": "ybelkada/llava-1.5-7b-hf-awq"
+  },
+  "Isotr0py/Phi-3.5-vision-instruct-AWQ": {
+    "repo": "Isotr0py/Phi-3.5-vision-instruct-AWQ",
+    "arch": "Phi3VForCausalLM",
+    "n_images": 100,
+    "last_block_p50": 232.0,
+    "last_block_p95": 242.0,
+    "last_block_worst": 254.0,
+    "headroom_p50": 282.3448275862069,
+    "headroom_p95": 270.6776859504132,
+    "headroom_worst": 257.8897637795276,
+    "loader": "vision_only_strict",
+    "processor_from": "Isotr0py/Phi-3.5-vision-instruct-AWQ"
+  },
+  "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ": {
+    "repo": "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ",
+    "arch": "InternVLChatModel",
+    "n_images": 100,
+    "last_block_p50": 155.0,
+    "last_block_p95": 161.0,
+    "last_block_worst": 163.0,
+    "headroom_p50": 422.60645161290324,
+    "headroom_p95": 406.85714285714283,
+    "headroom_worst": 401.86503067484665,
+    "loader": "vision_only_strict",
+    "processor_from": "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ"
+  }
+}
