@@ -184,7 +184,18 @@ def profile(tower, cache, dtype, fmax_dtype=None):
     (크기는 bf16에서 재고 여유는 fp16 기준으로 보고할 때).
     """
     blocks = get_blocks(tower)
+    # **블록 이후도 잰다 (2026-09-18 추가).** 지금까지 `blocks[-1]`만 봤는데,
+    # 블록 뒤에 오는 연산이 크기를 **키우는** 계열이 있다. vLLM #40290의 Gemma 4가
+    # 그렇다 — SigLIP 표준화 `(h − std_bias) × std_scale`에서 `std_bias`가 53,760
+    # (여유 1.218배)이라 **뺄셈 중간값이 fp16을 넘고**, 줄여 줄 `× std_scale`
+    # (0.001~0.021)은 뺄셈 뒤에 온다. 블록 출력만 보면 **안전으로 오판한다.**
+    #
+    # 반대 방향도 있다 — Qwen2.5-VL의 merger는 크기를 줄여서, 타워 반환값만 보면
+    # 여유가 1336배로 보인다(2026-09-15에 이 함정으로 한 번 틀렸다).
+    # 그래서 **둘 다 재고 나쁜 쪽(여유가 작은 쪽)을 판정에 쓴다.**
+    TOWER_OUT = -1                       # rec의 특수 키: 타워 최종 출력
     rec = {i: [] for i in range(len(blocks))}
+    rec[TOWER_OUT] = []
     hs = []
 
     def mk(i):
@@ -200,6 +211,8 @@ def profile(tower, cache, dtype, fmax_dtype=None):
     nan = 0
     for pv, grid in cache:
         out = tower_forward(tower, pv, grid)
+        if torch.is_tensor(out):
+            rec[TOWER_OUT].append(out.detach().float().abs().max().item())
         if not torch.isfinite(out).all():
             nan += 1
     for h in hs:
@@ -223,6 +236,19 @@ def profile(tower, cache, dtype, fmax_dtype=None):
                           "headroom_worst": (fmax / worst) if worst and math.isfinite(worst) else None,
                           "exceed_rate": exceed,
                           "n_finite": len(vals), "n_images": len(rec[i])})
+
+    # 타워 최종 출력 — 블록과 같은 형식으로 붙이되 block은 "tower_out"으로 표시한다.
+    tv = [v for v in rec[TOWER_OUT] if math.isfinite(v)]
+    if rec[TOWER_OUT]:
+        p50 = st.median(tv) if tv else float("nan")
+        worst = max(tv) if tv else float("nan")
+        exceed = (sum(1 for v in tv if v > fmax) + (len(rec[TOWER_OUT]) - len(tv))) / \
+                 len(rec[TOWER_OUT])
+        per_block.append({"block": "tower_out", "max_p50": p50, "max_worst": worst,
+                          "headroom": (fmax / p50) if p50 and math.isfinite(p50) else None,
+                          "headroom_worst": (fmax / worst) if worst and math.isfinite(worst) else None,
+                          "exceed_rate": exceed,
+                          "n_finite": len(tv), "n_images": len(rec[TOWER_OUT])})
     return per_block, nan / len(cache)
 
 
@@ -325,6 +351,8 @@ def plan_fix(per_block, target, tower=None, cache=None, dtype="float16"):
     target_max = fmax / target
     plan = []
     for b in per_block:
+        if b["block"] == "tower_out":
+            continue          # 블록이 아니므로 MLP 축소를 적용할 수 없다
         h = b.get("headroom_worst")
         if h is None:                       # 구 형식 기록과의 호환
             h = b["headroom"]
@@ -538,7 +566,12 @@ def main():
     # 그래서 --available_formats로 대상의 지원 형식을 선언받는다.
     #
     # 판정 기준과 같은 통계량(최악)을 쓴다 — 여기만 p50이면 표가 서로 어긋난다.
-    last_mag = before[-1]["max_worst"]
+    # **타워 전체의 최대**를 쓴다 (마지막 블록이 아니라). 형식을 고르는 문제는
+    # "어느 한 지점이라도 넘으면 실패"이므로, 최댓값이 나오는 곳이 기준이다.
+    _mags = [(b["block"], b["max_worst"]) for b in before
+             if b.get("max_worst") and math.isfinite(b["max_worst"])]
+    last_where, last_mag = max(_mags, key=lambda kv: kv[1])
+    _where = "타워 출력" if last_where == "tower_out" else f"블록 {last_where}"
     alt = {dt: FORMAT_MAX[dt] / last_mag for dt in FORMAT_MAX if last_mag}
 
     scaled, unknown = set(), set()
@@ -556,7 +589,7 @@ def main():
     else:
         avail = set(FORMAT_MAX)
 
-    print(f"\n[형식별 여유] 마지막 블록 max|act| = {last_mag:,.0f} (최악)")
+    print(f"\n[형식별 여유] 타워 최대 max|act| = {last_mag:,.0f} (최악, {_where})")
     for dt, h in alt.items():
         mark = "  ← 목표 dtype" if dt == args.dtype else ""
         if dt not in avail:
@@ -596,7 +629,20 @@ def main():
     #    한 모델 안에서는 셋이 비례해 움직이기 때문이다. 최악을 쓰는 이유는 여백이
     #    커서가 아니라 **임계값이 물리적 의미(형식 상한)를 갖기 때문**이다.
     #  - 그래서 1차 판정은 임계값이 아니라 **초과 비율**로 한다.
-    lastb = before[-1]
+    # **마지막 블록과 타워 출력 중 나쁜 쪽으로 판정한다 (2026-09-18).**
+    # 블록 뒤 연산이 키우는 계열(Gemma 4 표준화)과 줄이는 계열(Qwen merger)이
+    # 둘 다 있으므로, 어느 하나만 보면 각각 다른 방향으로 오판한다.
+    blk_last = [b for b in before if b["block"] != "tower_out"][-1]
+    tower_out = next((b for b in before if b["block"] == "tower_out"), None)
+    cands = [b for b in (blk_last, tower_out) if b and b.get("headroom_worst")]
+    lastb = min(cands, key=lambda b: b["headroom_worst"]) if cands else blk_last
+    if tower_out and lastb is tower_out:
+        print(f"\n  ※ 판정을 **타워 최종 출력**으로 한다 — 마지막 블록"
+              f"({blk_last['headroom_worst']:.2f}배)보다 나쁘다"
+              f"({tower_out['headroom_worst']:.2f}배). 블록 뒤 연산이 크기를 키운다.")
+    elif tower_out:
+        print(f"\n  · 타워 최종 출력 여유 {tower_out['headroom_worst']:.2f}배 "
+              f"(마지막 블록 {blk_last['headroom_worst']:.2f}배) — 블록 쪽이 나쁘다")
     exc, nimg = lastb["exceed_rate"], lastb.get("n_images", len(cache_mag))
     print_verdict(lastb, nimg)
 
@@ -619,9 +665,11 @@ def main():
         hw = b.get("headroom_worst")
         if hw is None:
             print(f"{b['block']:>4}{'(비유한)':>15}{'—':>11}")
-        elif hw < args.target_headroom or b["block"] >= len(before) - 3:
+        elif (hw < args.target_headroom or b["block"] == "tower_out"
+              or (isinstance(b["block"], int) and b["block"] >= len(before) - 4)):
             mark = "  ← 위험" if hw < args.target_headroom else ""
-            print(f"{b['block']:>4}{b['max_worst']:>15,.0f}{hw:>10.2f}배{mark}")
+            name = "출력" if b["block"] == "tower_out" else b["block"]
+            print(f"{name:>4}{b['max_worst']:>15,.0f}{hw:>10.2f}배{mark}")
     print(f"\n[진단] 위험 블록 {len(risky)}개 "
           f"(기준: **최악** 여유 < {args.target_headroom})")
     print(f"       현재 붕괴율 {nan_before*100:.1f}%  ({len(paths)}장)")
