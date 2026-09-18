@@ -102,15 +102,13 @@ def _build_from_remote(cfg, fname, clsname, vcfg):
     **파일 하나만 import**해서 비전 클래스를 꺼낸다. 원격 코드를 실행하는 것은
     같으므로 잘 알려진 저장소에만 쓴다.
     """
-    import importlib.util
-    from huggingface_hub import hf_hub_download
+    # 모델링 파일을 단독 exec하면 **상대 import가 깨진다**
+    # (`from .configuration_intern_vit import ...`). transformers의 동적 모듈
+    # 헬퍼가 패키지 맥락을 만들어 주므로 그것을 쓴다.
+    from transformers.dynamic_module_utils import get_class_from_dynamic_module
     repo = getattr(cfg, "_name_or_path", None) or getattr(cfg, "name_or_path", "")
-    path = hf_hub_download(repo, f"{fname}.py")
-    spec = importlib.util.spec_from_file_location(fname, path)
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[fname] = mod
-    spec.loader.exec_module(mod)
-    return getattr(mod, clsname)(vcfg)
+    cls = get_class_from_dynamic_module(f"{fname}.{clsname}", repo)
+    return cls(vcfg)
 
 
 def fetch_vision_state(repo):
@@ -210,27 +208,58 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
           f"(빠진 버퍼 {len(missing)}개는 비지속 버퍼)")
 
     tower = tower.to("cuda", dtype).eval()
-    proc = retry_429(lambda: AutoProcessor.from_pretrained(
-        repo, trust_remote_code=trust))
-    if max_pixels and hasattr(proc.image_processor, "max_pixels"):
-        proc.image_processor.max_pixels = max_pixels
-        proc.image_processor.min_pixels = 3136
+    # **프로세서 실패가 타워 측정을 막아서는 안 된다.** Phi-3.5는 타워 적재가
+    # 391/391로 통과했는데 저장소 프로세서가 TypeError로 죽었다. 전처리는
+    # 이미지 → 픽셀 텐서일 뿐이므로, 실패하면 비전 인코더가 실제로 쓰는
+    # CLIP 프로세서로 대체하고 **그 사실을 결과에 남긴다.**
+    # **이미지 프로세서만 쓴다.** 텍스트 쪽은 한 번도 안 쓰는데, 전체 프로세서를
+    # 부르면 그쪽 결함에 걸려 넘어진다 — LLaVA는 `patch_size=None`으로,
+    # Phi-3.5는 원격 프로세서 코드로 죽었다. 둘 다 타워 적재는 391/391 통과였다.
+    from transformers import AutoImageProcessor
+    proc_src = repo
+    try:
+        proc = retry_429(lambda: AutoImageProcessor.from_pretrained(
+            repo, trust_remote_code=trust))
+    except Exception as e:
+        ip = getattr(cfg, "img_processor", None)
+        fallback = (ip or {}).get("model_name") if isinstance(ip, dict) else None
+        if not fallback:
+            raise
+        print(f"  저장소 프로세서 실패({type(e).__name__}) — "
+              f"'{fallback}' 프로세서로 대체한다", flush=True)
+        proc = retry_429(lambda: AutoImageProcessor.from_pretrained(fallback))
+        proc_src = fallback
+    # **계열 일반화 (2026-09-18).** 이 루프는 Qwen 전용이었다 — 전체 프로세서,
+    # `image_grid_thw`, `tower.blocks`, `tower(pv, grid)` 네 곳이 모두 그렇다.
+    # CLIP 기반 타워(LLaVA·Phi-3-V)는 넷 다 다르므로 `headroom_guard`의
+    # 계열 일반화 함수를 재사용한다.
+    from headroom_guard import get_blocks, tower_forward
 
+    ipx = getattr(proc, "image_processor", proc)      # 전체/이미지 프로세서 둘 다 허용
+    dynamic = hasattr(ipx, "max_pixels")
+    if max_pixels and dynamic:
+        ipx.max_pixels = max_pixels
+        ipx.min_pixels = 3136
+    if not dynamic:
+        # **CLIP 계열은 입력 해상도가 고정(보통 336x336)이다.** max_pixels가
+        # 적용되지 않으므로 Qwen 계열과 **같은 조건이 아니다.** 결과에 남긴다.
+        print(f"  ⚠ 고정 해상도 타워 — max_pixels {max_pixels:,}가 적용되지 않는다. "
+              f"Qwen 계열과 조건이 다르므로 나란히 비교하지 말 것", flush=True)
+
+    blocks = get_blocks(tower)
     maxes = []
     with torch.no_grad():
         for p in paths:
-            enc = proc(text=["<image>"], images=[Image.open(p).convert("RGB")],
-                       return_tensors="pt")
+            enc = ipx(images=[Image.open(p).convert("RGB")], return_tensors="pt")
             pv = enc["pixel_values"].to("cuda", dtype)
-            grid = enc["image_grid_thw"].to("cuda")
-            out = tower.blocks[-1]  # 후크 대신 마지막 블록 출력을 직접 잡는다
+            grid = (enc["image_grid_thw"].to("cuda")
+                    if "image_grid_thw" in enc else None)
             rec = {}
-            h = out.register_forward_hook(
+            h = blocks[-1].register_forward_hook(
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
-            tower(pv, grid)
+            tower_forward(tower, pv, grid)
             h.remove()
-            t = rec["t"].float().abs().max().item()
-            maxes.append(t)
+            maxes.append(rec["t"].float().abs().max().item())
 
     del tower
     gc.collect()
@@ -247,7 +276,7 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             "headroom_p50": FP16_MAX / pct(sm, 0.5),
             "headroom_p95": FP16_MAX / pct(sm, 0.95),
             "headroom_worst": FP16_MAX / sm[-1],
-            "loader": "vision_only_strict"}
+            "loader": "vision_only_strict", "processor_from": proc_src}
 
 
 def main():
