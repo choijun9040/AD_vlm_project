@@ -1,0 +1,35 @@
+{
+  "Qwen/Qwen2.5-VL-3B-Instruct": {
+    "repo": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "arch": "Qwen2_5_VLForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 68608.0,
+    "last_block_worst": 84992.0,
+    "headroom_p50": 0.9547574626865671,
+    "headroom_p95": 0.8416940789473685,
+    "headroom_worst": 0.7707078313253012
+  },
+  "QuantTrio/Qwen3-VL-32B-Instruct-AWQ": {
+    "repo": "QuantTrio/Qwen3-VL-32B-Instruct-AWQ",
+    "arch": "Qwen3VLForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 10752.0,
+    "last_block_worst": 11904.0,
+    "headroom_p50": 6.092261904761905,
+    "headroom_p95": 5.686111111111111,
+    "headroom_worst": 5.502688172043011
+  },
+  "QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ": {
+    "repo": "QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ",
+    "arch": "Qwen3VLMoeForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 1552.0,
+    "last_block_worst": 1888.0,
+    "headroom_p50": 42.20618556701031,
+    "headroom_p95": 36.71748878923767,
+    "headroom_worst": 34.69491525423729
+  }
+}
