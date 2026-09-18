@@ -1,0 +1,15 @@
+{
+  "moonshotai/Kimi-VL-A3B-Instruct": {
+    "repo": "moonshotai/Kimi-VL-A3B-Instruct",
+    "arch": "KimiVLForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 1624.0,
+    "last_block_p95": 1672.0,
+    "last_block_worst": 1704.0,
+    "headroom_p50": 40.33497536945813,
+    "headroom_p95": 39.177033492822964,
+    "headroom_worst": 38.44131455399061,
+    "loader": "vision_only_strict",
+    "processor_from": "moonshotai/Kimi-VL-A3B-Instruct"
+  }
+}

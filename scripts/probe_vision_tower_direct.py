@@ -95,6 +95,10 @@ def build_tower(cfg):
     remote = {
         "InternVLChatModel": ("modeling_intern_vit", "InternVisionModel"),
         "Phi3VForCausalLM":  ("modeling_phi3_v", "Phi3ImageEmbedding"),
+        # Kimi-VL(MoonViT) — 원격 코드가 `is_torch_fx_available`를 쓰는데 그 심볼이
+        # transformers 5.17에서 제거됐다. 4.49에는 있으므로 **구 환경에서만** 된다.
+        # 버전 파편화가 양방향임을 보여주는 사례다(§6).
+        "KimiVLForConditionalGeneration": ("modeling_kimi_vl", "MoonVitPretrainedModel"),
     }
     for a in archs:
         if a in remote:
@@ -273,12 +277,15 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
         for p in paths:
             enc = ipx(images=[Image.open(p).convert("RGB")], return_tensors="pt")
             pv = enc["pixel_values"].to("cuda", dtype)
-            grid = (enc["image_grid_thw"].to("cuda")
-                    if "image_grid_thw" in enc else None)
+            # grid 키 이름이 계열마다 다르다 (Qwen·GLM: image_grid_thw / Kimi: image_grid_hws)
+            gk = next((k for k in ("image_grid_thw", "image_grid_hws") if k in enc), None)
+            grid = enc[gk].to("cuda") if gk else None
             rec = {}
             h = blocks[-1].register_forward_hook(
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
-            if "image_sizes" in enc:
+            if gk == "image_grid_hws":
+                tower(pv, grid)                  # MoonViT — forward(pixel_values, grid_hws)
+            elif "image_sizes" in enc:
                 # Pixtral 계열 — grid가 아니라 image_sizes를 요구한다
                 tower(pv, enc["image_sizes"].to("cuda"))
             else:
@@ -334,11 +341,31 @@ def main():
             res[repo] = {"repo": repo, "failed": f"{type(e).__name__}: {str(e)[:250]}"}
         out_path.write_text(json.dumps(res, indent=2, ensure_ascii=False))
         if args.cleanup:
-            import os
-            cache = os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
-            d = Path(cache) / "hub" / ("models--" + repo.replace("/", "--"))
+            # **blob까지 지운다 (2026-09-18 수정).** models--* 디렉터리만 지우면
+            # hub/blobs의 실체 파일이 참조 없이 남는다. 실측으로 고아 blob이
+            # 14.42 GB 쌓여 있었다. 스냅샷 심볼릭 링크가 가리키는 실체를 모아
+            # **참조가 0인 것만** 지운다.
+            import os, shutil
+            cache = Path(os.environ.get("HF_HOME")
+                         or os.path.expanduser("~/.cache/huggingface")) / "hub"
+            d = cache / ("models--" + repo.replace("/", "--"))
             if d.exists():
-                shutil.rmtree(d, ignore_errors=True); print(f"  캐시 정리: {d.name}")
+                shutil.rmtree(d, ignore_errors=True)
+                print(f"  캐시 정리: {d.name}")
+            refd = set()
+            for s in cache.glob("models--*/snapshots/*/*"):
+                try:
+                    if s.is_symlink():
+                        refd.add(os.path.realpath(s))
+                except OSError:
+                    pass
+            freed = 0
+            for b in list((cache / "blobs").glob("*/*")) + list((cache / "blobs").glob("*")):
+                if b.is_file() and str(b.resolve()) not in refd:
+                    freed += b.stat().st_size
+                    b.unlink()
+            if freed:
+                print(f"  고아 blob {freed/1e9:.2f} GB 회수")
 
     print("\n" + "=" * 86)
     print(f"{'저장소':<48}{'여유 p50':>10}{'p95':>9}{'최악':>9}")

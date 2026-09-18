@@ -74,12 +74,26 @@ def build_tower(cfg):
         "Qwen2VLForConditionalGeneration":    ("qwen2_vl",   "Qwen2VisionTransformerPretrainedModel"),
         "Qwen3VLForConditionalGeneration":    ("qwen3_vl",   "Qwen3VLVisionModel"),
         "Qwen3VLMoeForConditionalGeneration": ("qwen3_vl_moe", "Qwen3VLMoeVisionModel"),
+        # **Qwen 밖에서 같은 설계를 찾은 것 (2026-09-18).** GLM-4.1V는 Zhipu가
+        # 독립적으로 학습했는데 프로세서 출력 형상이 Qwen2-VL과 완전히 같다
+        # (320×180 → (264,1176), 1280×720 → (4784,1176)). 같은 패치 방식
+        # (14×14, 2×2 병합)에 가변 시퀀스다.
+        "Glm4vForConditionalGeneration": ("glm4v", "Glm4vVisionModel"),
     }
     for a in archs:
         if a in table:
             mod, cls = table[a]
             m = __import__(f"transformers.models.{mod}.modeling_{mod}", fromlist=[cls])
             return getattr(m, cls)(vcfg), a
+    # 원격 코드 계열 — 저장소가 들고 다니는 모델링 파일에서 비전 클래스만 가져온다.
+    # 전체 모델을 세우지 않는다(LLM이 크고 필요도 없다).
+    remote = {"KimiVLForConditionalGeneration": ("modeling_kimi_vl", "MoonVitPretrainedModel")}
+    for a in archs:
+        if a in remote:
+            fname, cls = remote[a]
+            from transformers.dynamic_module_utils import get_class_from_dynamic_module
+            repo = getattr(cfg, "_name_or_path", None) or getattr(cfg, "name_or_path", "")
+            return get_class_from_dynamic_module(f"{fname}.{cls}", repo)(vcfg), a
     raise RuntimeError(f"지원 밖 architectures: {archs}")
 
 
@@ -93,10 +107,10 @@ def get_blocks(tower):
     raise RuntimeError(f"블록 리스트를 못 찾았다: {type(tower).__name__}")
 
 
-def profile(repo, paths, max_pixels, dtype=torch.bfloat16):
+def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
     from transformers import AutoConfig, AutoImageProcessor
     print(f"\n{'='*70}\n[{repo}]\n{'='*70}", flush=True)
-    cfg = AutoConfig.from_pretrained(repo)
+    cfg = AutoConfig.from_pretrained(repo, trust_remote_code=trust)
     tower, arch = build_tower(cfg)
     print(f"  타워: {type(tower).__name__}  ({arch})")
 
@@ -110,7 +124,7 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16):
     print(f"  적재 검증 통과: 파라미터 {len(pnames)}개 전부")
     tower = tower.to("cuda", dtype).eval()
 
-    ipx = AutoImageProcessor.from_pretrained(repo)
+    ipx = AutoImageProcessor.from_pretrained(repo, trust_remote_code=trust)
     if hasattr(ipx, "max_pixels"):
         ipx.max_pixels = max_pixels; ipx.min_pixels = 3136
     blocks = get_blocks(tower)
@@ -120,7 +134,10 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16):
         for p in paths:
             enc = ipx(images=[Image.open(p).convert("RGB")], return_tensors="pt")
             pv = enc["pixel_values"].to("cuda", dtype)
-            grid = enc["image_grid_thw"].to("cuda") if "image_grid_thw" in enc else None
+            # grid 키 이름이 계열마다 다르다 — Qwen/GLM은 image_grid_thw,
+            # Kimi-VL(MoonViT)은 image_grid_hws다.
+            gk = next((k for k in ("image_grid_thw", "image_grid_hws") if k in enc), None)
+            grid = enc[gk].to("cuda") if gk else None
             rec = {}
             h = blocks[-1].register_forward_hook(
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
@@ -148,6 +165,7 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=1440000)
     ap.add_argument("--out", default="eval_results/bridge_newhf.json")
     ap.add_argument("--cleanup", action="store_true")
+    ap.add_argument("--trust_remote_code", action="store_true")
     args = ap.parse_args()
 
     paths = json.loads(Path(args.paths).read_text())
@@ -159,7 +177,7 @@ def main():
     res = json.loads(out.read_text()) if out.exists() else {}
     for repo in args.repos:
         try:
-            res[repo] = profile(repo, paths, args.max_pixels)
+            res[repo] = profile(repo, paths, args.max_pixels, trust=args.trust_remote_code)
             r = res[repo]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
                   f"여유 p50={r['headroom_p50']:.2f}배  최악={r['headroom_worst']:.2f}배", flush=True)
@@ -168,11 +186,31 @@ def main():
             res[repo] = {"failed": f"{type(e).__name__}: {e}"}
         out.write_text(json.dumps(res, indent=2, ensure_ascii=False))
         if args.cleanup:
+            # **blob까지 지운다 (2026-09-18 수정).** models--* 디렉터리만 지우면
+            # hub/blobs의 실체 파일이 참조 없이 남는다. 실측으로 고아 blob이
+            # 14.42 GB 쌓여 있었다. 스냅샷 심볼릭 링크가 가리키는 실체를 모아
+            # **참조가 0인 것만** 지운다.
             import os, shutil
-            cache = os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
-            d = Path(cache) / "hub" / ("models--" + repo.replace("/", "--"))
+            cache = Path(os.environ.get("HF_HOME")
+                         or os.path.expanduser("~/.cache/huggingface")) / "hub"
+            d = cache / ("models--" + repo.replace("/", "--"))
             if d.exists():
-                shutil.rmtree(d, ignore_errors=True); print(f"  캐시 정리: {d.name}")
+                shutil.rmtree(d, ignore_errors=True)
+                print(f"  캐시 정리: {d.name}")
+            refd = set()
+            for s in cache.glob("models--*/snapshots/*/*"):
+                try:
+                    if s.is_symlink():
+                        refd.add(os.path.realpath(s))
+                except OSError:
+                    pass
+            freed = 0
+            for b in list((cache / "blobs").glob("*/*")) + list((cache / "blobs").glob("*")):
+                if b.is_file() and str(b.resolve()) not in refd:
+                    freed += b.stat().st_size
+                    b.unlink()
+            if freed:
+                print(f"  고아 blob {freed/1e9:.2f} GB 회수")
     print(f"\n저장: {out}")
 
 

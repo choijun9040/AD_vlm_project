@@ -31,5 +31,19 @@
     "headroom_p50": 42.20618556701031,
     "headroom_p95": 36.71748878923767,
     "headroom_worst": 34.69491525423729
+  },
+  "zai-org/GLM-4.1V-9B-Thinking": {
+    "repo": "zai-org/GLM-4.1V-9B-Thinking",
+    "arch": "Glm4vForConditionalGeneration",
+    "n_images": 100,
+    "transformers": "5.17.0",
+    "last_block_p50": 1712.0,
+    "last_block_worst": 1784.0,
+    "headroom_p50": 38.26168224299065,
+    "headroom_p95": 36.88288288288288,
+    "headroom_worst": 36.71748878923767
+  },
+  "moonshotai/Kimi-VL-A3B-Instruct": {
+    "failed": "ImportError: cannot import name 'is_torch_fx_available' from 'transformers.utils.import_utils' (/venv/hf_new/lib/python3.10/site-packages/transformers/utils/import_utils.py)"
   }
 }
