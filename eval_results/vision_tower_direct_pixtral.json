@@ -1,0 +1,15 @@
+{
+  "mistral-community/pixtral-12b": {
+    "repo": "mistral-community/pixtral-12b",
+    "arch": "LlavaForConditionalGeneration/pixtral",
+    "n_images": 100,
+    "last_block_p50": 1824.0,
+    "last_block_p95": 2096.0,
+    "last_block_worst": 2288.0,
+    "headroom_p50": 35.91228070175438,
+    "headroom_p95": 31.251908396946565,
+    "headroom_worst": 28.62937062937063,
+    "loader": "vision_only_strict",
+    "processor_from": "mistral-community/pixtral-12b"
+  }
+}

@@ -76,6 +76,14 @@ def build_tower(cfg):
         # 사례가 Qwen2.5-VL 하나로 몰렸다(선택 편향). 다른 계열을 재려고 넓혔다.
         "LlavaForConditionalGeneration": ("clip", "CLIPVisionModel"),
     }
+    # **Pixtral은 arch가 LlavaForConditionalGeneration인데 타워가 CLIP이 아니다.**
+    # HF가 Pixtral을 Llava 클래스로 감싸므로 arch만 보면 CLIPVisionModel을 세워
+    # 조용히 틀린다. `vision_config.model_type`으로 먼저 가른다.
+    vtype = getattr(vcfg, "model_type", None)
+    if vtype == "pixtral":
+        from transformers.models.pixtral.modeling_pixtral import PixtralVisionModel
+        return PixtralVisionModel(vcfg), f"{archs[0] if archs else '?'}/pixtral"
+
     for a in archs:
         if a in table:
             mod, cls = table[a]
@@ -236,10 +244,23 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
     from headroom_guard import get_blocks, tower_forward
 
     ipx = getattr(proc, "image_processor", proc)      # 전체/이미지 프로세서 둘 다 허용
-    dynamic = hasattr(ipx, "max_pixels")
-    if max_pixels and dynamic:
+    if max_pixels and hasattr(ipx, "max_pixels"):
         ipx.max_pixels = max_pixels
         ipx.min_pixels = 3136
+
+    # **동적 여부는 속성이 아니라 실측으로 가른다 (2026-09-18 정정).**
+    # 처음에는 `hasattr(ipx, "max_pixels")`로 판정했는데 그것은 Qwen 전용
+    # 속성이라 **Pixtral을 고정으로 오판했다** — Pixtral은 `size.longest_edge`로
+    # 종횡비를 보존하며 시퀀스가 자란다(320×180 → 240패치, 1600×900 → 2,304패치).
+    # 크기가 다른 두 이미지를 넣어 **출력 형상이 달라지는지** 직접 본다.
+    from PIL import Image as _I
+    _probe = _I.open(paths[0]).convert("RGB")
+    _a = ipx(images=[_probe.resize((320, 180))], return_tensors="pt")["pixel_values"]
+    _b = ipx(images=[_probe.resize((1280, 720))], return_tensors="pt")["pixel_values"]
+    _shape = lambda x: tuple(x.shape) if hasattr(x, "shape") else tuple(x[0][0].shape)
+    dynamic = _shape(_a) != _shape(_b)
+    print(f"  입력 형상: 320×180 → {_shape(_a)} · 1280×720 → {_shape(_b)}  "
+          f"→ {'가변' if dynamic else '고정'}", flush=True)
     if not dynamic:
         # **CLIP 계열은 입력 해상도가 고정(보통 336x336)이다.** max_pixels가
         # 적용되지 않으므로 Qwen 계열과 **같은 조건이 아니다.** 결과에 남긴다.
@@ -257,7 +278,11 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             rec = {}
             h = blocks[-1].register_forward_hook(
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
-            tower_forward(tower, pv, grid)
+            if "image_sizes" in enc:
+                # Pixtral 계열 — grid가 아니라 image_sizes를 요구한다
+                tower(pv, enc["image_sizes"].to("cuda"))
+            else:
+                tower_forward(tower, pv, grid)
             h.remove()
             maxes.append(rec["t"].float().abs().max().item())
 
