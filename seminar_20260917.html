@@ -49,6 +49,9 @@ h2{font-size:clamp(22px,3vw,27px);line-height:1.34;font-weight:700;letter-spacin
 .lede{color:var(--ink-2);font-size:16.5px;margin:0 0 30px;max-width:62ch}
 h3{font-size:17px;font-weight:600;margin:34px 0 12px;letter-spacing:-.005em}
 h3:first-of-type{margin-top:0}
+/* h4 — h3 아래 한 단계. ①~④ 기여 안의 하위 묶음에 쓴다 */
+h4{font-size:14.5px;font-weight:600;margin:26px 0 10px;letter-spacing:-.005em;
+   color:var(--mute);text-transform:none}
 p{margin:0 0 14px;max-width:64ch}
 .small{font-size:14px;color:var(--mute);max-width:64ch}
 
@@ -290,6 +293,41 @@ strong{font-weight:600}
   <div class="note"><b>왜 그런가.</b> SNR과 이상치 비율은 <b>스케일 불변량</b>입니다 —
   모든 값을 10배로 키워도 값이 같습니다. 그런데 fp16 붕괴는 <b>절대 크기</b> 문제입니다.
   두 축이 <b>수학적으로 직교</b>합니다. 우연이 아니라 정의상의 귀결입니다.</div>
+
+  <h4>기존 지표와 여유 — 경쟁이 아니라 분업</h4>
+  <div class="tw"><table>
+    <thead><tr><th></th><th>INT8 SNR · max/rms</th><th>표현 범위 여유</th></tr></thead>
+    <tbody>
+      <tr><td>측정 축</td><td>값들의 <b>모양</b>(상대 비율)</td><td>값의 <b>절대 크기</b></td></tr>
+      <tr><td>답하는 질문</td><td>양자화가 얼마나 왜곡하는가</td><td>형식 안에 들어가는가</td></tr>
+      <tr><td>스케일 불변성</td><td><b>있음</b> — 10배 키워도 동일</td><td>없음 — 크기에 정비례</td></tr>
+      <tr><td>층·모델 간 비교</td><td>가능</td><td>불가 (작은 층은 무조건 안전해 보임)</td></tr>
+      <tr><td>목표 형식</td><td>몰라도 산출 가능</td><td><b>사전 지정 필요</b> (fp16 0.88× / bf16 4.5e33×)</td></tr>
+      <tr class="hi2"><td>제 영역</td><td><b>스케일 쓰는 형식</b><br>INT8 · fp8</td><td><b>스케일 안 쓰는 형식</b><br>fp16 · bf16</td></tr>
+      <tr><td>측정 비용</td><td>순전파 1회</td><td>순전파 1회</td></tr>
+    </tbody>
+  </table></div>
+
+  <ul class="read">
+    <li><b>스케일 불변성은 결함이 아니라 설계 의도입니다.</b> 양자화는 스케일 인자를
+      동반하므로 절대 크기가 오차에 무관합니다 — 10배 키우면 격자도 10배라
+      상대 오차가 같습니다. <b>SNR이 안 변하는 것이 정상입니다.</b></li>
+    <li><b>직교의 정확한 뜻.</b> 임의 텐서는 <code>x = m·u</code>로 유일하게 나뉩니다
+      — 크기 <code>m = max|x|</code>, 모양 <code>u = x/m</code>. 기존 지표는
+      <b>u의 함수</b>이고 붕괴는 <b>m의 함수</b>입니다. 같은 대상의 <b>서로 다른
+      좌표</b>를 보므로, 네 조합(SNR 높음·낮음 × 붕괴 O·X)이 <b>전부 가능</b>합니다.
+      데이터를 더 모아도 예측 규칙이 나올 수 없습니다.</li>
+    <li><b>실측 시연.</b> 같은 텐서를 10만 배로 키우면 SNR 22.2601 → <b>22.2601</b>,
+      max/rms 33.9791 → <b>33.9791</b>. 소수점 넷째 자리까지 같고 <b>붕괴 여부만</b>
+      바뀝니다.</li>
+    <li><b>여유도 만능이 아닙니다.</b> 스케일을 쓰는 형식(INT8·fp8)에서는 절대 크기
+      문제가 사라지고 <b>동적 범위</b>가 문제가 됩니다 — 그건 max/rms가 보는 축입니다.
+      도구도 <code>int8</code>을 받으면 <b>“내 소관이 아니다”</b>라고 답합니다.</li>
+  </ul>
+
+  <div class="note"><b>한 문장으로.</b> “SNR이 틀린 게 아니라, 저희가 재려는 축을
+  <b>원리적으로 볼 수 없습니다</b>.” 그래서 요약문도 <b>“틀렸다”가 아니라
+  “원리적으로 빠져 있는 축이 있다”</b>로 씁니다. <b>대체가 아니라 추가</b>입니다.</div>
 
   <h3>② 실패가 이산적이다 — 기능이 통째로 죽는다 <span class="chip over">매우 강함</span></h3>
   <p>전구가 어두워지는 게 아니라 나가는 것입니다.</p>
