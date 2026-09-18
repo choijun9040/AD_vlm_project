@@ -1,0 +1,41 @@
+{
+  "Qwen/Qwen2.5-VL-3B-Instruct-AWQ": {
+    "repo": "Qwen/Qwen2.5-VL-3B-Instruct-AWQ",
+    "arch": "Qwen2_5_VLForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 68608.0,
+    "last_block_p95": 77312.0,
+    "last_block_worst": 86528.0,
+    "headroom_p50": 0.9547574626865671,
+    "headroom_p95": 0.8472682119205298,
+    "headroom_worst": 0.7570266272189349,
+    "loader": "vision_only_strict",
+    "processor_from": "Qwen/Qwen2.5-VL-3B-Instruct-AWQ"
+  },
+  "Qwen/Qwen2.5-VL-7B-Instruct-AWQ": {
+    "repo": "Qwen/Qwen2.5-VL-7B-Instruct-AWQ",
+    "arch": "Qwen2_5_VLForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 37632.0,
+    "last_block_p95": 44288.0,
+    "last_block_worst": 51968.0,
+    "headroom_p50": 1.7406462585034013,
+    "headroom_p95": 1.4790462427745665,
+    "headroom_worst": 1.2604679802955665,
+    "loader": "vision_only_strict",
+    "processor_from": "Qwen/Qwen2.5-VL-7B-Instruct-AWQ"
+  },
+  "Qwen/Qwen2.5-VL-3B-Instruct": {
+    "repo": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "arch": "Qwen2_5_VLForConditionalGeneration",
+    "n_images": 100,
+    "last_block_p50": 68608.0,
+    "last_block_p95": 77312.0,
+    "last_block_worst": 86528.0,
+    "headroom_p50": 0.9547574626865671,
+    "headroom_p95": 0.8472682119205298,
+    "headroom_worst": 0.7570266272189349,
+    "loader": "vision_only_strict",
+    "processor_from": "Qwen/Qwen2.5-VL-3B-Instruct"
+  }
+}
