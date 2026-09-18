@@ -1,5 +1,15 @@
 # Jetson Orin Nano 검증 절차 (2026-09-14)
 
+> **대상 보드 사양 확인 (2026-09-18).** Jetson Orin Nano 8GB는
+> **1024-core Ampere GPU + 32 Tensor Core**이고 **DLA가 없다**(4GB는 512-core / 16).
+> DLA는 상위 모듈에만 들어간다 — **AGX Orin 2× / Orin NX 1×**.
+>
+> 그래서 **"DLA가 bf16을 지원하지 않는다"는 논거는 이 보드에 해당하지 않는다.**
+> 여기서는 GPU만 쓰므로 bf16도 선택지에 있고, fp16을 쓰는 이유는 **정밀도
+> (가수 10 대 7비트)와 현재 런타임의 속도 차이(1.34~1.38배)**다. DLA 논거는
+> 상위 Orin으로 확장할 때만 쓴다(§8 한계 ③).
+> 출처: https://developer.nvidia.com/blog/solving-entry-level-edge-ai-challenges-with-nvidia-jetson-orin-nano/
+
 본 연구의 가장 큰 구멍은 **"배포를 주장하는데 배포한 적이 없다"**는 점이다. 모든 측정이
 A100 위 PyTorch에서 이뤄졌고, "차량용 가속기가 fp16만 지원한다"는 서술은 측정이 아니라
 인용이다. 이 문서는 그 구멍을 메우는 최소 경로를 정리한다.

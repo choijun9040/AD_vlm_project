@@ -1771,11 +1771,36 @@ Qwen2-VL-2B(여유 3.88)는 32.30 dB다. 계열마다 SNR 기준선이 다르기
    **한계를 삭제하지 않되 "관측된 두 버전에서는 유지됐다"로 적는다.** 추측이
    측정으로 바뀌었다.
 
-   **범위를 좁히는 근거 하나 (2026-09-16).** NVIDIA TensorRT 문서의 DLA 레이어 제약
-   절은 지원 정밀도를 **"Both FP16 and INT8 are supported"**로 적고 **BF16을 언급하지
-   않는다.** 즉 Jetson Orin에서 **DLA로 오프로드하는 배포에서는 bf16이 선택지가
-   아니다.** Orin을 쓰는 이유가 DLA인 경우가 많으므로 무게가 있으나, **GPU만 쓰는
-   배포에는 해당하지 않아 한계를 지우지는 못한다.**
+   **범위를 좁히는 근거 하나 — 다만 대상 보드를 정확히 적는다 (2026-09-18 정정).**
+   NVIDIA TensorRT 문서의 DLA 레이어 제약 절은 지원 정밀도를 **"Both FP16 and INT8
+   are supported"**로 적고 **BF16을 언급하지 않는다.** 즉 **DLA로 오프로드하는
+   배포에서는 bf16이 선택지가 아니다.**
+
+   > **그런데 본 연구의 대상인 Orin Nano에는 DLA가 없다.** NVIDIA 사양표상
+   > Orin Nano 8GB는 *"1024-core Ampere GPU with 32 Tensor Cores"*뿐이고 **DLA 항목이
+   > 없다**(4GB도 동일). DLA는 상위 모듈에만 들어간다 — AGX Orin 2×, Orin NX 1×.
+   >
+   > | 모듈 | DLA |
+   > |---|---|
+   > | AGX Orin | 2× DLA v2 |
+   > | Orin NX | 1× DLA v2 |
+   > | **Orin Nano 8GB / 4GB (본 연구 대상)** | **없음** |
+   >
+   > 이전 판은 *"Jetson Orin에서 DLA 오프로드 배포에서는"*이라고만 적어 **Orin Nano도
+   > 포함되는 것처럼 읽혔다.** 자기 실험과 어긋나므로 범위를 좁힌다.
+   >
+   > **따라서 두 서술을 분리한다.**
+   > - *"DLA는 bf16을 지원하지 않는다"* → **참**, 일반론. **AGX Orin·Orin NX** 해당
+   > - *"따라서 본 연구 배포에서 bf16은 선택지가 아니다"* → **거짓**. Orin Nano는
+   >   GPU만 쓰므로 bf16이 선택지에 있다
+   >
+   > **본 연구에서 fp16을 쓰는 이유는 정밀도(가수 10 대 7비트)와 현재 런타임의
+   > 속도 차이(1.34~1.38배)다.** DLA 논거는 **상위 Orin 모듈로 확장할 때의 근거**
+   > 로만 쓴다. 출처:
+   > https://developer.nvidia.com/blog/solving-entry-level-edge-ai-challenges-with-nvidia-jetson-orin-nano/
+
+   Orin 계열 전반으로 보면 DLA를 쓰는 배포가 드물지 않으므로 이 근거는 무게가 있으나,
+   **GPU만 쓰는 배포에는 해당하지 않아 한계를 지우지는 못한다.**
    출처: https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html
 
    **가장 단단한 반론 봉쇄 — fp16은 bf16보다 정밀하다 (2026-09-18 추가).**
@@ -1814,7 +1839,8 @@ Qwen2-VL-2B(여유 3.88)는 32.30 dB다. 계열마다 SNR 기준선이 다르기
    **측정의 목적이 바뀌는 것이지 사라지는 것이 아니다 (2026-09-17 추가).**
    bf16이 공짜가 된 세상을 가정해도 실무자에게는 질문이 남는다 — **"나는 fp16을 쓸
    수 있는가?"** fp16은 bf16보다 **1.34배 빠르고**(138.7 ms 대 186.5 ms, §6.3),
-   **DLA에서 쓸 수 있는 유일한 부동소수 형식**이며, **같은 크기에서 8배 정밀하다.**
+   **DLA에서 쓸 수 있는 유일한 부동소수 형식**이며(AGX Orin·Orin NX 한정 — 본 연구
+   대상인 Orin Nano에는 DLA가 없다), **같은 크기에서 8배 정밀하다.**
    여유를 재면 그 답이 나온다.
 
    | 측정의 역할 | bf16이 비싼 지금 | bf16이 공짜인 미래 |
@@ -2076,6 +2102,8 @@ gradient 상 동일해야 하므로, 벗어나면 결과 해석 전에 버그를
 **DLA 사양 확인 (2026-09-16 완료).** NVIDIA TensorRT 문서의 DLA 레이어 제약 절은
 지원 정밀도를 **"Both FP16 and INT8 are supported"**로 적고 **BF16을 언급하지
 않는다.** 즉 Jetson Orin에서 **DLA로 오프로드하는 배포에서는 bf16이 선택지가 아니다.**
+(**2026-09-18 단서**: 본 연구 대상인 **Orin Nano에는 DLA가 없다** — AGX Orin·Orin NX
+한정이다. §8 한계 ③ 참조.)
 Orin을 쓰는 이유가 DLA 활용인 경우가 많으므로, **커널이 성숙해도 bf16이 만능
 대안은 아니라는 근거**가 된다. 다만 GPU만 쓰는 배포에는 해당하지 않으므로
 **한계 ③을 지우지는 못하고 범위를 좁힐 뿐이다.**
