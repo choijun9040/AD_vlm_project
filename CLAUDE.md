@@ -2,6 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Read first — how work is done here
+
+**`docs/working_agreement.md` is mandatory reading before touching results, numbers,
+or the thesis.** It carries three standing rules the user has given repeatedly:
+
+1. **After every experiment**, report the *new* weakness the result created and
+   classify each as 서술로 해소 / 실험 필수 / 불필요 — "필수" only where the paper's
+   claim does not stand without it. Run the next experiment only if it is 필수.
+2. **Pre-register the interpretation before seeing results**, and report unfavorable
+   results as-is. Never reinterpret them favorably after the fact.
+3. **When correcting a number, sweep the places that number also lives** — captions,
+   footnotes, other chapters, slides, and the code that computes it. This error class
+   passes value-comparison checks.
+
+Respond in **Korean**; report times in **KST (UTC+9)**.
+
+Companion documents: `docs/weakness_ledger.md` (every open/closed weakness),
+`thesis_outline_20260910.md` §3.5 (numeric-correction rule) and §6 (pre-registrations).
+
 ## What this is
 
 A knowledge-distillation research pipeline for autonomous-driving VLMs: a LoRA
