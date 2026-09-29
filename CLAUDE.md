@@ -196,8 +196,11 @@ retired `HazardWeightedKDLoss` design; it appears in no comparison.
 2026-09-15** once that run finished and all five `*_4bit_awq_bfloat16_*.json` results
 were on disk. Regenerating it means re-running the AWQ quantization from the LoRA
 checkpoints; nothing currently planned needs it. The v1 pair (`student_baseline`, `student_kd_only`) was also **kept**;
-their activation profile is queued (the accuracy comparison was dropped as
-appendix-level — what matters is whether vision-attention LoRA alone moves headroom).
+their activation profile **is done** (`eval_results/v1_vs_v2_profile.json`; the accuracy
+comparison was dropped as appendix-level). Result: the v1 (LLM-only LoRA) variant has ~10%
+*lower* activation than pretrained, and the rise appears at v2 (1.58×; headroom 2.18× → 1.38×,
+collapse 0/250 → 8/250) — but v1→v2 changes two variables, so write it as "vision-LoRA
+extension **plus** sampling change", not LoRA capacity alone (`thesis_outline_20260910.md` §4).
 
 **INT4 re-measurement with the two confounders fixed (2026-09-15)** — load the same
 AWQ checkpoints with `--dtype bfloat16` and build the processor from base
@@ -536,8 +539,8 @@ constraint worth knowing before touching evaluation code:
   ```bash
   python scripts/eval_em_vlm4ad_nuscenesqa.py --model-name T5-Medium --lm T5-Base
   ```
-  `scripts/finetune_em_vlm4ad_nuscenesqa.py` (not yet
-  run — needs a free GPU window) fine-tunes it on the *same* NuScenes-QA train
+  `scripts/finetune_em_vlm4ad_nuscenesqa.py` (**already run** — result is the
+  54.08% single-camera row in the reference comparison above) fine-tunes it on the *same* NuScenes-QA train
   subset our student sees, to get a same-data/same-eval-set comparison instead
   (then re-run `eval_em_vlm4ad_nuscenesqa.py --model-name T5-Medium_nuscenesqa_ft
   --lm T5-Base --eval_mode finetuned` against the fine-tuned checkpoint).
