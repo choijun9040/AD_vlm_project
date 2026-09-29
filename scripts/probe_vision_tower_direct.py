@@ -330,8 +330,11 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
                 lambda _m, _i, o: rec.__setitem__("t", (o[0] if isinstance(o, tuple) else o).detach()))
             if gk == "image_grid_hws":
                 out = tower(pv, grid)            # MoonViT — forward(pixel_values, grid_hws)
-            elif "image_sizes" in enc:
-                # Pixtral 계열 — grid가 아니라 image_sizes를 요구한다
+            elif "image_sizes" in enc and pv.dim() == 4:
+                # Pixtral 계열 — grid가 아니라 image_sizes를 요구한다.
+                # **4-D일 때만 (2026-09-29 수정).** Phi-3-V도 image_sizes를 내지만
+                # pixel_values가 5-D(B,크롭,C,H,W)라 이 분기에 잡히면 CLIP 타워가
+                # 죽는다. 이 분기(1ac7625)가 Phi 측정(5622ba9) 10분 뒤에 들어와 회귀했다
                 out = tower(pv, enc["image_sizes"].to("cuda"))
             else:
                 out = tower_forward(tower, pv, grid)

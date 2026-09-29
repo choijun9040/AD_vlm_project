@@ -1,0 +1,28 @@
+{
+  "llava-hf/llava-1.5-7b-hf | ybelkada/llava-1.5-7b-hf-awq": {
+    "keys_base": 391,
+    "keys_awq": 391,
+    "common": 391,
+    "only_base": 0,
+    "only_awq": 0,
+    "bit_identical_after_upcast": 391,
+    "same_dtype": 391,
+    "dtypes": [
+      "torch.float16->torch.float16"
+    ],
+    "max_abs_diff": 0.0
+  },
+  "microsoft/Phi-3.5-vision-instruct | Isotr0py/Phi-3.5-vision-instruct-AWQ": {
+    "keys_base": 391,
+    "keys_awq": 391,
+    "common": 391,
+    "only_base": 0,
+    "only_awq": 0,
+    "bit_identical_after_upcast": 233,
+    "same_dtype": 0,
+    "dtypes": [
+      "torch.bfloat16->torch.float16"
+    ],
+    "max_abs_diff": 2.9802322387695312e-08
+  }
+}

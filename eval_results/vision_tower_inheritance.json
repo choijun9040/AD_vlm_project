@@ -1,0 +1,102 @@
+{
+  "llava-hf/llava-1.5-7b-hf": {
+    "repo": "llava-hf/llava-1.5-7b-hf",
+    "arch": "LlavaForConditionalGeneration",
+    "n_images": 100,
+    "tower_out": {
+      "p50": 204.0,
+      "worst": 225.0,
+      "headroom_p50": 321.0980392156863,
+      "headroom_worst": 291.12888888888887,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 1.0
+    },
+    "post_block": null,
+    "last_block_p50": 204.0,
+    "last_block_p95": 220.0,
+    "last_block_worst": 225.0,
+    "headroom_p50": 321.0980392156863,
+    "headroom_p95": 297.74545454545455,
+    "headroom_worst": 291.12888888888887,
+    "loader": "vision_only_strict",
+    "processor_from": "llava-hf/llava-1.5-7b-hf"
+  },
+  "ybelkada/llava-1.5-7b-hf-awq": {
+    "repo": "ybelkada/llava-1.5-7b-hf-awq",
+    "arch": "LlavaForConditionalGeneration",
+    "n_images": 100,
+    "tower_out": {
+      "p50": 204.0,
+      "worst": 225.0,
+      "headroom_p50": 321.0980392156863,
+      "headroom_worst": 291.12888888888887,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 1.0
+    },
+    "post_block": null,
+    "last_block_p50": 204.0,
+    "last_block_p95": 220.0,
+    "last_block_worst": 225.0,
+    "headroom_p50": 321.0980392156863,
+    "headroom_p95": 297.74545454545455,
+    "headroom_worst": 291.12888888888887,
+    "loader": "vision_only_strict",
+    "processor_from": "ybelkada/llava-1.5-7b-hf-awq"
+  },
+  "microsoft/Phi-3.5-vision-instruct": {
+    "repo": "microsoft/Phi-3.5-vision-instruct",
+    "arch": "Phi3VForCausalLM",
+    "n_images": 100,
+    "tower_out": {
+      "p50": 232.0,
+      "worst": 254.0,
+      "headroom_p50": 282.3448275862069,
+      "headroom_worst": 257.8897637795276,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 1.0
+    },
+    "post_block": null,
+    "last_block_p50": 232.0,
+    "last_block_p95": 242.0,
+    "last_block_worst": 254.0,
+    "headroom_p50": 282.3448275862069,
+    "headroom_p95": 270.6776859504132,
+    "headroom_worst": 257.8897637795276,
+    "loader": "vision_only_strict",
+    "processor_from": "microsoft/Phi-3.5-vision-instruct"
+  },
+  "Isotr0py/Phi-3.5-vision-instruct-AWQ": {
+    "repo": "Isotr0py/Phi-3.5-vision-instruct-AWQ",
+    "arch": "Phi3VForCausalLM",
+    "n_images": 100,
+    "tower_out": {
+      "p50": 232.0,
+      "worst": 254.0,
+      "headroom_p50": 282.3448275862069,
+      "headroom_worst": 257.8897637795276,
+      "n_finite": 100,
+      "n_images": 100,
+      "gain_vs_block_worst": 1.0
+    },
+    "post_block": null,
+    "last_block_p50": 232.0,
+    "last_block_p95": 242.0,
+    "last_block_worst": 254.0,
+    "headroom_p50": 282.3448275862069,
+    "headroom_p95": 270.6776859504132,
+    "headroom_worst": 257.8897637795276,
+    "loader": "vision_only_strict",
+    "processor_from": "Isotr0py/Phi-3.5-vision-instruct-AWQ"
+  },
+  "sensenova/SenseNova-SI-InternVL3-8B": {
+    "repo": "sensenova/SenseNova-SI-InternVL3-8B",
+    "failed": "OSError: sensenova/SenseNova-SI-InternVL3-8B is not a local folder and is not a valid model identifier listed on 'https://huggingface.co/models'\nIf this is a private repository, make sure to pass a token having permission to this repo either by logging in wit"
+  },
+  "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ": {
+    "repo": "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ",
+    "failed": "ImportError: This modeling file requires the following packages that were not found in your environment: einops, timm. Run `pip install einops timm`"
+  }
+}
