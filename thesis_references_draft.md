@@ -1,6 +1,6 @@
 # 학위 논문 참고문헌 초안 (2026-09-29)
 
-> **번호 규칙.** 1~9장 초안(`thesis_ch1_ch3_draft.md` · `thesis_ch4_ch5_draft.md` ·
+> **번호 규칙.** 1~9장 초안(6장 대안판 포함)(`thesis_ch1_ch3_draft.md` · `thesis_ch4_ch5_draft.md` ·
 > `thesis_ch7_ch8_draft.md` · `thesis_ch9_draft.md`)에 **처음 나오는 순서**로 매겼다(IEEE 형식).
 > 본문에는 아직 `[n]` 표지를 넣지 않았다 — 6장이 들어오면 순서가 바뀔 수 있으므로 원고를 합칠 때
 > 한 번에 넣는다.
@@ -101,6 +101,9 @@
 43. L. S. Karumbunathan, "Solving Entry-Level Edge AI Challenges with NVIDIA Jetson Orin Nano,"
     *NVIDIA Technical Blog*, 2022-09-21.
     https://developer.nvidia.com/blog/solving-entry-level-edge-ai-challenges-with-nvidia-jetson-orin-nano/
+44. NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*.
+    https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html
+    (accessed 2026-09-29)
 
 ---
 
@@ -132,6 +135,7 @@
 | 35 | arxiv.org/abs/2404.14219 | **Phi-3.5-Vision은 v4(2024-08-30)부터 포함**된다 — 초록: "we introduce three models in the phi-3.5 series: phi-3.5-mini, phi-3.5-MoE, and phi-3.5-Vision". v1~v3에는 없으므로 판을 v4로 명시했다 (2026-09-29 확인) |
 | 31·34·36~41 | 각 arxiv.org/abs 페이지 | 게재처 표기 없음 → 프리프린트. 34는 64인, 37은 51인, 38은 17인, 39는 42인, 40·41은 팀명 포함 약 95인. 40은 현행 제목(GLM-4.5V 포함)으로 적었다 |
 | 42 | 위 URL | DLA 지원 정밀도 "FP16, INT8", BF16 언급 없음 확인 |
+| 44 | 위 URL (+ 10.x→11.x 마이그레이션 안내) | 11.0에서 정밀도별 BuilderFlag(FP16·BF16·INT8·… ·OBEY_PRECISION_CONSTRAINTS)와 약타입 API(`setPrecision` 등) 제거, 강타입이 기본 — 6.8절. 개요가 적던 "10.12부터 폐기 예정"의 버전 번호는 확인하지 못해 본문에서 뺐다 (2026-09-29) |
 | 43 | 위 URL | 8GB 모듈 "1024-core NVIDIA Ampere Architecture GPU with 32 Tensor Cores", DLA 언급 없음 확인 |
 
 **남은 확인 과제.** (i) ~~35가 Phi-3.5-vision을 다루는지~~ → **해소 (2026-09-29)**: v4부터 다룬다.
