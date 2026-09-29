@@ -20,6 +20,10 @@
 """
 
 import argparse
+# 색 (2026-09-29 변경): 블록 깊이는 **순서가 있는 양**이므로 범주색이 아니라 단일 색상 순차 램프
+# (dataviz 참조 파랑 400·500·600·700: 16 #3987e5 → 24 #256abf → 28 #184f95 → 31 #0d366b, 얕을수록 밝게).
+# 그림 4-1·4-2에서 파랑·주황이 '과제만·Full'을 뜻하므로 범주색을 쓰면 그림 사이에 뜻이 겹친다.
+# 모든 단계가 흰 바탕 대비 3:1 이상. 선 모양·표지로 보조 구분. 기준선·주석 글자는 중립 잉크.
 import json
 from pathlib import Path
 
@@ -31,10 +35,10 @@ FP16_MAX = 65504.0
 
 # (블록 index, 범례, 색, 선 스타일, 굵기, 마커)
 SERIES = [
-    (31, "block 31 (final)", "#0d6b59", "-",  2.6, "o"),
-    (28, "block 28",         "#8a97a8", "-",  1.4, "^"),
-    (24, "block 24",         "#a99b6f", "--", 1.4, "v"),
-    (16, "block 16",         "#6b7674", ":",  1.4, "s"),
+    (31, "block 31 (final)", "#0d366b", "-",  2.6, "o"),
+    (28, "block 28",         "#184f95", "-",  1.4, "^"),
+    (24, "block 24",         "#256abf", "--", 1.4, "v"),
+    (16, "block 16",         "#3987e5", ":",  1.4, "s"),
 ]
 
 LAYOUT = {
@@ -83,23 +87,23 @@ def main():
     y31 = [val(e, 31) for _, e in pts]
     ax_a.annotate("monotonic", xy=(lams[-1], y31[-1]), xytext=(-4, 10),
                   textcoords="offset points", ha="right", fontsize=L["legend_fs"],
-                  color="#0d6b59", fontweight="bold")
+                  color="#0b0b0b", fontweight="bold")
     y24 = [val(e, 24) for _, e in pts]
-    ax_a.annotate("saturates", xy=(lams[-1], y24[-1]), xytext=(-4, -14),
-                  textcoords="offset points", ha="right", fontsize=L["legend_fs"],
-                  color="#8a6a12")
+    # 곡선 위 빈 자리에 둔다 — 이전 위치(λ=2 아래)는 block 16 점선·표지와 겹쳤다
+    ax_a.text((lams[-2] + lams[-1]) / 2, max(y24[-1], val(pts[-1][1], 28)) * 2.6, "saturates",
+              ha="center", va="bottom", fontsize=L["legend_fs"], color="#52514e")
 
     # --- (b) fp16 여유 ---
     head = [FP16_MAX / val(e, 31) for _, e in pts]
-    ax_b.axhspan(0, 1.0, color="#b03a1f", alpha=0.10, zorder=0)
-    ax_b.axhline(1.0, color="#b03a1f", lw=1.2 * L["lw"], ls=(0, (5, 3)), zorder=1)
+    ax_b.axhspan(0, 1.0, color="#ecebe6", zorder=0, lw=0)
+    ax_b.axhline(1.0, color="#0b0b0b", lw=1.2 * L["lw"], ls=(0, (5, 3)), zorder=1)
     ax_b.text(lams[-1], 1.06, "collapse below 1.0", fontsize=L["legend_fs"],
-              color="#b03a1f", ha="right", va="bottom")
-    ax_b.plot(lams, head, color="#0d6b59", lw=2.6 * L["lw"], marker="o",
+              color="#0b0b0b", ha="right", va="bottom")
+    ax_b.plot(lams, head, color="#0d366b", lw=2.6 * L["lw"], marker="o",
               ms=L["ms"], zorder=3)
     for x, y in zip(lams, head):
         ax_b.annotate(f"{y:.2f}x", xy=(x, y), xytext=(0, 7), textcoords="offset points",
-                      ha="center", fontsize=L["legend_fs"], color="#0d6b59")
+                      ha="center", fontsize=L["legend_fs"], color="#52514e")
     ax_b.set_ylabel("fp16 representable-range headroom")
     ax_b.set_ylim(0, max(head) * 1.28)
     ax_b.set_title("(b) deployment headroom", fontsize=L["base_fs"], pad=6)

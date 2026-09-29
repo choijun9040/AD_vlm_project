@@ -17,6 +17,10 @@ x축은 max_pixels 대신 실제 vision token 수로 둔다 — 활성 크기를
 """
 
 import argparse
+# 색 (2026-09-29 변경): dataviz 참조 팔레트 슬롯을 **개체마다 고정**해 모든 그림에서 같은 색을 쓴다 —
+# 과제만 #2a78d6 · Full #eb6834 · 정렬만 #1baf7a · 시간만 #eda100 · 출력KD #e87ba4 · 사전학습 #008300 ·
+# 교사 #4a3aa7. validate_palette.js 전 항목 통과(대비 WARN 셋은 본문 표가 표 보기 역할). 기준선·주석
+# 글자는 시리즈 색이 아니라 중립 잉크. 이전 색(학술대회·세미나)은 정상 시각 ΔE 9.7로 검증 실패였다.
 import json
 from pathlib import Path
 
@@ -43,13 +47,13 @@ def actual_tokens(max_pixels, h=900, w=1600):
 EVAL_TOKENS = actual_tokens(200704)   # 학습·평가에 쓴 해상도(실제 231 토큰)
 
 SERIES = [
-    ("student_baseline_v2", "Task CE only",       "Task only",          "#b03a1f", "-",  2.4, "o"),
-    ("student_temporal",    "Task + $L_{atc}$",   "Task + $L_{atc}$",   "#8a97a8", "-",  1.3, "^"),
-    ("base_3b",             "Pre-trained (no FT)", "Pre-trained",       "#6b7674", "--", 1.3, "s"),
-    ("student_kd_only_v4",  "Task + output KD",   "Task + out.KD",      "#a99b6f", "-",  1.3, "v"),
-    ("student_spatial",     "Task + $L_{align}$", "Task + $L_{align}$", "#1f8a70", "--", 1.8, "D"),
+    ("student_baseline_v2", "Task CE only",       "Task only",          "#2a78d6", "-",  2.4, "o"),
+    ("student_temporal",    "Task + $L_{atc}$",   "Task + $L_{atc}$",   "#eda100", "-",  1.3, "^"),
+    ("base_3b",             "Pre-trained (no FT)", "Pre-trained",       "#008300", "--", 1.3, "s"),
+    ("student_kd_only_v4",  "Task + output KD",   "Task + out.KD",      "#e87ba4", "-",  1.3, "v"),
+    ("student_spatial",     "Task + $L_{align}$", "Task + $L_{align}$", "#1baf7a", "--", 1.8, "D"),
     ("student_full",        "Task + $L_{align}$ + $L_{atc}$",
-                            "Task + $L_{align}$ + $L_{atc}$",           "#0d6b59", "-",  2.4, "o"),
+                            "Task + $L_{align}$ + $L_{atc}$",           "#eb6834", "-",  2.4, "o"),
 ]
 
 LAYOUT = {
@@ -105,12 +109,12 @@ def main():
         return xs, ys
 
     # --- (a) 마지막 블록 활성 크기 ---
-    ax_a.axhline(FP16_MAX, color="#b03a1f", lw=1.3 * L["lw_scale"], ls=(0, (5, 3)), zorder=1)
+    ax_a.axhline(FP16_MAX, color="#0b0b0b", lw=1.3 * L["lw_scale"], ls=(0, (5, 3)), zorder=1)
     # 라벨을 **왼쪽 위**에 둔다 (2026-09-16). 오른쪽 아래(기존)는 Task CE only 곡선이
     # 한계선을 가로지르는 바로 그 지점이라 글자가 곡선에 관통당했다 — 그림에서 가장
     # 중요한 주석이 읽히지 않았다. 왼쪽 상단은 모든 곡선이 한계선 아래라 비어 있다.
     ax_a.text(tokens[0], FP16_MAX * 1.04, "fp16 limit (65,504)",
-              fontsize=L["legend_fs"] + 0.5, color="#b03a1f", va="bottom", ha="left")
+              fontsize=L["legend_fs"] + 0.5, color="#0b0b0b", va="bottom", ha="left")
 
     for key, label_d, label_s, color, ls, lw, mk in SERIES:
         xs, ys = points(key, lambda e: e["passes"]["bfloat16"]["by_layer"][str(e["depth"] - 1)]["p50"])

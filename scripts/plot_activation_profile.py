@@ -15,6 +15,10 @@ max|activation| 중앙값이며, 이미지 799장(DriveLM val CAM_FRONT) 기준�
 """
 
 import argparse
+# 색 (2026-09-29 변경): dataviz 참조 팔레트 슬롯을 **개체마다 고정**해 모든 그림에서 같은 색을 쓴다 —
+# 과제만 #2a78d6 · Full #eb6834 · 정렬만 #1baf7a · 시간만 #eda100 · 출력KD #e87ba4 · 사전학습 #008300 ·
+# 교사 #4a3aa7. validate_palette.js 전 항목 통과(대비 WARN 셋은 본문 표가 표 보기 역할). 기준선·주석
+# 글자는 시리즈 색이 아니라 중립 잉크. 이전 색(학술대회·세미나)은 정상 시각 ΔE 9.7로 검증 실패였다.
 import json
 from pathlib import Path
 
@@ -27,14 +31,14 @@ ALIGN_LAYER = 23          # L_align이 실제로 정렬하는 블록 (CONFIG의 
 
 # (JSON 키, 2단용 범례 표기, 1단용 축약 표기, 색, 선 스타일, 선 굵기, 밴드 표시 여부)
 SERIES = [
-    ("student_baseline_v2", "Task CE only",       "Task only",         "#b03a1f", "-",  2.4, True),
-    ("student_temporal",    "Task + $L_{atc}$",   "Task + $L_{atc}$",  "#8a97a8", "-",  1.3, False),
-    ("base_3b",             "Pre-trained (no FT)", "Pre-trained",      "#6b7674", "--", 1.3, False),
-    ("student_kd_only_v4",  "Task + output KD",   "Task + out.KD",     "#a99b6f", "-",  1.3, False),
-    ("teacher_7b",          "Teacher 7B",         "Teacher 7B",        "#2f4858", "-.", 1.3, False),
-    ("student_spatial",     "Task + $L_{align}$", "Task + $L_{align}$", "#1f8a70", "--", 1.8, False),
+    ("student_baseline_v2", "Task CE only",       "Task only",         "#2a78d6", "-",  2.4, True),
+    ("student_temporal",    "Task + $L_{atc}$",   "Task + $L_{atc}$",  "#eda100", "-",  1.3, False),
+    ("base_3b",             "Pre-trained (no FT)", "Pre-trained",      "#008300", "--", 1.3, False),
+    ("student_kd_only_v4",  "Task + output KD",   "Task + out.KD",     "#e87ba4", "-",  1.3, False),
+    ("teacher_7b",          "Teacher 7B",         "Teacher 7B",        "#4a3aa7", "-.", 1.3, False),
+    ("student_spatial",     "Task + $L_{align}$", "Task + $L_{align}$", "#1baf7a", "--", 1.8, False),
     ("student_full",        "Task + $L_{align}$ + $L_{atc}$",
-                            "Task + $L_{align}$ + $L_{atc}$",          "#0d6b59", "-",  2.4, True),
+                            "Task + $L_{align}$ + $L_{atc}$",          "#eb6834", "-",  2.4, True),
 ]
 
 # 레이아웃별 치수 — KSAE 논문집은 2단 조판이라 단칼럼 폭이 약 8.5cm(3.35in)다.
@@ -76,11 +80,11 @@ def main():
         ax.text(ALIGN_LAYER - 0.55, 11.5, f"aligned block ({ALIGN_LAYER})",
                 rotation=90, va="bottom", ha="right", fontsize=7.5, color="#8a918c")
 
-    ax.axhline(FP16_MAX, color="#b03a1f", lw=1.3 * L["lw_scale"], ls=(0, (5, 3)), zorder=1)
+    ax.axhline(FP16_MAX, color="#0b0b0b", lw=1.3 * L["lw_scale"], ls=(0, (5, 3)), zorder=1)
     ax.text(0.3, FP16_MAX * 1.2,
             "fp16 limit (65,504)" if args.layout == "single"
             else "fp16 representable limit (65,504)",
-            fontsize=L["legend_fs"] + 0.5, color="#b03a1f", va="bottom")
+            fontsize=L["legend_fs"] + 0.5, color="#0b0b0b", va="bottom")
 
     for key, label_d, label_s, color, ls, lw, do_band in SERIES:
         if key not in prof:
