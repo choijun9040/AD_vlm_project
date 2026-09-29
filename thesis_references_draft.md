@@ -84,7 +84,7 @@
     MLSys*, 2024. (Best Paper Award)
 34. S. Bai, Y. Cai, R. Chen, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
 35. M. Abdin, J. Aneja, H. Awadalla, et al., "Phi-3 Technical Report: A Highly Capable Language Model
-    Locally on Your Phone," arXiv:2404.14219, 2024.
+    Locally on Your Phone," arXiv:2404.14219v4, 2024.
 36. H. Liu, C. Li, Y. Li, Y. J. Lee, "Improved Baselines with Visual Instruction Tuning," in *Proc.
     CVPR*, 2024. (arXiv:2310.03744)
 37. J. Zhu, W. Wang, Z. Chen, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes
@@ -129,11 +129,11 @@
 | 28 | arxiv.org/abs/2106.09685, iclr.cc/virtual/2022/poster/6319 | ICLR 2022 Poster |
 | 29 | arxiv.org/abs/1503.02531 | |
 | 30·32 | Crossref (doi 10.2307/1412159, 10.1007/BF02295996) | 30의 끝 쪽수 미확인 |
-| 31·34~41 | 각 arxiv.org/abs 페이지 | 게재처 표기 없음 → 프리프린트. 34는 64인, 35는 129인, 37은 51인, 38은 17인, 39는 42인, 40·41은 팀명 포함 약 95인. 40은 현행 제목(GLM-4.5V 포함)으로 적었다 |
+| 35 | arxiv.org/abs/2404.14219 | **Phi-3.5-Vision은 v4(2024-08-30)부터 포함**된다 — 초록: "we introduce three models in the phi-3.5 series: phi-3.5-mini, phi-3.5-MoE, and phi-3.5-Vision". v1~v3에는 없으므로 판을 v4로 명시했다 (2026-09-29 확인) |
+| 31·34·36~41 | 각 arxiv.org/abs 페이지 | 게재처 표기 없음 → 프리프린트. 34는 64인, 37은 51인, 38은 17인, 39는 42인, 40·41은 팀명 포함 약 95인. 40은 현행 제목(GLM-4.5V 포함)으로 적었다 |
 | 42 | 위 URL | DLA 지원 정밀도 "FP16, INT8", BF16 언급 없음 확인 |
 | 43 | 위 URL | 8GB 모듈 "1024-core NVIDIA Ampere Architecture GPU with 32 Tensor Cores", DLA 언급 없음 확인 |
 
-**남은 확인 과제.** (i) 35가 Phi-3.5-vision을 다루는지 — 초록에서 확인하지 못했다. 다루지 않으면 모델
-카드(Hugging Face `microsoft/Phi-3.5-vision-instruct`)를 따로 인용한다. (ii) 30의 끝 쪽수. (iii) 5·31·34~41의
-정식 게재처가 이후 생기면 갱신한다. (iv) 학위 논문 심사 규정의 인용 형식(저자 수 표기 등)에 맞춰
-최종 조정한다.
+**남은 확인 과제.** (i) ~~35가 Phi-3.5-vision을 다루는지~~ → **해소 (2026-09-29)**: v4부터 다룬다.
+(ii) 30의 끝 쪽수. (iii) 5·31·34~41의 정식 게재처가 이후 생기면 갱신한다. (iv) 학위 논문 심사 규정의
+인용 형식(저자 수 표기 등)에 맞춰 최종 조정한다.
