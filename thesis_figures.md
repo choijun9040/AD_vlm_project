@@ -11,12 +11,16 @@
 
 ## 그림 목록
 
+> **번호 재배치 (2026-09-29, 합본 준비).** 그림은 본문에 **나오는 순서**로 번호를 매긴다. 지표 역전(4.4절)이
+> λ 용량-반응(4.8절)보다 먼저 나오므로 **지표 역전 = 그림 4-3, λ = 그림 4-4**로 바꿨다. 파일 이름(`fig3_…`=λ,
+> `fig4_…`=역전)은 그대로 둔다 — 합본 스크립트가 번호와 파일을 대응시킨다.
+
 | 번호 | 파일 (2단 / 1단) | 생성 스크립트 | 데이터 | 상태 |
 |---|---|---|---|---|
 | 그림 4-1 | `fig1_activation_profile{,_single}` | `plot_activation_profile.py` | `vision_activation_profile.json` | 사용 |
 | 그림 4-2 | `fig2_resolution_collapse{,_single}` | `plot_resolution_collapse.py` | `resolution_sweep/res_*.json` | **x축 수정 (09-29)** |
-| 그림 4-3 | `fig3_lambda_dose_response{,_single}` | `plot_lambda_sweep.py` | `lambda_sweep_activation_profile.json` | 사용 |
-| 그림 4-4 | `fig4_metric_inversion{,_single}` | `plot_metric_inversion.py` (신규) | `resolution_sweep/res_1440000.json`, `int8_quant_error_native.json` | **신규 (09-29)** |
+| 그림 4-4 | `fig3_lambda_dose_response{,_single}` | `plot_lambda_sweep.py` | `lambda_sweep_activation_profile.json` | 사용 |
+| 그림 4-3 | `fig4_metric_inversion{,_single}` | `plot_metric_inversion.py` (신규) | `resolution_sweep/res_1440000.json`, `int8_quant_error_native.json` | **신규 (09-29)** |
 | 그림 7-1 | `fig_gate_calibration{,_single}` | `plot_gate_calibration.py` (신규) | `detection_curve{,_fine}.json`, `guard_sweep_align*.json` | **신규 (09-29)** |
 | 6장 | — | — | Orin 결과 | 대기 |
 | ~~—~~ | ~~`fig_detection_curve{,_fine}`~~ | `detection_curve.py` | | **대체됨** → 그림 7-1 |
@@ -41,12 +45,12 @@
 > "Vision tokens per image"로 적었다. 학술대회 캡션은 "1,836은 예산"이라고 밝혀 두었으나, 학위 논문에서는
 > 축 자체를 실제 토큰 수로 바꿨다.
 
-**그림 4-3.** 정렬 손실 가중치 λ_align에 따른 (a) 블록별 활성 크기와 (b) 마지막 블록 fp16 여유. 각 λ에서
+**그림 4-4.** 정렬 손실 가중치 λ_align에 따른 (a) 블록별 활성 크기와 (b) 마지막 블록 fp16 여유. 각 λ에서
 시드와 학습률 궤적을 고정하고 5,000스텝 학습했다. 799장, 평가 해상도, 이미지별 최대의 **중앙값·bf16**.
 마지막 블록은 λ에 따라 단조 감소하고(여유 1.79 → 4.61배), 중간층은 λ=1.0에서 포화한다. 이 스텝 수와
 해상도에서는 네 점 모두 붕괴가 없다(4.8절 — 인과를 두 링크로 나눈 이유).
 
-**그림 4-4.** 표준 압축 지표의 역전 — 마지막 블록의 fp16 여유와 같은 텐서의 INT8 양자화 SNR. 원본 해상도
+**그림 4-3.** 표준 압축 지표의 역전 — 마지막 블록의 fp16 여유와 같은 텐서의 INT8 양자화 SNR. 원본 해상도
 (`max_pixels` 1,440,000). 가로축은 이미지별 최대의 **중앙값**으로 계산한 여유(크기는 **bf16**, 250장), 세로축은
 INT8 양자화 SNR의 중앙값(200장)이다. 채운 점은 fp16에서 붕괴가 있는 모델, 속 빈 점은 붕괴 0%이며 라벨의 %가
 원본 해상도 붕괴율이다. (a) **텐서 단위** SNR은 여유와 완전히 역순이다(6모델 Spearman ρ = −1.000) — 붕괴율 94.8%인
@@ -82,7 +86,7 @@ bf16·붕괴는 fp16. 붕괴는 최악 여유 1.00~1.05 사이에서 사라지�
 
   `validate_palette.js` 전 항목 통과. 대비 WARN 셋(청록·노랑·자홍)은 **구제 규칙**을 따른다 — 같은 값이
   본문 표(4.2·4.3절)에 있고, 선 모양·표지로 보조 구분한다.
-- **그림 4-3 — 단일 색상 순차 램프.** 블록 깊이는 순서가 있는 양이라 범주색을 쓰지 않았다(범주색이면
+- **그림 4-4 — 단일 색상 순차 램프.** 블록 깊이는 순서가 있는 양이라 범주색을 쓰지 않았다(범주색이면
   4-1·4-2의 파랑=과제만, 주황=Full과 뜻이 겹친다). 참조 파랑 400→700: 블록 16 `#3987e5` · 24 `#256abf` ·
   28 `#184f95` · 31 `#0d366b`, 모두 흰 바탕 대비 3:1 이상.
 - **그림 7-1** — 참조 팔레트 슬롯 1·2(합성 파랑, 학습된 체크포인트 주황).
@@ -95,5 +99,5 @@ git 이력에 있다.
 
 - [x] 색 결정 — 검증 통과 색으로 다시 그림 (2026-09-29)
 - [ ] 6장 그림 — Orin 결과가 오면: 정밀도 조건별 붕괴율, 해상도 × (붕괴율 · 지연 · 피크 메모리)
-- [x] 4.4절 지표 역전 산점도 → 그림 4-4 (2026-09-29)
+- [x] 4.4절 지표 역전 산점도 → 그림 4-3 (2026-09-29)
 - [ ] 본문에 그림 참조("그림 4-1") 넣기 — 참고문헌 [n] 표지와 함께 합본 때
