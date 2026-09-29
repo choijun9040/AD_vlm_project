@@ -523,7 +523,7 @@ constraint worth knowing before touching evaluation code:
   `data/codalm_mini/` via `scripts/fetch_codalm_images.py` — note the raw Mini parquet
   has 193 rows but only 143 distinct images (the `general` and `suggestion` tasks share
   the same 50 scenes; `regional` adds 93 more). Images are pre-resized to ~720p, so
-  they yield ~1,175 vision tokens versus nuScenes' 1,836 at the same `max_pixels` —
+  they yield ~1,175 vision tokens versus nuScenes' 1,824 (the 1,836 often quoted is the `max_pixels ÷ 28²` budget, not the realized count) at the same `max_pixels` —
   any cross-dataset activation comparison must control for token count, not resolution.
 - **SOTA comparison** (EM-VLM4AD, MiniDrive, etc.) is two-tiered:
   MiniDrive's GitHub repo (`EMZucas/minidrive`) has no code or weights at all

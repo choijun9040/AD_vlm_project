@@ -26,7 +26,21 @@ import matplotlib.pyplot as plt
 
 FP16_MAX = 65504.0
 PATCH_PX = 28 * 28        # merge 후 토큰 하나가 덮는 픽셀 수
-EVAL_TOKENS = 200704 // PATCH_PX      # 학습·평가에 쓴 해상도(256 토큰)
+
+
+def actual_tokens(max_pixels, h=900, w=1600):
+    """처리기가 실제로 만드는 비전 토큰 수 (nuScenes CAM_FRONT는 모두 1600×900).
+
+    **2026-09-29 수정.** 이전에는 `max_pixels // 784`(= 128·256·512·1024·1836)를 x축에 썼다.
+    그것은 상한에서 나온 **명목 예산**이고, 실제 1600×900 이미지는 종횡비 때문에 120·231·480·966·1824
+    토큰이 된다. 축 이름이 "Vision tokens per image"였으므로 틀린 값을 보여 주고 있었다.
+    """
+    from transformers.models.qwen2_vl.image_processing_qwen2_vl import smart_resize
+    rh, rw = smart_resize(h, w, factor=28, min_pixels=3136, max_pixels=max_pixels)
+    return rh * rw // PATCH_PX
+
+
+EVAL_TOKENS = actual_tokens(200704)   # 학습·평가에 쓴 해상도(실제 231 토큰)
 
 SERIES = [
     ("student_baseline_v2", "Task CE only",       "Task only",          "#b03a1f", "-",  2.4, "o"),
@@ -70,7 +84,7 @@ def main():
     if not data:
         raise SystemExit(f"{args.sweep_dir}에 res_*.json이 없다 — 스윕이 아직 안 끝났다")
     mps = sorted(data)
-    tokens = [mp // PATCH_PX for mp in mps]
+    tokens = [actual_tokens(mp) for mp in mps]
     n_images = data[mps[0]].get("_meta", {}).get("n_images", "?")
 
     plt.rcParams.update({"font.size": L["base_fs"], "axes.labelsize": L["base_fs"],
@@ -86,7 +100,7 @@ def main():
             entry = data[mp].get(key)
             if entry is None:
                 continue
-            xs.append(mp // PATCH_PX)
+            xs.append(actual_tokens(mp))
             ys.append(pick(entry))
         return xs, ys
 
