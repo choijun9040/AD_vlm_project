@@ -16,6 +16,7 @@
 | 그림 4-1 | `fig1_activation_profile{,_single}` | `plot_activation_profile.py` | `vision_activation_profile.json` | 사용 |
 | 그림 4-2 | `fig2_resolution_collapse{,_single}` | `plot_resolution_collapse.py` | `resolution_sweep/res_*.json` | **x축 수정 (09-29)** |
 | 그림 4-3 | `fig3_lambda_dose_response{,_single}` | `plot_lambda_sweep.py` | `lambda_sweep_activation_profile.json` | 사용 |
+| 그림 4-4 | `fig4_metric_inversion{,_single}` | `plot_metric_inversion.py` (신규) | `resolution_sweep/res_1440000.json`, `int8_quant_error_native.json` | **신규 (09-29)** |
 | 그림 7-1 | `fig_gate_calibration{,_single}` | `plot_gate_calibration.py` (신규) | `detection_curve{,_fine}.json`, `guard_sweep_align*.json` | **신규 (09-29)** |
 | 6장 | — | — | Orin 결과 | 대기 |
 | ~~—~~ | ~~`fig_detection_curve{,_fine}`~~ | `detection_curve.py` | | **대체됨** → 그림 7-1 |
@@ -44,6 +45,15 @@
 시드와 학습률 궤적을 고정하고 5,000스텝 학습했다. 799장, 평가 해상도, 이미지별 최대의 **중앙값·bf16**.
 마지막 블록은 λ에 따라 단조 감소하고(여유 1.79 → 4.61배), 중간층은 λ=1.0에서 포화한다. 이 스텝 수와
 해상도에서는 네 점 모두 붕괴가 없다(4.8절 — 인과를 두 링크로 나눈 이유).
+
+**그림 4-4.** 표준 압축 지표의 역전 — 마지막 블록의 fp16 여유와 같은 텐서의 INT8 양자화 SNR. 원본 해상도
+(`max_pixels` 1,440,000). 가로축은 이미지별 최대의 **중앙값**으로 계산한 여유(크기는 **bf16**, 250장), 세로축은
+INT8 양자화 SNR의 중앙값(200장)이다. 채운 점은 fp16에서 붕괴가 있는 모델, 속 빈 점은 붕괴 0%이며 라벨의 %가
+원본 해상도 붕괴율이다. (a) **텐서 단위** SNR은 여유와 완전히 역순이다(6모델 Spearman ρ = −1.000) — 붕괴율 94.8%인
+모델이 32.23 dB로 가장 안전해 보이고 0%인 Full이 22.88 dB로 가장 위험해 보인다. (b) **채널 단위** SNR은
+정렬만(39.15 dB)에서 단조성이 깨지지만(ρ = −0.657) 두 끝점의 역전은 남는다. 여유를 **최악값**으로 재면 여유가 거의
+같은 시간만·출력 증류 쌍의 순서가 뒤집혀 5변형 ρ = −0.900이 되며, 한계 아래 네 모델과 약 2.9배의 두 모델 사이의
+역전은 어느 통계량에서도 유지된다(4.4절). 여섯 모델은 색이 아니라 직접 붙인 이름으로 구별한다.
 
 **그림 7-1.** 판정 기준의 보정 — 마지막 블록의 **최악 이미지 여유**와 fp16 붕괴율. 파란 선은 기준선 학생의
 마지막 블록 MLP를 여러 배수로 줄여 만든 합성 연속체(18점), 주황 마름모는 학습으로 여유가 달라진 λ 스윕
@@ -85,6 +95,5 @@ git 이력에 있다.
 
 - [x] 색 결정 — 검증 통과 색으로 다시 그림 (2026-09-29)
 - [ ] 6장 그림 — Orin 결과가 오면: 정밀도 조건별 붕괴율, 해상도 × (붕괴율 · 지연 · 피크 메모리)
-- [ ] (선택) 4.4절 지표 역전 산점도 — 여유(가로) 대 INT8 SNR(세로), 6모델. 표로도 서지만 기여의 실체라
-      그림 하나가 가장 빨리 읽힌다
+- [x] 4.4절 지표 역전 산점도 → 그림 4-4 (2026-09-29)
 - [ ] 본문에 그림 참조("그림 4-1") 넣기 — 참고문헌 [n] 표지와 함께 합본 때
