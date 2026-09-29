@@ -74,7 +74,9 @@ INT8 지표의 해상도 조건 혼입, fixA 정확도를 교정이 필요 없�
 캡션·주석·코드까지 확인한다. 문서에 통계량을 안 적었으면 그 자리에서 적는다.
 **「A를 바꾸니 B가 됐다」를 쓰기 전에 A만 바뀌었는지 확인한다.**
 
-자동 검사: `python scripts/audit_numbers.py` · `python scripts/verify_claim_provenance.py`
+자동 검사: `python scripts/audit_numbers.py` · `python scripts/verify_claim_provenance.py --strict`
+(**`--strict`를 빼면 문제가 있어도 종료코드 0**이다 — 출력 끝의 「문제 N건」을 눈으로 봐야 한다.
+종료코드로 판정하려면 반드시 붙인다. 2026-09-29 확인)
 프로젝트 규칙으로 `thesis_outline_20260910.md` §3.5에 성문화되어 있다.
 
 ---

@@ -708,7 +708,8 @@ python scripts/audit_numbers.py --show 1.41배
   옳았음을 확인**한다 — 붕괴율로 쟀다면 4점 모두 0%라 아무것도 보이지 않았을 것이다.
 - 배포 설계 지표 제안: `format_max / p99(max|act|)`
 - 선행 연구 위치: CrAFT는 optimizer 축, 이상치 억제 정규화 계열은 설계된 처방,
-  PASA·vLLM Issue #40290은 현상 선점이나 아키텍처 기인. **증류 손실 축은 미측정**
+  PASA·vLLM Issue #40290은 현상 선점이나 한 모델의 사전학습 가중치 성질(vLLM은 저장된
+  `std_bias`, ~~아키텍처 기인~~ — 2026-09-18 정정을 2026-09-29에 이 자리까지 반영). **증류 손실 축은 미측정**
   (`"activation magnitude"` AND `"fp16"` 0건)
 
 ### 5장 따름정리 — 이산적 실패는 집계 지표를 무력화한다

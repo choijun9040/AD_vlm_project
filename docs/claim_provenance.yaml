@@ -331,3 +331,51 @@
     - claim: "849가 최상위인 블록 수"
       from: "eval_results/channel849.json::depth_profile.31.rank"
       expect: 1
+
+# ---------------------------------------------------------------------------
+# 3장 5변형 정확도 (2026-09-29 추가)
+#
+# 학위논문 3장 표와 CLAUDE.md 표가 인용하는 평가 해상도 정확도. 그동안 매니페스트에
+# 없어 이 표의 값이 산출물과 어긋나도 검사기가 몰랐다.
+# ---------------------------------------------------------------------------
+- id: 정확도 · 5변형 (평가 해상도)
+  where: "학위논문 3.6절 표"
+  sources:
+    - eval_results/student_full_epoch_1_nuscenesqa_val.json
+    - eval_results/student_spatial_epoch_1_nuscenesqa_val.json
+    - eval_results/student_temporal_epoch_1_nuscenesqa_val.json
+    - eval_results/student_baseline_v2_epoch_1_nuscenesqa_val.json
+    - eval_results/student_kd_only_v4_epoch_1_nuscenesqa_val.json
+  allow_differ:
+    checkpoint: "변형이 다른 것이 이 그룹의 요점이다 — 나머지(11,309문항·평가 해상도 200,704·bf16·max_new_tokens 16)는 같다"
+  values:
+    - claim: "full 전체 정확도 (평가 해상도)"
+      from: "eval_results/student_full_epoch_1_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 51.69
+      tol: 0.01
+      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+    - claim: "spatial 전체 정확도 (평가 해상도)"
+      from: "eval_results/student_spatial_epoch_1_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 51.40
+      tol: 0.01
+      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+    - claim: "temporal 전체 정확도 (평가 해상도)"
+      from: "eval_results/student_temporal_epoch_1_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 51.34
+      tol: 0.01
+      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+    - claim: "baseline_v2 전체 정확도 (평가 해상도)"
+      from: "eval_results/student_baseline_v2_epoch_1_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 50.30
+      tol: 0.01
+      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+    - claim: "kd_only_v4 전체 정확도 (평가 해상도)"
+      from: "eval_results/student_kd_only_v4_epoch_1_nuscenesqa_val.json::accuracy"
+      expr: "100*x"
+      expect: 46.74
+      tol: 0.01
+      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
