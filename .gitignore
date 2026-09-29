@@ -17,3 +17,4 @@ eval_results/posthoc_*_predictions.jsonl
 
 # local-only Claude Code settings
 .claude/settings.local.json
+.claude/scheduled_tasks.lock
