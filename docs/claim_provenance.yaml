@@ -153,11 +153,11 @@
   where: "ksae2026_abstract.md — 4번 문단 + Fig. 2 (λ 용량-반응 · 자기정렬 · fixA)"
   sources:
     - eval_results/lambda_sweep_activation_profile.json   # Fig. 2가 읽는 파일
-    - eval_results/align_target_profile.json              # 자기정렬 51%의 출처
+    - eval_results/align_target_profile.json              # 자기정렬 50%의 출처 (bf16, 2026-09-29 정정 — 이전 51%는 fp16 경로)
     - eval_results/mcnemar_fixa.json                      # fixA 정확도 비용
   allow_differ:
     n_images: >-
-      λ 수치와 Fig. 2는 799장 실행에서, 자기정렬 51%는 aligntgt_base3b와
+      λ 수치와 Fig. 2는 799장 실행에서, 자기정렬 50%는 aligntgt_base3b와
       짝지은 250장 실행에서 온다. 짝지은 비교는 같은 실행 안에서만 유효하므로
       합칠 수 없다. **본문의 λ 끝점은 반드시 799장 쪽을 쓴다(그림과 같아야 한다).**
       2026-09-15 이전 판은 본문이 250장, 그림이 799장이어서 끝점이 어긋났다.
