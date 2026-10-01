@@ -127,12 +127,8 @@ def layer_precisions(lines):
     return prec
 
 
-def run(engine, inputs):
-    # cuda-python 13.x부터 경로가 cuda.bindings.runtime으로 바뀌었다(구버전은 cuda.cudart).
-    try:
-        from cuda.bindings import runtime as cudart
-    except ImportError:
-        from cuda import cudart
+def _runner(engine, cudart):
+    """엔진 하나를 감싼 실행 함수 — 입력 배열을 받아 출력 배열을 돌려준다."""
     ctx = engine.create_execution_context()
     i_name, o_name = engine.get_tensor_name(0), engine.get_tensor_name(1)
     i_dt = trt.nptype(engine.get_tensor_dtype(i_name))
@@ -143,12 +139,10 @@ def run(engine, inputs):
     d_in = cudart.cudaMalloc(nb_i)[1]
     d_out = cudart.cudaMalloc(nb_o)[1]
     stream = cudart.cudaStreamCreate()[1]
-    import time
-    bad, maxes, lat = 0, [], []
-    for x in inputs:
+
+    def f(x):
         x = np.ascontiguousarray(x, dtype=i_dt)
         out = np.empty(o_shape, dtype=o_dt)
-        t0 = time.perf_counter()
         cudart.cudaMemcpyAsync(d_in, x.ctypes.data, x.nbytes,
                                cudart.cudaMemcpyKind.cudaMemcpyHostToDevice, stream)
         ctx.set_tensor_address(i_name, int(d_in))
@@ -157,6 +151,28 @@ def run(engine, inputs):
         cudart.cudaMemcpyAsync(out.ctypes.data, d_out, out.nbytes,
                                cudart.cudaMemcpyKind.cudaMemcpyDeviceToHost, stream)
         cudart.cudaStreamSynchronize(stream)
+        return out
+    return f
+
+
+def run(engine, inputs, engine2=None):
+    """engine2가 있으면 **분할 엔진**이다(2026-10-01, 사전 등록 6.4d): 1부 출력을 2부 입력으로
+    넘기고 붕괴는 2부의 최종 출력에서 판정한다. 두 엔진 사이 텐서는 엔진의 입출력 형식(기본 fp32)을
+    그대로 따른다."""
+    # cuda-python 13.x부터 경로가 cuda.bindings.runtime으로 바뀌었다(구버전은 cuda.cudart).
+    try:
+        from cuda.bindings import runtime as cudart
+    except ImportError:
+        from cuda import cudart
+    f1 = _runner(engine, cudart)
+    f2 = _runner(engine2, cudart) if engine2 is not None else None
+    import time
+    bad, maxes, lat = 0, [], []
+    for x in inputs:
+        t0 = time.perf_counter()
+        out = f1(x)
+        if f2 is not None:
+            out = f2(out)
         lat.append((time.perf_counter() - t0) * 1000)
         if not np.isfinite(out).all():
             bad += 1
@@ -172,6 +188,8 @@ def run(engine, inputs):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--onnx", required=True)
+    ap.add_argument("--onnx2", default=None,
+                    help="분할 엔진의 2부(블록 K..끝→merger). 주면 --onnx(1부) 출력을 이어 받는다")
     ap.add_argument("--npz", required=True, help="미리 전처리한 pixel_values 묶음")
     ap.add_argument("--modes", default="fp32,fp16,bf16")
     ap.add_argument("--workspace_gb", type=int, default=24)
@@ -184,12 +202,18 @@ def main():
     print(f"[입력] {len(inputs)}장, 형상 {inputs[0].shape}")
     print(f"[ONNX] {args.onnx}\n")
 
-    res = {"onnx": args.onnx, "n_images": len(inputs), "trt": trt.__version__, "modes": {}}
+    res = {"onnx": args.onnx, "onnx2": args.onnx2, "n_images": len(inputs),
+           "trt": trt.__version__, "modes": {}}
     for mode in args.modes.split(","):
         mode = mode.strip()
         logp = f"logs/trt_build_{mode}.log"
         try:
             eng, lines = build(args.onnx, mode, args.workspace_gb, logp)
+            eng2 = None
+            if args.onnx2:
+                eng2, lines2 = build(args.onnx2, mode, args.workspace_gb,
+                                     logp.replace(".log", "_p2.log"))
+                lines = lines + lines2
         except Exception as e:
             # 한 조건이 실패해도 나머지는 계속한다. 특히 strict는 TRT 10.12부터
             # layer.precision이 deprecated(강타입으로 대체)라 실패할 수 있는데,
@@ -199,7 +223,7 @@ def main():
                                   "build_log": logp}
             continue
         prec = layer_precisions(lines)
-        nan_rate, absmax, lat = run(eng, inputs)
+        nan_rate, absmax, lat = run(eng, inputs, eng2)
         n_half, n_float = prec.get("Half", 0), prec.get("Float", 0)
         wmb = prec.get("_weights_mb")
         print(f"  [{mode}] 붕괴 {nan_rate*100:.1f}%   유한 max 중앙값 "
@@ -212,7 +236,7 @@ def main():
                               "n_half_tensors": n_half, "n_float_tensors": n_float,
                               "weights_mib": wmb, "latency_ms": lat,
                               "build_log": logp}
-        del eng
+        del eng, eng2
 
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"\n저장: {args.out}")

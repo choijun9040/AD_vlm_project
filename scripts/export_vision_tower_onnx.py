@@ -123,6 +123,10 @@ class TowerExportWrapper(nn.Module):
         self.fullatt_idx = set(tower.fullatt_block_indexes)
         for blk in tower.blocks:
             blk.attn.forward = _attn_forward_with_const_mask.__get__(blk.attn)
+        # **분할 (2026-10-01).** part=None이면 전체, 1이면 입력→블록 0..split-1(은닉 상태 출력),
+        # 2면 은닉 상태→블록 split..끝→merger. Orin Nano 8GB에서 한 엔진에 가중치 전체를 담으면
+        # 빌드가 메모리 부족으로 실패해(사전 등록 6.4d) 엔진 두 개로 나눈다.
+        self.part, self.split = None, 0
 
     @staticmethod
     def _mask_from_seg(seg, fill=-1e4):
@@ -136,13 +140,20 @@ class TowerExportWrapper(nn.Module):
         # 마스크 두 종류를 한 번만 만들어 모든 블록이 같은 그래프 값을 쓰게 한다
         m_full = self._mask_from_seg(self.seg_full)
         m_win = self._mask_from_seg(self.seg_win)
-        h = t.patch_embed(pixel_values)
-        h = h.reshape(self.seq_len // self.merge_unit, self.merge_unit, -1)
-        h = h[self.window_index, :, :].reshape(self.seq_len, -1)
+        n = len(t.blocks)
+        if self.part == 2:                       # 입력이 이미 은닉 상태다(1부의 출력)
+            h, blocks = pixel_values, range(self.split, n)
+        else:
+            h = t.patch_embed(pixel_values)
+            h = h.reshape(self.seq_len // self.merge_unit, self.merge_unit, -1)
+            h = h[self.window_index, :, :].reshape(self.seq_len, -1)
+            blocks = range(self.split) if self.part == 1 else range(n)
         pos = (self.cos, self.sin)
-        for i, blk in enumerate(t.blocks):
-            h = blk(h, cu_seqlens=(m_full if i in self.fullatt_idx else m_win),
-                    position_embeddings=pos)
+        for i in blocks:
+            h = t.blocks[i](h, cu_seqlens=(m_full if i in self.fullatt_idx else m_win),
+                            position_embeddings=pos)
+        if self.part == 1:
+            return h
         h = t.merger(h)
         return h[self.reverse_index, :]
 
@@ -214,6 +225,9 @@ def main():
                     help="마지막 블록에 fixA를 적용해 내보낸다. gate·up 가중치를 각각 "
                          "1/sqrt(SCALE)로 나눠 곱을 1/SCALE로 만든다(MLP에 bias가 없어 "
                          "순전파 훅과 등가). 0이면 적용하지 않는다. 논문 7.4용.")
+    ap.add_argument("--split", type=int, default=0, metavar="K",
+                    help="0이 아니면 블록 K에서 그래프를 둘로 나눠 *_p1.onnx(입력→블록 0..K-1)와 "
+                         "*_p2.onnx(블록 K..끝→merger)를 내보낸다. Orin Nano 빌드 메모리 대응(6.4d)")
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -295,16 +309,7 @@ def main():
     if not fold:
         print(f"[내보내기] 상수 접기 끔 — 마스크 {mask_mib:.0f} MiB가 블록마다 복제되는 것을 막는다")
 
-    print(f"[내보내기] {out}")
-    import tempfile, shutil, onnx
-    with tempfile.TemporaryDirectory() as td:
-        raw = Path(td) / "raw.onnx"
-        torch.onnx.export(
-            wrapper, (pv,), str(raw), opset_version=args.opset,
-            input_names=["pixel_values"], output_names=["image_embeds"],
-            do_constant_folding=fold,
-        )
-        m = onnx.load(str(raw))
+    import tempfile, onnx
 
     def _big_consts(g, min_bytes=2**20):
         for n in g.node:
@@ -314,35 +319,40 @@ def main():
                 if a.name == "value" and len(a.t.raw_data) >= min_bytes:
                     yield n, a.t
 
-    before = sum(len(t.raw_data) for _, t in _big_consts(m.graph))
-    dropped = dedup_constants(m)
-    after = sum(len(t.raw_data) for _, t in _big_consts(m.graph))
-    if dropped:
-        print(f"  중복 Constant {dropped}개를 공유 초기화값으로 합쳤다: "
-              f"{before/2**20:.0f} MiB → {after/2**20:.0f} MiB")
-    elif before:
-        print(f"  큰 Constant 노드 합계 {before/2**20:.0f} MiB (중복 없음)")
+    def save_onnx(inputs, in_name, out_name, path):
+        """래퍼(현재 part 설정)를 ONNX로 내보내 중복 상수를 합치고 한 데이터 파일로 저장한다."""
+        print(f"[내보내기] {path}")
+        with tempfile.TemporaryDirectory() as td:
+            raw = Path(td) / "raw.onnx"
+            torch.onnx.export(
+                wrapper, inputs, str(raw), opset_version=args.opset,
+                input_names=[in_name], output_names=[out_name],
+                do_constant_folding=fold,
+            )
+            m = onnx.load(str(raw))
+        before = sum(len(t.raw_data) for _, t in _big_consts(m.graph))
+        dropped = dedup_constants(m)
+        after = sum(len(t.raw_data) for _, t in _big_consts(m.graph))
+        if dropped:
+            print(f"  중복 Constant {dropped}개를 공유 초기화값으로 합쳤다: "
+                  f"{before/2**20:.0f} MiB → {after/2**20:.0f} MiB")
+        elif before:
+            print(f"  큰 Constant 노드 합계 {before/2**20:.0f} MiB (중복 없음)")
+        # 기본 내보내기는 가중치를 수백 개 파일로 흩뿌린다. Orin으로 옮기기 쉽게 한 파일로 모은다.
+        for f in path.parent.glob(path.stem + ".onnx.data"):
+            f.unlink()
+        onnx.save_model(m, str(path), save_as_external_data=True,
+                        all_tensors_to_one_file=True, location=path.name + ".data",
+                        size_threshold=1024, convert_attribute=True)
+        data = path.parent / (path.name + ".data")
+        print(f"  완료: {path.name} ({path.stat().st_size/2**20:.1f} MiB) "
+              f"+ {data.name} ({data.stat().st_size/2**30:.2f} GiB)")
 
-    # 기본 내보내기는 가중치를 수백 개 파일로 흩뿌린다. Orin으로 옮기기 쉽게 한 파일로 모은다.
-    for f in out.parent.glob(out.stem + ".onnx.data"):
-        f.unlink()
-    onnx.save_model(m, str(out), save_as_external_data=True,
-                    all_tensors_to_one_file=True, location=out.name + ".data",
-                    size_threshold=1024, convert_attribute=True)
-    data = out.parent / (out.name + ".data")
-    print(f"  완료: {out.name} ({out.stat().st_size/2**20:.1f} MiB) "
-          f"+ {data.name} ({data.stat().st_size/2**30:.2f} GiB)")
-
-    # ONNX 그래프가 PyTorch와 같은 값을 내는지 CPU에서 확인.
-    # 주의: 절대오차로 판정하면 안 된다. 블록 32개를 지나며 누적되는 fp32 재정렬 오차만으로도
-    # 최대 절대오차가 0.8 수준까지 벌어지며, 이는 **같은 PyTorch 코드를 CPU와 CUDA에서
-    # 돌려도 동일하게 나타난다**(실측 0.8394). 따라서 방향 일치도(코사인)로 판정하고,
-    # CPU/CUDA 차이를 기준선으로 함께 찍는다.
-    try:
-        import onnxruntime as ort
+    def ort_check(o):
+        """ONNX 런타임 출력이 PyTorch와 같은지 — 절대오차가 아니라 코사인으로 판정한다.
+        블록 32개를 지나며 누적되는 fp32 재정렬 오차만으로도 최대 절대오차가 0.8 수준까지
+        벌어지며, 이는 같은 PyTorch 코드를 CPU와 CUDA에서 돌려도 동일하게 나타난다(실측 0.8394)."""
         ref_cpu = got.float().cpu()
-        sess = ort.InferenceSession(str(out), providers=["CPUExecutionProvider"])
-        o = torch.from_numpy(sess.run(None, {"pixel_values": pv.cpu().numpy()})[0])
         cos = torch.nn.functional.cosine_similarity(o, ref_cpu, dim=-1).median().item()
         amax = (o - ref_cpu).abs().max().item()
         print(f"[대조] ONNX 런타임: 토큰별 코사인 중앙값 = {cos:.6f}  "
@@ -351,8 +361,44 @@ def main():
             print("  경고: 방향이 어긋난다 — TensorRT 빌드 전에 원인을 확인할 것")
         else:
             print("  일치 확인 — 절대오차는 fp32 누적 차이 수준이다")
-    except ImportError:
-        print("  (onnxruntime 없음 — 그래프 검증 생략)")
+
+    if not args.split:
+        save_onnx((pv,), "pixel_values", "image_embeds", out)
+        try:
+            import onnxruntime as ort
+            sess = ort.InferenceSession(str(out), providers=["CPUExecutionProvider"])
+            ort_check(torch.from_numpy(sess.run(None, {"pixel_values": pv.cpu().numpy()})[0]))
+        except ImportError:
+            print("  (onnxruntime 없음 — 그래프 검증 생략)")
+    else:
+        k = args.split
+        wrapper.split = k
+        wrapper.part = 1
+        with torch.no_grad():
+            h1 = wrapper(pv)
+        wrapper.part = 2
+        with torch.no_grad():
+            chained = wrapper(h1)
+        d = (chained.float() - got.float()).abs().max().item()
+        print(f"[분할] 블록 {k}에서 나눔 — 1부 출력 {tuple(h1.shape)}, |1부 max| {h1.abs().max().item():,.1f}; "
+              f"1부→2부 대 전체 최대 오차 {d:.3e}")
+        if d > args.tol:
+            raise SystemExit("분할 결과가 전체와 다르다 — 내보내기 중단")
+        p1 = out.with_name(out.stem + "_p1.onnx")
+        p2 = out.with_name(out.stem + "_p2.onnx")
+        wrapper.part = 1
+        save_onnx((pv,), "pixel_values", "hidden_states", p1)
+        wrapper.part = 2
+        save_onnx((h1,), "hidden_states", "image_embeds", p2)
+        wrapper.part = None
+        try:
+            import onnxruntime as ort
+            s1 = ort.InferenceSession(str(p1), providers=["CPUExecutionProvider"])
+            s2 = ort.InferenceSession(str(p2), providers=["CPUExecutionProvider"])
+            hh = s1.run(None, {"pixel_values": pv.cpu().numpy()})[0]
+            ort_check(torch.from_numpy(s2.run(None, {"hidden_states": hh})[0]))
+        except ImportError:
+            print("  (onnxruntime 없음 — 그래프 검증 생략)")
 
     print(f"""
 다음 단계 (Orin에서):
