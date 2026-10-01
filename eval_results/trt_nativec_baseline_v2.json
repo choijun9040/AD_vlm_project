@@ -1,0 +1,20 @@
+{
+  "onnx": "onnx/rc/tower_baseline_v2_nativec_p1.onnx",
+  "onnx2": "onnx/rc/tower_baseline_v2_nativec_p2.onnx",
+  "n_images": 250,
+  "trt": "10.13.3.9",
+  "modes": {
+    "fp16": {
+      "nan_rate": 0.936,
+      "absmax_p50": 23.703125,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 674.4534912109375,
+      "latency_ms": {
+        "p50": 107.75716882199049,
+        "p95": 108.90600886195898
+      },
+      "build_log": "logs/trt_build_fp16.log"
+    }
+  }
+}

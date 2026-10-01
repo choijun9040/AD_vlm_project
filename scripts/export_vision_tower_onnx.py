@@ -71,11 +71,56 @@ def _attn_forward_with_const_mask(self, hidden_states, cu_seqlens=None,
     return self.proj(out)
 
 
+def _attn_forward_chunked(self, hidden_states, cu_seqlens=None,
+                          rotary_pos_emb=None, position_embeddings=None):
+    """어텐션을 **나눠 계산한다** (2026-10-01, 사전 등록 6.4f). `cu_seqlens` 자리로 계획을 받는다.
+
+      ("win", [(s, e), ...], seg)  창 블록 — 연속한 창 묶음 [s, e) 안에서만 계산한다. 창이 묶음 경계를
+                                    넘지 않으므로 바깥 키는 원래도 마스크(-1e4)로 기여가 0이다.
+      ("full", chunk, seg)         전체 블록 — 쿼리를 chunk개씩 나눠 모든 키와 계산한다.
+    seg는 구간 id 벡터(없으면 None = 마스크 불필요). S×S 행렬을 만들지 않아 Orin Nano 8GB에서
+    빌드 중 어텐션 버퍼가 0.85 GB(원본 해상도) → 0.12 GB 이하로 준다. softmax가 행 단위라 결과가 같다."""
+    from transformers.models.qwen2_5_vl.modeling_qwen2_5_vl import apply_rotary_pos_emb_vision
+    import math
+
+    seq_length = hidden_states.shape[0]
+    q, k, v = (self.qkv(hidden_states)
+               .reshape(seq_length, 3, self.num_heads, -1)
+               .permute(1, 0, 2, 3).unbind(0))
+    cos, sin = position_embeddings
+    q, k = apply_rotary_pos_emb_vision(q, k, cos, sin)
+    q, k, v = q.transpose(0, 1), k.transpose(0, 1), v.transpose(0, 1)   # (H, S, D)
+    scale = 1.0 / math.sqrt(self.head_dim)
+
+    def block(qq, kk, vv, seg_q, seg_k):
+        w = torch.matmul(qq, kk.transpose(1, 2)) * scale
+        if seg_q is not None:
+            eq = seg_q.unsqueeze(-1) == seg_k.unsqueeze(0)
+            w = w + torch.where(eq, 0.0, -1e4).to(torch.float32)
+        w = nn.functional.softmax(w, dim=-1, dtype=torch.float32).to(qq.dtype)
+        return torch.matmul(w, vv)
+
+    kind, plan, seg = cu_seqlens
+    outs = []
+    if kind == "win":
+        for st, en in plan:
+            sg = None if seg is None else seg[st:en]
+            outs.append(block(q[:, st:en], k[:, st:en], v[:, st:en], sg, sg))
+    else:
+        for st in range(0, seq_length, plan):
+            en = min(st + plan, seq_length)
+            outs.append(block(q[:, st:en], k, v,
+                              None if seg is None else seg[st:en], seg))
+    out = torch.cat(outs, dim=1).transpose(0, 1).reshape(seq_length, -1)
+    return self.proj(out)
+
+
 class TowerExportWrapper(nn.Module):
     """grid 의존 값을 전부 상수로 굳힌 비전 타워. 입력은 pixel_values 하나뿐이다."""
 
-    def __init__(self, tower, grid_thw):
+    def __init__(self, tower, grid_thw, attn="dense", attn_chunk=256):
         super().__init__()
+        self.attn_mode, self.attn_chunk = attn, attn_chunk
         self.tower = tower
         dev = next(tower.parameters()).device
 
@@ -121,8 +166,22 @@ class TowerExportWrapper(nn.Module):
             if t is not None:
                 self.register_buffer("_" + name, t, persistent=False)
         self.fullatt_idx = set(tower.fullatt_block_indexes)
+        if attn == "chunked":
+            # 연속한 창을 attn_chunk 토큰 이상이 될 때까지 묶는다(창은 쪼개지 않는다)
+            bounds = [int(x) for x in cu_window.tolist()]
+            groups, st = [], bounds[0]
+            for b_ in bounds[1:]:
+                if b_ - st >= attn_chunk:
+                    groups.append((st, b_)); st = b_
+            if st < bounds[-1]:
+                groups.append((st, bounds[-1]))
+            assert groups[0][0] == 0 and groups[-1][1] == seq_len
+            self.win_groups = groups
+            fn = _attn_forward_chunked
+        else:
+            fn = _attn_forward_with_const_mask
         for blk in tower.blocks:
-            blk.attn.forward = _attn_forward_with_const_mask.__get__(blk.attn)
+            blk.attn.forward = fn.__get__(blk.attn)
         # **분할 (2026-10-01).** part=None이면 전체, 1이면 입력→블록 0..split-1(은닉 상태 출력),
         # 2면 은닉 상태→블록 split..끝→merger. Orin Nano 8GB에서 한 엔진에 가중치 전체를 담으면
         # 빌드가 메모리 부족으로 실패해(사전 등록 6.4d) 엔진 두 개로 나눈다.
@@ -138,8 +197,9 @@ class TowerExportWrapper(nn.Module):
     def forward(self, pixel_values):
         t = self.tower
         # 마스크 두 종류를 한 번만 만들어 모든 블록이 같은 그래프 값을 쓰게 한다
-        m_full = self._mask_from_seg(self.seg_full)
-        m_win = self._mask_from_seg(self.seg_win)
+        if self.attn_mode != "chunked":
+            m_full = self._mask_from_seg(self.seg_full)
+            m_win = self._mask_from_seg(self.seg_win)
         n = len(t.blocks)
         if self.part == 2:                       # 입력이 이미 은닉 상태다(1부의 출력)
             h, blocks = pixel_values, range(self.split, n)
@@ -150,8 +210,12 @@ class TowerExportWrapper(nn.Module):
             blocks = range(self.split) if self.part == 1 else range(n)
         pos = (self.cos, self.sin)
         for i in blocks:
-            h = t.blocks[i](h, cu_seqlens=(m_full if i in self.fullatt_idx else m_win),
-                            position_embeddings=pos)
+            if self.attn_mode == "chunked":
+                spec = (("full", self.attn_chunk, self.seg_full) if i in self.fullatt_idx
+                        else ("win", self.win_groups, self.seg_win))
+            else:
+                spec = m_full if i in self.fullatt_idx else m_win
+            h = t.blocks[i](h, cu_seqlens=spec, position_embeddings=pos)
         if self.part == 1:
             return h
         h = t.merger(h)
@@ -228,6 +292,9 @@ def main():
     ap.add_argument("--split", type=int, default=0, metavar="K",
                     help="0이 아니면 블록 K에서 그래프를 둘로 나눠 *_p1.onnx(입력→블록 0..K-1)와 "
                          "*_p2.onnx(블록 K..끝→merger)를 내보낸다. Orin Nano 빌드 메모리 대응(6.4d)")
+    ap.add_argument("--attn", choices=["dense", "chunked"], default="dense",
+                    help="dense=S×S 어텐션 전체(기존), chunked=창 묶음·쿼리 나눠 계산(6.4f)")
+    ap.add_argument("--attn_chunk", type=int, default=256)
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -289,13 +356,40 @@ def main():
 
     with torch.no_grad():
         ref = tower(pv, grid)
-    wrapper = TowerExportWrapper(tower, grid).eval()
+    wrapper = TowerExportWrapper(tower, grid, attn=args.attn, attn_chunk=args.attn_chunk).eval()
+    if args.attn == "chunked":
+        sizes = [e - s_ for s_, e in wrapper.win_groups]
+        print(f"[어텐션] 나눠 계산 — 창 묶음 {len(sizes)}개(토큰 {min(sizes)}~{max(sizes)}), "
+              f"전체 블록 쿼리 {args.attn_chunk}개씩")
     with torch.no_grad():
         got = wrapper(pv)
 
     diff = (ref.float() - got.float()).abs().max().item()
     print(f"[대조] 원본 대비 최대 오차 = {diff:.3e}  (허용 {args.tol:.1e})")
-    if diff > args.tol:
+    if diff > args.tol and args.attn == "chunked":
+        # **fp64 기준 판정 (2026-10-01).** 나눠 계산하면 합산 순서가 바뀌어 fp32 반올림이 원본과
+        # 달라진다. 큰 활성이 있는 타워(원본 해상도 교정본 등)는 **원본 fp32 자체가 fp64와 최대 6
+        # 어긋날 만큼** 조건이 나빠, 절대 허용치로는 순서 차이와 구현 오류를 가르지 못한다(실측).
+        # 그래서 fp64 기준값을 만들어 "나눠 계산의 fp32 오차가 원본 fp32 오차의 1.5배 안"이면
+        # 같은 계산으로 본다. 구현 오류(마스크·창 경계)는 fp64에서도 남으므로 여기서 걸린다.
+        tower.double()
+        with torch.no_grad():
+            ref64 = TowerExportWrapper(tower, grid, attn="dense").eval()(pv.double()).double()
+        tower.float()
+        e_ref = (ref.double() - ref64).abs().max().item()
+        e_got = (got.double() - ref64).abs().max().item()
+        print(f"[대조·fp64] 원본 fp32 오차 {e_ref:.3e}, 나눠 계산 fp32 오차 {e_got:.3e} "
+              f"(허용: 원본의 1.5배)")
+        if e_got > 1.5 * e_ref:
+            raise SystemExit("나눠 계산의 오차가 fp32 고유 오차보다 크다 — 구현을 확인할 것")
+        # 위의 dense 래퍼가 attention forward를 바꿔 놓았으므로 나눠 계산 래퍼를 다시 만든다
+        wrapper = TowerExportWrapper(tower, grid, attn=args.attn,
+                                     attn_chunk=args.attn_chunk).eval()
+        with torch.no_grad():
+            again = (wrapper(pv).float() - got.float()).abs().max().item()
+        assert again == 0.0, f"래퍼 재생성 후 출력이 달라졌다({again:.3e})"
+        print("  fp64 기준 통과 — 차이는 연산 순서에 따른 fp32 반올림이다")
+    elif diff > args.tol:
         raise SystemExit("래퍼가 원본과 다르다 — 내보내기 중단. 상수화 로직을 확인할 것")
     print("  일치 확인 — 상수화가 원본 동작을 보존한다")
 

@@ -1,0 +1,20 @@
+{
+  "onnx": "onnx/rc/tower_full_401408c_p1.onnx",
+  "onnx2": "onnx/rc/tower_full_401408c_p2.onnx",
+  "n_images": 250,
+  "trt": "10.13.3.9",
+  "modes": {
+    "fp16": {
+      "nan_rate": 0.0,
+      "absmax_p50": 20.9375,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 672.9527587890625,
+      "latency_ms": {
+        "p50": 22.919288836419582,
+        "p95": 28.733976371586323
+      },
+      "build_log": "logs/trt_build_fp16.log"
+    }
+  }
+}

@@ -5,6 +5,7 @@
 #   bash orin_run_all.sh            # 전부
 #   bash orin_run_all.sh fp16       # 관행 --fp16 셋만 (가장 중요)
 #   bash orin_run_all.sh fp16 802816   # 802,816 해상도 판본 (원본 해상도 OOM 이후, 사전 등록 6.4c)
+#   bash orin_run_all.sh fp16 nativec  # 어텐션 나눠 계산 그래프 (6.4f) — 원본 해상도부터
 #   TRT_EXTRA="--memPoolSize=workspace:1024" bash orin_run_all.sh fp16 802816   # 빌드 메모리 부족 시
 set -u
 cd "$(dirname "$0")"
@@ -17,7 +18,14 @@ case $RES in
            MODELS="tower_baseline_v2_802816s tower_full_802816s tower_baseline_v2_802816s_fixa" ;;
   401408s) MP=401408; SPLIT=1   # 802,816 분할도 OOM — 6.4e
            MODELS="tower_baseline_v2_401408s tower_full_401408s tower_baseline_v2_401408s_fixa" ;;
-  *) echo "해상도는 native, 802816, 802816s, 401408s"; exit 1 ;;
+  # 어텐션을 나눠 계산하는 그래프 (6.4f) — 분할 유지. 원본 해상도부터 시도하고 안 되면 아래로 내린다
+  nativec) MP=1440000; SPLIT=1
+           MODELS="tower_baseline_v2_nativec tower_full_nativec tower_baseline_v2_nativec_fixa" ;;
+  802816c) MP=802816; SPLIT=1
+           MODELS="tower_baseline_v2_802816c tower_full_802816c tower_baseline_v2_802816c_fixa" ;;
+  401408c) MP=401408; SPLIT=1
+           MODELS="tower_baseline_v2_401408c tower_full_401408c tower_baseline_v2_401408c_fixa" ;;
+  *) echo "해상도는 native, 802816, 802816s, 401408s, nativec, 802816c, 401408c"; exit 1 ;;
 esac
 BASE=${MODELS%% *}   # fp32 대조군은 기준선만
 SPLIT=${SPLIT:-0}
@@ -42,7 +50,17 @@ fi
 
 # ── 1. 파일 무결성 · 전처리 일치 — 하나라도 실패하면 멈춘다 ──────────────
 # ONNX는 이 디렉터리(orin_pkg/)에, SHA256SUMS는 상위(옮겨 온 곳)에 있다
-grep '\.onnx' ../SHA256SUMS | sha256sum -c --quiet - \
+# 이번 해상도의 모델 파일만 검사한다 — SHA256SUMS에는 여러 해상도가 있고 보드에는 하나씩 옮긴다
+NEED=""
+for m in $MODELS; do
+  if [ "$SPLIT" = 1 ]; then NEED="$NEED ${m}_p1.onnx ${m}_p1.onnx.data ${m}_p2.onnx ${m}_p2.onnx.data"
+  else NEED="$NEED $m.onnx"; [ -f $m.onnx.data ] && NEED="$NEED $m.onnx.data"; fi
+done
+for f in $NEED; do
+  [ -f "$f" ] || { echo "**파일 없음: $f — 옮길 것**"; exit 1; }
+  grep -q "  $f\$" ../SHA256SUMS || { echo "**SHA256SUMS에 $f 가 없다**"; exit 1; }
+done
+printf '%s\n' $NEED | sed 's/^/  /;s/$/$/' | grep -f - ../SHA256SUMS | sha256sum -c --quiet - \
   || { echo "**ONNX 체크섬 불일치 — 파일을 다시 옮길 것**"; exit 1; }
 echo "[1] ONNX 체크섬 통과"
 python3 orin_check_preproc.py || { echo "**전처리 불일치 — 측정 중단**"; exit 1; }
