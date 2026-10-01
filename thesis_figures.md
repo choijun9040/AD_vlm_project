@@ -22,7 +22,7 @@
 | 그림 4-4 | `fig3_lambda_dose_response{,_single}` | `plot_lambda_sweep.py` | `lambda_sweep_activation_profile.json` | 사용 |
 | 그림 4-3 | `fig4_metric_inversion{,_single}` | `plot_metric_inversion.py` (신규) | `resolution_sweep/res_1440000.json`, `int8_quant_error_native.json` | **신규 (09-29)** |
 | 그림 7-1 | `fig_gate_calibration{,_single}` | `plot_gate_calibration.py` (신규) | `detection_curve{,_fine}.json`, `guard_sweep_align*.json` | **신규 (09-29)** |
-| 6장 | — | — | Orin 결과 | 대기 |
+| 6장 | — | — | Orin 결과 | **그림 없음** — 보드 빌드 불가(6.9절은 표로 쓴다) |
 | ~~—~~ | ~~`fig_detection_curve{,_fine}`~~ | `detection_curve.py` | | **대체됨** → 그림 7-1 |
 
 ---
@@ -98,6 +98,6 @@ git 이력에 있다.
 ## 할 일
 
 - [x] 색 결정 — 검증 통과 색으로 다시 그림 (2026-09-29)
-- [ ] 6장 그림 — Orin 결과가 오면: 정밀도 조건별 붕괴율, 해상도 × (붕괴율 · 지연 · 피크 메모리)
+- [x] 6장 그림 — 만들지 않는다. Orin에서 엔진을 빌드하지 못해 그릴 측정값이 없다 (2026-10-01)
 - [x] 4.4절 지표 역전 산점도 → 그림 4-3 (2026-09-29)
 - [ ] 본문에 그림 참조("그림 4-1") 넣기 — 참고문헌 [n] 표지와 함께 합본 때
