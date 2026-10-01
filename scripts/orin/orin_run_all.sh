@@ -13,9 +13,12 @@ RES=${2:-native}
 case $RES in
   native) MP=1440000; MODELS="tower_baseline_v2_native tower_full_native tower_baseline_v2_native_fixa" ;;
   802816) MP=802816;  MODELS="tower_baseline_v2_802816 tower_full_802816 tower_baseline_v2_802816_fixa" ;;
-  *) echo "해상도는 native 또는 802816"; exit 1 ;;
+  802816s) MP=802816; SPLIT=1   # 블록 16에서 나눈 두 엔진 (6.4d) — 파일은 <모델>_p1/_p2.onnx
+           MODELS="tower_baseline_v2_802816s tower_full_802816s tower_baseline_v2_802816s_fixa" ;;
+  *) echo "해상도는 native, 802816, 802816s(분할)"; exit 1 ;;
 esac
 BASE=${MODELS%% *}   # fp32 대조군은 기준선만
+SPLIT=${SPLIT:-0}
 echo "[해상도] $RES (max_pixels $MP)"
 TRTEXEC=${TRTEXEC:-$(command -v trtexec || echo /usr/src/tensorrt/bin/trtexec)}
 export HF_HOME=$PWD/hf_cache_processor HF_HUB_OFFLINE=1
@@ -71,7 +74,21 @@ measure () {  # $1=모델 $2=조건
       --max_pixels $MP --tag $tag --out results/orin_$tag.json 2>&1 | tee logs/measure_$tag.log
 }
 
-run () { build "$1" "$2" && measure "$1" "$2"; }
+run () {
+  if [ "${SPLIT:-0}" = 1 ]; then
+    build "$1_p1" "$2" && build "$1_p2" "$2" && measure_split "$1" "$2"
+  else
+    build "$1" "$2" && measure "$1" "$2"
+  fi
+}
+
+measure_split () {  # 두 엔진을 이어 실행 — 붕괴는 2부 최종 출력에서 판정
+  local m=$1 c=$2 tag=${1#tower_}_$2
+  [ -f results/orin_$tag.json ] && { echo "  [건너뜀] results/orin_$tag.json"; return 0; }
+  python3 orin_verify_tower.py --engine ${m}_p1_$c.plan --engine2 ${m}_p2_$c.plan \
+      --images images --list img250.txt --max_pixels $MP --tag $tag \
+      --out results/orin_$tag.json 2>&1 | tee logs/measure_$tag.log
+}
 
 # ── 2. 관행 --fp16 — 가장 중요한 셋. 붕괴 쪽부터 ────────────────────────
 echo "[2] 관행 --fp16"

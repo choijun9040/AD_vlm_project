@@ -110,6 +110,9 @@ def peak_mem_mib():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--engine", required=True, help="trtexec가 만든 .plan")
+    ap.add_argument("--engine2", default=None,
+                    help="분할 엔진의 2부 .plan (사전 등록 6.4d). 주면 --engine 출력을 이어 받고 "
+                         "붕괴는 2부의 최종 출력에서 판정한다")
     ap.add_argument("--images", required=True, help="이미지가 든 디렉터리")
     ap.add_argument("--list", default=None,
                     help="쓸 파일명 목록(한 줄에 하나). 없으면 디렉터리 전체")
@@ -138,9 +141,14 @@ def main():
 
     print(f"[엔진] {args.engine}")
     run = Runner(args.engine)
+    run2 = Runner(args.engine2) if args.engine2 else None
+    if run2 is not None and tuple(run.o_shape) != tuple(run2.i_shape):
+        raise SystemExit(f"분할 엔진 형상 불일치: 1부 출력 {run.o_shape} vs 2부 입력 {run2.i_shape}")
 
     for _ in range(args.warmup):
-        run(np.zeros(run.i_shape, dtype=run.i_dtype))
+        w = run(np.zeros(run.i_shape, dtype=run.i_dtype))
+        if run2 is not None:
+            run2(w)
 
     base_mem = peak_mem_mib()
     nan_imgs, lat, peak, per_image = [], [], base_mem, []
@@ -154,6 +162,8 @@ def main():
                 f"--max_pixels가 엔진 빌드 때와 다르다.")
         t0 = time.perf_counter()
         out = run(pv)
+        if run2 is not None:
+            out = run2(out)
         lat.append((time.perf_counter() - t0) * 1000)
 
         bad = bool(~np.isfinite(out).all())
@@ -170,7 +180,7 @@ def main():
     lat = np.array(lat)
     finite_max = [r["max_abs"] for r in per_image if r["max_abs"] is not None]
     res = {
-        "tag": args.tag, "engine": args.engine, "n": len(paths),
+        "tag": args.tag, "engine": args.engine, "engine2": args.engine2, "n": len(paths),
         "max_pixels": args.max_pixels,
         "nan_rate": len(nan_imgs) / len(paths),
         "nan_count": len(nan_imgs),
