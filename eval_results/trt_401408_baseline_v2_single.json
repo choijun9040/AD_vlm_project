@@ -1,0 +1,32 @@
+{
+  "onnx": "onnx/r401408s/tower_baseline_v2_401408_single.onnx",
+  "onnx2": null,
+  "n_images": 250,
+  "trt": "10.13.3.9",
+  "modes": {
+    "fp16": {
+      "nan_rate": 0.152,
+      "absmax_p50": 12.8359375,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 1288.77783203125,
+      "latency_ms": {
+        "p50": 28.353567235171795,
+        "p95": 32.99178872257471
+      },
+      "build_log": "logs/trt_build_fp16.log"
+    },
+    "fp32": {
+      "nan_rate": 0.0,
+      "absmax_p50": 42.74244689941406,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 2567.986572265625,
+      "latency_ms": {
+        "p50": 58.201879262924194,
+        "p95": 58.526031486690044
+      },
+      "build_log": "logs/trt_build_fp32.log"
+    }
+  }
+}
