@@ -5,6 +5,7 @@
 #   bash orin_run_all.sh            # 전부
 #   bash orin_run_all.sh fp16       # 관행 --fp16 셋만 (가장 중요)
 #   bash orin_run_all.sh fp16 802816   # 802,816 해상도 판본 (원본 해상도 OOM 이후, 사전 등록 6.4c)
+#   TRT_EXTRA="--memPoolSize=workspace:1024" bash orin_run_all.sh fp16 802816   # 빌드 메모리 부족 시
 set -u
 cd "$(dirname "$0")"
 MODE=${1:-all}
@@ -53,7 +54,10 @@ build () {  # $1=모델 $2=조건(fp16|strict|fp32)
   echo "  [빌드] $plan ($flags) — 수십 분 걸릴 수 있다"
   # 레이어 정보 JSON — 빌드가 레이어를 ForeignNode로 융합하면 --verbose 로그만으로는
   # 배정 정밀도가 안 보인다(A100 fp16 로그에서 확인). 이 JSON이 입출력 형식을 남긴다
-  "$TRTEXEC" --onnx=$m.onnx --saveEngine=$plan $flags --verbose \
+  # TRT_EXTRA: 메모리 부족 대응 등 추가 빌드 플래그(예: --memPoolSize=workspace:1024). 정밀도 설정은
+  # 바꾸지 않는다. 쓴 값은 results/build_flags.txt에 남겨 결과와 함께 보고한다.
+  echo "$(date -Is) $plan $flags ${TRT_EXTRA:-}" >> results/build_flags.txt
+  "$TRTEXEC" --onnx=$m.onnx --saveEngine=$plan $flags ${TRT_EXTRA:-} --verbose \
       --profilingVerbosity=detailed --exportLayerInfo=logs/layers_${m}_$c.json \
       > logs/build_${m}_$c.log 2>&1 \
     || { echo "  **빌드 실패** $plan — logs/build_${m}_$c.log 끝부분:"; tail -5 logs/build_${m}_$c.log; rm -f "$plan"; return 1; }
