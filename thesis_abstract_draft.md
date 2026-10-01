@@ -39,7 +39,7 @@ Qwen2.5-VL-7B 교사를 3B 학생으로 증류하면서 데이터·LoRA 구성·
 기반 모델의 여유를 그대로 물려받았다.
 
 이 진단을 도구 `headroom_guard`로 구현했다. 도구는 활성 크기를 넘치지 않는 형식(bf16)에서 재고, 형식 상한을
-넘는 이미지의 비율로 붕괴율을 추정하며(6개 모델 평균 오차 2.1%p), 대상이 지원하는 형식에 맞춰 형식 전환이나
+넘는 이미지의 비율로 붕괴율을 추정하며(PyTorch fp16 기준 6개 모델 평균 오차 2.1%p), 대상이 지원하는 형식에 맞춰 형식 전환이나
 가중치 교정을 권고한다. 배포 조건에서 도구가 교정한 가중치는 정확도를 1.36%에서 50.73%로 되돌렸다. 비전
 인코더를 ONNX로 내보내 TensorRT fp16 엔진으로 실행해도 같은 붕괴가 재현되었다. 엣지 보드(Jetson Orin Nano
 8GB)에서는 엔진 빌드가 메모리 부족으로 실패해 검증하지 못했다.
@@ -82,7 +82,7 @@ quantization inherit their base model's headroom exactly.
 
 We implement the diagnosis as a tool, `headroom_guard`. It measures magnitudes in a format that does not
 overflow (bf16), estimates the collapse rate as the fraction of images exceeding the format limit (mean error
-2.1 percentage points over six models), and recommends a format switch or weight correction according to the
+2.1 percentage points over six models in PyTorch fp16), and recommends a format switch or weight correction according to the
 formats the target supports. Under deployment conditions, the tool's corrected weights restore accuracy from
 1.36% to 50.73%. The same collapse reproduces when the vision encoder is exported to ONNX and run as a TensorRT
 fp16 engine. On an edge board (Jetson Orin Nano 8GB) the engine could not be built for lack of memory, so
