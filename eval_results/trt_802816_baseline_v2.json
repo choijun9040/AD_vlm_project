@@ -1,0 +1,31 @@
+{
+  "onnx": "onnx/r802816/tower_baseline_v2_802816.onnx",
+  "n_images": 250,
+  "trt": "10.13.3.9",
+  "modes": {
+    "fp32": {
+      "nan_rate": 0.0,
+      "absmax_p50": 43.42217445373535,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 2612.06982421875,
+      "latency_ms": {
+        "p50": 154.5780161395669,
+        "p95": 155.4743578657508
+      },
+      "build_log": "logs/trt_build_fp32.log"
+    },
+    "fp16": {
+      "nan_rate": 0.04,
+      "absmax_p50": 19.0546875,
+      "n_half_tensors": 0,
+      "n_float_tensors": 0,
+      "weights_mib": 1310.8363037109375,
+      "latency_ms": {
+        "p50": 63.371628522872925,
+        "p95": 64.70524817705154
+      },
+      "build_log": "logs/trt_build_fp16.log"
+    }
+  }
+}
