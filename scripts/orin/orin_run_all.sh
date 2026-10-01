@@ -15,7 +15,9 @@ case $RES in
   802816) MP=802816;  MODELS="tower_baseline_v2_802816 tower_full_802816 tower_baseline_v2_802816_fixa" ;;
   802816s) MP=802816; SPLIT=1   # 블록 16에서 나눈 두 엔진 (6.4d) — 파일은 <모델>_p1/_p2.onnx
            MODELS="tower_baseline_v2_802816s tower_full_802816s tower_baseline_v2_802816s_fixa" ;;
-  *) echo "해상도는 native, 802816, 802816s(분할)"; exit 1 ;;
+  401408s) MP=401408; SPLIT=1   # 802,816 분할도 OOM — 6.4e
+           MODELS="tower_baseline_v2_401408s tower_full_401408s tower_baseline_v2_401408s_fixa" ;;
+  *) echo "해상도는 native, 802816, 802816s, 401408s"; exit 1 ;;
 esac
 BASE=${MODELS%% *}   # fp32 대조군은 기준선만
 SPLIT=${SPLIT:-0}
