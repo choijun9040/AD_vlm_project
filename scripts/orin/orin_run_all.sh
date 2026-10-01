@@ -6,6 +6,7 @@
 #   bash orin_run_all.sh fp16       # 관행 --fp16 셋만 (가장 중요)
 #   bash orin_run_all.sh fp16 802816   # 802,816 해상도 판본 (원본 해상도 OOM 이후, 사전 등록 6.4c)
 #   bash orin_run_all.sh fp16 nativec  # 어텐션 나눠 계산 그래프 (6.4f) — 원본 해상도부터
+#   bash orin_run_all.sh fp16 nativeh  # fp16 가중치 그래프 (6.4g) — 원본 해상도부터
 #   TRT_EXTRA="--memPoolSize=workspace:1024" bash orin_run_all.sh fp16 802816   # 빌드 메모리 부족 시
 set -u
 cd "$(dirname "$0")"
@@ -25,7 +26,14 @@ case $RES in
            MODELS="tower_baseline_v2_802816c tower_full_802816c tower_baseline_v2_802816c_fixa" ;;
   401408c) MP=401408; SPLIT=1
            MODELS="tower_baseline_v2_401408c tower_full_401408c tower_baseline_v2_401408c_fixa" ;;
-  *) echo "해상도는 native, 802816, 802816s, 401408s, nativec, 802816c, 401408c"; exit 1 ;;
+  # fp16 가중치 그래프 (6.4g) — 나눠 계산·분할 유지, 가중치·활성 fp16. 원본 해상도부터
+  nativeh) MP=1440000; SPLIT=1
+           MODELS="tower_baseline_v2_nativeh tower_full_nativeh tower_baseline_v2_nativeh_fixa" ;;
+  802816h) MP=802816; SPLIT=1
+           MODELS="tower_baseline_v2_802816h tower_full_802816h tower_baseline_v2_802816h_fixa" ;;
+  401408h) MP=401408; SPLIT=1
+           MODELS="tower_baseline_v2_401408h tower_full_401408h tower_baseline_v2_401408h_fixa" ;;
+  *) echo "해상도는 native, 802816, 802816s, 401408s, nativec, 802816c, 401408c, nativeh, 802816h, 401408h"; exit 1 ;;
 esac
 BASE=${MODELS%% *}   # fp32 대조군은 기준선만
 SPLIT=${SPLIT:-0}

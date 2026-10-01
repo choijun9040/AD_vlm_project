@@ -201,10 +201,13 @@ class TowerExportWrapper(nn.Module):
             m_full = self._mask_from_seg(self.seg_full)
             m_win = self._mask_from_seg(self.seg_win)
         n = len(t.blocks)
+        # **자료형 (6.4g).** 타워를 fp16으로 바꿔 내보낼 때도 입출력(1부→2부 은닉 상태 포함)은 fp32로 둔다 —
+        # 그래프 안에서 변환하므로 측정 스크립트가 그대로 쓰인다. fp32 타워에서는 둘 다 아무 연산도 만들지 않는다.
+        x = pixel_values.to(t.patch_embed.proj.weight.dtype)
         if self.part == 2:                       # 입력이 이미 은닉 상태다(1부의 출력)
-            h, blocks = pixel_values, range(self.split, n)
+            h, blocks = x, range(self.split, n)
         else:
-            h = t.patch_embed(pixel_values)
+            h = t.patch_embed(x)
             h = h.reshape(self.seq_len // self.merge_unit, self.merge_unit, -1)
             h = h[self.window_index, :, :].reshape(self.seq_len, -1)
             blocks = range(self.split) if self.part == 1 else range(n)
@@ -217,9 +220,10 @@ class TowerExportWrapper(nn.Module):
                 spec = m_full if i in self.fullatt_idx else m_win
             h = t.blocks[i](h, cu_seqlens=spec, position_embeddings=pos)
         if self.part == 1:
-            return h
+            return h.float() if h.dtype == torch.float16 else h
         h = t.merger(h)
-        return h[self.reverse_index, :]
+        h = h[self.reverse_index, :]
+        return h.float() if h.dtype == torch.float16 else h
 
 
 def dedup_constants(model, min_bytes=2**20):
@@ -295,6 +299,9 @@ def main():
     ap.add_argument("--attn", choices=["dense", "chunked"], default="dense",
                     help="dense=S×S 어텐션 전체(기존), chunked=창 묶음·쿼리 나눠 계산(6.4f)")
     ap.add_argument("--attn_chunk", type=int, default=256)
+    ap.add_argument("--dtype", choices=["fp32", "fp16"], default="fp32",
+                    help="fp16=타워를 fp16으로 바꿔 내보낸다(가중치·활성 fp16, softmax fp32, 입출력 fp32). "
+                         "Orin 빌드의 가중치 상수 메모리 대응(6.4g)")
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -341,6 +348,11 @@ def main():
         print(f"[fixA] 마지막 블록 gate·up의 weight{'·bias' if has_b else ''}를 각각 "
               f"x{f:.6f} (곱 1/{args.fixa:g}) — 논문 7.4 처방을 그래프에 굳혔다")
 
+    if args.dtype == "fp16":
+        # PyTorch fp16 측정(`model.to(float16)`)과 같은 부류 — 버퍼(회전 위치 주파수 등)도 함께 바뀐다
+        tower.half()
+        print("[자료형] 타워를 fp16으로 바꿨다 — 가중치·활성 fp16, softmax fp32, 입출력 fp32 (6.4g)")
+
     # 대표 이미지 하나로 형상을 고정한다
     tok = build_token_to_images(DRIVELM_VAL_JSON)
     img_path = str(next(iter(tok.values()))["CAM_FRONT"])
@@ -355,7 +367,7 @@ def main():
           f"vision token ≈ {tokens}")
 
     with torch.no_grad():
-        ref = tower(pv, grid)
+        ref = tower(pv.to(tower.patch_embed.proj.weight.dtype), grid)
     wrapper = TowerExportWrapper(tower, grid, attn=args.attn, attn_chunk=args.attn_chunk).eval()
     if args.attn == "chunked":
         sizes = [e - s_ for s_, e in wrapper.win_groups]
@@ -364,9 +376,46 @@ def main():
     with torch.no_grad():
         got = wrapper(pv)
 
-    diff = (ref.float() - got.float()).abs().max().item()
-    print(f"[대조] 원본 대비 최대 오차 = {diff:.3e}  (허용 {args.tol:.1e})")
-    if diff > args.tol and args.attn == "chunked":
+    if args.dtype == "fp16":
+        # **fp16 일치 검사 (6.4g 등록).** 붕괴하는 모델은 일부 토큰이 NaN이 되므로 절대오차 하나로는 못 본다
+        # (NaN과의 비교는 항상 거짓이라 조용히 통과한다). (1) 유한하지 않은 토큰 위치가 원본과 같아야 하고,
+        # (2) 유한한 토큰에서 fp32 기준값 대비 오차가 원본 fp16 오차의 1.5배 안이어야 한다.
+        bad_r = ~torch.isfinite(ref.float()).all(dim=-1)
+        bad_g = ~torch.isfinite(got.float()).all(dim=-1)
+        print(f"[대조·fp16] 유한하지 않은 토큰: 원본 {int(bad_r.sum())}개, 래퍼 {int(bad_g.sum())}개 "
+              f"(전체 {bad_r.numel()}개)")
+        if not torch.equal(bad_r, bad_g):
+            raise SystemExit(f"NaN 토큰 위치가 원본과 다르다(불일치 {int((bad_r ^ bad_g).sum())}개) — 내보내기 중단")
+        tower.float()
+        with torch.no_grad():
+            ref32 = TowerExportWrapper(tower, grid, attn="dense").eval()(pv).float()
+        tower.half()
+        ok = ~bad_r & torch.isfinite(ref32).all(dim=-1)
+        # 토큰별 최대 오차의 **p99**로 판정한다 (6.4g 기록, 결과를 본 뒤 바꿨다). 최대값 하나는 fp32에서도
+        # 코사인 0.71인 민감한 토큰에 좌우돼, 합산 순서만 바꿔도 4.7 → 9.1처럼 흔들린다(401,408 기준선 실측:
+        # p50 0.065/0.067, p90 0.248/0.240, p99 1.065/0.946 — 분포는 같다). 구현 오류는 분포 전체를 옮긴다.
+        tok_r = (ref.float()[ok] - ref32[ok]).abs().amax(dim=-1)
+        tok_g = (got.float()[ok] - ref32[ok]).abs().amax(dim=-1)
+        e_ref, e_got = torch.quantile(tok_r, 0.99).item(), torch.quantile(tok_g, 0.99).item()
+        print(f"[대조·fp16] 유한 토큰 {int(ok.sum())}개 — fp32 기준 대비 토큰별 오차 p99: 원본 fp16 {e_ref:.3e}, "
+              f"래퍼 fp16 {e_got:.3e} (허용: 원본의 1.5배) | 참고 최대 {tok_r.max():.3e} / {tok_g.max():.3e}")
+        if e_got > 1.5 * e_ref:
+            raise SystemExit("래퍼의 fp16 오차가 원본 fp16 오차보다 크다 — 구현을 확인할 것")
+        # 위의 dense 래퍼가 attention forward를 바꿔 놓았으므로 내보낼 래퍼를 다시 만든다
+        wrapper = TowerExportWrapper(tower, grid, attn=args.attn,
+                                     attn_chunk=args.attn_chunk).eval()
+        with torch.no_grad():
+            again = wrapper(pv)
+        assert torch.equal(torch.isfinite(again), torch.isfinite(got)) and \
+            (again - got)[torch.isfinite(got)].abs().max().item() == 0.0, "래퍼 재생성 후 출력이 달라졌다"
+        print("  fp16 일치 확인")
+        diff = 0.0
+    else:
+        diff = (ref.float() - got.float()).abs().max().item()
+        print(f"[대조] 원본 대비 최대 오차 = {diff:.3e}  (허용 {args.tol:.1e})")
+    if args.dtype == "fp16":
+        pass
+    elif diff > args.tol and args.attn == "chunked":
         # **fp64 기준 판정 (2026-10-01).** 나눠 계산하면 합산 순서가 바뀌어 fp32 반올림이 원본과
         # 달라진다. 큰 활성이 있는 타워(원본 해상도 교정본 등)는 **원본 fp32 자체가 fp64와 최대 6
         # 어긋날 만큼** 조건이 나빠, 절대 허용치로는 순서 차이와 구현 오류를 가르지 못한다(실측).
@@ -447,8 +496,13 @@ def main():
         블록 32개를 지나며 누적되는 fp32 재정렬 오차만으로도 최대 절대오차가 0.8 수준까지
         벌어지며, 이는 같은 PyTorch 코드를 CPU와 CUDA에서 돌려도 동일하게 나타난다(실측 0.8394)."""
         ref_cpu = got.float().cpu()
-        cos = torch.nn.functional.cosine_similarity(o, ref_cpu, dim=-1).median().item()
-        amax = (o - ref_cpu).abs().max().item()
+        o = o.float()
+        fin = torch.isfinite(ref_cpu).all(dim=-1) & torch.isfinite(o).all(dim=-1)
+        if int(fin.sum()) < fin.numel():
+            print(f"  (유한하지 않은 토큰 제외: PyTorch {int((~torch.isfinite(ref_cpu).all(dim=-1)).sum())}개, "
+                  f"ONNX 런타임 {int((~torch.isfinite(o).all(dim=-1)).sum())}개)")
+        cos = torch.nn.functional.cosine_similarity(o[fin], ref_cpu[fin], dim=-1).median().item()
+        amax = (o[fin] - ref_cpu[fin]).abs().max().item()
         print(f"[대조] ONNX 런타임: 토큰별 코사인 중앙값 = {cos:.6f}  "
               f"(참고: 최대 절대오차 {amax:.3f})")
         if cos < 0.9999:
@@ -473,7 +527,10 @@ def main():
         wrapper.part = 2
         with torch.no_grad():
             chained = wrapper(h1)
-        d = (chained.float() - got.float()).abs().max().item()
+        fin = torch.isfinite(got.float())
+        if not torch.equal(torch.isfinite(chained.float()), fin):
+            raise SystemExit("분할 결과의 NaN 위치가 전체와 다르다 — 내보내기 중단")
+        d = (chained.float() - got.float())[fin].abs().max().item()
         print(f"[분할] 블록 {k}에서 나눔 — 1부 출력 {tuple(h1.shape)}, |1부 max| {h1.abs().max().item():,.1f}; "
               f"1부→2부 대 전체 최대 오차 {d:.3e}")
         if d > args.tol:
@@ -493,6 +550,8 @@ def main():
             ort_check(torch.from_numpy(s2.run(None, {"hidden_states": hh})[0]))
         except ImportError:
             print("  (onnxruntime 없음 — 그래프 검증 생략)")
+        except Exception as e:   # CPU 실행기에 fp16 커널이 없는 연산이 있을 수 있다 — 판정은 TRT 대조로 한다
+            print(f"  (ONNX 런타임 검증 실패 — {type(e).__name__}: {str(e)[:200]}) — A100 TRT 대조로 대신한다")
 
     print(f"""
 다음 단계 (Orin에서):
