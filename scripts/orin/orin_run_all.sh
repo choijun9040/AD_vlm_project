@@ -4,10 +4,18 @@
 #
 #   bash orin_run_all.sh            # 전부
 #   bash orin_run_all.sh fp16       # 관행 --fp16 셋만 (가장 중요)
+#   bash orin_run_all.sh fp16 802816   # 802,816 해상도 판본 (원본 해상도 OOM 이후, 사전 등록 6.4c)
 set -u
 cd "$(dirname "$0")"
 MODE=${1:-all}
-MP=1440000
+RES=${2:-native}
+case $RES in
+  native) MP=1440000; MODELS="tower_baseline_v2_native tower_full_native tower_baseline_v2_native_fixa" ;;
+  802816) MP=802816;  MODELS="tower_baseline_v2_802816 tower_full_802816 tower_baseline_v2_802816_fixa" ;;
+  *) echo "해상도는 native 또는 802816"; exit 1 ;;
+esac
+BASE=${MODELS%% *}   # fp32 대조군은 기준선만
+echo "[해상도] $RES (max_pixels $MP)"
 TRTEXEC=${TRTEXEC:-$(command -v trtexec || echo /usr/src/tensorrt/bin/trtexec)}
 export HF_HOME=$PWD/hf_cache_processor HF_HUB_OFFLINE=1
 mkdir -p results logs
@@ -63,16 +71,16 @@ run () { build "$1" "$2" && measure "$1" "$2"; }
 
 # ── 2. 관행 --fp16 — 가장 중요한 셋. 붕괴 쪽부터 ────────────────────────
 echo "[2] 관행 --fp16"
-for m in tower_baseline_v2_native tower_full_native tower_baseline_v2_native_fixa; do run $m fp16; done
+for m in $MODELS; do run $m fp16; done
 [ "$MODE" = fp16 ] && exit 0
 
 # ── 3. fp32 대조군 (baseline만) ─────────────────────────────────────────
 echo "[3] fp32 대조군"
-run tower_baseline_v2_native fp32
+run $BASE fp32
 
 # ── 4. 엄격 — A100에서도 빌드가 실패했던 조건. 실패해도 결론은 선다 ────
 echo "[4] 엄격"
-for m in tower_baseline_v2_native tower_full_native tower_baseline_v2_native_fixa; do run $m strict || true; done
+for m in $MODELS; do run $m strict || true; done
 
 # ── 5. 빌드 로그에서 마지막 블록 down_proj 정밀도 발췌 (논문 6.2) ─────────
 : > results/down_proj_precision.txt
@@ -92,5 +100,5 @@ PY
 done
 echo "[5] 발췌 → results/down_proj_precision.txt"
 
-tar czf orin_results_$(date +%Y%m%d_%H%M).tar.gz results logs
+tar czf orin_results_${RES}_$(date +%Y%m%d_%H%M).tar.gz results logs
 echo "끝. orin_results_*.tar.gz 를 서버로 가져올 것"
