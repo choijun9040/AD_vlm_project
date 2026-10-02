@@ -250,3 +250,13 @@ pairs:
       function: main
       must_use: ["n_body_tab"]
     broke_once: "2026-10-02 — 표 41·절 59로 보고했으나 40·57이었다. 문단 제목이 표 패턴에 걸리고 목차 제목이 본문 절로 세어졌다"
+
+  - id: c10-ledger-selfcheck
+    claim: "C10 — 원장 자신의 정합성(대응표 누락·번호 중복·열림 규칙)을 검사하고, 논문 8.3·8.4와 직접 대조한다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["이 원장 자신이 논문과 어긋남"]
+    code:
+      file: scripts/ledger_stats.py
+      function: main
+      must_use: ["paper_limits", "map_L"]
+    broke_once: "2026-10-02 — 대응표 대조를 수동으로 두 번 했고(한계 넷 누락, 8.4절 누락), 구획을 안 나눠 센 집계가 두 번 틀렸다"
