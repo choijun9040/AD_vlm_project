@@ -46,3 +46,67 @@ pairs:
       constant: MARGINAL_HEADROOM
       value: 1.25
     broke_once: "깨진 적은 없다. 원장 O4가 '측정 아님'을 세 곳으로 확대한 뒤 상수가 흩어지지 않게 건다"
+
+  # ── 7.2절 설계 판단 ①④⑥⑦⑨와 7.3절 표본 상한 (2026-10-02 추가) ──────────────
+  # 고른 기준: 되돌아가면 **조용히 틀린 값이 나오거나 논문이 반례가 되는** 자리.
+  # ④는 L16이, ⑨는 C5가 실제로 그 부류였다.
+
+  - id: two-dtype-split
+    claim: "크기는 넘치지 않는 형식(bf16)에서 재고 붕괴는 목표 형식에서 잰다 (7.2① · 설계 원칙 2)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["크기는 bf16에서"]
+    code:
+      file: scripts/headroom_guard.py
+      function: main
+      must_use: ["MAG"]
+    broke_once: "깨진 적은 없다. 목표 형식에서 크기를 재면 이미 발산한 이미지의 최댓값이 inf가 되어 **조용히 틀린다**"
+
+  - id: tower-out-included
+    claim: "비전 인코더의 블록 뒤 출력도 재고 나쁜 쪽으로 판정한다 (7.2④)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["블록 뒤 출력"]
+    code:
+      file: scripts/headroom_guard.py
+      function: profile
+      must_use: ["tower_out"]
+    broke_once: "원장 L16 — 계열 조사가 `blocks[-1]`만 재서 블록 뒤 연산을 놓쳤다. 안전을 과대평가할 수 있었다"
+
+  - id: scaled-formats-out-of-scope
+    claim: "스케일 형식(INT8·INT4·fp8)은 선언만 받고 '내 소관이 아니다'라고 답한다 (7.2⑥)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["스케일 형식"]
+    code:
+      file: scripts/headroom_guard.py
+      function: main
+      must_use: ["scaled_formats_declared"]
+    broke_once: "깨진 적은 없다. 스케일 형식에 절대 크기 기준을 적용하면 틀린 판정을 내므로 범위를 코드에 박아 둔다"
+
+  - id: residual-split-solve
+    claim: "블록 출력은 `잔차 + MLP(...)`이므로 잔차를 분리해 축소량을 푼다 (7.2⑦)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["잔차를 분리"]
+    code:
+      file: scripts/headroom_guard.py
+      function: plan_fix
+      must_use: ["solve_factor"]
+    broke_once: "깨진 적은 없다. 근사값으로 되돌리면 교정량이 과소·과대가 되고 교정본의 0% 붕괴가 흔들린다"
+
+  - id: silent-load-guard
+    claim: "조용히 틀리는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (7.2⑨)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["조용히 틀리는 적재"]
+    code:
+      file: scripts/headroom_guard.py
+      function: load_tower_repo
+      must_use: ["check_weights_loaded"]
+    broke_once: "원장 C5 — `from_pretrained`가 조용히 랜덤 초기화해도 측정은 돌아가고 숫자가 나온다"
+
+  - id: zero-observation-bound
+    claim: "초과 0건이면 표본 수에 따른 참 초과율의 95% 상한을 함께 적는다 (7.3절)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["95% 상한"]
+    code:
+      file: scripts/headroom_guard.py
+      function: print_verdict
+      must_use: ["zero_obs_upper_bound"]
+    broke_once: "깨진 적은 없다. 상한 없이 '안전'만 찍으면 표본 30장과 250장이 같은 말로 읽힌다"

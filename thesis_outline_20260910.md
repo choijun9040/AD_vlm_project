@@ -3444,12 +3444,26 @@ hook 개입이 가중치 편집을 대신한다. (bias 관련 정정은 위 §5 
 
 | 새 파일 | 역할 |
 |---|---|
-| `docs/doc_code_contract.yaml` | 문서 주장 ↔ 코드 동작 쌍 (현재 3쌍) |
+| `docs/doc_code_contract.yaml` | 문서 주장 ↔ 코드 동작 쌍 (현재 **9쌍**) |
 | `scripts/verify_doc_code_contract.py` | 대조 검사기 |
 | `docs/doc_code_contract_regress.yaml` | 검사기 자신의 회귀 시험 — **반드시 종료코드 1** |
 
-**등록한 세 쌍**: 게이트 판정이 최악 여유를 쓴다(`plan_fix` → `headroom_worst`) · bf16 권고가
-대상 지원 형식을 묻는다(`main` → `available_formats`) · `MARGINAL_HEADROOM = 1.25`.
+**등록한 아홉 쌍.** 처음 셋은 **실제로 깨진 적 있는 자리**(앞의 둘)와 흩어지기 쉬운 상수다.
+
+| 쌍 | 문서 | 코드 | 왜 거는가 |
+|---|---|---|---|
+| 게이트 판정 통계량 | 7.3 | `plan_fix` → `headroom_worst` | **2026-09-17 실제로 어긋났다** |
+| bf16 권고의 대상 조건 | 7.2⑤ | `main` → `available_formats` | **2026-09-17 실제로 어긋났다** |
+| 보조 경고 임계값 | 7.3 | `MARGINAL_HEADROOM = 1.25` | O4가 세 곳으로 확대한 상수가 흩어지지 않게 |
+| 두 dtype 분리 | 7.2① | `main` → `MAG` | 목표 형식에서 크기를 재면 inf가 되어 **조용히 틀린다** |
+| 블록 뒤 출력 포함 | 7.2④ | `profile` → `tower_out` | **L16이 그 부류** — `blocks[-1]`만 재면 안전을 과대평가 |
+| 스케일 형식은 소관 밖 | 7.2⑥ | `main` → `scaled_formats_declared` | 절대 크기 기준을 스케일 형식에 적용하면 틀린 판정 |
+| 잔차 분리로 축소량 | 7.2⑦ | `plan_fix` → `solve_factor` | 근사로 되돌리면 교정본의 0% 붕괴가 흔들린다 |
+| 조용히 틀리는 적재 방지 | 7.2⑨ | `load_tower_repo` → `check_weights_loaded` | **C5가 그 부류** — 랜덤 초기화도 숫자는 나온다 |
+| 표본 0건의 95% 상한 | 7.3 | `print_verdict` → `zero_obs_upper_bound` | 상한 없이 「안전」만 찍으면 30장과 250장이 같은 말이 된다 |
+
+**고른 기준은 「되돌아가면 조용히 틀린 값이 나오거나 논문이 반례가 되는 자리」다.** 도구의
+모든 동작을 걸지 않는다 — 쌍이 늘면 유지 비용과 오탐이 같이 는다.
 
 **AST로 본다 — 텍스트 검색이면 오탐이 난다.** `plan_fix`의 docstring에는 과거 판을 설명하려고
 **"p50"이 들어 있다.** 원시 소스를 grep하면 *"코드가 아직 p50을 쓴다"*로 읽힌다. 그래서
