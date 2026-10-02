@@ -129,9 +129,13 @@ measure_split () {  # 두 엔진을 이어 실행 — 붕괴는 2부 최종 출�
   [ -f results/orin_$tag.json ] && { echo "  [건너뜀] results/orin_$tag.json"; return 0; }
   # --sequential (6.4h): 1부를 전 이미지에 돌려 은닉 상태를 디스크에 두고 1부를 내린 뒤 2부를 올린다 —
   # 두 엔진을 한꺼번에 올릴 메모리가 없을 수 있다. 지연은 이미지별 1부+2부 합이다.
-  python3 orin_verify_tower.py --engine ${m}_p1_$c.plan --engine2 ${m}_p2_$c.plan --sequential \
-      --images images --list img250.txt --max_pixels $MP --tag $tag \
-      --out results/orin_$tag.json 2>&1 | tee logs/measure_$tag.log
+  # 1부·2부를 **다른 프로세스**로 (6.4h, 401,408에서 같은 프로세스의 2부 적재가 0.71 GB에서 실패)
+  local common="--engine ${m}_p1_$c.plan --engine2 ${m}_p2_$c.plan --sequential --images images --list img250.txt --max_pixels $MP --tag $tag"
+  python3 orin_verify_tower.py $common --stage 1 2>&1 | tee logs/measure_$tag.log
+  [ "${PIPESTATUS[0]}" = 0 ] || { echo "  **1부 측정 실패** — logs/measure_$tag.log"; return 1; }
+  sync
+  python3 orin_verify_tower.py $common --stage 2 --out results/orin_$tag.json 2>&1 | tee -a logs/measure_$tag.log
+  [ -f results/orin_$tag.json ] || { echo "  **2부 측정 실패** — 엔진은 남아 있다. 캐시를 비우고 다시 실행하면 측정만 다시 한다"; return 1; }
 }
 
 # ── 강타입 (6.4h) — fp16 그래프(*h)를 --stronglyTyped로. 이 모드만 돌고 끝난다 ──────

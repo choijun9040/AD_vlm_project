@@ -139,6 +139,10 @@ def main():
                     help="분할 엔진을 **차례로** 올린다: 1부로 전 이미지를 돌려 은닉 상태를 디스크에 두고, 1부를 내린 뒤 "
                          "2부를 올린다. 두 엔진을 한꺼번에 올릴 메모리가 없을 때(6.4h). 지연은 이미지별 1부+2부 합")
     ap.add_argument("--tmp", default="seq_tmp", help="--sequential의 은닉 상태 저장 디렉터리")
+    ap.add_argument("--stage", choices=["all", "1", "2"], default="all",
+                    help="--sequential에서 1부·2부를 **다른 프로세스**로 돌린다(6.4h). 1=1부만 돌려 은닉 상태와 "
+                         "지연을 저장하고 끝, 2=저장한 것을 읽어 2부를 돌리고 결과를 낸다. 같은 프로세스에서 1부를 "
+                         "내려도 메모리가 다 돌아오지 않아 2부 적재가 실패했다(401,408)")
     args = ap.parse_args()
 
     root = Path(args.images)
@@ -206,6 +210,13 @@ def main_sequential(args, paths, proc):
     tmp.mkdir(exist_ok=True)
     base_mem = peak_mem_mib()
     peak = base_mem
+    if args.stage == "2":
+        st = json.loads((tmp / "stage1.json").read_text())
+        if st["engine"] != args.engine or st["n"] != len(paths):
+            raise SystemExit(f"1부 저장분이 이번 실행과 다르다: {st['engine']} / {st['n']}장")
+        lat1, o_shape = st["lat1"], tuple(st["o_shape"])
+        base_mem, peak = st["base_mem"], st["peak"]
+        return sequential_part2(args, paths, tmp, lat1, o_shape, base_mem, peak)
 
     print(f"[순차 1/2] {args.engine}")
     run = Runner(args.engine)
@@ -228,7 +239,16 @@ def main_sequential(args, paths, proc):
     o_shape = run.o_shape
     run.close()
     del run
+    if args.stage == "1":
+        (tmp / "stage1.json").write_text(json.dumps(
+            {"engine": args.engine, "n": len(paths), "lat1": lat1, "o_shape": list(o_shape),
+             "base_mem": base_mem, "peak": peak}))
+        print(f"[순차 1/2] 끝 — 은닉 상태 {len(paths)}개를 {tmp}/에 저장. 2부는 새 프로세스에서 돈다")
+        return
+    return sequential_part2(args, paths, tmp, lat1, o_shape, base_mem, peak)
 
+
+def sequential_part2(args, paths, tmp, lat1, o_shape, base_mem, peak):
     print(f"[순차 2/2] {args.engine2}")
     run2 = Runner(args.engine2)
     if tuple(o_shape) != tuple(run2.i_shape):
@@ -252,6 +272,7 @@ def main_sequential(args, paths, proc):
         if i % 50 == 0:
             print(f"  2부 {i}/{len(paths)}  붕괴 {len(nan_imgs)}  지연(1부+2부) 중앙값 {np.median(lat):.0f} ms")
     run2.close()
+    (tmp / "stage1.json").unlink(missing_ok=True)
     finish(args, paths, nan_imgs, lat, per_image, base_mem, peak, sequential=True)
 
 
