@@ -90,7 +90,10 @@ build () {  # $1=모델 $2=조건(fp16|strict|fp32)
   # TRT_EXTRA: 메모리 부족 대응 등 추가 빌드 플래그(예: --memPoolSize=workspace:1024). 정밀도 설정은
   # 바꾸지 않는다. 쓴 값은 results/build_flags.txt에 남겨 결과와 함께 보고한다.
   echo "$(date -Is) $plan $flags ${TRT_EXTRA:-}" >> results/build_flags.txt
-  "$TRTEXEC" --onnx=$m.onnx --saveEngine=$plan $flags ${TRT_EXTRA:-} --verbose \
+  # --skipInference (2026-10-02): 빌드만 하고 엔진을 저장한다. trtexec는 빌드 직후 같은 프로세스에서 시험 추론을
+  # 도는데, 빌드 메모리를 쥔 채 실행 공간을 잡다가 실패해 **이미 만든 엔진까지 지워졌다**(802,816 강타입, 6.4h).
+  # 측정은 orin_verify_tower.py가 따로 하므로 시험 추론은 필요 없다 — 엔진은 같다.
+  "$TRTEXEC" --onnx=$m.onnx --saveEngine=$plan $flags ${TRT_EXTRA:-} --skipInference --verbose \
       --profilingVerbosity=detailed --exportLayerInfo=logs/layers_${m}_$c.json \
       > logs/build_${m}_$c.log 2>&1 \
     || { echo "  **빌드 실패** $plan — logs/build_${m}_$c.log 끝부분:"; tail -5 logs/build_${m}_$c.log; rm -f "$plan"; return 1; }
