@@ -145,3 +145,108 @@ pairs:
       function: main
       must_say: ["완전 등가가 아니다", "정확도 비용"]
     broke_once: "깨진 적은 없다. 비용 경고가 사라지면 도구가 교정을 **권하는 물건**이 되어 7.2⑧의 설계 판단과 어긋난다"
+
+  # ══ 원장 「닫힘」 C1~C8의 장치가 코드에 있는지 (2026-10-02) ════════════════════
+  # **왜 이것이 가장 중요한가.** 닫힘 항목의 장치가 리팩터링 중 조용히 사라지면, 원장은
+  # 계속 "막고 있다"고 말하는데 실제로는 안 막는다. **정확히 L9 부류이고, 피해는 더 크다**
+  # — 닫힌 줄 알고 더 보지 않기 때문이다. 아래 쌍은 원장의 주장과 코드를 양방향으로 묶는다.
+
+  - id: c1-values-compared
+    claim: "C1 — 문서 숫자가 산출물과 다른 것을 `values:` 대조로 막는다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["문서 숫자가 산출물과 다름"]
+    code:
+      file: scripts/verify_claim_provenance.py
+      function: check_group
+      must_use: ["values"]
+    broke_once: "깨진 적은 없다. 사라지면 원장 C1이 거짓이 된다"
+
+  - id: c2-condition-mixing
+    claim: "C2 — 한 표의 숫자가 다른 조건에서 온 것을 `sources:`/`allow_differ:`로 막고 이유를 쓰게 한다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["이유를 쓰게 강제"]
+    code:
+      file: scripts/verify_claim_provenance.py
+      function: check_group
+      must_use: ["sources", "allow_differ"]
+    broke_once: "원장의 실증 신호 — 핵심을 때린 약점 3건이 모두 이 채널(Table 1의 조건 혼입)이었다"
+
+  - id: c3-stale-across-docs
+    claim: "C3 — 같은 수치를 한 곳만 고치는 것을 `docs:`/`stale:`로 막는다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["한 곳만 고침"]
+    code:
+      file: scripts/verify_claim_provenance.py
+      function: scan_docs
+      must_use: ["stale"]
+    broke_once: "2026-09-15 — Table 1을 고치며 개요 다섯 곳을 놓쳤다. JSON만 보는 검사로는 원리적으로 안 잡힌다"
+
+  - id: c4-nonfinite-raises
+    claim: "C4 — bf16 활성이 비유한인데 측정값으로 기록되는 것을 예외로 막는다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["측정값으로 기록"]
+    code:
+      file: scripts/profile_other_vlm_families.py
+      function: profile
+      must_use: ["isfinite"]
+    broke_once: "깨진 적은 없다. bf16 상한은 3.4e38이라 비유한 값은 측정 실패이지 큰 활성이 아니다"
+
+  - id: c5-strict-load
+    claim: "C5 — `from_pretrained`의 조용한 랜덤 초기화를 strict 적재로 막는다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["랜덤 초기화"]
+    code:
+      file: scripts/probe_vision_tower_direct.py
+      function: profile
+      must_use: ["load_state_dict", "missing"]
+    broke_once: "조용히 랜덤 초기화돼도 측정은 돌아가고 숫자가 나온다 — 값만 보면 알 수 없다"
+
+  - id: c6-failure-preserved
+    claim: "C6 — 디스크 스킵 기록이 기존 실패 사유를 덮어쓰지 않게 보존한다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["실패 사유를 덮어씀"]
+    code:
+      file: scripts/profile_other_vlm_families.py
+      function: main
+      must_use: ["failed"]
+    broke_once: "덮어쓰면 '디스크 때문에 못 쟀다'와 '재다가 실패했다'가 구별되지 않는다"
+
+  - id: c7-retired-values
+    claim: "C7 — 정정한 값이 다른 자리에 남은 것을 `retired:`로 잡고, 정정 박스와 본문을 구분한다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["정정한 값이 다른 자리에 남음"]
+    code:
+      file: scripts/audit_numbers.py
+      function: main
+      must_use: ["retired"]
+    broke_once: "값 대조도 출처 대조도 통과한다 — 캡션·주석·다른 장에 남은 옛 값은 그 자리에서 일관되기 때문이다"
+
+  - id: c8-condition-watch
+    claim: "C8 — 조건 종속 값이 조건 없이 쓰인 것을 `watch:`로 경고한다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["조건 없이"]
+    code:
+      file: scripts/audit_numbers.py
+      function: main
+      must_use: ["watch"]
+    broke_once: "값은 맞고 조건만 빠지므로 값 대조로는 영원히 통과한다"
+
+  - id: record-section-split
+    claim: "C7의 전제 — 기록 구역과 본문을 구분한다. 구분이 없으면 작업 기록의 옛 값이 전부 오류로 올라와 검사가 무력해진다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["정정 박스와 본문을 구분"]
+    code:
+      file: scripts/audit_numbers.py
+      function: classify
+      must_use: ["RECORD_MARKERS", "RECORD_SECTIONS"]
+    broke_once: "깨진 적은 없다. 사라지면 오탐이 폭증해 **아무도 보지 않는 검사**가 된다 — 조용한 무력화다"
+
+  - id: thesis-count-crosscheck
+    claim: "원고 집계는 목차를 만든 자료에서 세고 본문·목차를 대조한다 — 사람이 grep으로 세면 틀린다 (개요 §7)"
+    docs: [thesis_outline_20260910.md]
+    docs_must_contain: ["본문·목차 대조 통과"]
+    code:
+      file: scripts/build_thesis.py
+      function: main
+      must_use: ["n_body_tab"]
+    broke_once: "2026-10-02 — 표 41·절 59로 보고했으나 40·57이었다. 문단 제목이 표 패턴에 걸리고 목차 제목이 본문 절로 세어졌다"
