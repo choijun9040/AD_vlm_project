@@ -18,3 +18,5 @@ eval_results/posthoc_*_predictions.jsonl
 # local-only Claude Code settings
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
+# 작업용 git worktree — 저장소가 메타데이터로 관리하므로 추적 대상이 아니다
+.claude/worktrees/
