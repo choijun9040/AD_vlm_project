@@ -96,6 +96,19 @@ class Runner:
             self.stream.synchronize()
         return out
 
+    def close(self):
+        """엔진·실행 공간·버퍼를 내려놓는다 — 순차 측정에서 2부를 올리기 전에 1부 메모리를 돌려준다."""
+        if self._api == "cuda-python":
+            for d in (self.d_in, self.d_out):
+                self._rt.cudaFree(d)
+            self._rt.cudaStreamDestroy(self.stream)
+        else:
+            self.d_in.free(); self.d_out.free()
+        del self.ctx
+        del self.engine
+        import gc
+        gc.collect()
+
 
 def peak_mem_mib():
     """보드는 CPU/GPU 메모리를 공유하므로 시스템 전체 사용량을 본다."""
@@ -122,6 +135,10 @@ def main():
     ap.add_argument("--tag", default="run")
     ap.add_argument("--warmup", type=int, default=3)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--sequential", action="store_true",
+                    help="분할 엔진을 **차례로** 올린다: 1부로 전 이미지를 돌려 은닉 상태를 디스크에 두고, 1부를 내린 뒤 "
+                         "2부를 올린다. 두 엔진을 한꺼번에 올릴 메모리가 없을 때(6.4h). 지연은 이미지별 1부+2부 합")
+    ap.add_argument("--tmp", default="seq_tmp", help="--sequential의 은닉 상태 저장 디렉터리")
     args = ap.parse_args()
 
     root = Path(args.images)
@@ -138,6 +155,9 @@ def main():
     from transformers import AutoProcessor
     proc = AutoProcessor.from_pretrained(BASE, max_pixels=args.max_pixels,
                                          min_pixels=args.min_pixels)
+
+    if args.sequential and args.engine2:
+        return main_sequential(args, paths, proc)
 
     print(f"[엔진] {args.engine}")
     run = Runner(args.engine)
@@ -177,9 +197,69 @@ def main():
             print(f"  {i}/{len(paths)}  붕괴 {len(nan_imgs)}  "
                   f"지연 중앙값 {np.median(lat):.0f} ms")
 
+    finish(args, paths, nan_imgs, lat, per_image, base_mem, peak)
+
+
+def main_sequential(args, paths, proc):
+    """1부 → (디스크) → 2부. 두 엔진이 동시에 메모리에 있지 않다."""
+    tmp = Path(args.tmp)
+    tmp.mkdir(exist_ok=True)
+    base_mem = peak_mem_mib()
+    peak = base_mem
+
+    print(f"[순차 1/2] {args.engine}")
+    run = Runner(args.engine)
+    for _ in range(args.warmup):
+        run(np.zeros(run.i_shape, dtype=run.i_dtype))
+    lat1 = []
+    for i, p in enumerate(paths, 1):
+        enc = proc.image_processor(images=[Image.open(p).convert("RGB")], return_tensors="np")
+        pv = enc["pixel_values"]
+        if tuple(pv.shape) != run.i_shape:
+            raise SystemExit(f"형상 불일치: 이미지 {pv.shape} vs 엔진 {run.i_shape}. "
+                             f"--max_pixels가 엔진 빌드 때와 다르다.")
+        t0 = time.perf_counter()
+        h = run(pv)
+        lat1.append((time.perf_counter() - t0) * 1000)
+        np.save(tmp / f"{i:04d}.npy", h)
+        peak = max(peak, peak_mem_mib())
+        if i % 50 == 0:
+            print(f"  1부 {i}/{len(paths)}  지연 중앙값 {np.median(lat1):.0f} ms")
+    o_shape = run.o_shape
+    run.close()
+    del run
+
+    print(f"[순차 2/2] {args.engine2}")
+    run2 = Runner(args.engine2)
+    if tuple(o_shape) != tuple(run2.i_shape):
+        raise SystemExit(f"분할 엔진 형상 불일치: 1부 출력 {o_shape} vs 2부 입력 {run2.i_shape}")
+    for _ in range(args.warmup):
+        run2(np.zeros(run2.i_shape, dtype=run2.i_dtype))
+    nan_imgs, lat, per_image = [], [], []
+    for i, p in enumerate(paths, 1):
+        h = np.load(tmp / f"{i:04d}.npy")
+        t0 = time.perf_counter()
+        out = run2(h)
+        lat.append(lat1[i - 1] + (time.perf_counter() - t0) * 1000)
+        bad = bool(~np.isfinite(out).all())
+        if bad:
+            nan_imgs.append(p.name)
+        finite = out[np.isfinite(out)]
+        per_image.append({"image": p.name, "nan": bad,
+                          "max_abs": float(np.abs(finite).max()) if finite.size else None})
+        peak = max(peak, peak_mem_mib())
+        (tmp / f"{i:04d}.npy").unlink()
+        if i % 50 == 0:
+            print(f"  2부 {i}/{len(paths)}  붕괴 {len(nan_imgs)}  지연(1부+2부) 중앙값 {np.median(lat):.0f} ms")
+    run2.close()
+    finish(args, paths, nan_imgs, lat, per_image, base_mem, peak, sequential=True)
+
+
+def finish(args, paths, nan_imgs, lat, per_image, base_mem, peak, sequential=False):
     lat = np.array(lat)
     finite_max = [r["max_abs"] for r in per_image if r["max_abs"] is not None]
     res = {
+        "sequential": sequential,
         "tag": args.tag, "engine": args.engine, "engine2": args.engine2, "n": len(paths),
         "max_pixels": args.max_pixels,
         "nan_rate": len(nan_imgs) / len(paths),
@@ -201,7 +281,7 @@ def main():
         print(f"여유(유한값) p50 {res['headroom_p50']:.2f}배  "
               f"(max|act| {res['max_abs_p50']:.0f})")
     print("=" * 60)
-    print("A100 기준값(원본 해상도): baseline_v2 94.8% / full 0.0%")
+    print("비교 기준값은 개요 6.4f~6.4h의 해당 그래프·해상도 A100 값이다 (강타입 6.4h: 92.4 / 24.4 / 10.0%)")
 
     out = Path(args.out or f"orin_{args.tag}.json")
     out.write_text(json.dumps(res, ensure_ascii=False, indent=2))

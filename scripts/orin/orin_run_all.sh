@@ -90,6 +90,15 @@ build () {  # $1=모델 $2=조건(fp16|strict|fp32)
   # TRT_EXTRA: 메모리 부족 대응 등 추가 빌드 플래그(예: --memPoolSize=workspace:1024). 정밀도 설정은
   # 바꾸지 않는다. 쓴 값은 results/build_flags.txt에 남겨 결과와 함께 보고한다.
   echo "$(date -Is) $plan $flags ${TRT_EXTRA:-}" >> results/build_flags.txt
+  # **강타입은 Python 빌더로 (2026-10-02, 6.4h).** trtexec는 --skipInference여도 빌드한 엔진을 같은 프로세스에서
+  # 다시 적재해, 빌드 메모리를 쥔 채 가중치 자원 0.64 GB를 잡다 실패·segfault했다(802,816). 이 빌더는 엔진을
+  # 파일로 쓰고 바로 끝난다. 빌더 설정은 API 기본값(= trtexec 기본값). 레이어 정보 JSON은 남지 않는다.
+  if [ "$c" = typed ]; then
+    python3 orin_build_engine.py --onnx $m.onnx --out $plan --mode typed > logs/build_${m}_$c.log 2>&1 \
+      || { echo "  **빌드 실패** $plan — logs/build_${m}_$c.log 끝부분:"; tail -5 logs/build_${m}_$c.log; rm -f "$plan"; return 1; }
+    tail -1 logs/build_${m}_$c.log
+    return 0
+  fi
   # --skipInference (2026-10-02): 빌드만 하고 엔진을 저장한다. trtexec는 빌드 직후 같은 프로세스에서 시험 추론을
   # 도는데, 빌드 메모리를 쥔 채 실행 공간을 잡다가 실패해 **이미 만든 엔진까지 지워졌다**(802,816 강타입, 6.4h).
   # 측정은 orin_verify_tower.py가 따로 하므로 시험 추론은 필요 없다 — 엔진은 같다.
@@ -118,7 +127,9 @@ run () {
 measure_split () {  # 두 엔진을 이어 실행 — 붕괴는 2부 최종 출력에서 판정
   local m=$1 c=$2 tag=${1#tower_}_$2
   [ -f results/orin_$tag.json ] && { echo "  [건너뜀] results/orin_$tag.json"; return 0; }
-  python3 orin_verify_tower.py --engine ${m}_p1_$c.plan --engine2 ${m}_p2_$c.plan \
+  # --sequential (6.4h): 1부를 전 이미지에 돌려 은닉 상태를 디스크에 두고 1부를 내린 뒤 2부를 올린다 —
+  # 두 엔진을 한꺼번에 올릴 메모리가 없을 수 있다. 지연은 이미지별 1부+2부 합이다.
+  python3 orin_verify_tower.py --engine ${m}_p1_$c.plan --engine2 ${m}_p2_$c.plan --sequential \
       --images images --list img250.txt --max_pixels $MP --tag $tag \
       --out results/orin_$tag.json 2>&1 | tee logs/measure_$tag.log
 }
