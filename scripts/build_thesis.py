@@ -13,7 +13,7 @@ thesis_references_draft.md, thesis_figures.md)이고, 이 스크립트를 다시
      참고문헌 목록은 새 번호 순서로 다시 적는다. 인용되지 않은 항목은 경고한다.
   4. **그림을 넣는다** — 기준 줄(표 아래 조건 줄) 뒤에 그림과 캡션(thesis_figures.md)을 넣고, 기준 줄에
      "그림 X-Y"를 붙여 본문이 그림을 가리키게 한다.
-  5. 목차를 만든다.
+  5. 목차와 그림 목차를 만든다(그림 제목은 캡션 첫 문장).
 
 실행:
     python scripts/build_thesis.py            # → thesis_full_draft.md
@@ -170,6 +170,15 @@ def toc(text):
     return "\n".join(items)
 
 
+def figure_list(text):
+    """그림 목차 — 캡션 첫 문장을 제목으로 쓴다 (2026-10-02)."""
+    items = []
+    for m in re.finditer(r"^\*\*그림 (\d-\d)\.\*\* (.*)$", text, flags=re.M):
+        first = re.split(r"(?<=\.)\s", m.group(2), maxsplit=1)[0].rstrip(".")
+        items.append(f"- 그림 {m.group(1)}. {first.replace('**', '').replace('`', '')}")
+    return "\n".join(items)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--check", action="store_true")
@@ -209,7 +218,8 @@ def main():
             "Autonomous-Driving Vision-Language Models*\n\n"
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
     body = f"{ko}\n\n---\n\n{main_text}\n\n---\n\n# 참고문헌\n\n{bib}\n\n---\n\n{en}\n"
-    out = head + "# 목차\n\n" + toc(body) + "\n\n---\n\n" + body
+    out = (head + "# 목차\n\n" + toc(body) + "\n\n## 그림 목차\n\n" + figure_list(main_text)
+           + "\n\n---\n\n" + body)
 
     n_cite = len(re.findall(r"\[\d+\]", main_text))
     print(f"장 {len(CHAPTERS)}개 · 정정 블록 {dropped}개 제거 · 인용 표지 {n_cite}개 · 인용 문헌 {len(order)}개")
