@@ -204,7 +204,8 @@ def number_tables(text):
 def figure_list(text):
     """그림 목차 — 캡션 첫 문장을 제목으로 쓴다 (2026-10-02)."""
     items = []
-    for m in re.finditer(r"^\*\*그림 (\d-\d)\.\*\* (.*)$", text, flags=re.M):
+    # `\d+-\d+` — 한 자리만 받으면 그림이나 장이 10을 넘을 때 조용히 빠진다 (2026-10-02)
+    for m in re.finditer(r"^\*\*그림 (\d+-\d+)\.\*\* (.*)$", text, flags=re.M):
         first = re.split(r"(?<=\.)\s", m.group(2), maxsplit=1)[0].rstrip(".")
         items.append(f"- 그림 {m.group(1)}. {first.replace('**', '').replace('`', '')}")
     return "\n".join(items)
@@ -250,14 +251,33 @@ def main():
             "Autonomous-Driving Vision-Language Models*\n\n"
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
     body = f"{ko}\n\n---\n\n{main_text}\n\n---\n\n# 참고문헌\n\n{bib}\n\n---\n\n{en}\n"
-    lists = ("# 목차\n\n" + toc(body) + "\n\n## 그림 목차\n\n" + figure_list(main_text)
+    toc_items, figure_items = toc(body), figure_list(main_text)
+    lists = ("# 목차\n\n" + toc_items + "\n\n## 그림 목차\n\n" + figure_items
              + "\n\n## 표 목차\n\n" + table_items)
     out = head + lists + "\n\n---\n\n" + body
     # 목차만 따로 (2026-10-02). 합본과 같은 실행에서 쓰므로 항상 맞는다
     toc_doc = head.replace("석사학위논문 초안 · 합본 생성", "석사학위논문 목차 · 합본 생성") + lists + "\n"
 
+    # 원고 집계 (2026-10-02). **사람이 grep으로 세지 않는다** — `**표 3-3에서 주장하는…**` 같은
+    # 문단 제목이 표 제목 패턴에 걸리고, `## 그림 목차`·`## 표 목차`가 본문 절로 세어진다.
+    # 둘 다 실제로 틀렸다(표 41·절 59로 보고했으나 40·57이었다). 아래는 목차를 만든 바로 그
+    # 자료에서 세므로 정의상 어긋날 수 없고, 어긋나면 그것이 결함이라 아래 검증이 멈춘다.
+    n_sec = sum(1 for l in toc_items.split("\n") if l.startswith("  - "))
+    n_tab = len([l for l in table_items.split("\n") if l.strip()])
+    n_fig = len([l for l in figure_items.split("\n") if l.strip()])
+
+    # 번호를 손으로 적은 표가 섞이면 본문과 목차가 어긋난다 — 번호 매김 뒤 패턴 수로 잡는다
+    n_body_tab = len(re.findall(r"^\*\*표 \d+-\d+\.", main_text, flags=re.M))
+    if n_body_tab != n_tab:
+        raise SystemExit(f"표 수 불일치: 본문 {n_body_tab} ≠ 목차 {n_tab} — "
+                         "`**표 N-M.**`를 직접 쓴 표가 있는지 본다 (키 형식 `**표 [키].**`를 쓸 것)")
+    if n_fig != len(FIGURES):
+        raise SystemExit(f"그림 수 불일치: 캡션 {n_fig} ≠ 삽입 설정 {len(FIGURES)} — "
+                         "thesis_figures.md의 캡션과 FIGURES 목록 둘 다 본다")
+
     n_cite = len(re.findall(r"\[\d+\]", main_text))
     print(f"장 {len(CHAPTERS)}개 · 정정 블록 {dropped}개 제거 · 인용 표지 {n_cite}개 · 인용 문헌 {len(order)}개")
+    print(f"절 {n_sec}개 · 표 {n_tab}개 · 그림 {n_fig}개 — 본문·목차 대조 통과")
     print(f"그림 {len(FIGURES)}개 · 번호 대응(옛→새): " + ", ".join(f"{o}→{new_no[o]}" for o in order))
     if uncited:
         print(f"⚠ 인용되지 않은 참고문헌(옛 번호): {uncited}")
