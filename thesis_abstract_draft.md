@@ -5,7 +5,7 @@
 > 범위, 도구, 배포 런타임 확인 — 를 요약한다. 근거는 9장 결론 초안의 9.1·9.2절이다.
 >
 > **작성 규칙.** 수치마다 조건(해상도·통계량)을 짧게 붙인다. 확인된 것은 A100의 TensorRT fp16 엔진까지다.
-> Orin은 엔진 빌드가 메모리 부족으로 실패해(6.9절) 미검증 사실 한 문장만 넣었다(2026-10-01).
+> Orin은 강타입 엔진으로 확인한 결과 한 문장을 넣었다(6.9절, 2026-10-02). 관행 빌드 불가 등 조건은 본문에 둔다.
 > 분량은 국문 약 1,160자(공백 제외), 영문 약 450단어(제목·주요어 포함)다. 학교 규정 분량이 정해지면 맞춘다.
 >
 > **정확도 문장의 범위.** "다섯 학생이 정확도로 구별되지 않는다"로 쓰지 않는다 — 출력 증류 학생(46.74%)은
@@ -42,7 +42,7 @@ Qwen2.5-VL-7B 교사를 3B 학생으로 증류하면서 데이터·LoRA 구성·
 넘는 이미지의 비율로 붕괴율을 추정하며(PyTorch fp16 기준 6개 모델 평균 오차 2.1%p), 대상이 지원하는 형식에 맞춰 형식 전환이나
 가중치 교정을 권고한다. 배포 조건에서 도구가 교정한 가중치는 정확도를 1.36%에서 50.73%로 되돌렸다. 비전
 인코더를 ONNX로 내보내 TensorRT fp16 엔진으로 실행해도 같은 붕괴가 재현되었다. 엣지 보드(Jetson Orin Nano
-8GB)에서는 엔진 빌드가 메모리 부족으로 실패해 검증하지 못했다.
+8GB)의 강타입 엔진도 A100과 같은 비율로 붕괴했고(802,816 해상도, 24.4%), 교정 엔진은 붕괴하지 않았다.
 
 압축된 주행 VLM의 저정밀 배포에서 부족한 것은 여유를 움직이는 수단이 아니라 **그것을 재는 일**이다.
 
@@ -85,8 +85,8 @@ overflow (bf16), estimates the collapse rate as the fraction of images exceeding
 2.1 percentage points over six models in PyTorch fp16), and recommends a format switch or weight correction according to the
 formats the target supports. Under deployment conditions, the tool's corrected weights restore accuracy from
 1.36% to 50.73%. The same collapse reproduces when the vision encoder is exported to ONNX and run as a TensorRT
-fp16 engine. On an edge board (Jetson Orin Nano 8GB) the engine could not be built for lack of memory, so
-the board remains unverified.
+fp16 engine. On an edge board (Jetson Orin Nano 8GB), a strongly typed engine collapsed at the same rate as on the
+A100 (24.4% at 802,816 pixels), and the corrected engine did not collapse.
 
 What low-precision deployment of compressed driving VLMs lacks is not the means to move headroom, but
 **measuring it**.
