@@ -53,6 +53,7 @@ FIGURES = [
     ("4-2", "figures/fig2_resolution_collapse.png", "(fp16 붕괴율, 250장, 이미지 단위로 출력이 NaN이면 붕괴)"),
     ("4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 250장, 마지막 블록, 여유는 p50·bf16 측정)"),
     ("4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
+    ("6-1", "figures/fig6_runtime_collapse.png", "(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
     ("7-1", "figures/fig_gate_calibration.png", "최악 여유 1.00에서 붕괴 2%, 1.05에서 0%다. 따로 보정할 상수가 없다."),
 ]
 

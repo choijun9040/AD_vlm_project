@@ -1,0 +1,23 @@
+{
+  "sequential": true,
+  "tag": "baseline_v2_802816h_fixa_typed",
+  "engine": "tower_baseline_v2_802816h_fixa_p1_typed.plan",
+  "engine2": "tower_baseline_v2_802816h_fixa_p2_typed.plan",
+  "n": 250,
+  "max_pixels": 802816,
+  "nan_rate": 0.0,
+  "nan_count": 0,
+  "latency_ms": {
+    "p50": 1069.4224089675117,
+    "p95": 1070.1070099472417,
+    "min": 1065.6829130020924
+  },
+  "mem_mib": {
+    "baseline": 1902.08203125,
+    "peak": 2708.69140625,
+    "delta": 806.609375
+  },
+  "max_abs_p50": 57.234375,
+  "headroom_p50": 1144.4870324870326,
+  "nan_images": []
+}
