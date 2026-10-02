@@ -3325,8 +3325,9 @@ hook 개입이 가중치 편집을 대신한다. (bias 관련 정정은 위 §5 
 | `eval_results/orin/{chunked_20261001,typed_20261002}/` | 0.4 GB | 압축본이 커밋돼 있다(`orin_results_*.tar.gz`) | 압축 풀기 |
 
 **남긴 것.** `onnx/rh/`(fp16 그래프 9개, 13 GB) — 보드 결과(6.4h)를 재현하는 그래프. 보드 꾸러미(`onnx/orin_pkg_*.tar.gz`)와
-체크섬, 단일 그래프 원본(`onnx/*.onnx`)도 그대로다. `onnx/SHA256SUMS`에는 지운 `rc/` 항목이 남아 있으나 보드 스크립트는
-해당 해상도 파일만 검사하므로 무해하다.
+체크섬, 단일 그래프 원본(`onnx/*.onnx`)도 그대로다. `onnx/SHA256SUMS`에서 지운 `rc/` 항목 36개를 뺐다 — 남은 37개
+(보드 꾸러미 `orin_pkg_20261002t2.tar.gz` + `rh/` ONNX 36개)는 다시 검사해 모두 일치. 정리 전 파일은
+`onnx/SHA256SUMS_before_cleanup_20261002`.
 
 ## 7. 남은 할 일
 
