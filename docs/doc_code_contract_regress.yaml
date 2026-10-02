@@ -46,3 +46,30 @@ pairs:
       function: 존재하지_않는_함수
       must_use: ["x"]
     broke_once: "합성 위반"
+
+  # ── must_say·argparse 유형 (2026-10-02 추가) ──────────────────────────
+  - id: regress-argparse-default-mismatch
+    claim: "(합성) 기본값 불일치를 잡는가 — 실제 --max_pixels 기본값은 None이다"
+    code:
+      file: scripts/headroom_guard.py
+      argparse:
+        - option: "--max_pixels"
+          default: 200704
+    broke_once: "합성 위반"
+
+  - id: regress-argparse-option-missing
+    claim: "(합성) 인자가 사라진 경우를 잡는가"
+    code:
+      file: scripts/headroom_guard.py
+      argparse:
+        - option: "--존재하지-않는-인자"
+          default: null
+    broke_once: "합성 위반"
+
+  - id: regress-must-say-missing
+    claim: "(합성) 도구가 말해야 할 것을 말하지 않을 때 잡는가"
+    code:
+      file: scripts/headroom_guard.py
+      function: main
+      must_say: ["이 문구는 도구가 말하지 않는다"]
+    broke_once: "합성 위반"

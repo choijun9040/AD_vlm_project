@@ -110,3 +110,38 @@ pairs:
       function: print_verdict
       must_use: ["zero_obs_upper_bound"]
     broke_once: "깨진 적은 없다. 상한 없이 '안전'만 찍으면 표본 30장과 250장이 같은 말로 읽힌다"
+
+  # ── 7.2절 ②③⑧ (2026-10-02 추가). 앞서 "식별자로 고정하기 어렵다"며 뺐던 셋이다.
+  # 검사 유형을 늘려 걸었다 — ②는 기본값 자체가 논거이고, ③은 하드코딩 회귀가 실제로
+  # 있었고, ⑧은 도구가 **내는 말**을 보면 된다.
+
+  - id: model-default-max-pixels
+    claim: "모델 기본 설정을 기본값으로 쓴다 — `--max_pixels`를 주지 않으면 모델 자신의 설정을 따른다 (7.2②)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["모델 기본 설정을 기본값으로"]
+    code:
+      file: scripts/headroom_guard.py
+      argparse:
+        - option: "--max_pixels"
+          default: null
+    broke_once: "깨진 적은 없다. 여기에 값이 박히면 **문서가 거짓이 되는데 식별자 검사로는 보이지 않는다** — 그래서 기본값을 직접 본다"
+
+  - id: family-name-pattern
+    claim: "계열 차이는 이름 패턴으로 흡수한다 — 블록 리스트 이름이 계열마다 다르다 (7.2③)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["이름 패턴으로 흡수"]
+    code:
+      file: scripts/headroom_guard.py
+      function: get_blocks
+      must_use: ["find_blocks"]
+    broke_once: "2026-09-15 — `tower.blocks`를 하드코딩해 SmolVLM(Idefics3, `encoder.layers`)에서 죽었다. 하드코딩으로 되돌아가면 이 검사가 잡는다"
+
+  - id: fix-cost-reported
+    claim: "교정은 권하지 않고 비용과 함께 보고한다 — 완전 등가가 아니며 정확도 비용은 따로 재야 한다 (7.2⑧)"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["교정은 권하지 않고"]
+    code:
+      file: scripts/headroom_guard.py
+      function: main
+      must_say: ["완전 등가가 아니다", "정확도 비용"]
+    broke_once: "깨진 적은 없다. 비용 경고가 사라지면 도구가 교정을 **권하는 물건**이 되어 7.2⑧의 설계 판단과 어긋난다"

@@ -15,6 +15,9 @@ docstring에는 "p50"이 (과거 판을 설명하려고) 나오므로, 텍스트
 실행:
     python scripts/verify_doc_code_contract.py
     python scripts/verify_doc_code_contract.py --manifest docs/doc_code_contract_regress.yaml  # 회귀(반드시 1)
+
+검사 유형 다섯: function+must_use / must_not_use / must_say(도구가 내는 말) ·
+constant+value · argparse(기본값 자체가 논거인 자리).
 """
 
 import argparse
@@ -47,6 +50,46 @@ def used_names(fn):
     return names
 
 
+def said_strings(fn):
+    """함수가 **내는 말** — docstring을 뺀 본문의 문자열 리터럴 전부.
+
+    `must_say`는 부분 일치로 본다. 출력 문장은 괄호로 이어 붙여 조각나 있고(f-string도
+    조각난다), 문구를 글자 그대로 고정하면 사소한 수정마다 검사가 깨져 **아무도 믿지 않는
+    검사**가 된다. 보려는 것은 "도구가 이 말을 하는가"이지 문장의 형태가 아니다.
+    """
+    body = fn.body
+    if (body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant)
+            and isinstance(body[0].value.value, str)):
+        body = body[1:]
+    out = []
+    for stmt in body:
+        for n in ast.walk(stmt):
+            if isinstance(n, ast.Constant) and isinstance(n.value, str):
+                out.append(n.value)
+    return out
+
+
+def argparse_defaults(tree):
+    """`ap.add_argument("--opt", ..., default=X)` → {"--opt": X}.
+
+    문서가 *"주지 않으면 모델 자신의 설정을 쓴다"*처럼 **기본값 자체를 근거로 삼는** 자리가
+    있다. 그 자리에 값이 박히면 문서가 거짓이 되는데, 식별자 검사로는 보이지 않는다.
+    """
+    out = {}
+    for n in ast.walk(tree):
+        if (isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+                and n.func.attr == "add_argument" and n.args
+                and isinstance(n.args[0], ast.Constant) and isinstance(n.args[0].value, str)):
+            opt = n.args[0].value
+            for kw in n.keywords:
+                if kw.arg == "default" and isinstance(kw.value, ast.Constant):
+                    out[opt] = kw.value.value
+                elif kw.arg == "default":
+                    out[opt] = "<non-literal>"
+            out.setdefault(opt, "<absent>")
+    return out
+
+
 def module_constants(tree):
     out = {}
     for node in tree.body:
@@ -72,6 +115,16 @@ def check_code(spec):
         elif consts[name] != spec["value"]:
             problems.append(f"상수 불일치: {name} = {consts[name]!r}, 선언은 {spec['value']!r}")
 
+    if "argparse" in spec:
+        defaults = argparse_defaults(tree)
+        for item in spec["argparse"]:
+            opt = item["option"]
+            if opt not in defaults:
+                problems.append(f"인자 없음: {opt} ({spec['file']})")
+            elif defaults[opt] != item["default"]:
+                problems.append(f"기본값 불일치: {opt} = {defaults[opt]!r}, 선언은 {item['default']!r}"
+                                " — 문서가 기본값을 근거로 삼는 자리다")
+
     if "function" in spec:
         fns = {n.name: n for n in ast.walk(tree)
                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))}
@@ -86,6 +139,11 @@ def check_code(spec):
             for bad in spec.get("must_not_use", []):
                 if bad in names:
                     problems.append(f"{fname}()가 «{bad}»를 쓴다 — 문서가 쓰지 않기로 한 것이다")
+            said = said_strings(fns[fname])
+            for phrase in spec.get("must_say", []):
+                if not any(phrase in s for s in said):
+                    problems.append(f"{fname}()가 «{phrase}»를 말하지 않는다 — "
+                                    "문서는 도구가 이것을 알린다고 적고 있다")
     return problems
 
 
