@@ -1,0 +1,48 @@
+# 문서의 논거 ↔ 코드 구현 (원장 L9). 2026-10-02 신설.
+#
+# **왜 필요한가.** 문서에서 판단이 바뀌어도 코드가 따라오지 않는 일이 2026-09-17에 두 번
+# 나왔다. 값 검사(audit_numbers)도 출처 검사(verify_claim_provenance)도 이 부류를 통과시킨다
+# — 문서 안에서는 일관되기 때문이다. 어긋난 것은 문서와 산출물 사이다.
+#
+# **무엇을 닫는가.** 여기 등록된 쌍에 대해서는 **되돌림이 자동으로 잡힌다.** 등록되지 않은
+# 범위는 여전히 사람 몫이다(그래서 L9는 「절반 닫힘」이고 완전 닫힘이 아니다).
+#
+# **등록 기준.** 문서가 특정 코드 동작을 근거로 삼는 자리. 특히 7장 도구는 4~6장의 결론을
+# 실행하는 물건이므로, 4~6장의 판단이 바뀌면 그 판단을 구현한 함수를 여기 건다.
+#
+# code 검사 셋:
+#   function + must_use  — 그 함수가 이 식별자/문자열 키를 쓴다 (docstring·주석은 제외한다.
+#                          설명이 아니라 동작을 본다)
+#   function + must_not_use — 쓰지 않는다
+#   constant + value     — 모듈 상수가 이 값이다
+
+pairs:
+  - id: gate-statistic
+    claim: "게이트 판정은 최악 여유로 한다 — p50으로 걸면 λ=0.0(p50 1.14·최악 0.87, 11% 붕괴)을 놓친다"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["최악 여유"]
+    code:
+      file: scripts/headroom_guard.py
+      function: plan_fix
+      must_use: ["headroom_worst"]
+    broke_once: "2026-09-17 — 문서는 §7.4에서 최악으로 결론냈는데 plan_fix()가 계속 p50으로 걸고 있었다"
+
+  - id: dla-available-formats
+    claim: "bf16 권고는 대상이 그 형식을 지원할 때만 유효하다 — Jetson DLA는 FP16·INT8만 지원한다"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["DLA"]
+    code:
+      file: scripts/headroom_guard.py
+      function: main
+      must_use: ["available_formats"]
+    broke_once: "2026-09-17 — 문서는 DLA에 bf16이 없다고 적었는데 도구가 대상을 묻지 않고 모두에게 bf16을 권했다"
+
+  - id: marginal-headroom
+    claim: "보조 경고 임계값은 1.25다 — 측정이 아니라 설계 판단이며 그 사실을 함께 출력한다"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["1.25"]
+    code:
+      file: scripts/headroom_guard.py
+      constant: MARGINAL_HEADROOM
+      value: 1.25
+    broke_once: "깨진 적은 없다. 원장 O4가 '측정 아님'을 세 곳으로 확대한 뒤 상수가 흩어지지 않게 건다"

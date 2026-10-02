@@ -1,0 +1,48 @@
+# 검사기 자신의 회귀 시험 — **반드시 종료코드 1이어야 한다.**
+# claim_provenance_regress.yaml과 같은 역할이다. 네 실패 유형을 일부러 심어 둔다.
+#
+#   python scripts/verify_doc_code_contract.py --manifest docs/doc_code_contract_regress.yaml
+#   echo $?   # 1
+
+pairs:
+  - id: regress-constant-mismatch
+    claim: "(합성) 상수 불일치를 잡는가 — 실제 MARGINAL_HEADROOM은 1.25다"
+    code:
+      file: scripts/headroom_guard.py
+      constant: MARGINAL_HEADROOM
+      value: 1.5
+    broke_once: "합성 위반"
+
+  - id: regress-must-use-missing
+    claim: "(합성) 문서의 논거가 코드에 없을 때 잡는가"
+    code:
+      file: scripts/headroom_guard.py
+      function: plan_fix
+      must_use: ["headroom_median_only"]
+    broke_once: "합성 위반"
+
+  - id: regress-must-not-use-violated
+    claim: "(합성) 쓰지 않기로 한 것을 쓸 때 잡는가 — plan_fix는 headroom_worst를 실제로 쓴다"
+    code:
+      file: scripts/headroom_guard.py
+      function: plan_fix
+      must_not_use: ["headroom_worst"]
+    broke_once: "합성 위반"
+
+  - id: regress-docs-lost-claim
+    claim: "(합성) 코드는 있는데 문서가 주장을 잃은 경우를 잡는가"
+    docs: [thesis_ch7_ch8_draft.md]
+    docs_must_contain: ["이 문구는 문서에 없다"]
+    code:
+      file: scripts/headroom_guard.py
+      constant: MARGINAL_HEADROOM
+      value: 1.25
+    broke_once: "합성 위반"
+
+  - id: regress-missing-function
+    claim: "(합성) 함수가 사라진 경우를 잡는가"
+    code:
+      file: scripts/headroom_guard.py
+      function: 존재하지_않는_함수
+      must_use: ["x"]
+    broke_once: "합성 위반"
