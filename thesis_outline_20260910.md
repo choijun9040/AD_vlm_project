@@ -3313,6 +3313,21 @@ hook 개입이 가중치 편집을 대신한다. (bias 관련 정정은 위 §5 
 
 ---
 
+### 디스크 정리 기록 (2026-10-02, Orin 측정 종료 후, 사용자 승인)
+
+보드 측정이 끝나 **재생성 가능한 중간 산출물만** 지웠다. **여유 43 GB → 107 GB (사용률 84% → 59%).**
+
+| 지운 것 | 크기 | 결과 기록 위치 | 재생성 |
+|---|---|---|---|
+| `onnx/rc/` (나눠 계산 fp32 그래프, 3해상도×3모델 분할) | 24 GB | `eval_results/trt_{nativec,802816c,401408c}_*.json` | `export_vision_tower_onnx.py --split 16 --attn chunked --max_pixels {1440000,802816,401408}`, 개당 약 10분 |
+| `onnx/r802816/`, `onnx/r802816s/`, `onnx/r401408s/` | 27 GB | `eval_results/trt_802816*_*.json`, `trt_401408s_*.json` | 같은 스크립트(`--split 16` 유무), 개당 약 10분 |
+| `trt_inputs_{401408,802816,native250}.npz` | 14 GB | — (TRT 입력 캐시) | `scripts/prep_trt_inputs.py --limit 250 --max_pixels …`, 수 분 |
+| `eval_results/orin/{chunked_20261001,typed_20261002}/` | 0.4 GB | 압축본이 커밋돼 있다(`orin_results_*.tar.gz`) | 압축 풀기 |
+
+**남긴 것.** `onnx/rh/`(fp16 그래프 9개, 13 GB) — 보드 결과(6.4h)를 재현하는 그래프. 보드 꾸러미(`onnx/orin_pkg_*.tar.gz`)와
+체크섬, 단일 그래프 원본(`onnx/*.onnx`)도 그대로다. `onnx/SHA256SUMS`에는 지운 `rc/` 항목이 남아 있으나 보드 스크립트는
+해당 해상도 파일만 검사하므로 무해하다.
+
 ## 7. 남은 할 일
 
 ### 보류 — 자원이 확보되면 진행 (2026-09-14 결정)
