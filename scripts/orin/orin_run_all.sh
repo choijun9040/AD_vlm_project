@@ -7,6 +7,7 @@
 #   bash orin_run_all.sh fp16 802816   # 802,816 해상도 판본 (원본 해상도 OOM 이후, 사전 등록 6.4c)
 #   bash orin_run_all.sh fp16 nativec  # 어텐션 나눠 계산 그래프 (6.4f) — 원본 해상도부터
 #   bash orin_run_all.sh fp16 nativeh  # fp16 가중치 그래프 (6.4g) — 원본 해상도부터
+#   bash orin_run_all.sh typed nativeh # 같은 fp16 그래프를 강타입으로 빌드 (6.4h)
 #   TRT_EXTRA="--memPoolSize=workspace:1024" bash orin_run_all.sh fp16 802816   # 빌드 메모리 부족 시
 set -u
 cd "$(dirname "$0")"
@@ -80,6 +81,7 @@ build () {  # $1=모델 $2=조건(fp16|strict|fp32)
   case $c in
     fp16)   flags="--fp16" ;;
     strict) flags="--fp16 --precisionConstraints=obey --noTF32" ;;
+    typed)  flags="--stronglyTyped" ;;   # 강타입 — 정밀도는 그래프 자료형이 정한다 (6.4h)
     fp32)   flags="" ;;
   esac
   echo "  [빌드] $plan ($flags) — 수십 분 걸릴 수 있다"
@@ -117,6 +119,13 @@ measure_split () {  # 두 엔진을 이어 실행 — 붕괴는 2부 최종 출�
       --images images --list img250.txt --max_pixels $MP --tag $tag \
       --out results/orin_$tag.json 2>&1 | tee logs/measure_$tag.log
 }
+
+# ── 강타입 (6.4h) — fp16 그래프(*h)를 --stronglyTyped로. 이 모드만 돌고 끝난다 ──────
+if [ "$MODE" = typed ]; then
+  echo "[2] 강타입 --stronglyTyped"
+  for m in $MODELS; do run $m typed; done
+  exit 0
+fi
 
 # ── 2. 관행 --fp16 — 가장 중요한 셋. 붕괴 쪽부터 ────────────────────────
 echo "[2] 관행 --fp16"

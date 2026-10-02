@@ -57,8 +57,12 @@ def build(onnx_path, mode, workspace_gb=24, log_path=None):
     logger = Cap()
     logger.min_severity = trt.ILogger.Severity.VERBOSE
     builder = trt.Builder(logger)
-    network = builder.create_network(
-        1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH))
+    # **typed (2026-10-02, 6.4h).** 강타입 — 정밀도를 그래프의 자료형이 정한다(trtexec --stronglyTyped와 같다).
+    # 정밀도 플래그(FP16 등)는 함께 쓸 수 없다. TensorRT 11은 모든 네트워크를 이렇게 빌드한다.
+    flags = 1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+    if mode == "typed":
+        flags |= 1 << int(trt.NetworkDefinitionCreationFlag.STRONGLY_TYPED)
+    network = builder.create_network(flags)
     parser = trt.OnnxParser(network, logger)
     # **parse(bytes)가 아니라 parse_from_file을 써야 한다.** 이 그래프는 가중치를
     # 외부 데이터(.onnx.data)로 두는데, 바이트만 넘기면 파서가 그 상대 경로를
