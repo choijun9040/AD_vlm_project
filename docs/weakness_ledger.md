@@ -58,7 +58,9 @@
 | C10 | **이 원장 자신이 논문과 어긋남** — 대응표에서 한계가 빠짐 · 번호 중복 · 열림 항목에 담당·비용 누락 | `ledger_stats.py` — 구획 경계로 한정해 세므로 **대응표의 `~~L~~` 표기에 오염되지 않는다.** 논문 8.3·8.4 항목과 대응표를 직접 대조한다 |
 | C9 | 문서의 논거가 **코드에 없음** — 판정 통계량·형식 권고 조건·임계 상수·기본값·도구가 내는 말 (**등록된 쌍만**, 현재 12쌍) | `verify_doc_code_contract.py` + `docs/doc_code_contract.yaml` — AST로 보므로 docstring·주석의 설명에 속지 않는다. 검사 5종: 식별자 사용/비사용 · 내는 말(부분 일치) · 모듈 상수 · argparse 기본값 |
 
-**검사기 자신의 회귀 시험**: `docs/claim_provenance_regress.yaml` · `docs/doc_code_contract_regress.yaml` (둘 다 반드시 종료코드 1)
+**검사기 자신의 회귀 시험**: `docs/claim_provenance_regress.yaml` **(`--strict` 필수)** · `docs/doc_code_contract_regress.yaml` — 둘 다 **반드시 종료코드 1**. `verify_all.py`가 기대 종료코드를 표에 적고 대조하므로 사람이 이 반전을 기억하지 않는다.
+
+> **2026-10-02 — 이 줄이 `--strict`를 빼고 있었다.** `verify_claim_provenance.py`는 그 플래그 없이는 문제를 찍고도 **종료코드 0**을 내므로, 회귀 시험이 **늘 통과로 읽히는 상태**였다. 통합 검사 스크립트를 만들며 드러났다 — **원장의 주장과 코드가 어긋난 실례**이고 C9가 다루는 부류다. 평상시 검사도 `--strict`로 돌려 문제를 실패로 만든다.
 
 ---
 

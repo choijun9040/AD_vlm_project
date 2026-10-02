@@ -260,3 +260,13 @@ pairs:
       function: main
       must_use: ["paper_limits", "map_L"]
     broke_once: "2026-10-02 — 대응표 대조를 수동으로 두 번 했고(한계 넷 누락, 8.4절 누락), 구획을 안 나눠 센 집계가 두 번 틀렸다"
+
+  - id: verify-all-expected-codes
+    claim: "통합 검사가 기대 종료코드를 표에 적고 대조한다 — 회귀 시험 둘은 종료코드 1이 정상이라 사람이 기억하면 틀린다"
+    docs: [docs/weakness_ledger.md]
+    docs_must_contain: ["기대 종료코드를 표에 적고 대조하므로"]
+    code:
+      file: scripts/verify_all.py
+      function: main
+      must_use: ["CHECKS", "WATCH_BASELINE"]
+    broke_once: "2026-10-02 — 원장이 `--strict`를 빼고 '반드시 종료코드 1'이라 적어, 출처 대조 회귀가 늘 통과로 읽히고 있었다. 통합 스크립트를 만들며 드러났다"
