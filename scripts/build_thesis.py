@@ -13,7 +13,7 @@ thesis_references_draft.md, thesis_figures.md)이고, 이 스크립트를 다시
      참고문헌 목록은 새 번호 순서로 다시 적는다. 인용되지 않은 항목은 경고한다.
   4. **그림을 넣는다** — 기준 줄(표 아래 조건 줄) 뒤에 그림과 캡션(thesis_figures.md)을 넣고, 기준 줄에
      "그림 X-Y"를 붙여 본문이 그림을 가리키게 한다.
-  5. 목차와 그림 목차를 만든다(그림 제목은 캡션 첫 문장).
+  5. 목차·그림 목차·표 목차를 만든다(그림 제목은 캡션 첫 문장, 표는 `**표 [키].** 제목`에 장별 번호, 본문 `[표:키]`는 번호로).
 
 실행:
     python scripts/build_thesis.py            # → thesis_full_draft.md
@@ -170,6 +170,36 @@ def toc(text):
     return "\n".join(items)
 
 
+def number_tables(text):
+    """표 번호 (2026-10-02). 장별 초안의 `**표 [키].** 제목`에 장별 번호(표 4-2)를 매기고, 본문의
+    `[표:키]`를 그 번호로 바꾼다. 번호는 장 안에서 나오는 순서다 — 표를 넣거나 빼도 다시 맞춰진다."""
+    out, numbers, items, chap, k = [], {}, [], None, 0
+    for ln in text.split("\n"):
+        m = re.match(r"^# (\d+)장", ln)
+        if m:
+            chap, k = int(m.group(1)), 0
+        m = re.match(r"^\*\*표 \[([\w-]+)\]\.\*\* (.*)$", ln)
+        if m:
+            if chap is None:
+                raise SystemExit(f"장 밖의 표: {m.group(1)}")
+            if m.group(1) in numbers:
+                raise SystemExit(f"표 키 중복: {m.group(1)}")
+            k += 1
+            no = f"{chap}-{k}"
+            numbers[m.group(1)] = no
+            items.append(f"- 표 {no}. {m.group(2).replace('`', '')}")
+            ln = f"**표 {no}.** {m.group(2)}"
+        out.append(ln)
+    text = "\n".join(out)
+
+    def ref(m):
+        if m.group(1) not in numbers:
+            raise SystemExit(f"없는 표를 가리킨다: [표:{m.group(1)}]")
+        return f"표 {numbers[m.group(1)]}"
+    text = re.sub(r"\[표:([\w-]+)\]", ref, text)
+    return text, "\n".join(items)
+
+
 def figure_list(text):
     """그림 목차 — 캡션 첫 문장을 제목으로 쓴다 (2026-10-02)."""
     items = []
@@ -210,6 +240,7 @@ def main():
     bib = "\n".join(f"{new_no[o]}. {refs[o]}" for o in order)
 
     main_text = insert_figures(main_text, parse_captions())
+    main_text, table_items = number_tables(main_text)
 
     today = dt.date.today().isoformat()
     head = (f"<!-- 자동 생성: scripts/build_thesis.py ({today}). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->\n\n"
@@ -219,6 +250,7 @@ def main():
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
     body = f"{ko}\n\n---\n\n{main_text}\n\n---\n\n# 참고문헌\n\n{bib}\n\n---\n\n{en}\n"
     out = (head + "# 목차\n\n" + toc(body) + "\n\n## 그림 목차\n\n" + figure_list(main_text)
+           + "\n\n## 표 목차\n\n" + table_items
            + "\n\n---\n\n" + body)
 
     n_cite = len(re.findall(r"\[\d+\]", main_text))
