@@ -270,3 +270,13 @@ pairs:
       function: main
       must_use: ["CHECKS", "WATCH_BASELINE"]
     broke_once: "2026-10-02 — 원장이 `--strict`를 빼고 '반드시 종료코드 1'이라 적어, 출처 대조 회귀가 늘 통과로 읽히고 있었다. 통합 스크립트를 만들며 드러났다"
+
+  - id: ci-runs-verify-all
+    claim: "CI가 `verify_all.py`를 돌리고, 의존성이 없는 검사는 건너뛴다 — 건너뜀은 실패가 아니다"
+    docs: [.github/workflows/verify.yml]
+    docs_must_contain: ["verify_all.py"]
+    code:
+      file: scripts/verify_all.py
+      function: main
+      must_use: ["skipped", "have"]
+    broke_once: "깨진 적은 없다. 건너뜀이 실패로 처리되면 CI가 늘 빨갛고, 반대로 통과로만 찍히면 **무엇이 안 돌았는지 모른다** — 로그에 ⊘로 남긴다"

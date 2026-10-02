@@ -17,6 +17,7 @@
 """
 
 import argparse
+import importlib.util
 import re
 import subprocess
 import sys
@@ -24,25 +25,31 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# (이름, 명령, 기대 종료코드, 비고)
+# (이름, 명령, 기대 종료코드, 비고, 필요한 모듈)
+# **필요한 모듈이 없으면 건너뛴다 — 실패가 아니다.** 문서·메타 검사 여섯은 pyyaml만 있으면
+# 돌고, 도구 스모크만 torch가 필요하다. CI는 가벼운 환경에서 여섯을 돌리고 하나를 건너뛴다.
 CHECKS = [
-    ("수치 감사 (C1·C7·C8)", ["scripts/audit_numbers.py"], 0, "watch 건수는 아래에서 따로 본다"),
+    ("수치 감사 (C1·C7·C8)", ["scripts/audit_numbers.py"], 0, "watch 건수는 아래에서 따로 본다", ()),
     # `--strict` 없이는 문제를 찍고도 **종료코드 0**이다. 원장 61행이 그 플래그를 빼고
     # "반드시 종료코드 1"이라 적어, 회귀 시험이 **늘 통과로 읽히는 상태**였다 (2026-10-02 발견).
-    ("출처 대조 (C1~C3)", ["scripts/verify_claim_provenance.py", "--strict"], 0, ""),
+    ("출처 대조 (C1~C3)", ["scripts/verify_claim_provenance.py", "--strict"], 0, "", ("yaml",)),
     ("출처 대조 — 회귀", ["scripts/verify_claim_provenance.py", "--strict",
                           "--manifest", "docs/claim_provenance_regress.yaml"], 1,
-     "**1이 정상** — 합성 위반을 잡아야 한다"),
-    ("문서↔코드 계약 (C9)", ["scripts/verify_doc_code_contract.py"], 0, ""),
+     "**1이 정상** — 합성 위반을 잡아야 한다", ("yaml",)),
+    ("문서↔코드 계약 (C9)", ["scripts/verify_doc_code_contract.py"], 0, "", ("yaml",)),
     ("문서↔코드 계약 — 회귀", ["scripts/verify_doc_code_contract.py",
                                "--manifest", "docs/doc_code_contract_regress.yaml"], 1,
-     "**1이 정상** — 합성 위반을 잡아야 한다"),
-    ("원장 정합성 (C10)", ["scripts/ledger_stats.py", "--quiet"], 0, ""),
-    ("합본 집계·목차 대조", ["scripts/build_thesis.py", "--check"], 0, ""),
-    ("도구 판정 분기 (O10)", ["scripts/headroom_guard.py", "selftest"], 0, "모델 없이 돈다"),
+     "**1이 정상** — 합성 위반을 잡아야 한다", ("yaml",)),
+    ("원장 정합성 (C10)", ["scripts/ledger_stats.py", "--quiet"], 0, "", ()),
+    ("합본 집계·목차 대조", ["scripts/build_thesis.py", "--check"], 0, "", ()),
+    ("도구 판정 분기 (O10)", ["scripts/headroom_guard.py", "selftest"], 0, "모델 없이 돈다", ("torch",)),
 ]
 
 WATCH_BASELINE = 33     # 2026-10-02. 바꿀 때는 개요 §7에 사유를 적는다
+
+
+def have(mods):
+    return [m for m in mods if importlib.util.find_spec(m) is None]
 
 
 def run(cmd):
@@ -55,12 +62,18 @@ def smoke():
     """argparse를 쓰는 스크립트 전부에 `--help` (원장 O10의 전수 훑기)."""
     targets = sorted(p for p in (ROOT / "scripts").glob("*.py")
                      if "argparse" in p.read_text(encoding="utf-8"))
-    bad = []
+    bad, skipped_smoke = [], []
     for p in targets:
         code, out = run([f"scripts/{p.name}", "--help"])
-        if code != 0:
-            bad.append((p.name, out.strip().split("\n")[-1][:90]))
-    return len(targets), bad
+        if code == 0:
+            continue
+        # **의존성 부재는 argparse 결함이 아니다.** 스모크의 목적은 플래그 오타·설정 오류를
+        # 잡는 것이고(원장 O10), CI의 가벼운 환경에서는 torch·transformers가 없다.
+        if "ModuleNotFoundError" in out or "ImportError" in out:
+            skipped_smoke.append(p.name)
+            continue
+        bad.append((p.name, out.strip().split("\n")[-1][:90]))
+    return len(targets), bad, skipped_smoke
 
 
 def main():
@@ -71,9 +84,14 @@ def main():
     args = ap.parse_args()
 
     print(f"검사 {len(CHECKS)}개" + ("" if args.skip_smoke else " + --help 전수 훑기") + "\n")
-    failed, notes = [], []
+    failed, notes, skipped = [], [], []
 
-    for name, cmd, want, note in CHECKS:
+    for name, cmd, want, note, requires in CHECKS:
+        absent = have(requires)
+        if absent:
+            print(f"  ⊘ {name:26s} 건너뜀 — {', '.join(absent)} 없음 (실패가 아니다)")
+            skipped.append(name)
+            continue
         code, out = run(cmd)
         ok = code == want
         print(f"  {'✓' if ok else '✗'} {name:26s} 종료 {code}" + (f"  ({note})" if note else ""))
@@ -95,8 +113,9 @@ def main():
                     print(f"        watch {n}건 — 기준선과 같다")
 
     if not args.skip_smoke:
-        n, bad = smoke()
-        print(f"  {'✓' if not bad else '✗'} {'--help 전수 훑기':24s} {n}개")
+        n, bad, sk = smoke()
+        tail = f"{n}개" + (f" ({len(sk)}개는 의존성 없어 건너뜀)" if sk else "")
+        print(f"  {'✓' if not bad else '✗'} {'--help 전수 훑기':24s} {tail}")
         for fname, msg in bad:
             print(f"        ✗ {fname}: {msg}")
         if bad:
@@ -110,7 +129,9 @@ def main():
         for name, why in failed:
             print(f"    ✗ {name} — {why}")
         return 1
-    print("✓ 전부 통과" + (" (watch 경고는 조건 병기 확인용이며 실패가 아니다)" if not notes else ""))
+    if skipped:
+        print(f"⊘ {len(skipped)}개 건너뜀 (의존성 없음): {', '.join(skipped)}")
+    print("✓ 통과" + (" (watch 경고는 조건 병기 확인용이며 실패가 아니다)" if not notes else ""))
     return 0
 
 
