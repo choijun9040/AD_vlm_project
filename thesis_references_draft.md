@@ -11,39 +11,39 @@
 
 ---
 
-1. S. Bai et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
-2. A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, Y. Bengio, "FitNets: Hints for Thin Deep
+1. S. Bai, K. Chen, X. Liu, et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
+2. A. Romero, N. Ballas, S. E. Kahou, et al., "FitNets: Hints for Thin Deep
    Nets," in *Proc. ICLR*, 2015.
 3. W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
    Driving," arXiv:2601.21288, 2026.
 4. A. Gopalkrishnan, R. Greer, M. Trivedi, "Multi-Frame, Lightweight & Efficient Vision-Language Models
    for Question Answering in Autonomous Driving," in *CVPR 2024 Workshop on Vision and Language for
    Autonomous Driving and Robotics*, 2024. (arXiv:2403.19838)
-5. E. Zhang, X. Dai, M. Huang, Y. Lv, Q. Miao, "MiniDrive: More Efficient Vision-Language Models with
+5. E. Zhang, X. Dai, M. Huang, et al., "MiniDrive: More Efficient Vision-Language Models with
    Multi-Level 2D Features as Text Tokens for Autonomous Driving," arXiv:2409.07267, 2024.
-6. Z. Xia, Y. Liu, X. Li, X. Zhu, Y. Ma, Y. Li, Y. Hou, Y. Qiao, "SCPNet: Semantic Scene Completion on
+6. Z. Xia, Y. Liu, X. Li, et al., "SCPNet: Semantic Scene Completion on
    Point Cloud," in *Proc. CVPR*, 2023. (arXiv:2303.06884)
-7. J. H. Heo, S. Azizi, A. Fayyazi, M. Pedram, "CrAFT: Compression-Aware Fine-Tuning for Efficient
+7. J. H. Heo, S. Azizi, A. Fayyazi, et al., "CrAFT: Compression-Aware Fine-Tuning for Efficient
    Visual Task Adaptation," arXiv:2305.04526, 2023.
-8. J. Tong, G. Liang, P. Sun, J. Wu, "Colinearity Decay: Training Quantization-Friendly ViTs with
+8. J. Tong, G. Liang, P. Sun, et al., "Colinearity Decay: Training Quantization-Friendly ViTs with
    Outlier Decay," arXiv:2605.01330, 2026.
-9. X. Huang, Z. Liu, S.-Y. Liu, K.-T. Cheng, "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
+9. X. Huang, Z. Liu, S.-Y. Liu, et al., "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
    Effective Weight-Activation Quantization," in *Findings of EMNLP*, 2024. (arXiv:2407.08044)
-10. Q. Wei, C.-Y. Yau, H.-T. Wai, Y. K. Zhao, D. Kang, Y. Park, M. Hong, "RoSTE: An Efficient
+10. Q. Wei, C.-Y. Yau, H.-T. Wai, et al., "RoSTE: An Efficient
     Quantization-Aware Supervised Fine-Tuning Approach for Large Language Models," in *Proc. ICML*,
     2025. (arXiv:2502.09003)
-11. J.-M. Chen, Y.-H. Chao, Y.-J. Wang, M.-D. Shieh, C.-C. Hsu, W.-F. Lin, "QuantTune: Optimizing Model
+11. J.-M. Chen, Y.-H. Chao, Y.-J. Wang, et al., "QuantTune: Optimizing Model
     Quantization with Adaptive Outlier-Driven Fine Tuning," arXiv:2403.06497, 2024.
-12. M. Sun, X. Chen, J. Z. Kolter, Z. Liu, "Massive Activations in Large Language Models," in *Proc.
+12. M. Sun, X. Chen, J. Z. Kolter, et al., "Massive Activations in Large Language Models," in *Proc.
     Conference on Language Modeling (COLM)*, 2024. (arXiv:2402.17762)
 13. L. Chen, H. Tian, X. Chen, et al., "Measuring Maximum Activations in Open Large Language Models,"
     arXiv:2605.15572, 2026.
-14. S. Kim, T. Yeom, J. Kim, W. Park, K. Kim, J. Lee, "Activation Quantization of Vision Encoders Needs
+14. S. Kim, T. Yeom, J. Kim, et al., "Activation Quantization of Vision Encoders Needs
     Prefixing Registers," in *Proc. ECCV*, 2026. (arXiv:2510.04547)
-15. H. Shin, C. Kim, R. Kim, H. Yoo, J. Kim, "Rethinking Small VLM Quantization: From Component-Wise
+15. H. Shin, C. Kim, R. Kim, et al., "Rethinking Small VLM Quantization: From Component-Wise
     Analysis to Hardware-Aware Edge Deployment," in *ICML 2026 Workshop on Hypothesis Testing*, 2026.
     (arXiv:2607.08029)
-16. L. Cheng et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM
+16. L. Cheng, Q. Liao, F. Wu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM
     Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
 17. vLLM Project, "[Bug]: Gemma 4 (31B/26B-A4B) vision outputs only \<pad\> under fp16 — vision_tower
     standardize overflows," GitHub Issue #40290, 2026-04-19.
@@ -60,16 +60,16 @@
     Smarter, Trustworthy Driving," in *Proc. EMNLP*, 2026. (arXiv:2608.30144)
 23. H. Caesar, V. Bankiti, A. H. Lang, et al., "nuScenes: A Multimodal Dataset for Autonomous
     Driving," in *Proc. CVPR*, 2020. (arXiv:1903.11027)
-24. C. Sima, K. Renz, K. Chitta, L. Chen, H. Zhang, C. Xie, J. Beisswenger, P. Luo, A. Geiger, H. Li,
+24. C. Sima, K. Renz, K. Chitta, et al.,
     "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024. (Oral)
-25. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-Modal Visual Question
+25. T. Qian, J. Chen, L. Zhuo, et al., "NuScenes-QA: A Multi-Modal Visual Question
     Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI Conf. on Artificial
     Intelligence*, vol. 38, no. 5, pp. 4542–4550, 2024.
 26. K. Chen, Y. Li, W. Zhang, et al., "Automated Evaluation of Large Vision-Language Models on
     Self-driving Corner Cases," in *Proc. WACV*, 2025. (arXiv:2404.10595)
 27. K. Li, K. Chen, H. Wang, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection
     in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
-28. E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, "LoRA: Low-Rank
+28. E. J. Hu, Y. Shen, P. Wallis, et al., "LoRA: Low-Rank
     Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
 29. G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," in *NIPS 2014 Deep
     Learning Workshop*, 2015. (arXiv:1503.02531)
@@ -79,22 +79,22 @@
     World at Any Resolution," arXiv:2409.12191, 2024.
 32. Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or
     Percentages," *Psychometrika*, vol. 12, no. 2, pp. 153–157, 1947.
-33. J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, G. Xiao, X. Dang, C. Gan, S. Han, "AWQ:
+33. J. Lin, J. Tang, H. Tang, et al., "AWQ:
     Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc.
     MLSys*, 2024. (Best Paper Award)
 34. S. Bai, Y. Cai, R. Chen, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
 35. M. Abdin, J. Aneja, H. Awadalla, et al., "Phi-3 Technical Report: A Highly Capable Language Model
     Locally on Your Phone," arXiv:2404.14219v4, 2024.
-36. H. Liu, C. Li, Y. Li, Y. J. Lee, "Improved Baselines with Visual Instruction Tuning," in *Proc.
+36. H. Liu, C. Li, Y. Li, et al., "Improved Baselines with Visual Instruction Tuning," in *Proc.
     CVPR*, 2024. (arXiv:2310.03744)
 37. J. Zhu, W. Wang, Z. Chen, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes
     for Open-Source Multimodal Models," arXiv:2504.10479, 2025.
 38. A. Marafioti, O. Zohar, M. Farré, et al., "SmolVLM: Redefining Small and Efficient Multimodal
     Models," arXiv:2504.05299, 2025.
 39. P. Agrawal, S. Antoniak, E. B. Hanna, et al., "Pixtral 12B," arXiv:2410.07073, 2024.
-40. GLM-V Team, W. Hong, W. Yu, X. Gu, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile
+40. GLM-V Team, W. Hong, W. Yu, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile
     Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
-41. Kimi Team, A. Du, B. Yin, B. Xing, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
+41. Kimi Team, A. Du, B. Yin, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
 42. NVIDIA, "DLA Layer Restrictions," *TensorRT Documentation*.
     https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html
     (accessed 2026-09-29)
@@ -111,7 +111,7 @@
 
 | # | 확인 출처 | 비고 |
 |---|---|---|
-| 1·2·7·12·16·17·24·25·33 | 2026-09-16 원문·게재처 조회 (`archive/thesis_ch5_ch6_draft.md` 서지 확인 기록) | 1은 arXiv 저자가 **S. Bai 외 27인**(2026-10-07 API 재확인: Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang …). **2026-10-07 `Qwen Team` → `S. Bai et al.`로 교체**(사용자 결정). **단 이 목록의 다른 다저자 문헌은 「3인 + et al.」이다**(31 `P. Wang, S. Bai, S. Tan, et al.` · 34 `S. Bai, Y. Cai, R. Chen, et al.` · 40·41은 팀명 + 3인 + et al.). 항목 1만 **1인 + et al.**이라 형식이 다르고, **34는 첫 저자가 같아 나란히 놓이면 눈에 띈다.** 심사 규정이 저자 수를 정하면 그때 전체를 통일한다 — 3인으로 맞출 경우 `S. Bai, K. Chen, X. Liu, et al.`이다 |
+| 1·2·7·12·16·17·24·25·33 | 2026-09-16 원문·게재처 조회 (`archive/thesis_ch5_ch6_draft.md` 서지 확인 기록) | 1은 arXiv 저자가 **S. Bai 외 27인**(2026-10-07 API 재확인: Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang …). **2026-10-07 `Qwen Team` → `S. Bai, K. Chen, X. Liu, et al.`로 교체**(사용자 결정). **단 이 목록의 다른 다저자 문헌은 「3인 + et al.」이다**(31 `P. Wang, S. Bai, S. Tan, et al.` · 34 `S. Bai, Y. Cai, R. Chen, et al.` · 40·41은 팀명 + 3인 + et al.). 항목 1만 **1인 + et al.**이라 형식이 다르고, **34는 첫 저자가 같아 나란히 놓이면 눈에 띈다.** 심사 규정이 저자 수를 정하면 그때 전체를 통일한다 — 3인으로 맞출 경우 `S. Bai, K. Chen, X. Liu, et al.`이다 |
 | 3 | arxiv.org/abs/2601.21288 (+html) | 저자 15인. **두 교사–학생 쌍 중 하나가 Qwen2.5-VL-7B→3B** — 본문을 그렇게 고쳤다 |
 | 4 | arxiv.org/abs/2403.19838 | 게재처는 arXiv comments의 CVPR 2024 워크숍 |
 | 5 | arxiv.org/abs/2409.07267 | 게재처 표기 없음 → 프리프린트로 인용 |
@@ -137,6 +137,24 @@
 | 42 | 위 URL | DLA 지원 정밀도 "FP16, INT8", BF16 언급 없음 확인 |
 | 44 | 위 URL (+ 10.x→11.x 마이그레이션 안내) | 11.0에서 정밀도별 BuilderFlag(FP16·BF16·INT8·… ·OBEY_PRECISION_CONSTRAINTS)와 약타입 API(`setPrecision` 등) 제거, 강타입이 기본 — 6.8절. 개요가 적던 "10.12부터 폐기 예정"의 버전 번호는 확인하지 못해 본문에서 뺐다 (2026-09-29) |
 | 43 | 위 URL | 8GB 모듈 "1024-core NVIDIA Ampere Architecture GPU with 32 Tensor Cores", DLA 언급 없음 확인 |
+
+**저자 표기 규칙 — 3인 + et al.로 통일 (2026-10-07, 사용자 결정).**
+
+목록 **전체**를 「저자 3인 이하면 전부, 4인 이상이면 처음 3인 + et al.」로 맞췄다. 손댄 것은 셋이다.
+
+| 유형 | 건수 | 처리 |
+|---|---|---|
+| 4인 이상 전부 나열 | **16** | 처음 3인 + et al.로 축약 (2·5·6·7·8·9·10·11·12·14·15·24·25·28·33·36) |
+| **1인 + et al.** | 2 | arXiv API로 저자를 받아 3인까지 채웠다 — 1 `S. Bai, K. Chen, X. Liu, et al.`(27인), 16 `L. Cheng, Q. Liao, F. Wu, et al.`(13인) |
+| 팀명이 첫 저자 | 2 | **팀명도 저자 자리로 센다** — arXiv 등재의 첫 항목이 팀명이다(40은 94인 중 `GLM-V Team`, 41은 95인 중 `Kimi Team`). 그래서 팀명 + 개인 2인 + et al.이다 |
+
+전수 재검증으로 **규칙 위반 0건**을 확인했다.
+
+> **규정이 다른 수를 요구하면 다시 바꾼다.** 심사 규정에 저자 표기 규칙이 있으면 그것이 우선이고,
+> 지금 통일해 둔 덕에 **어느 자리가 저자부인지 기계적으로 찾을 수 있어** 재변경이 쉽다(원장 O12와
+> 함께 본다). 1인 + et al.이던 둘은 그때도 3인분 이름이 필요하므로 **위 조회 결과를 여기 남겨 둔다** —
+> 1은 Shuai Bai · Keqin Chen · Xuejing Liu · Jialin Wang …, 16은 Long Cheng · Qichen Liao · Fan Wu ·
+> Junlin Mu · Tengfei Han …이다.
 
 **남은 확인 과제.** (i) ~~35가 Phi-3.5-vision을 다루는지~~ → **해소 (2026-09-29)**: v4부터 다룬다.
 (ii) ~~30의 끝 쪽수~~ → **해소 (2026-09-29)**: 72–101. (iii) ~~5·31·34~41의 정식 게재처~~ → **확정 (2026-10-02)**: **arXiv 표기로 낸다.** 열 문헌 모두 `"제목," arXiv:XXXX.XXXXX, 년.` 형식이고, 게재처가 있는 문헌은 `in *Proc. X*, 년. (arXiv:…)`로 구별돼 있어 **형식은 이미 일관되다** — 바꿀 것이 없었다. **제출 직전에 한 번** 게재 여부를 재조회한다(각 arXiv 페이지의 comments·journal-ref, 10~20분). **→ 실행 (2026-10-02)**: arXiv API로 열 문헌을 한 번에 조회했고 **`journal_ref`가 생긴 문헌은 없었다** — 표기를 바꾸지 않는다. **`comment`도 함께 본 것이 중요했다**: 36(LLaVA)은 `journal_ref`가 비어 있는데 comment가 *"Camera ready, CVPR 2024 (highlight)"*라 게재를 밝힌다 — `journal_ref`만 보면 게재된 문헌을 프리프린트로 잘못 적는다. 36은 이미 `in *Proc. CVPR*, 2024`로 적혀 있어 맞다 — 그때 게재처가 생긴 문헌만 `in *Proc. X*, 년. (arXiv:…)` 형식으로 옮기고, 없으면 arXiv 표기 그대로 낸다. 게재처가 생기는 시점이 우리 손 밖이므로 **재조회 결과를 기다리느라 제출을 미루지는 않는다.** *(2026-10-02 사용자 결정으로 "재조회하지 않는다"에서 변경 — 확인 비용이 작고, 그사이 게재된 문헌을 프리프린트로 인용하는 일을 막는다.)* (iv) 학위 논문 심사 규정의

@@ -1957,25 +1957,25 @@ PyTorch만의 현상이 아니라 실제 배포 런타임의 기본 설정에서
 # 참고문헌
 
 1. G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," in *NIPS 2014 Deep Learning Workshop*, 2015. (arXiv:1503.02531)
-2. S. Bai et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
-3. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-Modal Visual Question Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI Conf. on Artificial Intelligence*, vol. 38, no. 5, pp. 4542–4550, 2024.
-4. A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, Y. Bengio, "FitNets: Hints for Thin Deep
+2. S. Bai, K. Chen, X. Liu, et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
+3. T. Qian, J. Chen, L. Zhuo, et al., "NuScenes-QA: A Multi-Modal Visual Question Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI Conf. on Artificial Intelligence*, vol. 38, no. 5, pp. 4542–4550, 2024.
+4. A. Romero, N. Ballas, S. E. Kahou, et al., "FitNets: Hints for Thin Deep
 5. W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
 6. J. Zhu, W. Wang, Z. Chen, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes for Open-Source Multimodal Models," arXiv:2504.10479, 2025.
 7. A. Gopalkrishnan, R. Greer, M. Trivedi, "Multi-Frame, Lightweight & Efficient Vision-Language Models
-8. C. Sima, K. Renz, K. Chitta, L. Chen, H. Zhang, C. Xie, J. Beisswenger, P. Luo, A. Geiger, H. Li, "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024. (Oral)
-9. E. Zhang, X. Dai, M. Huang, Y. Lv, Q. Miao, "MiniDrive: More Efficient Vision-Language Models with
-10. Z. Xia, Y. Liu, X. Li, X. Zhu, Y. Ma, Y. Li, Y. Hou, Y. Qiao, "SCPNet: Semantic Scene Completion on
-11. J. H. Heo, S. Azizi, A. Fayyazi, M. Pedram, "CrAFT: Compression-Aware Fine-Tuning for Efficient
-12. J. Tong, G. Liang, P. Sun, J. Wu, "Colinearity Decay: Training Quantization-Friendly ViTs with
-13. X. Huang, Z. Liu, S.-Y. Liu, K.-T. Cheng, "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
-14. Q. Wei, C.-Y. Yau, H.-T. Wai, Y. K. Zhao, D. Kang, Y. Park, M. Hong, "RoSTE: An Efficient Quantization-Aware Supervised Fine-Tuning Approach for Large Language Models," in *Proc. ICML*, 2025. (arXiv:2502.09003)
-15. J.-M. Chen, Y.-H. Chao, Y.-J. Wang, M.-D. Shieh, C.-C. Hsu, W.-F. Lin, "QuantTune: Optimizing Model Quantization with Adaptive Outlier-Driven Fine Tuning," arXiv:2403.06497, 2024.
-16. M. Sun, X. Chen, J. Z. Kolter, Z. Liu, "Massive Activations in Large Language Models," in *Proc. Conference on Language Modeling (COLM)*, 2024. (arXiv:2402.17762)
+8. C. Sima, K. Renz, K. Chitta, et al., "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024. (Oral)
+9. E. Zhang, X. Dai, M. Huang, et al., "MiniDrive: More Efficient Vision-Language Models with
+10. Z. Xia, Y. Liu, X. Li, et al., "SCPNet: Semantic Scene Completion on
+11. J. H. Heo, S. Azizi, A. Fayyazi, et al., "CrAFT: Compression-Aware Fine-Tuning for Efficient
+12. J. Tong, G. Liang, P. Sun, et al., "Colinearity Decay: Training Quantization-Friendly ViTs with
+13. X. Huang, Z. Liu, S.-Y. Liu, et al., "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
+14. Q. Wei, C.-Y. Yau, H.-T. Wai, et al., "RoSTE: An Efficient Quantization-Aware Supervised Fine-Tuning Approach for Large Language Models," in *Proc. ICML*, 2025. (arXiv:2502.09003)
+15. J.-M. Chen, Y.-H. Chao, Y.-J. Wang, et al., "QuantTune: Optimizing Model Quantization with Adaptive Outlier-Driven Fine Tuning," arXiv:2403.06497, 2024.
+16. M. Sun, X. Chen, J. Z. Kolter, et al., "Massive Activations in Large Language Models," in *Proc. Conference on Language Modeling (COLM)*, 2024. (arXiv:2402.17762)
 17. L. Chen, H. Tian, X. Chen, et al., "Measuring Maximum Activations in Open Large Language Models," arXiv:2605.15572, 2026.
-18. S. Kim, T. Yeom, J. Kim, W. Park, K. Kim, J. Lee, "Activation Quantization of Vision Encoders Needs Prefixing Registers," in *Proc. ECCV*, 2026. (arXiv:2510.04547)
-19. H. Shin, C. Kim, R. Kim, H. Yoo, J. Kim, "Rethinking Small VLM Quantization: From Component-Wise Analysis to Hardware-Aware Edge Deployment," in *ICML 2026 Workshop on Hypothesis Testing*, 2026. (arXiv:2607.08029)
-20. L. Cheng et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
+18. S. Kim, T. Yeom, J. Kim, et al., "Activation Quantization of Vision Encoders Needs Prefixing Registers," in *Proc. ECCV*, 2026. (arXiv:2510.04547)
+19. H. Shin, C. Kim, R. Kim, et al., "Rethinking Small VLM Quantization: From Component-Wise Analysis to Hardware-Aware Edge Deployment," in *ICML 2026 Workshop on Hypothesis Testing*, 2026. (arXiv:2607.08029)
+20. L. Cheng, Q. Liao, F. Wu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
 21. vLLM Project, "[Bug]: Gemma 4 (31B/26B-A4B) vision outputs only \<pad\> under fp16 — vision_tower standardize overflows," GitHub Issue #40290, 2026-04-19. https://github.com/vllm-project/vllm/issues/40290
 22. A. Karjol, D. M. Hanna, "Edge AI for Automotive Vulnerable Road User Safety: Deployable Detection via Knowledge Distillation," arXiv:2604.26857, 2026.
 23. S. Jiang, Z. Huang, K. Qian, et al., "A Survey on Vision-Language-Action Models for Autonomous Driving," arXiv:2506.24044, 2025.
@@ -1985,17 +1985,17 @@ PyTorch만의 현상이 아니라 실제 배포 런타임의 기본 설정에서
 27. H. Caesar, V. Bankiti, A. H. Lang, et al., "nuScenes: A Multimodal Dataset for Autonomous Driving," in *Proc. CVPR*, 2020. (arXiv:1903.11027)
 28. K. Chen, Y. Li, W. Zhang, et al., "Automated Evaluation of Large Vision-Language Models on Self-driving Corner Cases," in *Proc. WACV*, 2025. (arXiv:2404.10595)
 29. K. Li, K. Chen, H. Wang, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
-30. E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, W. Chen, "LoRA: Low-Rank Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
+30. E. J. Hu, Y. Shen, P. Wallis, et al., "LoRA: Low-Rank Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
 31. C. Spearman, "The Proof and Measurement of Association between Two Things," *The American Journal of Psychology*, vol. 15, no. 1, pp. 72–101, 1904.
 32. P. Wang, S. Bai, S. Tan, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution," arXiv:2409.12191, 2024.
 33. Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages," *Psychometrika*, vol. 12, no. 2, pp. 153–157, 1947.
-34. J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, G. Xiao, X. Dang, C. Gan, S. Han, "AWQ: Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc. MLSys*, 2024. (Best Paper Award)
-35. H. Liu, C. Li, Y. Li, Y. J. Lee, "Improved Baselines with Visual Instruction Tuning," in *Proc. CVPR*, 2024. (arXiv:2310.03744)
+34. J. Lin, J. Tang, H. Tang, et al., "AWQ: Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc. MLSys*, 2024. (Best Paper Award)
+35. H. Liu, C. Li, Y. Li, et al., "Improved Baselines with Visual Instruction Tuning," in *Proc. CVPR*, 2024. (arXiv:2310.03744)
 36. M. Abdin, J. Aneja, H. Awadalla, et al., "Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone," arXiv:2404.14219v4, 2024.
 37. S. Bai, Y. Cai, R. Chen, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
 38. P. Agrawal, S. Antoniak, E. B. Hanna, et al., "Pixtral 12B," arXiv:2410.07073, 2024.
-39. GLM-V Team, W. Hong, W. Yu, X. Gu, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
-40. Kimi Team, A. Du, B. Yin, B. Xing, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
+39. GLM-V Team, W. Hong, W. Yu, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
+40. Kimi Team, A. Du, B. Yin, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
 41. NVIDIA, "DLA Layer Restrictions," *TensorRT Documentation*. https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html (accessed 2026-09-29)
 42. NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*. https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html (accessed 2026-09-29)
 43. L. S. Karumbunathan, "Solving Entry-Level Edge AI Challenges with NVIDIA Jetson Orin Nano," *NVIDIA Technical Blog*, 2022-09-21. https://developer.nvidia.com/blog/solving-entry-level-edge-ai-challenges-with-nvidia-jetson-orin-nano/
