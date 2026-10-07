@@ -1,10 +1,10 @@
-<!-- 자동 생성: scripts/build_thesis.py (2026-10-02). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
+<!-- 자동 생성: scripts/build_thesis.py (2026-10-07). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
 # 자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단
 
 *Measuring and Diagnosing Representable-Range Headroom for Low-Precision Deployment of Autonomous-Driving Vision-Language Models*
 
-석사학위논문 초안 · 합본 생성 2026-10-02 · 학교 양식 적용 전
+석사학위논문 초안 · 합본 생성 2026-10-07 · 학교 양식 적용 전
 
 ---
 
@@ -1957,7 +1957,7 @@ PyTorch만의 현상이 아니라 실제 배포 런타임의 기본 설정에서
 # 참고문헌
 
 1. G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," in *NIPS 2014 Deep Learning Workshop*, 2015. (arXiv:1503.02531)
-2. Qwen Team, "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
+2. S. Bai et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
 3. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-Modal Visual Question Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI Conf. on Artificial Intelligence*, vol. 38, no. 5, pp. 4542–4550, 2024.
 4. A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, Y. Bengio, "FitNets: Hints for Thin Deep
 5. W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous

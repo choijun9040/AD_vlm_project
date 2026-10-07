@@ -11,7 +11,7 @@
 
 ---
 
-1. Qwen Team, "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
+1. S. Bai et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
 2. A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, Y. Bengio, "FitNets: Hints for Thin Deep
    Nets," in *Proc. ICLR*, 2015.
 3. W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
@@ -111,7 +111,7 @@
 
 | # | 확인 출처 | 비고 |
 |---|---|---|
-| 1·2·7·12·16·17·24·25·33 | 2026-09-16 원문·게재처 조회 (`archive/thesis_ch5_ch6_draft.md` 서지 확인 기록) | 1은 arXiv 저자가 S. Bai 외 27인 — 심사 규정이 개인 저자를 요구하면 교체 |
+| 1·2·7·12·16·17·24·25·33 | 2026-09-16 원문·게재처 조회 (`archive/thesis_ch5_ch6_draft.md` 서지 확인 기록) | 1은 arXiv 저자가 **S. Bai 외 27인**(2026-10-07 API 재확인: Shuai Bai, Keqin Chen, Xuejing Liu, Jialin Wang …). **2026-10-07 `Qwen Team` → `S. Bai et al.`로 교체**(사용자 결정). **단 이 목록의 다른 다저자 문헌은 「3인 + et al.」이다**(31 `P. Wang, S. Bai, S. Tan, et al.` · 34 `S. Bai, Y. Cai, R. Chen, et al.` · 40·41은 팀명 + 3인 + et al.). 항목 1만 **1인 + et al.**이라 형식이 다르고, **34는 첫 저자가 같아 나란히 놓이면 눈에 띈다.** 심사 규정이 저자 수를 정하면 그때 전체를 통일한다 — 3인으로 맞출 경우 `S. Bai, K. Chen, X. Liu, et al.`이다 |
 | 3 | arxiv.org/abs/2601.21288 (+html) | 저자 15인. **두 교사–학생 쌍 중 하나가 Qwen2.5-VL-7B→3B** — 본문을 그렇게 고쳤다 |
 | 4 | arxiv.org/abs/2403.19838 | 게재처는 arXiv comments의 CVPR 2024 워크숍 |
 | 5 | arxiv.org/abs/2409.07267 | 게재처 표기 없음 → 프리프린트로 인용 |
