@@ -47,14 +47,17 @@ NAMED = [
 ]
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 
-# ── 그림: 번호 → (파일, 기준 줄이 포함하는 글자) ─────────────────────────────────────────
+# ── 그림: (일련번호, 캡션 키, 파일, 기준 줄이 포함하는 글자) ────────────────────────────
+# **번호는 전체 일련이다 (2026-10-12, 학교 양식).** 졸업생 논문(2026-08)이 `[그림 1]`~`[그림 19]`로
+# 장과 무관하게 이어 붙인다. 캡션 키("4-1" 등)는 `thesis_figures.md` 쪽 식별자라 그대로 둔다 —
+# 번호와 키를 분리해야 그림을 끼워 넣어도 캡션 파일을 건드리지 않는다.
 FIGURES = [
-    ("4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
-    ("4-2", "figures/fig2_resolution_collapse.png", "(fp16 붕괴율, 250장, 이미지 단위로 출력이 NaN이면 붕괴)"),
-    ("4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 250장, 마지막 블록, 여유는 p50·bf16 측정)"),
-    ("4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
-    ("6-1", "figures/fig6_runtime_collapse.png", "(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
-    ("7-1", "figures/fig_gate_calibration.png", "최악 여유 1.00에서 붕괴 2%, 1.05에서 0%다. 따로 보정할 상수가 없다."),
+    ("1", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
+    ("2", "4-2", "figures/fig2_resolution_collapse.png", "(fp16 붕괴율, 250장, 이미지 단위로 출력이 NaN이면 붕괴)"),
+    ("3", "4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 250장, 마지막 블록, 여유는 p50·bf16 측정)"),
+    ("4", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
+    ("5", "6-1", "figures/fig6_runtime_collapse.png", "(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
+    ("6", "7-1", "figures/fig_gate_calibration.png", "최악 여유 1.00에서 붕괴 2%, 1.05에서 0%다. 따로 보정할 상수가 없다."),
 ]
 
 
@@ -149,15 +152,19 @@ def parse_captions():
 
 
 def insert_figures(text, caps):
-    for num, path, anchor in FIGURES:
+    """그림을 기준 줄 뒤에 넣고 **캡션은 그림 아래**에 둔다 (학교 양식).
+
+    캡션 표기는 `**[그림 N]** …`이다 — 졸업생 논문(2026-08)이 `[그림 1]` 형태를 쓴다.
+    """
+    for num, key, path, anchor in FIGURES:
         i = text.find(anchor)
         if i < 0:
             raise SystemExit(f"그림 {num}의 기준 줄을 찾지 못했다: {anchor[:40]}")
         j = text.index("\n", i)
         line = text[text.rfind("\n", 0, i) + 1:j]
-        tag = f" (그림 {num})" if not line.rstrip().endswith(")") else ""
-        new_line = (line[:-1] + f"; 그림 {num})") if line.rstrip().endswith(")") else line + tag
-        block = (f"\n\n![그림 {num}]({path})\n\n**그림 {num}.** {caps[num]}")
+        tag = f" ([그림 {num}])" if not line.rstrip().endswith(")") else ""
+        new_line = (line[:-1] + f"; [그림 {num}])") if line.rstrip().endswith(")") else line + tag
+        block = (f"\n\n![그림 {num}]({path})\n\n**[그림 {num}]** {caps[key]}")
         text = text[:text.rfind("\n", 0, i) + 1] + new_line + block + text[j:]
     return text
 
@@ -172,31 +179,50 @@ def toc(text):
 
 
 def number_tables(text):
-    """표 번호 (2026-10-02). 장별 초안의 `**표 [키].** 제목`에 장별 번호(표 4-2)를 매기고, 본문의
-    `[표:키]`를 그 번호로 바꾼다. 번호는 장 안에서 나오는 순서다 — 표를 넣거나 빼도 다시 맞춰진다."""
-    out, numbers, items, chap, k = [], {}, [], None, 0
-    for ln in text.split("\n"):
-        m = re.match(r"^# (\d+)장", ln)
-        if m:
-            chap, k = int(m.group(1)), 0
-        m = re.match(r"^\*\*표 \[([\w-]+)\]\.\*\* (.*)$", ln)
-        if m:
-            if chap is None:
-                raise SystemExit(f"장 밖의 표: {m.group(1)}")
-            if m.group(1) in numbers:
-                raise SystemExit(f"표 키 중복: {m.group(1)}")
-            k += 1
-            no = f"{chap}-{k}"
-            numbers[m.group(1)] = no
-            items.append(f"- 표 {no}. {m.group(2).replace('`', '')}")
-            ln = f"**표 {no}.** {m.group(2)}"
-        out.append(ln)
+    """표 번호와 캡션 위치 (2026-10-12 학교 양식으로 개정).
+
+    **전체 일련번호**(`[표 1]`~)이고 **캡션은 표 아래**다 — 졸업생 논문(2026-08)이 그렇다.
+    2026-10-02 판은 장별 번호(`표 4-2`)에 캡션이 표 **위**였는데, 둘 다 양식과 달랐다.
+
+    장별 초안은 여전히 `**표 [키].** 제목`을 표 **앞**에 적는다(쓰기 편한 자리다). 이 함수가
+    캡션을 떼어 **뒤따르는 표 블록 아래로 옮긴다.** 본문의 `[표:키]`는 `[표 N]`으로 바꾼다.
+    """
+    lines = text.split("\n")
+    out, numbers, items = [], {}, []
+    k, i = 0, 0
+    while i < len(lines):
+        m = re.match(r"^\*\*표 \[([\w-]+)\]\.\*\* (.*)$", lines[i])
+        if not m:
+            out.append(lines[i])
+            i += 1
+            continue
+        key, title = m.group(1), m.group(2)
+        if key in numbers:
+            raise SystemExit(f"표 키 중복: {key}")
+        k += 1
+        numbers[key] = str(k)
+        items.append(f"표 {k}. {title.replace('`', '')}")
+        i += 1
+        blanks = []
+        while i < len(lines) and not lines[i].strip():
+            blanks.append(lines[i])
+            i += 1
+        tbl = []
+        while i < len(lines) and lines[i].lstrip().startswith("|"):
+            tbl.append(lines[i])
+            i += 1
+        if not tbl:
+            raise SystemExit(f"표 {key}의 캡션 뒤에 표가 없다 — 캡션은 표 바로 앞에 둔다")
+        out.extend(blanks)
+        out.extend(tbl)
+        out.append("")
+        out.append(f"**[표 {k}]** {title}")
     text = "\n".join(out)
 
     def ref(m):
         if m.group(1) not in numbers:
             raise SystemExit(f"없는 표를 가리킨다: [표:{m.group(1)}]")
-        return f"표 {numbers[m.group(1)]}"
+        return f"[표 {numbers[m.group(1)]}]"
     text = re.sub(r"\[표:([\w-]+)\]", ref, text)
     return text, "\n".join(items)
 
@@ -204,10 +230,10 @@ def number_tables(text):
 def figure_list(text):
     """그림 목차 — 캡션 첫 문장을 제목으로 쓴다 (2026-10-02)."""
     items = []
-    # `\d+-\d+` — 한 자리만 받으면 그림이나 장이 10을 넘을 때 조용히 빠진다 (2026-10-02)
-    for m in re.finditer(r"^\*\*그림 (\d+-\d+)\.\*\* (.*)$", text, flags=re.M):
+    # 캡션은 `**[그림 N]** …` (학교 양식). `\d+`이므로 번호가 10을 넘어도 빠지지 않는다
+    for m in re.finditer(r"^\*\*\[그림 (\d+)\]\*\* (.*)$", text, flags=re.M):
         first = re.split(r"(?<=\.)\s", m.group(2), maxsplit=1)[0].rstrip(".")
-        items.append(f"- 그림 {m.group(1)}. {first.replace('**', '').replace('`', '')}")
+        items.append(f"그림 {m.group(1)}. {first.replace('**', '').replace('`', '')}")
     return "\n".join(items)
 
 
@@ -239,7 +265,8 @@ def main():
 
     refs = parse_references()
     uncited = sorted(set(refs) - set(order))
-    bib = "\n".join(f"{new_no[o]}. {refs[o]}" for o in order)
+    # `[N] 저자, "제목," 출처, 년.` — 졸업생 논문(2026-08)의 표기 (2026-10-12)
+    bib = "\n".join(f"[{new_no[o]}] {refs[o]}" for o in order)
 
     main_text = insert_figures(main_text, parse_captions())
     main_text, table_items = number_tables(main_text)
@@ -250,11 +277,28 @@ def main():
             "*Measuring and Diagnosing Representable-Range Headroom for Low-Precision Deployment of "
             "Autonomous-Driving Vision-Language Models*\n\n"
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
-    body = f"{ko}\n\n---\n\n{main_text}\n\n---\n\n# 참고문헌\n\n{bib}\n\n---\n\n{en}\n"
+    # 구성 순서 (2026-10-12 학교 양식) — 졸업생 논문(2026-08):
+    #   표지 → 속표지 → 차례 → Abstract → 표 차례 → 그림 차례 → 본문 → 참고 문헌 → 감사의 글
+    # **국문 초록은 남긴다 (사용자 결정)** — 졸업생 논문에는 없으나 빼야 할 이유도 없다.
+    # 한국 논문 관행대로 Abstract 앞에 둔다. 표지·속표지·쪽 번호는 조판 단계(한글)에서 붙인다.
+    ack = body_of("thesis_acknowledgment_draft.md")
+    body = (f"{ko}\n\n---\n\n{en}\n\n---\n\n{main_text}"
+            f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{ack}\n")
     toc_items, figure_items = toc(body), figure_list(main_text)
-    lists = ("# 목차\n\n" + toc_items + "\n\n## 그림 목차\n\n" + figure_items
-             + "\n\n## 표 목차\n\n" + table_items)
-    out = head + lists + "\n\n---\n\n" + body
+    # 표·그림 차례는 별도 쪽이라 본문 제목 훑기에 잡히지 않는다 — 차례에 손으로 끼운다
+    toc_lines = toc_items.split("\n")
+    for idx, ln in enumerate(toc_lines):
+        if ln.startswith("- Abstract"):
+            toc_lines[idx + 1:idx + 1] = ["- 표 차례", "- 그림 차례"]
+            break
+    else:
+        raise SystemExit("차례에 Abstract 항목이 없다 — 초록 제목을 확인한다")
+    toc_items = "\n".join(toc_lines)
+    front = (f"# 차 례\n\n{toc_items}\n\n---\n\n{ko}\n\n---\n\n{en}"
+             f"\n\n---\n\n# 표 차례\n\n{table_items}\n\n---\n\n# 그림 차례\n\n{figure_items}")
+    lists = front
+    out = (head + front + "\n\n---\n\n" + main_text
+           + f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{ack}\n")
     # 목차만 따로 (2026-10-02). 합본과 같은 실행에서 쓰므로 항상 맞는다
     toc_doc = head.replace("석사학위논문 초안 · 합본 생성", "석사학위논문 목차 · 합본 생성") + lists + "\n"
 
@@ -267,10 +311,10 @@ def main():
     n_fig = len([l for l in figure_items.split("\n") if l.strip()])
 
     # 번호를 손으로 적은 표가 섞이면 본문과 목차가 어긋난다 — 번호 매김 뒤 패턴 수로 잡는다
-    n_body_tab = len(re.findall(r"^\*\*표 \d+-\d+\.", main_text, flags=re.M))
+    n_body_tab = len(re.findall(r"^\*\*\[표 \d+\]\*\*", main_text, flags=re.M))
     if n_body_tab != n_tab:
         raise SystemExit(f"표 수 불일치: 본문 {n_body_tab} ≠ 목차 {n_tab} — "
-                         "`**표 N-M.**`를 직접 쓴 표가 있는지 본다 (키 형식 `**표 [키].**`를 쓸 것)")
+                         "`**[표 N]**`를 직접 쓴 표가 있는지 본다 (키 형식 `**표 [키].**`를 쓸 것)")
     if n_fig != len(FIGURES):
         raise SystemExit(f"그림 수 불일치: 캡션 {n_fig} ≠ 삽입 설정 {len(FIGURES)} — "
                          "thesis_figures.md의 캡션과 FIGURES 목록 둘 다 본다")

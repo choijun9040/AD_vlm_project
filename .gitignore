@@ -15,6 +15,10 @@ onnx/
 trt_inputs*.npz
 eval_results/posthoc_*_predictions.jsonl
 
+# 타인의 학위논문 — 양식 참고용으로 받은 것이고 이 저장소는 공개다.
+# 저작물이므로 커밋하지 않는다 (2026-10-12).
+석사학위논문_*_제출용.pdf
+
 # local-only Claude Code settings
 .claude/settings.local.json
 .claude/scheduled_tasks.lock
