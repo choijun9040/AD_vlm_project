@@ -169,6 +169,37 @@ def insert_figures(text, caps):
     return text
 
 
+ROMAN = ["", "Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ"]
+
+
+def style_chapters(text):
+    """장절 번호를 학교 양식으로 (2026-10-12). 졸업생 논문(2026-08): `Ⅰ. 서론` / `1. 연구 배경`.
+
+    **본문 참조도 함께 바꾼다** — 제목만 로마자로 하면 「7.3절」이 가리키는 곳이 사라진다.
+    `N.M절` → `Ⅹ장 M절`, `N장` → `Ⅹ장`.
+
+    **「250장」과 충돌하지 않는다.** 장 참조는 한 자리이고 앞에 숫자·쉼표가 오지 않는다 —
+    `(?<![0-9,])`가 「799장」의 `9장`, 「250장」의 `0장`을 막는다(0은 [1-9]가 아니다).
+    「4·6장」처럼 묶어 쓴 것도 각 숫자를 바꾼다.
+
+    장별 초안은 손대지 않는다 — 초안은 `# 4장 …` / `## 4.8 …`로 쓰고 여기서 양식을 입힌다.
+    """
+    def chap_title(m):
+        return f"# {ROMAN[int(m.group(1))]}. {m.group(2)}"
+    text = re.sub(r"^# (\d+)장 (.*)$", chap_title, text, flags=re.M)
+    # 절 제목: 장 안에서 1부터 — `## 4.8 제목` → `## 8. 제목`
+    text = re.sub(r"^## \d+\.(\d+) (.*)$", lambda m: f"## {m.group(1)}. {m.group(2)}", text, flags=re.M)
+    # 절 참조: `7.3절` → `Ⅶ장 3절`
+    text = re.sub(r"(?<![\d.])(\d+)\.(\d+)절",
+                  lambda m: f"{ROMAN[int(m.group(1))]}장 {m.group(2)}절", text)
+    # 장 참조: `6장` · `4·6장` · `4~6장`
+    def chap_ref(m):
+        body = m.group(1)
+        return "".join(ROMAN[int(c)] if c.isdigit() else c for c in body) + "장"
+    text = re.sub(r"(?<![0-9,])([1-9](?:[·~][1-9])*)장", chap_ref, text)
+    return text
+
+
 def toc(text):
     items = []
     for ln in text.split("\n"):
@@ -270,6 +301,7 @@ def main():
 
     main_text = insert_figures(main_text, parse_captions())
     main_text, table_items = number_tables(main_text)
+    main_text = style_chapters(main_text)      # 장절 번호와 본문 참조를 함께 바꾼다
 
     today = dt.date.today().isoformat()
     head = (f"<!-- 자동 생성: scripts/build_thesis.py ({today}). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->\n\n"
