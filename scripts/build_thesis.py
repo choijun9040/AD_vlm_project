@@ -366,6 +366,24 @@ def main():
     n_fig = len([l for l in figure_items.split("\n") if l.strip()])
 
     # 번호를 손으로 적은 표가 섞이면 본문과 목차가 어긋난다 — 번호 매김 뒤 패턴 수로 잡는다
+    # 절 참조가 실재하는 절을 가리키는가 (2026-10-12). 절을 합치면서 참조 57건을 다시
+    # 매겼는데, `thesis_figures.md`·초록·참고문헌을 **치환 대상에서 빠뜨려** 그림 캡션이
+    # 사라진 절(`Ⅳ장 8절`)을 가리키고 있었다. 수동 확인으로 겨우 잡았으므로 여기 건다.
+    chap_secs, cur = {}, None
+    for ln in main_text.split("\n"):
+        m = re.match(r"^# ([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])\. ", ln)
+        if m:
+            cur = m.group(1)
+            chap_secs[cur] = 0
+        elif cur and re.match(r"^## \d+\.", ln):
+            chap_secs[cur] += 1
+    bad = sorted({(c, n) for c, n in re.findall(r"([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])장 (\d+)절", main_text)
+                  if int(n) > chap_secs.get(c, 0)})
+    if bad:
+        raise SystemExit("없는 절을 가리키는 참조: "
+                         + ", ".join(f"{c}장 {n}절" for c, n in bad)
+                         + f" — 장별 절 수는 {chap_secs}")
+
     n_body_sec = len(re.findall(r"^## ", main_text, flags=re.M))
     if n_body_sec != n_sec:
         raise SystemExit(f"절 수 불일치: 본문 {n_body_sec} ≠ 차례 {n_sec} — "

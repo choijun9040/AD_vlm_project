@@ -69,8 +69,12 @@ def ids(section, prefix):
 def paper_limits():
     """논문 8.3절의 `**N. 제목**`과 8.4절의 `- **제목**`."""
     text = CHAPTER.read_text(encoding="utf-8")
-    s83 = text[text.index("## 8.3 한계"):text.index("## 8.4 한계로 두지 않은 것")]
-    s84 = text[text.index("## 8.4 한계로 두지 않은 것"):]
+    # 2026-10-12 절 통합으로 8.4가 8.3 안의 소제목이 됐다 — 경계가 `### 한계로 보지 않는 사항`이다
+    head, tail = "## 8.3 한계", "### 한계로 보지 않는 사항"
+    if tail not in text:
+        raise SystemExit(f"8장에서 「{tail}」을 찾지 못했다 — 제목이 바뀌었는지 본다")
+    s83 = text[text.index(head):text.index(tail)]
+    s84 = text[text.index(tail):]
     nums = [int(m.group(1)) for m in re.finditer(r"^\*\*(\d+)\. ", s83, flags=re.M)]
     items = re.findall(r"^- \*\*([^*]+)\*\*", s84, flags=re.M)
     return nums, items
