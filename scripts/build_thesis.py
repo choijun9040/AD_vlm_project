@@ -57,7 +57,7 @@ FIGURES = [
     ("3", "4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 250장, 마지막 블록, 여유는 p50·bf16 측정)"),
     ("4", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
     ("5", "6-1", "figures/fig6_runtime_collapse.png", "(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
-    ("6", "7-1", "figures/fig_gate_calibration.png", "최악 여유 1.00에서 붕괴 2%, 1.05에서 0%다. 따로 보정할 상수가 없다."),
+    ("6", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
 ]
 
 
