@@ -201,12 +201,33 @@ def style_chapters(text):
 
 
 def toc(text):
-    items = []
+    """차례 (2026-10-12 학교 양식). 졸업생 논문(2026-08)의 배치를 따른다.
+
+      앞부분(국문 초록·Abstract·표 차례·그림 차례)이 먼저 붙어서 오고,
+      **장마다 앞에 빈 줄 두 개**, 절은 **네 칸 들여쓰기**, 마지막에 참고 문헌·감사의 글.
+
+    **점선 리더와 쪽 번호는 넣지 않는다.** 졸업생 논문은 `Ⅰ. 서 론 ·········· 1`처럼 점선으로
+    쪽수를 잇는데, 쪽수는 조판(한글) 전에는 정해지지 않는다. 점선만 넣으면 **허공으로 가는
+    줄**이 되고, 한글에서는 탭 리더로 자동 생성하는 것이 정석이라 오히려 지워야 할 것이 된다.
+    마크다운 합본은 **구조만** 맞추고 리더는 조판에서 붙인다.
+
+    목록 기호(`- `)도 쓰지 않는다 — 졸업생 논문의 차례는 평문이다.
+    """
+    out = []
     for ln in text.split("\n"):
         m = re.match(r"^(#{1,2}) (.*)", ln)
-        if m and not m.group(2).startswith("목차"):
-            items.append(("  " if len(m.group(1)) == 2 else "") + "- " + m.group(2).replace("`", ""))
-    return "\n".join(items)
+        if not m:
+            continue
+        title = m.group(2).replace("`", "")
+        if title.startswith("차 례"):
+            continue
+        if len(m.group(1)) == 2:
+            out.append("    " + title)
+            continue
+        if re.match(r"^[ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ]\.", title):   # 장 앞은 두 줄 띄운다
+            out += ["", ""]
+        out.append(title)
+    return "\n".join(out)
 
 
 def number_tables(text):
@@ -320,8 +341,8 @@ def main():
     # 표·그림 차례는 별도 쪽이라 본문 제목 훑기에 잡히지 않는다 — 차례에 손으로 끼운다
     toc_lines = toc_items.split("\n")
     for idx, ln in enumerate(toc_lines):
-        if ln.startswith("- Abstract"):
-            toc_lines[idx + 1:idx + 1] = ["- 표 차례", "- 그림 차례"]
+        if ln.strip() == "Abstract":
+            toc_lines[idx + 1:idx + 1] = ["표 차례", "그림 차례"]
             break
     else:
         raise SystemExit("차례에 Abstract 항목이 없다 — 초록 제목을 확인한다")
@@ -338,11 +359,18 @@ def main():
     # 문단 제목이 표 제목 패턴에 걸리고, `## 그림 목차`·`## 표 목차`가 본문 절로 세어진다.
     # 둘 다 실제로 틀렸다(표 41·절 59로 보고했으나 40·57이었다). 아래는 목차를 만든 바로 그
     # 자료에서 세므로 정의상 어긋날 수 없고, 어긋나면 그것이 결함이라 아래 검증이 멈춘다.
-    n_sec = sum(1 for l in toc_items.split("\n") if l.startswith("  - "))
+    # 차례의 절은 **네 칸 들여쓰기**다(2026-10-12 양식). 2026-10-02 판은 `  - `였고,
+    # 양식을 바꾸면서 이 집계가 0을 내도 아무도 막지 않았다 — 그래서 아래에 대조를 넣었다.
+    n_sec = sum(1 for l in toc_items.split("\n") if l.startswith("    ") and l.strip())
     n_tab = len([l for l in table_items.split("\n") if l.strip()])
     n_fig = len([l for l in figure_items.split("\n") if l.strip()])
 
     # 번호를 손으로 적은 표가 섞이면 본문과 목차가 어긋난다 — 번호 매김 뒤 패턴 수로 잡는다
+    n_body_sec = len(re.findall(r"^## ", main_text, flags=re.M))
+    if n_body_sec != n_sec:
+        raise SystemExit(f"절 수 불일치: 본문 {n_body_sec} ≠ 차례 {n_sec} — "
+                         "차례의 들여쓰기 규칙과 집계가 어긋났는지 본다")
+
     n_body_tab = len(re.findall(r"^\*\*\[표 \d+\]\*\*", main_text, flags=re.M))
     if n_body_tab != n_tab:
         raise SystemExit(f"표 수 불일치: 본문 {n_body_tab} ≠ 목차 {n_tab} — "

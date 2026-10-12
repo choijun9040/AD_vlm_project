@@ -33,7 +33,10 @@ REGISTRY = ROOT / "number_registry.json"
 
 # 기본 감사 대상 — 수치가 실리는 문서들
 DEFAULT_GLOBS = ("*.md", "*.html", "*.txt")
-SKIP_NAMES = {"CLAUDE.md", "number_registry.json"}
+SKIP_NAMES = {"CLAUDE.md", "number_registry.json",
+              # 합본에서 뽑은 파생물 — 같은 값이 그대로 중복되므로 세면 경고만 두 배가 된다.
+              # 원본(thesis_full_draft.md)을 감사하면 충분하다 (2026-10-12).
+              "thesis_tables_rebuilt.html"}
 
 # 이 표식이 있으면 그 줄은 "기록"이다 — 옛 값을 인용해도 정상
 RECORD_MARKERS = re.compile(

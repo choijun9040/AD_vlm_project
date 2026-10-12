@@ -19,6 +19,9 @@ eval_results/posthoc_*_predictions.jsonl
 # 저작물이므로 커밋하지 않는다 (2026-10-12).
 석사학위논문_*_제출용.pdf
 
+# 조판 보조 생성물 — scripts/export_tables.py가 합본에서 뽑는다 (2026-10-12)
+thesis_tables.html
+
 # local-only Claude Code settings
 .claude/settings.local.json
 .claude/scheduled_tasks.lock

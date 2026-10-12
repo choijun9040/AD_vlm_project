@@ -1,0 +1,386 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>표 모음 — 한글 붙여넣기용</title>
+<style>
+ body { font-family: "맑은 고딕", sans-serif; margin: 28px; max-width: 1000px; }
+ table { border-collapse: collapse; margin: 6px 0; }
+ th, td { border: 1px solid #333; padding: 5px 9px; font-size: 13px; vertical-align: top; }
+ tr:first-child td { background: #e8e8e8; font-weight: bold; }
+ .cap { text-align: center; margin: 4px 0 2px; font-size: 13px; }
+ .cond { text-align: center; margin: 0 0 26px; font-size: 12px; color: #444; }
+ .hint { background: #fffbe6; border: 1px solid #e8d98a; padding: 10px 14px;
+         font-size: 13px; margin-bottom: 22px; line-height: 1.6; }
+</style>
+<div class="hint">
+<b>한글 붙여넣기용 표 모음</b> — <code>scripts/build_tables_html.py</code>가
+<code>thesis_full_draft.md</code>에서 뽑았다. 직접 고치지 말고 합본을 고친 뒤 다시 돌린다.<br>
+<b>캡션은 표 아래</b>이고(학교 양식) 그 아래 작은 글씨가 <b>측정 조건</b>이다 —
+조건을 빼고 옮기면 값이 무엇을 잰 것인지 알 수 없게 된다.<br>
+표는 브라우저에서 드래그해 복사하면 한글에 표로 들어간다.
+</div>
+<table>
+<tr><td>변형</td><td>체크포인트</td><td>손실</td><td>λ</td><td>교사 입력</td></tr>
+<tr><td>Full</td><td>student_full</td><td>L_task + L_align + L_atc</td><td>1.0 · 1.0</td><td>2프레임</td></tr>
+<tr><td>정렬만</td><td>student_spatial</td><td>L_task + L_align</td><td>1.0 · 0</td><td>1프레임</td></tr>
+<tr><td>시간만</td><td>student_temporal</td><td>L_task + L_atc</td><td>0 · 1.0</td><td>2프레임</td></tr>
+<tr><td>기준선</td><td>student_baseline_v2</td><td>L_task</td><td>—</td><td>교사 없음</td></tr>
+<tr><td>출력 증류</td><td>student_kd_only_v4</td><td>L_task + L_kd</td><td>λ_kd 1.0, T 1.5</td><td>1프레임</td></tr>
+</table>
+<div class="cap">[표 1] 다섯 학생 변형의 손실·가중치·교사 입력</div>
+<div class="cond"></div>
+<table>
+<tr><td>항목</td><td>Full</td><td>정렬만</td><td>시간만</td><td>기준선</td><td>출력 증류</td></tr>
+<tr><td>학습 가능 파라미터</td><td>41,124,224</td><td>41,124,224</td><td>41,124,224</td><td>41,124,224</td><td>41,124,224</td></tr>
+<tr><td>DriveLM 표본</td><td>377,983</td><td>377,983</td><td>377,983</td><td>377,983</td><td>377,983</td></tr>
+<tr><td>NuScenes-QA 표본</td><td>54,607</td><td>54,607</td><td>54,607</td><td>54,607</td><td>54,607</td></tr>
+<tr><td>최적화 스텝</td><td>27,037</td><td>27,037</td><td>27,037</td><td>27,037</td><td>27,037</td></tr>
+<tr><td>워밍업 스텝</td><td>1,351</td><td>1,351</td><td>1,351</td><td>1,351</td><td>1,351</td></tr>
+<tr><td>마이크로 배치 × 누적</td><td>2 × 8</td><td>2 × 8</td><td>2 × 8</td><td>4 × 4</td><td>2 × 8</td></tr>
+<tr><td>시드</td><td>고정 안 함</td><td>〃</td><td>〃</td><td>〃</td><td>〃</td></tr>
+</table>
+<div class="cap">[표 2] 다섯 변형의 공정성 통제 항목</div>
+<div class="cond">(표본 합 432,590 ÷ 유효 배치 16 = 27,036.9 → 27,037스텝, 즉 한 에폭)</div>
+<table>
+<tr><td>변형</td><td>전체</td><td>비교</td><td>개수</td><td>존재</td><td>대상</td><td>상태</td></tr>
+<tr><td>Full</td><td>51.69% (5,846)</td><td>64.72%</td><td>7.46%</td><td>80.17%</td><td>43.87%</td><td>51.03%</td></tr>
+<tr><td>정렬만</td><td>51.40% (5,813)</td><td>63.09%</td><td>10.58%</td><td>81.38%</td><td>37.86%</td><td>52.79%</td></tr>
+<tr><td>시간만</td><td>51.34% (5,806)</td><td>64.44%</td><td>7.73%</td><td>81.17%</td><td>39.89%</td><td>52.24%</td></tr>
+<tr><td>기준선</td><td>50.30% (5,688)</td><td>64.49%</td><td>7.96%</td><td>80.26%</td><td>36.67%</td><td>51.15%</td></tr>
+<tr><td>출력 증류</td><td>46.74% (5,286)</td><td>63.88%</td><td>10.40%</td><td>67.68%</td><td>35.48%</td><td>51.09%</td></tr>
+</table>
+<div class="cap">[표 3] NuScenes-QA 검증 정확도 — 변형별·질문 유형별</div>
+<div class="cond">(NuScenes-QA 검증 11,309문항, 평가 해상도, bf16, 각 변형 1회 학습. 괄호는 정답 수)</div>
+<table>
+<tr><td>측정 형식</td><td>유한 표본</td><td>활성 중앙값</td><td>여유</td><td>판정</td></tr>
+<tr><td>bf16 (참값)</td><td>250/250</td><td>74,752</td><td>0.88배</td><td>위험</td></tr>
+<tr><td>fp16</td><td>13/250</td><td>63,552</td><td>1.03배</td><td>&quot;안전&quot;(틀림)</td></tr>
+</table>
+<div class="cap">[표 4] 측정 형식에 따른 여유와 판정</div>
+<div class="cond">(`student_baseline_v2`, 원본 해상도, 마지막 블록)</div>
+<table>
+<tr><td>모델</td><td>blk16</td><td>blk24</td><td>blk28</td><td>blk31 (마지막)</td></tr>
+<tr><td>사전학습 3B (미세조정 없음)</td><td>840</td><td>8,256</td><td>8,256</td><td>33,792</td></tr>
+<tr><td>기준선</td><td>876</td><td>8,096</td><td>8,096</td><td>50,176</td></tr>
+<tr><td>출력 증류</td><td>604</td><td>7,712</td><td>7,712</td><td>30,336</td></tr>
+<tr><td>시간만</td><td>932</td><td>7,872</td><td>7,872</td><td>34,304</td></tr>
+<tr><td>정렬만</td><td>56</td><td>124</td><td>187</td><td>18,432</td></tr>
+<tr><td>Full</td><td>59</td><td>130</td><td>177</td><td>17,920</td></tr>
+<tr><td>교사 7B</td><td>458</td><td>9,024</td><td>9,024</td><td>27,904</td></tr>
+</table>
+<div class="cap">[표 5] 비전 인코더 블록별 최대 활성 크기</div>
+<div class="cond">(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값; [그림 1])</div>
+<table>
+<tr><td>입력 픽셀 상한</td><td>패치 수</td><td>기준선</td><td>출력 증류</td><td>시간만</td><td>사전학습</td><td>정렬만</td><td>Full</td></tr>
+<tr><td>1,440,000 (원본)</td><td>7,296</td><td>94.8%</td><td>20.4%</td><td>28.8%</td><td>69.6%</td><td>0.0%</td><td>0.0%</td></tr>
+<tr><td>802,816</td><td>3,864</td><td>25.6%</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>401,408</td><td>1,920</td><td>10.4%</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>200,704 (평가)</td><td>924</td><td>3.2%</td><td>0</td><td>0.4%</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>100,352</td><td>480</td><td>0.8%</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+</table>
+<div class="cap">[표 6] 입력 해상도별 fp16 붕괴율</div>
+<div class="cond">(fp16 붕괴율, 250장, 이미지 단위로 출력이 NaN이면 붕괴; [그림 2])</div>
+<table>
+<tr><td>모델</td><td>여유</td><td>해석</td></tr>
+<tr><td>사전학습 3B</td><td>0.95배</td><td>사전학습 상태에서 이미 여유가 없다</td></tr>
+<tr><td>기준선</td><td>0.88배</td><td>남은 여유마저 없앤다</td></tr>
+<tr><td>시간만 · 출력 증류</td><td>1.06배 · 1.10배</td><td>한계선 위로 조금 올린다</td></tr>
+<tr><td>정렬만 · Full</td><td>2.89배 · 2.92배</td><td>약 3배의 여유를 만든다</td></tr>
+</table>
+<div class="cap">[표 7] 원본 해상도에서의 모델별 여유와 해석</div>
+<div class="cond"></div>
+<table>
+<tr><td>변형</td><td>여유</td><td>붕괴율</td><td>max/rms</td><td>INT8 SNR (텐서 단위)</td></tr>
+<tr><td>사전학습</td><td>0.95배</td><td>69.6%</td><td>173.2</td><td>31.56 dB</td></tr>
+<tr><td>기준선</td><td>0.88배</td><td>94.8%</td><td>147.2</td><td>32.23 dB</td></tr>
+<tr><td>출력 증류</td><td>1.10배</td><td>20.4%</td><td>208.3</td><td>30.41 dB</td></tr>
+<tr><td>시간만</td><td>1.06배</td><td>28.8%</td><td>205.4</td><td>30.52 dB</td></tr>
+<tr><td>정렬만</td><td>2.89배</td><td>0.0%</td><td>173.7</td><td>25.72 dB</td></tr>
+<tr><td>Full</td><td>2.92배</td><td>0.0%</td><td>238.2</td><td>22.88 dB</td></tr>
+</table>
+<div class="cap">[표 8] 여유·붕괴율과 표준 압축 지표</div>
+<div class="cond">(원본 해상도, 250장, 마지막 블록, 여유는 p50·bf16 측정; [그림 3])</div>
+<table>
+<tr><td></td><td>양자화 검사를 받는가</td><td>fp16으로 실행되는가</td></tr>
+<tr><td>언어 디코더</td><td>예</td><td>아니오 (INT4)</td></tr>
+<tr><td>비전 인코더</td><td>아니오</td><td>예</td></tr>
+</table>
+<div class="cap">[표 9] 양자화 검사를 받는 부분과 fp16으로 실행되는 부분</div>
+<div class="cond"></div>
+<table>
+<tr><td>변형</td><td>잔차</td><td>attn</td><td>mlp</td><td>합</td></tr>
+<tr><td>기준선</td><td>−88</td><td>7</td><td>−46,848</td><td>−46,848</td></tr>
+<tr><td>출력 증류</td><td>−98</td><td>−9</td><td>−28,544</td><td>−28,672</td></tr>
+<tr><td>시간만</td><td>−94</td><td>−10</td><td>−33,536</td><td>−33,536</td></tr>
+<tr><td>정렬만</td><td>−148</td><td>−20</td><td>−17,024</td><td>−17,280</td></tr>
+<tr><td>Full</td><td>−139</td><td>−29</td><td>−17,152</td><td>−17,408</td></tr>
+</table>
+<div class="cap">[표 10] 마지막 블록 최댓값의 성분 분해</div>
+<div class="cond"></div>
+<table>
+<tr><td>형태</td><td>상태</td></tr>
+<tr><td>크기 매개 전파 — &quot;중간층 활성이 크므로 마지막 블록도 크다&quot;</td><td>기각. 잔차 기여 0.2~0.9%, 잔차를 줄이면 오히려 증가, 중간층 격차(약 62배)가 마지막 블록에서 약 2.8배로 줄어든다</td></tr>
+<tr><td>방향 매개 전파 — &quot;중간층 표현의 방향이 바뀌어 MLP 생성량이 준다&quot;</td><td>기각되지 않았다. norm2 실험이 오히려 지지한다</td></tr>
+</table>
+<div class="cap">[표 11] 마지막 블록 MLP 가설의 두 형태와 판정</div>
+<div class="cond"></div>
+<table>
+<tr><td>개입</td><td>곱 act(gate)⊙up</td><td>down_proj 출력</td><td>붕괴율 (원본 해상도)</td></tr>
+<tr><td>없음</td><td>4,588</td><td>63,200</td><td>94.4%</td></tr>
+<tr><td>MLP 출력을 1/3 (fixB)</td><td>4,588</td><td>63,360</td><td>94.8%</td></tr>
+<tr><td>gate·up를 각각 1/√3 (fixA, 곱이 1/3)</td><td>1,530</td><td>24,800</td><td>0.0%</td></tr>
+</table>
+<div class="cap">[표 12] 사후 개입 위치에 따른 활성과 붕괴율</div>
+<div class="cond">(250장, fp16)</div>
+<table>
+<tr><td>λ</td><td>blk24</td><td>blk31</td><td>λ=0 대비</td><td>fp16 여유</td></tr>
+<tr><td>0</td><td>8,512</td><td>36,608</td><td>—</td><td>1.79배</td></tr>
+<tr><td>0.5</td><td>5,856</td><td>26,112</td><td>−28.7%</td><td>2.51배</td></tr>
+<tr><td>1.0</td><td>124</td><td>19,072</td><td>−47.9%</td><td>3.43배</td></tr>
+<tr><td>2.0</td><td>128</td><td>14,208</td><td>−61.2%</td><td>4.61배</td></tr>
+</table>
+<div class="cap">[표 13] 정렬 손실 가중치 λ에 따른 활성과 여유</div>
+<div class="cond">(799장, 평가 해상도, bf16, p50; [그림 4])</div>
+<table>
+<tr><td>변형</td><td>정렬 대상</td><td>blk31 p50</td><td>λ=0 대비</td></tr>
+<tr><td>λ=0</td><td>—</td><td>36,352</td><td>—</td></tr>
+<tr><td>자기 정렬</td><td>3B 자기 자신</td><td>27,648</td><td>−23.9%</td></tr>
+<tr><td>교사 정렬 λ=0.5</td><td>7B 교사</td><td>25,600</td><td>−29.6%</td></tr>
+<tr><td>교사 정렬 λ=1.0</td><td>7B 교사</td><td>19,008</td><td>−47.7%</td></tr>
+<tr><td>교사 정렬 λ=2.0</td><td>7B 교사</td><td>14,464</td><td>−60.2%</td></tr>
+</table>
+<div class="cap">[표 14] 정렬 대상에 따른 마지막 블록 활성</div>
+<div class="cond">(250장 짝, 평가 해상도, bf16. [표 13]의 실행과 표본이 달라 값이 조금 다르다 — 짝지은 비교는 같은 실행</div>
+<table>
+<tr><td>변형</td><td>INT4 교란</td><td>INT4 정정</td><td>bf16 원본</td><td>정정−원본</td></tr>
+<tr><td>기준선</td><td>1.39%</td><td>48.30%</td><td>50.30%</td><td>−2.00%p</td></tr>
+<tr><td>Full</td><td>51.60%</td><td>51.86%</td><td>51.69%</td><td>+0.17%p</td></tr>
+<tr><td>정렬만</td><td>50.82%</td><td>50.64%</td><td>51.40%</td><td>−0.76%p</td></tr>
+<tr><td>시간만</td><td>30.49%</td><td>50.31%</td><td>51.34%</td><td>−1.03%p</td></tr>
+<tr><td>출력 증류</td><td>32.99%</td><td>47.96%</td><td>46.74%</td><td>+1.22%p</td></tr>
+</table>
+<div class="cap">[표 15] INT4 정확도 — 교란 요인 제거 전후</div>
+<div class="cond">(NuScenes-QA[3] 11,309문항)</div>
+<table>
+<tr><td>패턴</td><td>비율</td></tr>
+<tr><td>torch_dtype == float16</td><td>55/197 (28%)</td></tr>
+<tr><td>비전 인코더를 양자화에서 제외</td><td>67/197 (34%)</td></tr>
+<tr><td>둘 다 — 비전 인코더가 fp16으로 실행되도록 적혀 있음</td><td>27/197 (13.7%)</td></tr>
+<tr><td>처리기 max_pixels &gt; 4M</td><td>56/197 (28%)</td></tr>
+</table>
+<div class="cap">[표 16] 공개 양자화 저장소의 설정 패턴</div>
+<div class="cond"></div>
+<table>
+<tr><td>저장소</td><td>여유 p50</td><td>판정</td></tr>
+<tr><td>AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ</td><td>0.96배</td><td>한계 초과</td></tr>
+<tr><td>AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ</td><td>1.73배</td><td>경계</td></tr>
+<tr><td>Qwen/Qwen2-VL-2B-Instruct-AWQ (공식)</td><td>3.88배</td><td>안전</td></tr>
+<tr><td>Qwen/Qwen2-VL-7B-Instruct-AWQ (공식)</td><td>4.49배</td><td>안전</td></tr>
+<tr><td>QuantTrio/Qwen3-VL-32B-Instruct-AWQ</td><td>6.09배</td><td>안전</td></tr>
+<tr><td>QuantTrio/Qwen3-VL-30B-A3B-Instruct-AWQ</td><td>42.21배</td><td>안전</td></tr>
+<tr><td>Isotr0py/Phi-3.5-vision-instruct-AWQ</td><td>282.34배</td><td>안전 (고정 해상도)</td></tr>
+<tr><td>ybelkada/llava-1.5-7b-hf-awq</td><td>321.10배</td><td>안전 (고정 해상도)</td></tr>
+<tr><td>ELVISIO/SenseNova-SI-InternVL3-8B-AWQ</td><td>422.61배</td><td>안전 (고정 해상도)</td></tr>
+</table>
+<div class="cap">[표 17] 위험 구성 공개 저장소의 실측 여유</div>
+<div class="cond">(`p-christ/Qwen2-VL-7B-Instruct-AWQ`는 적재 경로에서 비전 타워를 찾지 못해 재지 못했다. 교차 확인용으로</div>
+<table>
+<tr><td>저장소</td><td>활성 p50</td><td>여유 p50</td><td>최악</td></tr>
+<tr><td>Qwen/Qwen2.5-VL-3B-Instruct (기반)</td><td>68,608</td><td>0.95</td><td>0.76</td></tr>
+<tr><td>Qwen/Qwen2.5-VL-3B-Instruct-AWQ (공식)</td><td>68,608</td><td>0.95</td><td>0.76</td></tr>
+<tr><td>AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ</td><td>68,096</td><td>0.96</td><td>0.76</td></tr>
+<tr><td>Qwen/Qwen2.5-VL-7B-Instruct-AWQ (공식)</td><td>37,632</td><td>1.74</td><td>1.26</td></tr>
+<tr><td>AngelSlim/Qwen2.5-VL-7B-Instruct-AWQ</td><td>37,888</td><td>1.73</td><td>1.30</td></tr>
+</table>
+<div class="cap">[표 18] 기반 모델과 양자화 파생본의 여유 — 상속</div>
+<div class="cond"></div>
+<table>
+<tr><td>계열</td><td>기반 → AWQ 여유 p50</td><td>최악</td><td>비전 가중치</td></tr>
+<tr><td>LLaVA-1.5-7B[35]</td><td>321.10 → 321.10</td><td>291.13 → 291.13</td><td>391/391 비트 동일</td></tr>
+<tr><td>Phi-3.5-vision[36]</td><td>282.34 → 282.34</td><td>257.89 → 257.89</td><td>bf16→fp16 재저장, 최대 차 2.98×10⁻⁸</td></tr>
+</table>
+<div class="cap">[표 19] 다른 두 계열에서의 여유 상속</div>
+<div class="cond"></div>
+<table>
+<tr><td>세대</td><td>모델</td><td>여유</td></tr>
+<tr><td>Qwen2-VL</td><td>2B · 7B (공식 AWQ)</td><td>3.88 · 4.49</td></tr>
+<tr><td>Qwen2.5-VL</td><td>3B · 7B</td><td>0.95 · 1.74</td></tr>
+<tr><td>Qwen3-VL</td><td>32B (dense) · 30B-A3B (MoE)</td><td>6.09 · 42.21</td></tr>
+</table>
+<div class="cap">[표 20] Qwen 세대별 여유</div>
+<div class="cond"></div>
+<table>
+<tr><td>막힌 곳</td><td>해결</td><td>확인</td></tr>
+<tr><td>grid_thw에 의존하는 동적 로직(회전 위치 임베딩, 윈도우 인덱스, cu_seqlens)이 ONNX로 나가지 않는다</td><td>배포 해상도를 고정하고 그 해상도의 값을 상수로 굽는 래퍼</td><td>원본 대비 오차 0</td></tr>
+<tr><td>어텐션 마스크의 채움값(finfo.min)이 fp16에서 −∞가 되어 무관한 NaN을 만든다</td><td>채움값을 −10⁴으로 (exp(−10⁴)은 fp32에서도 0)</td><td>상수화 대조 통과</td></tr>
+<tr><td>트레이서가 큰 상수(마스크)를 블록마다 복제해 파일이 약 3배로 부푼다</td><td>저장 직전에 내용이 같은 상수를 하나로 합친다 — 8.32 GiB → 2.69 GiB</td><td>토큰별 코사인 0.999920으로 동일</td></tr>
+<tr><td>가중치를 외부 파일(.onnx.data)로 둔 그래프를 TensorRT가 파싱하지 못한다</td><td>바이트가 아니라 파일 경로로 파싱</td><td>9,177 레이어 정상 파싱</td></tr>
+</table>
+<div class="cap">[표 21] ONNX 내보내기에서 막힌 곳과 해결</div>
+<div class="cond"></div>
+<table>
+<tr><td>파일</td><td>max_pixels</td><td>패치</td><td>상수화 대조</td><td>ONNX 코사인</td></tr>
+<tr><td>tower_baseline_v2_native</td><td>1,440,000</td><td>7,296</td><td>0</td><td>0.999920</td></tr>
+<tr><td>tower_full_native</td><td>1,440,000</td><td>7,296</td><td>0</td><td>0.999999</td></tr>
+<tr><td>tower_baseline_v2</td><td>200,704</td><td>924</td><td>0</td><td>0.999978</td></tr>
+<tr><td>tower_full</td><td>200,704</td><td>924</td><td>0</td><td>1.000000</td></tr>
+</table>
+<div class="cap">[표 22] 내보낸 ONNX 그래프와 대조 결과</div>
+<div class="cond"></div>
+<table>
+<tr><td>조건</td><td>빌드</td><td>답하는 질문</td></tr>
+<tr><td>관행</td><td>--fp16</td><td>실제 배포 관행에서 무슨 일이 일어나는가</td></tr>
+<tr><td>엄격</td><td>--fp16 + 정밀도 제약 강제, TF32 끔</td><td>순수 fp16 경로에서 주장의 수치 조건이 성립하는가</td></tr>
+<tr><td>대조군</td><td>fp32</td><td>붕괴가 정밀도 때문인가</td></tr>
+</table>
+<div class="cap">[표 23] TensorRT 정밀도 조건</div>
+<div class="cond"></div>
+<table>
+<tr><td>조건</td><td>붕괴율</td><td>가중치 메모리</td><td>지연 p50</td></tr>
+<tr><td>fp32 대조군</td><td>0.0%</td><td>2,760 MiB</td><td>441.0 ms</td></tr>
+<tr><td>fp16 관행</td><td>92.8%¹</td><td>1,385 MiB</td><td>139.7 ms</td></tr>
+<tr><td>fp16 엄격</td><td>빌드 실패(아래)</td><td>—</td><td>—</td></tr>
+</table>
+<div class="cap">[표 24] TensorRT 정밀도 조건별 붕괴율·메모리·지연</div>
+<div class="cond">(`student_baseline_v2`, 원본 해상도, TensorRT 10.13, A100. 붕괴율 92.8%만 250장, 나머지는 50장)</div>
+<table>
+<tr><td>TensorRT</td><td>교정 fp16</td><td>교정 bf16</td><td>bf16 ÷ fp16</td></tr>
+<tr><td>10.13</td><td>149.5 ms</td><td>205.5 ms</td><td>1.375배</td></tr>
+<tr><td>10.16</td><td>138.7 ms</td><td>186.5 ms</td><td>1.344배</td></tr>
+</table>
+<div class="cap">[표 25] 교정 그래프의 fp16·bf16 지연</div>
+<div class="cond">(50장, 원본 해상도, A100)</div>
+<table>
+<tr><td>선택</td><td>붕괴율</td><td>지연 p50</td><td>가중치 메모리</td><td>정확도 (원본 해상도, 1,029문항)</td></tr>
+<tr><td>fp32</td><td>0.0%</td><td>441.0 ms</td><td>2,760 MiB</td><td>—</td></tr>
+<tr><td>fp16 무교정</td><td>92.8%¹</td><td>139.7 ms</td><td>1,385 MiB</td><td>1.36% (PyTorch)</td></tr>
+<tr><td>fp16 + 도구 교정</td><td>0.0%</td><td>149.5 ms</td><td>1,385 MiB</td><td>50.73% (PyTorch)</td></tr>
+<tr><td>bf16 무교정</td><td>0.0%</td><td>197.4 ms</td><td>1,385 MiB</td><td>49.95% (PyTorch)</td></tr>
+</table>
+<div class="cap">[표 26] 배포 선택지 넷의 비교</div>
+<div class="cond">(붕괴율·지연·메모리는 TensorRT 10.13·50장, ¹만 250장(Ⅵ장 4절 각주). 정확도는 같은 가중치의 PyTorch 배포 조건 측정, Ⅶ장 5절)</div>
+<table>
+<tr><td>시도</td><td>그래프 (모두 관행 --fp16)</td><td>실패 지점 (빌드 로그)</td></tr>
+<tr><td>1</td><td>원본 해상도, 단일 그래프</td><td>어텐션 행렬 크기의 버퍼(3.48 GB)</td></tr>
+<tr><td>2</td><td>802,816, 단일 (작업 공간 제한·최적화 수준 0 포함)</td><td>가중치 fp32(2.6 GB)와 fp16 사본이 공유 메모리 7.4 GB를 넘음</td></tr>
+<tr><td>3</td><td>802,816 · 401,408, 블록 16에서 둘로 분할</td><td>전체 어텐션 행렬 두 개 분량(1.91 GB · 0.47 GB)</td></tr>
+<tr><td>4</td><td>분할 + 어텐션을 창·쿼리 단위로 나눠 계산, 세 해상도</td><td>원본은 작업 버퍼(0.2~0.44 GB), 802,816·401,408은 가중치 상수 영역(1.26 GB · 0.63 GB)</td></tr>
+<tr><td>5</td><td>4 + 가중치·활성을 fp16으로 저장한 그래프, 원본 · 802,816</td><td>원본은 작업 버퍼, 802,816은 같은 상수 영역 — 바이트 단위로 같다</td></tr>
+</table>
+<div class="cap">[표 27] Orin Nano에서의 관행 빌드 시도와 실패 지점</div>
+<div class="cond"></div>
+<table>
+<tr><td>해상도</td><td>초과 비율 (bf16)</td><td>PyTorch fp16</td><td>TRT 강타입</td><td>TRT 관행 (fp16 그래프)</td></tr>
+<tr><td>1,440,000 (원본)</td><td>95.6%</td><td>94.8%</td><td>92.4%</td><td>92.4%</td></tr>
+<tr><td>802,816</td><td>29.2%</td><td>25.6%</td><td>24.4%</td><td>3.6%</td></tr>
+<tr><td>401,408</td><td>10.8%</td><td>10.4%</td><td>10.0%</td><td>17.2%</td></tr>
+</table>
+<div class="cap">[표 28] 강타입 엔진의 A100 대조 — fp16 그래프</div>
+<div class="cond">(기준선 학생, 250장, TensorRT 10.13, A100. Full과 교정본은 모든 칸에서 0%)</div>
+<table>
+<tr><td>해상도</td><td>모델</td><td>Orin Nano</td><td>A100 강타입</td><td>지연 p50 (Orin)</td></tr>
+<tr><td>802,816</td><td>기준선</td><td>24.4% (61/250)</td><td>24.4% (61/250)</td><td>1,067 ms</td></tr>
+<tr><td>802,816</td><td>Full</td><td>0.0%</td><td>0.0%</td><td>1,069 ms</td></tr>
+<tr><td>802,816</td><td>교정 기준선</td><td>0.0%</td><td>0.0%</td><td>1,069 ms</td></tr>
+<tr><td>401,408</td><td>기준선</td><td>9.2% (23/250)</td><td>10.0% (25/250)</td><td>504 ms</td></tr>
+<tr><td>401,408</td><td>Full · 교정 기준선</td><td>0.0% · 0.0%</td><td>0% · 0%</td><td>503 ms</td></tr>
+<tr><td>원본 1,440,000</td><td>세 모델</td><td>빌드 불가 — 0.64 GB 자원 할당 실패</td><td>92.4% · 0% · 0%</td><td>—</td></tr>
+</table>
+<div class="cap">[표 29] Orin Nano 실측 결과</div>
+<div class="cond">(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합; [그림 5])</div>
+<table>
+<tr><td>명령</td><td>하는 일</td></tr>
+<tr><td>diagnose</td><td>블록별 `max</td><td>activation</td><td>`을 재고 초과 비율과 여유를 계산해 판정한다</td></tr>
+<tr><td>fix</td><td>위험 블록에 필요한 MLP 축소 배수를 산출해 가중치를 교정하고(--verify면 재측정) 교정 가중치를 저장한다</td></tr>
+<tr><td>selftest</td><td>모델 없이 판정 세 분기와 배수 풀이를 시험한다</td></tr>
+</table>
+<div class="cap">[표 30] headroom_guard의 명령</div>
+<div class="cond"></div>
+<table>
+<tr><td>최악 여유</td><td>1.00 미만</td><td></td><td></td><td></td><td>1.00</td><td>1.05</td><td>1.09 이상</td></tr>
+<tr><td>붕괴율</td><td>71%</td><td>57%</td><td>42%</td><td>23%</td><td>6% · 2%</td><td>0%</td><td>0%</td></tr>
+</table>
+<div class="cap">[표 31] 최악 여유에 따른 붕괴율 — 전이 지점</div>
+<div class="cond"></div>
+<table>
+<tr><td>모델</td><td>초과 비율</td><td>실제 붕괴율</td><td>오차</td></tr>
+<tr><td>사전학습 3B</td><td>72.0%</td><td>69.6%</td><td>+2.4%p</td></tr>
+<tr><td>기준선</td><td>95.6%</td><td>94.8%</td><td>+0.8%p</td></tr>
+<tr><td>출력 증류</td><td>23.2%</td><td>20.4%</td><td>+2.8%p</td></tr>
+<tr><td>시간만</td><td>35.2%</td><td>28.8%</td><td>+6.4%p</td></tr>
+<tr><td>정렬만</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
+<tr><td>Full</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
+</table>
+<div class="cap">[표 32] 초과 비율과 실제 붕괴율</div>
+<div class="cond"></div>
+<table>
+<tr><td>해상도 (max_pixels)</td><td>초과 비율 (bf16)</td><td>PyTorch fp16</td><td>TRT 강타입</td><td>TRT 관행 --fp16</td></tr>
+<tr><td>1,440,000 (원본)</td><td>95.6%</td><td>94.8%</td><td>92.4%</td><td>92.8%</td></tr>
+<tr><td>802,816</td><td>29.2%</td><td>25.6%</td><td>24.4%</td><td>4.0%</td></tr>
+<tr><td>401,408</td><td>10.8%</td><td>10.4%</td><td>10.0%</td><td>15.2%</td></tr>
+</table>
+<div class="cap">[표 33] 실행 경로별 붕괴율과 초과 비율 — 관행은 fp32 그래프</div>
+<div class="cond">(관행 열은 fp32 가중치 그래프, 강타입 열은 같은 구조의 fp16 그래프. A100, TensorRT 10.13)</div>
+<table>
+<tr><td>N</td><td>10</td><td>20</td><td>30</td><td>50</td><td>100</td><td>250</td></tr>
+<tr><td>95% 상한</td><td>25.9%</td><td>13.9%</td><td>9.5%</td><td>5.8%</td><td>3.0%</td><td>1.2%</td></tr>
+</table>
+<div class="cap">[표 34] 표본 수에 따른 무초과 시 참 초과율의 95% 상한</div>
+<div class="cond"></div>
+<table>
+<tr><td>판정</td><td>조건</td></tr>
+<tr><td>위험</td><td>초과 비율 &gt; 0</td></tr>
+<tr><td>경계</td><td>초과 0건, 그러나 최악 여유 &lt; 1.25</td></tr>
+<tr><td>안전</td><td>초과 0건, 최악 여유 ≥ 1.25 (참 초과율의 95% 상한을 함께 표시)</td></tr>
+</table>
+<div class="cap">[표 35] 도구의 세 판정</div>
+<div class="cond"></div>
+<table>
+<tr><td>모델</td><td>계열</td><td>블록 구조</td><td>마지막 블록 여유</td><td>판정</td></tr>
+<tr><td>기준선 학생</td><td>Qwen2.5-VL</td><td>blocks, gate·up→down</td><td>0.90배</td><td>위험 → 교정</td></tr>
+<tr><td>Qwen2-VL-2B-Instruct-AWQ</td><td>Qwen2-VL</td><td>blocks, fc1→fc2</td><td>3.83배</td><td>안전</td></tr>
+<tr><td>Qwen2-VL-7B-Instruct-AWQ</td><td>Qwen2-VL</td><td>blocks, fc1→fc2</td><td>4.52배</td><td>안전</td></tr>
+<tr><td>SmolVLM-Instruct[44]</td><td>Idefics3</td><td>encoder.layers, fc1→fc2</td><td>51.34배</td><td>안전</td></tr>
+</table>
+<div class="cap">[표 36] 모델 계열별 도구 적용 결과</div>
+<div class="cond">(10~30장. Ⅴ장 3절의 3.88·4.49·50.86배와 소수점이 다른 것은 표본 수와 SmolVLM의 해상도 조건 차이다)</div>
+<table>
+<tr><td>λ</td><td>여유 p50</td><td>최악</td><td>초과 비율</td><td>실제 붕괴</td></tr>
+<tr><td>0</td><td>1.14</td><td>0.87</td><td>14.0%</td><td>11.0%</td></tr>
+<tr><td>0.5</td><td>1.91</td><td>1.33</td><td>0.0%</td><td>0.0%</td></tr>
+<tr><td>1.0</td><td>2.32</td><td>1.57</td><td>0.0%</td><td>0.0%</td></tr>
+<tr><td>2.0</td><td>4.04</td><td>2.78</td><td>0.0%</td><td>0.0%</td></tr>
+</table>
+<div class="cap">[표 37] 학습된 λ 체크포인트의 여유와 실제 붕괴</div>
+<div class="cond"></div>
+<table>
+<tr><td>모델</td><td>해상도</td><td>형식</td><td>교정</td><td>정확도</td><td>붕괴형 출력</td></tr>
+<tr><td>기준선</td><td>원본</td><td>fp16</td><td>—</td><td>1.36%</td><td>1,001 / 1,029</td></tr>
+<tr><td>기준선</td><td>원본</td><td>fp16</td><td>도구</td><td>50.73%</td><td>0</td></tr>
+<tr><td>기준선</td><td>원본</td><td>bf16</td><td>—</td><td>49.95%</td><td>0</td></tr>
+<tr><td>기준선</td><td>평가</td><td>fp16</td><td>—</td><td>48.49%</td><td>45</td></tr>
+<tr><td>기준선</td><td>평가</td><td>bf16</td><td>—</td><td>50.63%</td><td>0</td></tr>
+<tr><td>Full</td><td>원본</td><td>fp16</td><td>—</td><td>52.38%</td><td>0</td></tr>
+<tr><td>Full</td><td>원본</td><td>bf16</td><td>—</td><td>52.87%</td><td>0</td></tr>
+<tr><td>Full</td><td>평가</td><td>fp16</td><td>—</td><td>51.31%</td><td>0</td></tr>
+<tr><td>Full</td><td>평가</td><td>bf16</td><td>—</td><td>51.02%</td><td>0</td></tr>
+</table>
+<div class="cap">[표 38] 배포 조건 정확도 — 종단 검증</div>
+<div class="cond"></div>
+<table>
+<tr><td>모델</td><td>해상도</td><td>여유</td><td>fp16</td><td>bf16</td><td>불일치</td><td>McNemar</td><td>fp16 붕괴형</td></tr>
+<tr><td>기준선</td><td>평가</td><td>1.35배</td><td>48.49%</td><td>50.63%</td><td>14 대 36</td><td>p=0.0030</td><td>45</td></tr>
+<tr><td>기준선 (붕괴 문항 제외)</td><td>평가</td><td>—</td><td>50.71%</td><td>50.30%</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Full</td><td>평가</td><td>3.63배</td><td>51.31%</td><td>51.02%</td><td>7 대 4</td><td>p=0.5465</td><td>0</td></tr>
+<tr><td>Full</td><td>원본</td><td>2.92배</td><td>52.38%</td><td>52.87%</td><td>4 대 9</td><td>p=0.267</td><td>0</td></tr>
+</table>
+<div class="cap">[표 39] fp16과 bf16의 짝지은 정확도 비교</div>
+<div class="cond"></div>
+<table>
+<tr><td>진술의 부분</td><td>근거</td><td>강도와 범위</td></tr>
+<tr><td>표준 지표가 역방향을 가리킨다</td><td>Ⅳ장 4절 — 같은 모델·같은 이미지에서 INT8 SNR 32.23 대 22.88 dB, 붕괴율 94.8% 대 0.0%(원본 해상도). Ⅴ장 2절 — 검사받는 부분과 터지는 부분이 서로소인 설정이 공개 저장소에 흔하다</td><td>가장 강하다. 다만 5변형의 완전 역전(ρ = −1.000)은 여유 p50 기준이고, 최악값으로 재면 인접한 한 쌍이 뒤집혀 −0.900이다. 군 사이의 역전은 유지된다</td></tr>
+<tr><td>실패는 이산적이다</td><td>Ⅳ장 3절 — 이미지 단위 붕괴, 해상도 절벽. Ⅶ장 5절 — 키프레임 안 혼재 0건, 붕괴형 정답 0개, 붕괴를 빼면 형식 차이 소멸. Ⅴ장 1절 — 이산성 때문에 INT4 정확도 1.39%가 양자화 탓으로 오인됐다</td><td>매우 강하다</td></tr>
+<tr><td>예고하는 값은 순전파 한 번</td><td>Ⅳ장 1절 정의, Ⅶ장 도구, Ⅶ장 3절 — 초과 비율이 6모델에서 평균 오차 2.1%p로 PyTorch fp16 붕괴율을 추정. 강타입 TensorRT 엔진(A100·Orin)에서도 맞고, 관행 약타입 엔진은 해상도에 따라 양쪽으로 어긋난다(한계 11)</td><td>정의이므로 논쟁 여지가 적다. 실무 기여는 &quot;어느 형식에서, 어느 통계량으로 재는가&quot;까지 정한 데 있다</td></tr>
+<tr><td>움직이는 수단은 여럿이다</td><td>Ⅳ장 8절 — λ 용량-반응, 자기 정렬로 효과의 50%, LoRA 범위 확장은 반대 방향. Ⅳ장 7절 — 학습 없는 사후 교정. Ⅵ장 — 형식 전환. Ⅴ장 4절 — 제작사의 세대 개선</td><td>강하다. 다만 손실 설계 축은 단일 계열이다(Ⅷ장 3절 한계 1)</td></tr>
+</table>
+<div class="cap">[표 40] 기여 진술의 부분별 근거와 강도</div>
+<div class="cond"></div>
