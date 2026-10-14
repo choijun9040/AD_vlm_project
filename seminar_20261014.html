@@ -113,7 +113,7 @@ blockquote b{color:var(--bad)}
   <h2>같은 모델, 같은 이미지에서 두 지표가 반대를 가리킨다</h2>
   <table>
     <tr><th>모델</th><th class="n">fp16 여유</th><th class="n">fp16 붕괴율</th><th class="n">INT8 SNR</th><th>지표가 하는 말</th></tr>
-    <tr class="hi"><td>기준선 (과제 손실만)</td><td class="n">0.88배</td><td class="n">94.8%</td><td class="n">32.23 dB</td><td>“가장 안전”</td></tr>
+    <tr class="hi"><td>Task only (과제 손실만)</td><td class="n">0.88배</td><td class="n">94.8%</td><td class="n">32.23 dB</td><td>“가장 안전”</td></tr>
     <tr class="ok"><td>Full (정렬+시간 증류)</td><td class="n">2.92배</td><td class="n">0.0%</td><td class="n">22.88 dB</td><td>“가장 위험”</td></tr>
   </table>
   <p class="small">원본 해상도(<span class="mono">max_pixels</span> 1,440,000), 250장, 마지막 블록. 여유는 p50·bf16 측정.</p>
@@ -159,14 +159,16 @@ blockquote b{color:var(--bad)}
   <table>
     <tr><th>변형</th><th>손실</th><th>교사 입력</th></tr>
     <tr><td>Full</td><td class="mono">L_task + L_align + L_atc</td><td>2프레임</td></tr>
-    <tr><td>정렬만</td><td class="mono">L_task + L_align</td><td>1프레임</td></tr>
-    <tr><td>시간만</td><td class="mono">L_task + L_atc</td><td>2프레임</td></tr>
-    <tr><td>기준선</td><td class="mono">L_task</td><td>교사 없음</td></tr>
-    <tr><td>출력 증류</td><td class="mono">L_task + L_kd</td><td>1프레임</td></tr>
+    <tr><td>Task + L_align</td><td class="mono">L_task + L_align</td><td>1프레임</td></tr>
+    <tr><td>Task + L_atc</td><td class="mono">L_task + L_atc</td><td>2프레임</td></tr>
+    <tr><td>Task only</td><td class="mono">L_task</td><td>교사 없음</td></tr>
+    <tr><td>Task + out.KD</td><td class="mono">L_task + L_kd</td><td>1프레임</td></tr>
   </table>
   <p><b>통제를 설정 파일이 아니라 실제 학습 기록으로 확인했다</b> — 학습 가능 파라미터 41,124,224개,
   최적화 스텝 27,037, 표본 수까지 다섯 변형이 모두 같다.</p>
-  <p class="small">Qwen2.5-VL-7B 교사 → 3B 학생. DriveLM + NuScenes-QA, 1 에폭. 시드는 고정하지 않았다.</p>
+  <p class="small">Qwen2.5-VL-7B 교사 → 3B 학생. DriveLM + NuScenes-QA, 1 에폭. 시드는 고정하지 않았다.<br>
+  표·그림의 이름은 손실 구성을 그대로 쓴다 — 말로는 <b>Full · 정렬만 · 시간만 · 기준선 ·
+  출력 증류</b>라 부르고, 미세조정하지 않은 기반 모델은 <b>Pre-trained</b>다.</p>
 </div></section>
 
 <section class="slide"><div class="inner">
@@ -175,10 +177,10 @@ blockquote b{color:var(--bad)}
   <table>
     <tr><th>변형</th><th class="n">전체</th><th class="n">존재</th><th class="n">대상</th><th class="n">개수</th></tr>
     <tr><td>Full</td><td class="n">51.69%</td><td class="n">80.17%</td><td class="n">43.87%</td><td class="n">7.46%</td></tr>
-    <tr><td>정렬만</td><td class="n">51.40%</td><td class="n">81.38%</td><td class="n">37.86%</td><td class="n">10.58%</td></tr>
-    <tr><td>시간만</td><td class="n">51.34%</td><td class="n">81.17%</td><td class="n">39.89%</td><td class="n">7.73%</td></tr>
-    <tr><td>기준선</td><td class="n">50.30%</td><td class="n">80.26%</td><td class="n">36.67%</td><td class="n">7.96%</td></tr>
-    <tr><td>출력 증류</td><td class="n">46.74%</td><td class="n">67.68%</td><td class="n">35.48%</td><td class="n">10.40%</td></tr>
+    <tr><td>Task + L_align</td><td class="n">51.40%</td><td class="n">81.38%</td><td class="n">37.86%</td><td class="n">10.58%</td></tr>
+    <tr><td>Task + L_atc</td><td class="n">51.34%</td><td class="n">81.17%</td><td class="n">39.89%</td><td class="n">7.73%</td></tr>
+    <tr><td>Task only</td><td class="n">50.30%</td><td class="n">80.26%</td><td class="n">36.67%</td><td class="n">7.96%</td></tr>
+    <tr><td>Task + out.KD</td><td class="n">46.74%</td><td class="n">67.68%</td><td class="n">35.48%</td><td class="n">10.40%</td></tr>
   </table>
   <p class="small">NuScenes-QA 검증 11,309문항, 평가 해상도, bf16, 각 변형 1회 학습.</p>
   <div class="note"><b>세 변형의 폭은 0.35%p다.</b> 시드를 고정하지 않았으므로 이 차이는 시드 잡음과
@@ -193,7 +195,7 @@ blockquote b{color:var(--bad)}
     <figcaption>799장, 평가 해상도, 이미지별 최대의 중앙값(bf16). 가로 점선은 fp16 한계 65,504.</figcaption></figure>
   <table>
     <tr><th>모델</th><th class="n">blk24</th><th class="n">blk31 (마지막)</th></tr>
-    <tr class="hi"><td>기준선</td><td class="n">8,096</td><td class="n">50,176</td></tr>
+    <tr class="hi"><td>Task only</td><td class="n">8,096</td><td class="n">50,176</td></tr>
     <tr class="ok"><td>Full</td><td class="n">130</td><td class="n">17,920</td></tr>
   </table>
   <p>중간층에서 <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b>. fp16 한계를 결정하는 것은 마지막 블록이다.</p>
@@ -274,7 +276,7 @@ blockquote b{color:var(--bad)}
   <h2>오버플로는 마지막 블록 MLP가 만든다</h2>
   <table>
     <tr><th>변형</th><th class="n">잔차</th><th class="n">attn</th><th class="n">mlp</th></tr>
-    <tr class="hi"><td>기준선</td><td class="n">−88</td><td class="n">7</td><td class="n">−46,848</td></tr>
+    <tr class="hi"><td>Task only</td><td class="n">−88</td><td class="n">7</td><td class="n">−46,848</td></tr>
     <tr class="ok"><td>Full</td><td class="n">−139</td><td class="n">−29</td><td class="n">−17,152</td></tr>
   </table>
   <p>잔차 기여는 전체의 <b>0.2~0.9%</b>다. 앞 블록에서 운반된 것이 아니라 마지막 블록에서 생성된다.</p>
@@ -381,7 +383,7 @@ blockquote b{color:var(--bad)}
     <figcaption>250장, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합.</figcaption></figure>
   <table>
     <tr><th>해상도</th><th>모델</th><th class="n">Orin Nano</th><th class="n">A100 강타입</th><th class="n">지연 p50</th></tr>
-    <tr class="hi"><td>802,816</td><td>기준선</td><td class="n">24.4% (61/250)</td><td class="n">24.4% (61/250)</td><td class="n">1,067 ms</td></tr>
+    <tr class="hi"><td>802,816</td><td>Task only</td><td class="n">24.4% (61/250)</td><td class="n">24.4% (61/250)</td><td class="n">1,067 ms</td></tr>
     <tr class="ok"><td>802,816</td><td>Full · 교정본</td><td class="n">0%</td><td class="n">0%</td><td class="n">—</td></tr>
   </table>
   <p><b>A100과 장 수까지 일치했다.</b> 다만 범위를 분명히 적는다 — 이것은 <b>강타입</b> 빌드 조건이고,
@@ -394,9 +396,9 @@ blockquote b{color:var(--bad)}
   <h2>배포 조건에서 정확도가 돌아온다</h2>
   <table>
     <tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th class="n">정확도</th><th class="n">붕괴형 출력</th></tr>
-    <tr class="hi"><td>기준선</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>1.36%</b></td><td class="n">1,001 / 1,029</td></tr>
-    <tr class="ok"><td>기준선</td><td>원본</td><td>fp16</td><td><b>도구</b></td><td class="n"><b>50.73%</b></td><td class="n"><b>0</b></td></tr>
-    <tr><td>기준선</td><td>원본</td><td>bf16</td><td>—</td><td class="n">49.95%</td><td class="n">0</td></tr>
+    <tr class="hi"><td>Task only</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>1.36%</b></td><td class="n">1,001 / 1,029</td></tr>
+    <tr class="ok"><td>Task only</td><td>원본</td><td>fp16</td><td><b>도구</b></td><td class="n"><b>50.73%</b></td><td class="n"><b>0</b></td></tr>
+    <tr><td>Task only</td><td>원본</td><td>bf16</td><td>—</td><td class="n">49.95%</td><td class="n">0</td></tr>
     <tr class="ok"><td>Full</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>52.38%</b></td><td class="n">0</td></tr>
   </table>
   <p class="small">1,029문항 · 708 키프레임(검증 11,309문항에서 11개마다 하나). 전체 대비 대표성 0.33%p.</p>
