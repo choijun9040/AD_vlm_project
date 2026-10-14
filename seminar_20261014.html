@@ -198,9 +198,12 @@ blockquote b{color:var(--bad)}
     <tr class="hi"><td>Task only</td><td class="n">8,096</td><td class="n">50,176</td></tr>
     <tr class="ok"><td>Full</td><td class="n">130</td><td class="n">17,920</td></tr>
   </table>
-  <p>중간층에서 <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b>. fp16 한계를 결정하는 것은 마지막 블록이다.</p>
+  <p class="small">그림·표 모두 같은 799장·평가 해상도다.</p>
+  <p>중간층에서 <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b>. fp16 한계를 결정하는 것은 마지막 블록이다.
+  이 해상도에서는 아직 어느 모델도 65,504를 넘지 않는다 — <b>넘기는 것은 배포 해상도다</b>(다음 장).</p>
   <div class="note"><b>측정 형식을 나눈다.</b> 크기는 넘치지 않는 bf16에서 재고 붕괴만 fp16에서 관측한다.
-  fp16에서 재면 250장 중 13장만 살아남아 중앙값이 내려가고 <b>0.88배가 1.03배로 “안전”해 보인다</b> — 생존 편향이다.</div>
+  <b>위 그림과는 다른 조건</b>(배포할 원본 해상도, 250장)에서 같은 <span class="mono">Task only</span>를 fp16으로
+  재면 13장만 살아남아 중앙값이 내려가고 <b>여유 0.88배가 1.03배로 “안전”해 보인다</b> — 생존 편향이다.</div>
 </div></section>
 
 <section class="slide"><div class="inner">
@@ -300,6 +303,7 @@ blockquote b{color:var(--bad)}
     <tr class="hi"><td>MLP <b>출력</b>을 1/3 (fixB)</td><td class="n">4,588</td><td class="n">63,360</td><td class="n">94.8%</td></tr>
     <tr class="ok"><td><b>gate·up을 각각 1/√3</b> (fixA)</td><td class="n">1,530</td><td class="n">24,800</td><td class="n">0.0%</td></tr>
   </table>
+  <p class="small">기준선에 건 사후 개입. 붕괴율은 <b>원본 해상도</b> 250장, fp16. 활성은 bf16.</p>
   <p>출력 스케일링은 <b>실패한다</b> — 오버플로가 <span class="mono">down_proj</span> 안에서 이미 일어나므로
   무한대를 나누는 셈이다. <b>곱이 만들어지기 전에</b> 줄이면 붕괴가 사라진다.</p>
   <div class="key"><b>이 비대칭이 오버플로 지점 가설을 검증한다</b> — 위치가 틀렸다면 두 개입이 같은 결과를 냈어야 한다.
@@ -353,6 +357,8 @@ blockquote b{color:var(--bad)}
     <tr class="hi"><td><b>…-3B-Instruct-AWQ</b> (공식)</td><td class="n">68,608</td><td class="n">0.95</td><td class="n">0.76</td></tr>
     <tr><td>…-7B-Instruct-AWQ (공식)</td><td class="n">37,632</td><td class="n">1.74</td><td class="n">1.26</td></tr>
   </table>
+  <p class="small">원본 해상도, 100장. 크기는 bf16에서 쟀다 — 저장 dtype 선언과 무관하게 배포 시 fp16으로
+  바꾼다는 전제다.</p>
   <p>AWQ가 비전 인코더를 양자화에서 제외하므로 <b>비전 가중치가 기반 그대로</b>다. LLaVA-1.5와
   Phi-3.5-vision에서도 같았다(321.10 → 321.10, 282.34 → 282.34).</p>
   <div class="key"><b>세는 방식이 바뀐다.</b> “저장소 27개 중 몇 개가 위험한가”가 아니라
@@ -368,7 +374,8 @@ blockquote b{color:var(--bad)}
     <tr><td>fp32 대조군</td><td class="n">0.0%</td><td class="n">2,760 MiB</td><td class="n">441.0 ms</td></tr>
     <tr class="hi"><td><b>fp16 관행</b> (<span class="mono">--fp16</span>)</td><td class="n"><b>92.8%</b></td><td class="n">1,385 MiB</td><td class="n">139.7 ms</td></tr>
   </table>
-  <p class="small">기준선 학생, 원본 해상도, TensorRT 10.13, A100. 붕괴율은 250장.</p>
+  <p class="small">기준선 학생, 원본 해상도, TensorRT 10.13, A100.
+  <b>92.8%만 250장이고 나머지 칸은 50장</b>이다.</p>
   <p><b>사전 등록한 예상은 빗나갔다.</b> “빌더가 해당 레이어를 fp32로 남겨 회피할 것”이라 적었는데
   관행 설정에서 그대로 붕괴했다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
   <div class="note">PyTorch fp16 붕괴율 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
