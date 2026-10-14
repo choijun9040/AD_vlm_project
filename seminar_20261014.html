@@ -1,0 +1,539 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>표현 범위 여유 — 랩세미나</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#F5F6F7; --card:#FFFFFF; --ink:#14181C; --ink-2:#3C4550; --mute:#6A7178;
+  --rule:#DCE0E4; --rule-2:#EDF0F2;
+  --bad:#B0331F; --bad-soft:#FBEDEA; --good:#1A6F5E; --good-soft:#E9F3F0;
+  --flag:#8A6D1F; --flag-soft:#FBF4E2;
+  --shadow:0 1px 2px rgba(20,24,28,.05),0 8px 24px -12px rgba(20,24,28,.16);
+}
+@media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+  --paper:#0E1113; --card:#171B1F; --ink:#E9EDF0; --ink-2:#BCC4CC; --mute:#8B949C;
+  --rule:#2A3138; --rule-2:#21272C;
+  --bad:#E4705C; --bad-soft:#2A1815; --good:#5FBFA6; --good-soft:#12241F;
+  --flag:#D2B05A; --flag-soft:#241E10;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}}
+:root[data-theme="dark"]{
+  --paper:#0E1113; --card:#171B1F; --ink:#E9EDF0; --ink-2:#BCC4CC; --mute:#8B949C;
+  --rule:#2A3138; --rule-2:#21272C;
+  --bad:#E4705C; --bad-soft:#2A1815; --good:#5FBFA6; --good-soft:#12241F;
+  --flag:#D2B05A; --flag-soft:#241E10;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px -12px rgba(0,0,0,.6);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font-family:"IBM Plex Sans KR",system-ui,-apple-system,"Malgun Gothic",sans-serif;
+  line-height:1.7;font-size:16px;-webkit-font-smoothing:antialiased}
+.mono{font-family:"IBM Plex Mono",ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+
+/* ── 슬라이드 ── */
+.slide{min-height:100vh;display:flex;flex-direction:column;justify-content:center;
+  padding:64px 32px;border-bottom:1px solid var(--rule);scroll-snap-align:start}
+.inner{max-width:880px;margin:0 auto;width:100%}
+.snum{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.14em;
+  color:var(--bad);font-weight:600;margin-bottom:12px}
+h1{font-size:clamp(30px,4.6vw,46px);line-height:1.24;font-weight:700;letter-spacing:-.02em;margin:0 0 20px}
+h2{font-size:clamp(23px,3.2vw,30px);line-height:1.3;font-weight:700;letter-spacing:-.015em;margin:0 0 10px}
+h3{font-size:16.5px;font-weight:600;margin:28px 0 10px}
+.lede{color:var(--ink-2);font-size:17px;margin:0 0 28px;max-width:66ch}
+p{margin:0 0 14px;max-width:68ch}
+.small{font-size:13.5px;color:var(--mute);max-width:70ch}
+b,strong{font-weight:600}
+code{font-family:"IBM Plex Mono",monospace;font-size:.92em;background:var(--rule-2);
+  padding:1px 5px;border-radius:4px}
+
+/* ── 요소 ── */
+.card{background:var(--card);border:1px solid var(--rule);border-radius:10px;
+  padding:20px 22px;box-shadow:var(--shadow);margin:18px 0}
+.grid{display:grid;gap:14px}
+.g2{grid-template-columns:repeat(2,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+@media(max-width:720px){.g2,.g3{grid-template-columns:1fr}}
+table{border-collapse:collapse;width:100%;margin:16px 0;font-size:14.5px}
+th,td{border-bottom:1px solid var(--rule);padding:8px 10px;text-align:left}
+th{font-weight:600;color:var(--ink-2);border-bottom:2px solid var(--rule);font-size:13.5px}
+td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
+tr.hi td{background:var(--bad-soft)}
+tr.ok td{background:var(--good-soft)}
+.chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:600;
+  font-family:"IBM Plex Mono",monospace}
+.chip.bad{background:var(--bad-soft);color:var(--bad)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.flag{background:var(--flag-soft);color:var(--flag)}
+.big{font-size:clamp(34px,5.5vw,54px);font-weight:700;letter-spacing:-.02em;line-height:1.1;
+  font-family:"IBM Plex Mono",monospace}
+.note{border-left:3px solid var(--flag);background:var(--flag-soft);padding:12px 16px;
+  border-radius:0 8px 8px 0;margin:16px 0;font-size:14.5px}
+.key{border-left:3px solid var(--bad);background:var(--bad-soft);padding:14px 18px;
+  border-radius:0 8px 8px 0;margin:18px 0}
+figure{margin:18px 0}
+figure img{width:100%;border:1px solid var(--rule);border-radius:8px;background:#fff}
+figcaption{font-size:13px;color:var(--mute);margin-top:8px}
+ul,ol{margin:0 0 14px;padding-left:22px;max-width:68ch}
+li{margin:6px 0}
+ol.rec{counter-reset:r;list-style:none;padding-left:0}
+ol.rec li{counter-increment:r;position:relative;padding-left:38px;margin:14px 0;max-width:72ch}
+ol.rec li::before{content:counter(r);position:absolute;left:0;top:2px;width:26px;height:26px;
+  border-radius:999px;background:var(--bad-soft);color:var(--bad);font-weight:700;font-size:14px;
+  display:flex;align-items:center;justify-content:center;font-family:"IBM Plex Mono",monospace}
+blockquote{margin:18px 0;padding:18px 22px;border:1px solid var(--rule);border-left:3px solid var(--bad);
+  border-radius:0 10px 10px 0;background:var(--card);box-shadow:var(--shadow);font-size:17px;
+  line-height:1.65;color:var(--ink)}
+blockquote b{color:var(--bad)}
+
+/* ── 진행 표시 ── */
+#bar{position:fixed;top:0;left:0;height:3px;background:var(--bad);z-index:50;width:0}
+#nav{position:fixed;right:18px;bottom:18px;z-index:50;display:flex;gap:6px;align-items:center;
+  background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:6px 12px;
+  box-shadow:var(--shadow);font-size:13px;color:var(--mute)}
+#nav button{border:0;background:none;color:var(--ink-2);cursor:pointer;font-size:15px;padding:2px 6px}
+#nav button:hover{color:var(--bad)}
+@media print{.slide{min-height:auto;page-break-after:always;border:0}#bar,#nav{display:none}}
+</style>
+<div id="bar"></div>
+<div id="nav"><button id="prev">←</button><span id="pos" class="mono">1</span><button id="next">→</button></div>
+
+<section class="slide"><div class="inner">
+  <div class="snum">랩세미나 · 2026-10-14</div>
+  <h1>자율주행 비전-언어 모델의 저정밀 배포를 위한<br>표현 범위 여유 측정과 진단</h1>
+  <p class="lede">압축된 주행 VLM을 fp16으로 배포할 때 <b>표현 범위 초과로 기능이 통째로 사라지며,
+  표준 압축 지표는 이 위험을 역방향으로 가리킨다.</b></p>
+  <p class="small">최 준 · 충북대학교 지능로봇공학과 · 지도교수 기석철<br>
+  석사학위논문 초안 (Ⅰ~Ⅸ장, 표 33 · 그림 6) · KSAE 2026 추계학술대회 발표</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">01 · 한 장 요약</div>
+  <h2>같은 모델, 같은 이미지에서 두 지표가 반대를 가리킨다</h2>
+  <table>
+    <tr><th>모델</th><th class="n">fp16 여유</th><th class="n">fp16 붕괴율</th><th class="n">INT8 SNR</th><th>지표가 하는 말</th></tr>
+    <tr class="hi"><td>기준선 (과제 손실만)</td><td class="n">0.88배</td><td class="n">94.8%</td><td class="n">32.23 dB</td><td>“가장 안전”</td></tr>
+    <tr class="ok"><td>Full (정렬+시간 증류)</td><td class="n">2.92배</td><td class="n">0.0%</td><td class="n">22.88 dB</td><td>“가장 위험”</td></tr>
+  </table>
+  <p class="small">원본 해상도(<span class="mono">max_pixels</span> 1,440,000), 250장, 마지막 블록. 여유는 p50·bf16 측정.</p>
+  <div class="key"><b>붕괴율 94.8%인 모델이 SNR로는 9.35 dB 더 안전해 보인다.</b>
+  구별하지 못하는 것이 아니라 <b>순서가 반대</b>다. 여섯 모델 Spearman ρ = −1.000.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">02 · 배경</div>
+  <h2>차량 탑재는 두 단계의 압축을 거친다</h2>
+  <div class="grid g2">
+    <div class="card"><h3 style="margin-top:0">① 지식 증류</h3>
+      <p>7B 교사 → 3B 학생. 평가 지표는 <b>정확도</b>.</p></div>
+    <div class="card"><h3 style="margin-top:0">② 저정밀 연산</h3>
+      <p>양자화·반정밀도(fp16). 평가 지표는 <b>이상치 비율·양자화 SNR</b>.</p></div>
+  </div>
+  <p>두 단계가 각자의 지표를 통과하면 배포 준비가 된 것으로 여긴다.
+  <b>이 평가 체계에 원리적으로 빠져 있는 축이 있다.</b></p>
+  <div class="note">fp16의 표현 한계는 <b>65,504</b>다. 어떤 층의 활성이 이를 넘으면 그 이미지의 출력은
+  통째로 무너진다 — 정확도가 조금 떨어지는 것이 아니라 <b>이미지 단위로 전부 아니면 전무</b>다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">03 · 논지</div>
+  <h2>기여는 하나다</h2>
+  <div class="key" style="font-size:16.5px">압축된 주행 VLM을 저정밀로 배포할 때 표현 범위 초과로 인한
+  기능 상실이 일어나며, 표준 압축 지표는 이 위험을 <b>역방향</b>으로 가리킨다. 이 실패는 정확도의 점진적
+  저하가 아니라 <b>이산적</b>이고, 그것을 예고하는 값은 <b>순전파 한 번</b>으로 계산되며 그 값을 움직이는
+  수단도 여럿이다. <b>부족한 것은 수단이 아니라 측정이다.</b></div>
+  <table>
+    <tr><th>네 부분</th><th>근거</th><th>강도</th></tr>
+    <tr><td><b>① 표준 지표가 역방향</b></td><td>Ⅳ장 3절</td><td>같은 모델·같은 이미지의 대조 — 가장 강함</td></tr>
+    <tr><td>② 실패는 이산적</td><td>Ⅳ장 2절 · Ⅶ장 3절</td><td>이미지 단위 전부/전무</td></tr>
+    <tr><td>③ 예고 값은 순전파 한 번</td><td>Ⅳ장 1절 · Ⅶ장</td><td>정의 + 추정 오차 2.1%p</td></tr>
+    <tr><td>④ 움직이는 수단은 여럿</td><td>Ⅳ장 4·5절</td><td>단일 시드·단일 계열</td></tr>
+  </table>
+  <p class="small"><b>순서가 곧 근거의 강도다.</b> ①은 산술이라 측정으로 무너지지 않고, ④는 단일 계열에서만 검증했다.</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">04 · 실험 기반</div>
+  <h2>손실 항만 다른 다섯 학생</h2>
+  <table>
+    <tr><th>변형</th><th>손실</th><th>교사 입력</th></tr>
+    <tr><td>Full</td><td class="mono">L_task + L_align + L_atc</td><td>2프레임</td></tr>
+    <tr><td>정렬만</td><td class="mono">L_task + L_align</td><td>1프레임</td></tr>
+    <tr><td>시간만</td><td class="mono">L_task + L_atc</td><td>2프레임</td></tr>
+    <tr><td>기준선</td><td class="mono">L_task</td><td>교사 없음</td></tr>
+    <tr><td>출력 증류</td><td class="mono">L_task + L_kd</td><td>1프레임</td></tr>
+  </table>
+  <p><b>통제를 설정 파일이 아니라 실제 학습 기록으로 확인했다</b> — 학습 가능 파라미터 41,124,224개,
+  최적화 스텝 27,037, 표본 수까지 다섯 변형이 모두 같다.</p>
+  <p class="small">Qwen2.5-VL-7B 교사 → 3B 학생. DriveLM + NuScenes-QA, 1 에폭. 시드는 고정하지 않았다.</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">05 · 출발점</div>
+  <h2>정확도로는 구별되지 않는다</h2>
+  <table>
+    <tr><th>변형</th><th class="n">전체</th><th class="n">존재</th><th class="n">대상</th><th class="n">개수</th></tr>
+    <tr><td>Full</td><td class="n">51.69%</td><td class="n">80.17%</td><td class="n">43.87%</td><td class="n">7.46%</td></tr>
+    <tr><td>정렬만</td><td class="n">51.40%</td><td class="n">81.38%</td><td class="n">37.86%</td><td class="n">10.58%</td></tr>
+    <tr><td>시간만</td><td class="n">51.34%</td><td class="n">81.17%</td><td class="n">39.89%</td><td class="n">7.73%</td></tr>
+    <tr><td>기준선</td><td class="n">50.30%</td><td class="n">80.26%</td><td class="n">36.67%</td><td class="n">7.96%</td></tr>
+    <tr><td>출력 증류</td><td class="n">46.74%</td><td class="n">67.68%</td><td class="n">35.48%</td><td class="n">10.40%</td></tr>
+  </table>
+  <p class="small">NuScenes-QA 검증 11,309문항, 평가 해상도, bf16, 각 변형 1회 학습.</p>
+  <div class="note"><b>세 변형의 폭은 0.35%p다.</b> 시드를 고정하지 않았으므로 이 차이는 시드 잡음과
+  구별할 수 없다 — <b>순위를 주장하지 않는다.</b></div>
+  <p><b>그런데 이 가운데 하나는 fp16으로 배포하는 순간 대부분의 이미지에서 출력을 잃는다.</b></p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">06 · 측정</div>
+  <h2>활성 크기는 수십 배 갈린다</h2>
+  <figure><img src="figures/fig1_activation_profile.png" alt="비전 인코더 블록별 최대 활성">
+    <figcaption>799장, 평가 해상도, 이미지별 최대의 중앙값(bf16). 가로 점선은 fp16 한계 65,504.</figcaption></figure>
+  <table>
+    <tr><th>모델</th><th class="n">blk24</th><th class="n">blk31 (마지막)</th></tr>
+    <tr class="hi"><td>기준선</td><td class="n">8,096</td><td class="n">50,176</td></tr>
+    <tr class="ok"><td>Full</td><td class="n">130</td><td class="n">17,920</td></tr>
+  </table>
+  <p>중간층에서 <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b>. fp16 한계를 결정하는 것은 마지막 블록이다.</p>
+  <div class="note"><b>측정 형식을 나눈다.</b> 크기는 넘치지 않는 bf16에서 재고 붕괴만 fp16에서 관측한다.
+  fp16에서 재면 250장 중 13장만 살아남아 중앙값이 내려가고 <b>0.88배가 1.03배로 “안전”해 보인다</b> — 생존 편향이다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">07 · 이산성</div>
+  <h2>해상도에 절벽이 있다</h2>
+  <figure><img src="figures/fig2_resolution_collapse.png" alt="해상도별 활성과 붕괴율">
+    <figcaption>250장. (a) 마지막 블록 활성 중앙값(bf16), (b) fp16에서 출력이 NaN이 된 이미지 비율.</figcaption></figure>
+  <table>
+    <tr><th>입력 픽셀 상한</th><th class="n">기준선</th><th class="n">정렬만 · Full</th></tr>
+    <tr><td>1,440,000 (원본)</td><td class="n">94.8%</td><td class="n">0.0%</td></tr>
+    <tr><td>802,816</td><td class="n">25.6%</td><td class="n">0</td></tr>
+    <tr><td>200,704 (평가)</td><td class="n">3.2%</td><td class="n">0</td></tr>
+  </table>
+  <p>붕괴는 <b>이미지 단위로 전부 아니면 전무</b>이고 같은 장면의 연속 키프레임에서 뭉친다.
+  802,816 → 1,440,000 구간에서 급격히 늘어 <b>안전 해상도에 절벽</b>이 있다.</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">08 · 핵심</div>
+  <h2>표준 압축 지표는 역방향을 가리킨다</h2>
+  <figure><img src="figures/fig4_metric_inversion.png" alt="여유와 INT8 SNR의 역전">
+    <figcaption>원본 해상도. 가로축 여유(p50·bf16, 250장), 세로축 INT8 양자화 SNR 중앙값(200장).
+    채운 점은 붕괴가 있는 모델.</figcaption></figure>
+  <div class="grid g3">
+    <div class="card"><div class="snum" style="margin:0">텐서 단위 SNR</div>
+      <div class="big" style="color:var(--bad)">−1.000</div>
+      <p class="small">여유와 완전히 역순 (6모델 Spearman ρ)</p></div>
+    <div class="card"><div class="snum" style="margin:0">채널 단위 SNR</div>
+      <div class="big">−0.657</div>
+      <p class="small">정렬만에서 단조성이 깨지나 두 끝점의 역전은 남는다</p></div>
+    <div class="card"><div class="snum" style="margin:0">이상치 비율</div>
+      <div class="big" style="color:var(--mute)">—</div>
+      <p class="small">147.2~238.2를 오가며 순서 관계가 없다</p></div>
+  </div>
+  <p><b>하나는 반대로 말하고 하나는 아무 말도 하지 않는다.</b></p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">09 · 왜</div>
+  <h2>역전은 정의에서 나온다 — 측정이 아니라 산술</h2>
+  <div class="grid g2">
+    <div class="card"><h3 style="margin-top:0">INT8 양자화 SNR</h3>
+      <p><span class="mono">scale = amax/127</span>로 나눈 뒤 반올림한다.
+      텐서를 <b>10⁶배 키워도 SNR은 소수점 넷째 자리까지 같다</b>(24.0065 dB 고정).</p>
+      <p class="small">→ <b>스케일 불변량</b></p></div>
+    <div class="card"><h3 style="margin-top:0">fp16 표현 범위 여유</h3>
+      <p><span class="mono">format_max ÷ max|activation|</span>.
+      같은 구간에서 2.28×10³배에서 2.28×10⁻³배로 <b>여섯 자릿수 움직인다</b>.</p>
+      <p class="small">→ <b>절대 크기에만 의존</b></p></div>
+  </div>
+  <div class="key"><b>두 축은 수학적으로 직교한다.</b> 스케일 불변 지표가 절대 크기에만 의존하는 실패를
+  예측하지 못하는 것은 증명 세 줄로 끝난다 — 측정으로 무너지지 않는다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">10 · 구조</div>
+  <h2>검사받는 부분과 터지는 부분이 서로소다</h2>
+  <table>
+    <tr><th></th><th>양자화 검사를 받는가</th><th>fp16으로 실행되는가</th></tr>
+    <tr><td>언어 디코더</td><td><span class="chip good">예</span></td><td>아니오 (INT4)</td></tr>
+    <tr class="hi"><td><b>비전 인코더</b></td><td><span class="chip bad">아니오</span></td><td><b>예</b></td></tr>
+  </table>
+  <p>공개 양자화 VLM에서 흔한 설정은 비전 인코더를 양자화에서 <b>빼고</b>(<span class="mono">modules_to_not_convert</span>)
+  저장 dtype을 fp16으로 둔다. 양자화 도구는 자기가 누른 층만 보고하므로 비전 인코더는
+  보고서에 “안전”으로 적히는 것이 아니라 <b>항목 자체가 없다.</b></p>
+  <div class="note">그러므로 이 장의 주장은 <b>“지표가 틀렸다”가 아니다.</b> 그렇게 쓰면
+  <i>“fp16 배포인데 왜 INT8 지표를 보나”</i>에 무너진다. 실제 주장은 <b>검사 대상과 실행 형식이
+  어긋나 있다</b>는 것이다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">11 · 기전</div>
+  <h2>오버플로는 마지막 블록 MLP가 만든다</h2>
+  <table>
+    <tr><th>변형</th><th class="n">잔차</th><th class="n">attn</th><th class="n">mlp</th></tr>
+    <tr class="hi"><td>기준선</td><td class="n">−88</td><td class="n">7</td><td class="n">−46,848</td></tr>
+    <tr class="ok"><td>Full</td><td class="n">−139</td><td class="n">−29</td><td class="n">−17,152</td></tr>
+  </table>
+  <p>잔차 기여는 전체의 <b>0.2~0.9%</b>다. 앞 블록에서 운반된 것이 아니라 마지막 블록에서 생성된다.</p>
+  <h3><span class="mono">down_proj</span>의 849번 행</h3>
+  <ul>
+    <li>행 노름이 중앙값의 <b>9.33배</b>, 2위(1.06배)와 동떨어져 있다</li>
+    <li><b>여섯 모델에서 완전히 같다</b> — 변형 간 차이는 증폭기가 아니라 <b>들어가는 입력</b>에서 온다</li>
+    <li>32개 블록 전부에서 최상위이고 <b>마지막 블록에서만 불연속적으로 증폭</b>된다</li>
+    <li>원본 해상도 50장에서 최대 활성 채널이 <b>50장 전부 849번</b>, 중앙값 73,448로 한계 초과</li>
+  </ul>
+  <p class="small"><b>왜 849번인가</b>는 사전학습 과정에 접근해야 답할 수 있어 범위 밖이다. 논증은 그 답을
+  필요로 하지 않는다 — 증폭기가 있고, 여섯 모델에서 같고, 달라지는 것은 입력이라는 세 사실로 닫힌다.</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">12 · 검증</div>
+  <h2>개입 위치가 결과를 가른다</h2>
+  <table>
+    <tr><th>개입</th><th class="n">곱 <span class="mono">act(gate)⊙up</span></th><th class="n">down_proj 출력</th><th class="n">붕괴율</th></tr>
+    <tr><td>없음</td><td class="n">4,588</td><td class="n">63,200</td><td class="n">94.4%</td></tr>
+    <tr class="hi"><td>MLP <b>출력</b>을 1/3 (fixB)</td><td class="n">4,588</td><td class="n">63,360</td><td class="n">94.8%</td></tr>
+    <tr class="ok"><td><b>gate·up을 각각 1/√3</b> (fixA)</td><td class="n">1,530</td><td class="n">24,800</td><td class="n">0.0%</td></tr>
+  </table>
+  <p>출력 스케일링은 <b>실패한다</b> — 오버플로가 <span class="mono">down_proj</span> 안에서 이미 일어나므로
+  무한대를 나누는 셈이다. <b>곱이 만들어지기 전에</b> 줄이면 붕괴가 사라진다.</p>
+  <div class="key"><b>이 비대칭이 오버플로 지점 가설을 검증한다</b> — 위치가 틀렸다면 두 개입이 같은 결과를 냈어야 한다.
+  그리고 <b>학습 없이</b> 가중치 편집만으로 붕괴가 0%가 된다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">13 · 수단</div>
+  <h2>여유는 설계로 움직인다</h2>
+  <figure><img src="figures/fig3_lambda_dose_response.png" alt="λ 용량-반응">
+    <figcaption>799장, 평가 해상도, 중앙값(bf16). 시드와 학습률 궤적 고정, 각 5,000스텝.</figcaption></figure>
+  <table>
+    <tr><th class="n">λ_align</th><th class="n">blk31</th><th class="n">fp16 여유</th></tr>
+    <tr><td class="n">0</td><td class="n">36,608</td><td class="n">1.79배</td></tr>
+    <tr><td class="n">1.0</td><td class="n">19,072</td><td class="n">3.43배</td></tr>
+    <tr class="ok"><td class="n">2.0</td><td class="n">14,208</td><td class="n">4.61배</td></tr>
+  </table>
+  <p>정렬 손실 가중치는 <b>연속 변수</b>로 여유를 움직인다. 정렬 대상을 교사가 아닌
+  <b>학생 자신의 동결 사본</b>으로 두어도 효과의 <b>50%</b>가 재현된다 — 교사 표현의 특수성이 아니라
+  <b>정렬 제약 일반</b>에서 절반이 온다.</p>
+  <p class="small">여기에 학습 없는 사후 가중치 교정(앞 장)과 형식 전환(bf16)을 더하면 수단은 넷이다.</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">14 · 범위</div>
+  <h2>공개 모델에서도 같은 조건이 흔하다</h2>
+  <div class="grid g2">
+    <div class="card">
+      <div class="big" style="color:var(--bad)">13.7%</div>
+      <p class="small">공개 양자화 VLM 저장소 <b>27/197</b>이 비전 인코더를 양자화에서 빼고 저장 dtype을
+      fp16으로 둔다. <b>제작사 공식 저장소 3개 포함.</b></p>
+    </div>
+    <div class="card">
+      <div class="big" style="color:var(--bad)">0.96배</div>
+      <p class="small"><span class="mono">AngelSlim/Qwen2.5-VL-3B-Instruct-INT4-AWQ</span> —
+      공개 배포본이 실제로 <b>한계를 넘는다</b>(원본 해상도, 100장).</p>
+    </div>
+  </div>
+  <p><b>13.7%는 하한이다.</b> 이것은 fp16이라고 <b>적혀 있는</b> 저장소다. 배포 시 fp16으로
+  <b>바꾸면</b> 나머지도 같은 조건이 된다 — 본 연구의 출발점도 이 27개 밖에 있었다.</p>
+  <div class="note"><b>구성만으로는 알 수 없다.</b> 같은 위험 구성에서 0.96배부터 422배까지 나온다.
+  <b>재봐야 한다</b> — 이것이 처방의 근거다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">15 · 실무</div>
+  <h2>여유는 기반 모델에서 상속된다</h2>
+  <table>
+    <tr><th>저장소</th><th class="n">활성 p50</th><th class="n">여유</th><th class="n">최악</th></tr>
+    <tr><td>Qwen2.5-VL-3B-Instruct (기반)</td><td class="n">68,608</td><td class="n">0.95</td><td class="n">0.76</td></tr>
+    <tr class="hi"><td><b>…-3B-Instruct-AWQ</b> (공식)</td><td class="n">68,608</td><td class="n">0.95</td><td class="n">0.76</td></tr>
+    <tr><td>…-7B-Instruct-AWQ (공식)</td><td class="n">37,632</td><td class="n">1.74</td><td class="n">1.26</td></tr>
+  </table>
+  <p>AWQ가 비전 인코더를 양자화에서 제외하므로 <b>비전 가중치가 기반 그대로</b>다. LLaVA-1.5와
+  Phi-3.5-vision에서도 같았다(321.10 → 321.10, 282.34 → 282.34).</p>
+  <div class="key"><b>세는 방식이 바뀐다.</b> “저장소 27개 중 몇 개가 위험한가”가 아니라
+  <b>“기반 모델이 위험하면 그 파생본 전부가 위험하다”</b>. 실무 권고도 간단해진다 —
+  <b>파생본마다 잴 필요 없이 기반 모델을 한 번 재면 된다.</b></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">16 · 런타임</div>
+  <h2>TensorRT는 이 오버플로를 막지 않는다</h2>
+  <table>
+    <tr><th>조건</th><th class="n">붕괴율</th><th class="n">가중치 메모리</th><th class="n">지연 p50</th></tr>
+    <tr><td>fp32 대조군</td><td class="n">0.0%</td><td class="n">2,760 MiB</td><td class="n">441.0 ms</td></tr>
+    <tr class="hi"><td><b>fp16 관행</b> (<span class="mono">--fp16</span>)</td><td class="n"><b>92.8%</b></td><td class="n">1,385 MiB</td><td class="n">139.7 ms</td></tr>
+  </table>
+  <p class="small">기준선 학생, 원본 해상도, TensorRT 10.13, A100. 붕괴율은 250장.</p>
+  <p><b>사전 등록한 예상은 빗나갔다.</b> “빌더가 해당 레이어를 fp32로 남겨 회피할 것”이라 적었는데
+  관행 설정에서 그대로 붕괴했다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
+  <div class="note">PyTorch fp16 붕괴율 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
+  <b>PyTorch만의 아티팩트가 아니다.</b> 그리고 TensorRT 11부터는 모든 빌드가 강타입이라
+  빌더가 위험한 레이어를 fp32로 남겨 줄 여지는 <b>더 줄어든다.</b></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">17 · 실기기</div>
+  <h2>Jetson Orin Nano에서도 같은 붕괴, 같은 교정</h2>
+  <figure><img src="figures/fig6_runtime_collapse.png" alt="실행 경로별 붕괴율과 엣지 보드 지연">
+    <figcaption>250장, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합.</figcaption></figure>
+  <table>
+    <tr><th>해상도</th><th>모델</th><th class="n">Orin Nano</th><th class="n">A100 강타입</th><th class="n">지연 p50</th></tr>
+    <tr class="hi"><td>802,816</td><td>기준선</td><td class="n">24.4% (61/250)</td><td class="n">24.4% (61/250)</td><td class="n">1,067 ms</td></tr>
+    <tr class="ok"><td>802,816</td><td>Full · 교정본</td><td class="n">0%</td><td class="n">0%</td><td class="n">—</td></tr>
+  </table>
+  <p><b>A100과 장 수까지 일치했다.</b> 다만 범위를 분명히 적는다 — 이것은 <b>강타입</b> 빌드 조건이고,
+  관행 <span class="mono">--fp16</span>은 보드에서 <b>어느 해상도로도 빌드되지 않았다</b>.
+  원본 해상도는 강타입으로도 열 번 모두 실패했다.</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">18 · 회복</div>
+  <h2>배포 조건에서 정확도가 돌아온다</h2>
+  <table>
+    <tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th class="n">정확도</th><th class="n">붕괴형 출력</th></tr>
+    <tr class="hi"><td>기준선</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>1.36%</b></td><td class="n">1,001 / 1,029</td></tr>
+    <tr class="ok"><td>기준선</td><td>원본</td><td>fp16</td><td><b>도구</b></td><td class="n"><b>50.73%</b></td><td class="n"><b>0</b></td></tr>
+    <tr><td>기준선</td><td>원본</td><td>bf16</td><td>—</td><td class="n">49.95%</td><td class="n">0</td></tr>
+    <tr class="ok"><td>Full</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>52.38%</b></td><td class="n">0</td></tr>
+  </table>
+  <p class="small">1,029문항 · 708 키프레임(검증 11,309문항에서 11개마다 하나). 전체 대비 대표성 0.33%p.</p>
+  <div class="grid g3">
+    <div class="card"><b>교정 비용</b><p class="small">무교정 bf16 대비 <b>+0.78%p</b>,
+      McNemar <b>p=0.34</b>(불일치 54쌍). “공짜”라고 쓰지 않는다 — 비유의는 동등성의 증거가 아니다.</p></div>
+    <div class="card"><b>이산성</b><p class="small">708 키프레임 중 <b>689개는 전부 붕괴</b>,
+      19개는 전부 정상. <b>섞인 경우 0건.</b></p></div>
+    <div class="card"><b>표준 평가가 가린 것</b><p class="small">평가 해상도라도 fp16이면
+      48.49% 대 50.63% — 차이는 <b>전부 붕괴한 45문항</b>에서 온다. 그걸 빼면 차이가 없다.</p></div>
+  </div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">19 · 도구</div>
+  <h2><span class="mono">headroom_guard</span> — 명령 하나로</h2>
+  <p>“부족한 것은 수단이 아니라 측정”이라 말하면서 재는 도구를 주지 않으면 주장이 불완전하다.</p>
+  <table>
+    <tr><th>명령</th><th>하는 일</th></tr>
+    <tr><td class="mono">diagnose</td><td>블록별 최대 활성을 재고 초과 비율·여유로 <b>위험/경계/안전</b>을 판정</td></tr>
+    <tr><td class="mono">fix</td><td>필요한 MLP 축소 배수를 산출해 <b>곱 이전</b> 가중치를 교정(<span class="mono">--verify</span>면 재측정)</td></tr>
+    <tr><td class="mono">selftest</td><td>모델 없이 판정 세 분기와 배수 풀이를 시험</td></tr>
+  </table>
+  <div class="grid g2">
+    <div class="card"><b>임계값을 없앴다</b><p class="small">형식 상한을 넘는 <b>이미지의 비율</b>이 곧 붕괴율 추정치다
+      — 6개 모델 평균 오차 <b>2.1%p</b>(최대 6.4%p). 사용자가 받는 값이 “몇 %가 무너지는가”다.</p></div>
+    <div class="card"><b>남은 매직 넘버를 적어 둔다</b><p class="small">경계 경고 <b>1.25</b>와 교정 목표 <b>2.0</b>은
+      측정이 아니라 <b>설계 판단</b>이다. 관측된 경계는 1.00~1.05뿐. 이 문장을 도움말과 판정 출력에도 적는다.</p></div>
+  </div>
+  <div class="note">표본 100장은 근거가 있다 — 초과 0건일 때 참 초과율의 95% 상한이 <b>3.0%</b>다.
+  10장이면 <b>25.9%</b>까지 허용하는 셈이다.</div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">20 · 권고</div>
+  <h2>실무자에게 권하는 것은 짧다</h2>
+  <ol class="rec">
+    <li><b>배포할 해상도에서 한 번 잰다.</b> 크기는 넘치지 않는 형식(bf16)에서, 마지막 블록과 그 뒤 출력을
+      모두, 100장 이상.</li>
+    <li><b>판정은 초과 이미지 비율로.</b> 0건이면 표본 수에 따른 상한을 함께 적는다.</li>
+    <li><b>양자화 보고서가 비전 인코더를 다루는지 확인한다.</b> 제외된 부분은 “안전”으로 적히는 게 아니라
+      <b>항목이 없다</b>.</li>
+    <li><b>넘친다면 지원 형식부터.</b> bf16이 가능하면 가장 단순하고, 아니면 곱 이전 가중치 교정 ·
+      해상도 하향 · 대상 변경 중에서 고른다. <b>무엇을 고를지는 여유가 알려 준다.</b></li>
+    <li><b>공개 양자화 모델은 기반 모델을 재면 된다.</b> 비전 인코더를 양자화에서 뺀 파생본은 여유를 상속한다.</li>
+  </ol>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">21 · 한계</div>
+  <h2>주장하지 않는 것</h2>
+  <div class="grid g2">
+    <div class="card"><b>단일 실패 양식 · 단일 계열</b><p class="small">fp16 표현 범위 초과 <b>하나</b>를 다룬 사례
+      연구다. 한계 근처의 여유는 <b>Qwen2.5-VL 세대</b>에서만 관찰됐다 — 세대 특성일 가능성을 인정한다.
+      손실 설계가 여유를 움직인다는 주장도 이 계열에서만 검증했다.</p></div>
+    <div class="card"><b>변형 간 정확도 순위</b><p class="small">다섯 변형을 <b>시드 고정 없이 한 번씩</b>만
+      학습했다. 0.35%p 폭은 시드 잡음과 구별되지 않는다. 활성 크기·붕괴율 차이는 규모가 커서 이 제약을
+      받지 않는다.</p></div>
+    <div class="card"><b>실기기 범위</b><p class="small">보드 하나(Orin Nano 8GB) · 런타임 하나(TensorRT 10.3) ·
+      <b>강타입</b> 엔진 · 메모리가 허락한 두 해상도. “실차 배포에서 붕괴한다”고 단정하지 않는다.</p></div>
+    <div class="card"><b>처방의 수명</b><p class="small">bf16 커널이 성숙해 지연 비용이 사라지면 “bf16으로
+      빌드하라”가 재지 않고도 통하는 처방이 된다. 관측한 두 버전에서는 격차가 유지됐다.</p></div>
+  </div>
+  <div class="note"><b>범위 밖으로 분리한 것.</b> 큰 어휘에서 증류 온도가 종료 토큰 신호를 지워
+  학생이 멈추지 못하는 현상(1.78%) — 저정밀 배포 축을 예시하지 않아 별도로 보고한다.
+  <b>다루지 않은 것이 아니라 분리했다.</b></div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">22 · 맺음</div>
+  <h2>부족한 것은 수단이 아니라 측정이다</h2>
+  <blockquote>압축된 주행 시각-언어 모델을 저정밀로 배포할 때 <b>표현 범위 초과로 기능이 이산적으로
+  상실</b>되며, <b>표준 압축 지표는 이 위험을 역방향으로 가리킨다</b>. 그 상실을 예고하는 값은
+  <b>순전파 한 번</b>으로 계산되고, 그 값을 <b>움직이는 수단도 여럿</b>이다.</blockquote>
+  <div class="grid g3">
+    <div class="card"><b>① 측정 규칙</b><p class="small">무엇을(마지막 블록·그 뒤 출력), 어느 형식에서(크기는
+      bf16·붕괴는 목표 형식), 어느 통계량으로(판정은 최악·초과 비율), 몇 장으로(100장).</p></div>
+    <div class="card"><b>② 통제된 증거</b><p class="small">손실 항만 다른 다섯 학생 위에서 역전·이산성·
+      오버플로 지점·움직이는 수단을 각각 측정하고, 공개 모델로 상속과 예측 불가능성을 확인.</p></div>
+    <div class="card"><b>③ 도구와 절차</b><p class="small"><span class="mono">headroom_guard</span>와 비전 인코더
+      배포 검증 절차. 도구는 <b>자기가 답할 수 없는 질문</b>을 스스로 출력한다.</p></div>
+  </div>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">부록 · 예상 질문</div>
+  <h2>자주 받는 질문</h2>
+  <table>
+    <tr><th>질문</th><th>답</th></tr>
+    <tr><td>그냥 bf16 쓰면 되지 않나</td><td>맞다, 가장 단순한 해법이다. 다만 붕괴하지 않는 fp16 엔진 대비
+      지연이 <b>1.34~1.38배</b>이고, 쓸 수 없는 대상도 있다. 그리고 <b>어느 쪽이 필요한지는 재야 안다.</b></td></tr>
+    <tr><td>정확도 순위가 Full이 1등 아닌가</td><td>아니다. 51.69 / 51.40 / 51.34%는 <b>n=1</b>이라
+      구별되지 않는다. 이 논문의 주장은 정확도 순위가 아니라 <b>정확도로는 안 보이는 축</b>이 있다는 것이다.</td></tr>
+    <tr><td>EM-VLM4AD가 더 높다(54.08%)</td><td>그렇다. 다른 모델 계열이고 별도 DriveLM 사전학습 단계를
+      가졌다. 기여는 <b>증류 방법</b>과 <b>저정밀 배포 축</b>이지 한 QA 형식의 점수가 아니다.</td></tr>
+    <tr><td>PyTorch 버그 아닌가</td><td>TensorRT fp16 엔진 <b>92.8%</b>(PyTorch 94.8%), 가중치 메모리가
+      정확히 절반, 같은 그래프의 bf16 엔진은 <b>0%</b>. 엣지 보드에서도 장 수까지 일치.</td></tr>
+    <tr><td>흔한 조건인가</td><td>공개 저장소 <b>13.7%</b>(제작사 공식 3개 포함)가 명시적으로 그 구성이고,
+      이는 배포 시 fp16으로 바꾸는 경우를 세지 않은 <b>하한</b>이다.</td></tr>
+  </table>
+</div></section>
+
+<script>
+(function(){
+  var slides = Array.prototype.slice.call(document.querySelectorAll('.slide'));
+  var bar = document.getElementById('bar'), pos = document.getElementById('pos');
+  var cur = 0;
+
+  function paint(){
+    var h = document.documentElement;
+    var max = h.scrollHeight - h.clientHeight;
+    bar.style.width = (max > 0 ? (h.scrollTop / max * 100) : 0) + '%';
+    // 화면 중앙에 가장 가까운 슬라이드를 현재로 본다
+    var mid = h.scrollTop + h.clientHeight / 2, best = 0, bd = Infinity;
+    slides.forEach(function(s, i){
+      var c = s.offsetTop + s.offsetHeight / 2, d = Math.abs(c - mid);
+      if (d < bd) { bd = d; best = i; }
+    });
+    cur = best;
+    pos.textContent = (cur + 1) + ' / ' + slides.length;
+  }
+  function go(i){
+    cur = Math.max(0, Math.min(slides.length - 1, i));
+    window.scrollTo({ top: slides[cur].offsetTop, behavior: 'smooth' });
+  }
+
+  document.getElementById('prev').onclick = function(){ go(cur - 1); };
+  document.getElementById('next').onclick = function(){ go(cur + 1); };
+  document.addEventListener('keydown', function(e){
+    if (e.target.tagName === 'INPUT') return;
+    if (e.key === 'ArrowRight' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); go(cur + 1); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); go(cur - 1); }
+    else if (e.key === 'Home') { e.preventDefault(); go(0); }
+    else if (e.key === 'End') { e.preventDefault(); go(slides.length - 1); }
+  });
+  window.addEventListener('scroll', paint, { passive: true });
+  window.addEventListener('resize', paint);
+  paint();
+})();
+</script>
