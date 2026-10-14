@@ -195,11 +195,17 @@ blockquote b{color:var(--bad)}
     <figcaption>799장, 평가 해상도, 이미지별 최대의 중앙값(bf16). 가로 점선은 fp16 한계 65,504.</figcaption></figure>
   <table>
     <tr><th>모델</th><th class="n">blk24</th><th class="n">blk31 (마지막)</th></tr>
-    <tr class="hi"><td>Task only</td><td class="n">8,096</td><td class="n">50,176</td></tr>
-    <tr class="ok"><td>Full</td><td class="n">130</td><td class="n">17,920</td></tr>
+    <tr class="hi"><td>Task CE only</td><td class="n">8,096</td><td class="n"><b>50,176</b></td></tr>
+    <tr><td>Task + L_atc</td><td class="n">7,872</td><td class="n">34,304</td></tr>
+    <tr><td>Pre-trained (no FT)</td><td class="n">8,256</td><td class="n">33,792</td></tr>
+    <tr><td>Task + output KD</td><td class="n">7,712</td><td class="n">30,336</td></tr>
+    <tr><td>Teacher 7B</td><td class="n">9,024</td><td class="n">27,904</td></tr>
+    <tr class="ok"><td>Task + L_align</td><td class="n">124</td><td class="n">18,432</td></tr>
+    <tr class="ok"><td>Task + L_align + L_atc (Full)</td><td class="n"><b>130</b></td><td class="n"><b>17,920</b></td></tr>
   </table>
-  <p class="small">그림·표 모두 같은 799장·평가 해상도다.</p>
-  <p>중간층에서 <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b>. fp16 한계를 결정하는 것은 마지막 블록이다.
+  <p class="small">그림·표 모두 같은 799장·평가 해상도이고, 표의 일곱 행이 그림의 일곱 선이다.</p>
+  <p>강조한 두 행(<span class="mono">Task CE only</span> ↔ <span class="mono">Full</span>)이 중간층에서
+  <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b> 차이다. fp16 한계를 결정하는 것은 마지막 블록이다.
   이 해상도에서는 아직 어느 모델도 65,504를 넘지 않는다 — <b>넘기는 것은 배포 해상도다</b>(다음 장).</p>
   <div class="note"><b>측정 형식을 나눈다.</b> 크기는 넘치지 않는 bf16에서 재고 붕괴만 fp16에서 관측한다.
   <b>위 그림과는 다른 조건</b>(배포할 원본 해상도, 250장)에서 같은 <span class="mono">Task only</span>를 fp16으로
@@ -212,11 +218,16 @@ blockquote b{color:var(--bad)}
   <figure><img src="figures/fig2_resolution_collapse.png" alt="해상도별 활성과 붕괴율">
     <figcaption>250장. (a) 마지막 블록 활성 중앙값(bf16), (b) fp16에서 출력이 NaN이 된 이미지 비율.</figcaption></figure>
   <table>
-    <tr><th>입력 픽셀 상한</th><th class="n">기준선</th><th class="n">정렬만 · Full</th></tr>
-    <tr><td>1,440,000 (원본)</td><td class="n">94.8%</td><td class="n">0.0%</td></tr>
-    <tr><td>802,816</td><td class="n">25.6%</td><td class="n">0</td></tr>
-    <tr><td>200,704 (평가)</td><td class="n">3.2%</td><td class="n">0</td></tr>
+    <tr><th class="n">비전 토큰</th><th>입력 픽셀 상한</th><th class="n">Task CE only</th><th class="n">Pre-trained</th><th class="n">Task + L_align · Full</th></tr>
+    <tr class="hi"><td class="n">1,824</td><td>1,440,000 (원본)</td><td class="n"><b>94.8%</b></td><td class="n">69.6%</td><td class="n"><b>0.0%</b></td></tr>
+    <tr><td class="n">966</td><td>802,816</td><td class="n">25.6%</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td class="n">480</td><td>401,408</td><td class="n">10.4%</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td class="n">231</td><td>200,704 (평가)</td><td class="n">3.2%</td><td class="n">0</td><td class="n">0</td></tr>
+    <tr><td class="n">120</td><td>100,352</td><td class="n">0.8%</td><td class="n">0</td><td class="n">0</td></tr>
   </table>
+  <p class="small">표의 다섯 행이 그림의 다섯 점이다. 남은 두 계열은 원본에서만 붕괴한다 —
+  <span class="mono">Task + out.KD</span> 20.4%, <span class="mono">Task + L_atc</span> 28.8%
+  (평가 해상도의 L_atc 0.4%를 빼면 그 아래는 모두 0).</p>
   <p>붕괴는 <b>이미지 단위로 전부 아니면 전무</b>이고 같은 장면의 연속 키프레임에서 뭉친다.
   802,816 → 1,440,000 구간에서 급격히 늘어 <b>안전 해상도에 절벽</b>이 있다.</p>
 </div></section>
@@ -233,7 +244,7 @@ blockquote b{color:var(--bad)}
       <p class="small">여유와 완전히 역순 (6모델 Spearman ρ)</p></div>
     <div class="card"><div class="snum" style="margin:0">채널 단위 SNR</div>
       <div class="big">−0.657</div>
-      <p class="small">정렬만에서 단조성이 깨지나 두 끝점의 역전은 남는다</p></div>
+      <p class="small"><span class="mono">Task + L_align</span>에서 단조성이 깨지나 두 끝점의 역전은 남는다</p></div>
     <div class="card"><div class="snum" style="margin:0">이상치 비율</div>
       <div class="big" style="color:var(--mute)">—</div>
       <p class="small">147.2~238.2를 오가며 순서 관계가 없다</p></div>
@@ -318,6 +329,7 @@ blockquote b{color:var(--bad)}
   <table>
     <tr><th class="n">λ_align</th><th class="n">blk31</th><th class="n">fp16 여유</th></tr>
     <tr><td class="n">0</td><td class="n">36,608</td><td class="n">1.79배</td></tr>
+    <tr><td class="n">0.5</td><td class="n">26,112</td><td class="n">2.51배</td></tr>
     <tr><td class="n">1.0</td><td class="n">19,072</td><td class="n">3.43배</td></tr>
     <tr class="ok"><td class="n">2.0</td><td class="n">14,208</td><td class="n">4.61배</td></tr>
   </table>
@@ -390,10 +402,14 @@ blockquote b{color:var(--bad)}
     <figcaption>250장, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합.</figcaption></figure>
   <table>
     <tr><th>해상도</th><th>모델</th><th class="n">Orin Nano</th><th class="n">A100 강타입</th><th class="n">지연 p50</th></tr>
-    <tr class="hi"><td>802,816</td><td>Task only</td><td class="n">24.4% (61/250)</td><td class="n">24.4% (61/250)</td><td class="n">1,067 ms</td></tr>
-    <tr class="ok"><td>802,816</td><td>Full · 교정본</td><td class="n">0%</td><td class="n">0%</td><td class="n">—</td></tr>
+    <tr class="hi"><td>802,816</td><td>Task only</td><td class="n"><b>24.4%</b> (61/250)</td><td class="n">24.4% (61/250)</td><td class="n">1,067 ms</td></tr>
+    <tr class="ok"><td>802,816</td><td>Full · Task only 교정본</td><td class="n"><b>0.0%</b></td><td class="n">0.0%</td><td class="n">1,069 ms</td></tr>
+    <tr class="hi"><td>401,408</td><td>Task only</td><td class="n"><b>9.2%</b> (23/250)</td><td class="n">10.0% (25/250)</td><td class="n">504 ms</td></tr>
+    <tr class="ok"><td>401,408</td><td>Full · Task only 교정본</td><td class="n"><b>0.0%</b></td><td class="n">0.0%</td><td class="n">503 ms</td></tr>
+    <tr><td>원본 1,440,000</td><td>세 모델</td><td class="n"><b>빌드 불가</b></td><td class="n">92.4% · 0% · 0%</td><td class="n">—</td></tr>
   </table>
-  <p><b>A100과 장 수까지 일치했다.</b> 다만 범위를 분명히 적는다 — 이것은 <b>강타입</b> 빌드 조건이고,
+  <p><b>802,816에서는 붕괴한 장 수까지 같았다</b>(양쪽 61장). 401,408에서는 23 대 25장으로 조금 갈린다.
+  범위를 분명히 적는다 — 이것은 <b>강타입</b> 빌드 조건이고,
   관행 <span class="mono">--fp16</span>은 보드에서 <b>어느 해상도로도 빌드되지 않았다</b>.
   원본 해상도는 강타입으로도 열 번 모두 실패했다.</p>
 </div></section>
