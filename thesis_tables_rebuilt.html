@@ -18,7 +18,7 @@
  <b>조건을 빼고 옮기면 값이 무엇을 잰 것인지 알 수 없게 된다.</b><br>
  표를 끌어 선택해 한글에 붙이면 표 서식이 함께 넘어간다. 캡션과 조건은 따로 복사한다.
 </div>
-<p>표 34개</p>
+<p>표 33개</p>
 
 <table>
 <tr><th>변형</th><th>체크포인트</th><th>손실</th><th>λ</th><th>교사 입력</th></tr>
@@ -189,19 +189,12 @@
 <div class="cap">[표 17] 기반 모델과 양자화 파생본의 여유 상속</div>
 
 <table>
-<tr><th>계열</th><th>기반 → AWQ 여유 p50</th><th>최악</th><th>비전 가중치</th></tr>
-<tr><td>LLaVA-1.5-7B[35]</td><td>321.10 → 321.10</td><td>291.13 → 291.13</td><td>391/391 비트 동일</td></tr>
-<tr><td>Phi-3.5-vision[36]</td><td>282.34 → 282.34</td><td>257.89 → 257.89</td><td>bf16→fp16 재저장, 최대 차 2.98×10⁻⁸</td></tr>
-</table>
-<div class="cap">[표 18] 다른 두 계열에서의 여유 상속</div>
-
-<table>
 <tr><th>세대</th><th>모델</th><th>여유</th></tr>
 <tr><td>Qwen2-VL</td><td>2B · 7B (공식 AWQ)</td><td>3.88 · 4.49</td></tr>
 <tr><td><b>Qwen2.5-VL</b></td><td><b>3B · 7B</b></td><td><b>0.95 · 1.74</b></td></tr>
 <tr><td>Qwen3-VL</td><td>32B (dense) · 30B-A3B (MoE)</td><td>6.09 · 42.21</td></tr>
 </table>
-<div class="cap">[표 19] Qwen 세대별 여유</div>
+<div class="cap">[표 18] Qwen 세대별 여유</div>
 
 <table>
 <tr><th>막힌 곳</th><th>해결</th><th>확인</th></tr>
@@ -210,7 +203,7 @@
 <tr><td>트레이서가 큰 상수(마스크)를 <b>블록마다 복제</b>해 파일이 약 3배로 부푼다</td><td>저장 직전에 내용이 같은 상수를 하나로 합친다 — 8.32 GiB → 2.69 GiB</td><td>토큰별 코사인 0.999920으로 동일</td></tr>
 <tr><td>가중치를 외부 파일(<code>.onnx.data</code>)로 둔 그래프를 TensorRT가 파싱하지 못한다</td><td>바이트가 아니라 <b>파일 경로로</b> 파싱</td><td>9,177 레이어 정상 파싱</td></tr>
 </table>
-<div class="cap">[표 20] ONNX 내보내기에서 막힌 곳과 해결</div>
+<div class="cap">[표 19] ONNX 내보내기에서 막힌 곳과 해결</div>
 
 <table>
 <tr><th>파일</th><th><code>max_pixels</code></th><th>패치</th><th>상수화 대조</th><th>ONNX 코사인</th></tr>
@@ -219,7 +212,7 @@
 <tr><td><code>tower_baseline_v2</code></td><td>200,704</td><td>924</td><td>0</td><td>0.999978</td></tr>
 <tr><td><code>tower_full</code></td><td>200,704</td><td>924</td><td>0</td><td>1.000000</td></tr>
 </table>
-<div class="cap">[표 21] 내보낸 ONNX 그래프와 대조 결과</div>
+<div class="cap">[표 20] 내보낸 ONNX 그래프와 대조 결과</div>
 
 <table>
 <tr><th>조건</th><th>붕괴율</th><th>가중치 메모리</th><th>지연 p50</th></tr>
@@ -227,7 +220,7 @@
 <tr><td><b>fp16 관행</b></td><td><b>92.8%</b>¹</td><td><b>1,385 MiB</b></td><td>139.7 ms</td></tr>
 <tr><td>fp16 엄격</td><td>빌드 실패(아래)</td><td>—</td><td>—</td></tr>
 </table>
-<div class="cap">[표 22] TensorRT 정밀도 조건별 붕괴율·메모리·지연</div><div class="cond">(<code>student_baseline_v2</code>, 원본 해상도, TensorRT 10.13, A100. 붕괴율 92.8%만 250장, 나머지는 50장)</div>
+<div class="cap">[표 21] TensorRT 정밀도 조건별 붕괴율·메모리·지연</div><div class="cond">(<code>student_baseline_v2</code>, 원본 해상도, TensorRT 10.13, A100. 붕괴율 92.8%만 250장, 나머지는 50장)</div>
 
 <table>
 <tr><th>선택</th><th>붕괴율</th><th>지연 p50</th><th>가중치 메모리</th><th>정확도 (원본 해상도, 1,029문항)</th></tr>
@@ -236,7 +229,7 @@
 <tr><td><b>fp16 + 도구 교정</b></td><td><b>0.0%</b></td><td><b>149.5 ms</b></td><td>1,385 MiB</td><td><b>50.73%</b> (PyTorch)</td></tr>
 <tr><td>bf16 무교정</td><td>0.0%</td><td>197.4 ms</td><td>1,385 MiB</td><td>49.95% (PyTorch)</td></tr>
 </table>
-<div class="cap">[표 23] 배포 선택지 넷의 비교</div><div class="cond">(붕괴율·지연·메모리는 TensorRT 10.13·50장, ¹만 250장(Ⅵ장 3절 각주). 정확도는 같은 가중치의 PyTorch 배포 조건 측정, Ⅶ장 3절)</div>
+<div class="cap">[표 22] 배포 선택지 넷의 비교</div><div class="cond">(붕괴율·지연·메모리는 TensorRT 10.13·50장, ¹만 250장(Ⅵ장 3절 각주). 정확도는 같은 가중치의 PyTorch 배포 조건 측정, Ⅶ장 3절)</div>
 
 <table>
 <tr><th>시도</th><th>그래프 (모두 관행 <code>--fp16</code>)</th><th>실패 지점 (빌드 로그)</th></tr>
@@ -246,7 +239,7 @@
 <tr><td>4</td><td>분할 + 어텐션을 창·쿼리 단위로 나눠 계산, 세 해상도</td><td>원본은 작업 버퍼(0.2~0.44 GB), 802,816·401,408은 <b>가중치 상수 영역(1.26 GB · 0.63 GB)</b></td></tr>
 <tr><td>5</td><td>4 + 가중치·활성을 fp16으로 저장한 그래프, 원본 · 802,816</td><td>원본은 작업 버퍼, 802,816은 <b>같은 상수 영역 — 바이트 단위로 같다</b></td></tr>
 </table>
-<div class="cap">[표 24] Orin Nano에서의 관행 빌드 시도와 실패 지점</div>
+<div class="cap">[표 23] Orin Nano에서의 관행 빌드 시도와 실패 지점</div>
 
 <table>
 <tr><th>해상도</th><th>초과 비율 (bf16)</th><th>PyTorch fp16</th><th><b>TRT 강타입</b></th><th>TRT 관행 (fp32 그래프)</th><th>TRT 관행 (fp16 그래프)</th></tr>
@@ -254,7 +247,7 @@
 <tr><td>802,816</td><td>29.2%</td><td>25.6%</td><td><b>24.4%</b></td><td>4.0%</td><td>3.6%</td></tr>
 <tr><td>401,408</td><td>10.8%</td><td>10.4%</td><td><b>10.0%</b></td><td>15.2%</td><td>17.2%</td></tr>
 </table>
-<div class="cap">[표 25] 실행 경로별 붕괴율과 초과 비율</div><div class="cond">(기준선 학생, 250장, TensorRT 10.13, A100. Full과 교정본은 모든 칸에서 0%. **관행 열이 둘인 것은</div>
+<div class="cap">[표 24] 실행 경로별 붕괴율과 초과 비율</div><div class="cond">(기준선 학생, 250장, TensorRT 10.13, A100. Full과 교정본은 모든 칸에서 0%. **관행 열이 둘인 것은</div>
 
 <table>
 <tr><th>해상도</th><th>모델</th><th>Orin Nano</th><th>A100 강타입</th><th>지연 p50 (Orin)</th></tr>
@@ -265,7 +258,7 @@
 <tr><td>401,408</td><td>Full · 교정 기준선</td><td><b>0.0% · 0.0%</b></td><td>0% · 0%</td><td>503 ms</td></tr>
 <tr><td>원본 1,440,000</td><td>세 모델</td><td><b>빌드 불가</b> — 0.64 GB 자원 할당 실패</td><td>92.4% · 0% · 0%</td><td>—</td></tr>
 </table>
-<div class="cap">[표 26] Orin Nano 실측 결과</div><div class="cond">(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합; [그림 5])</div>
+<div class="cap">[표 25] Orin Nano 실측 결과</div><div class="cond">(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합; [그림 5])</div>
 
 <table>
 <tr><th>명령</th><th>하는 일</th></tr>
@@ -273,7 +266,7 @@
 <tr><td><code>fix</code></td><td>위험 블록에 필요한 MLP 축소 배수를 산출해 가중치를 교정하고(<code>--verify</code>면 재측정) 교정 가중치를 저장한다</td></tr>
 <tr><td><code>selftest</code></td><td>모델 없이 판정 세 분기와 배수 풀이를 시험한다</td></tr>
 </table>
-<div class="cap">[표 27] headroom_guard의 명령</div>
+<div class="cap">[표 26] headroom_guard의 명령</div>
 
 <table>
 <tr><th>모델</th><th>초과 비율</th><th>실제 붕괴율</th><th>오차</th></tr>
@@ -284,7 +277,7 @@
 <tr><td>정렬만</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
 <tr><td>Full</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
 </table>
-<div class="cap">[표 28] 초과 비율과 실제 붕괴율</div>
+<div class="cap">[표 27] 초과 비율과 실제 붕괴율</div>
 
 <table>
 <tr><th>판정</th><th>조건</th></tr>
@@ -292,7 +285,7 @@
 <tr><td>경계</td><td>초과 0건, 그러나 최악 여유 &lt; 1.25</td></tr>
 <tr><td>안전</td><td>초과 0건, 최악 여유 ≥ 1.25 (참 초과율의 95% 상한을 함께 표시)</td></tr>
 </table>
-<div class="cap">[표 29] 도구의 세 판정</div>
+<div class="cap">[표 28] 도구의 세 판정</div>
 
 <table>
 <tr><th>모델</th><th>계열</th><th>블록 구조</th><th>마지막 블록 여유</th><th>판정</th></tr>
@@ -301,7 +294,7 @@
 <tr><td>Qwen2-VL-7B-Instruct-AWQ</td><td>Qwen2-VL</td><td><code>blocks</code>, fc1→fc2</td><td>4.52배</td><td>안전</td></tr>
 <tr><td>SmolVLM-Instruct[44]</td><td>Idefics3</td><td><code>encoder.layers</code>, fc1→fc2</td><td>51.34배</td><td>안전</td></tr>
 </table>
-<div class="cap">[표 30] 모델 계열별 도구 적용 결과</div><div class="cond">(10~30장. Ⅴ장 2절의 3.88·4.49·50.86배와 소수점이 다른 것은 표본 수와 SmolVLM의 해상도 조건 차이다)</div>
+<div class="cap">[표 29] 모델 계열별 도구 적용 결과</div><div class="cond">(10~30장. Ⅴ장 2절의 3.88·4.49·50.86배와 소수점이 다른 것은 표본 수와 SmolVLM의 해상도 조건 차이다)</div>
 
 <table>
 <tr><th>λ</th><th>여유 p50</th><th><b>최악</b></th><th>초과 비율</th><th><b>실제 붕괴</b></th></tr>
@@ -310,7 +303,7 @@
 <tr><td>1.0</td><td>2.32</td><td>1.57</td><td>0.0%</td><td>0.0%</td></tr>
 <tr><td>2.0</td><td>4.04</td><td>2.78</td><td>0.0%</td><td>0.0%</td></tr>
 </table>
-<div class="cap">[표 31] 학습된 λ 체크포인트의 여유와 실제 붕괴</div>
+<div class="cap">[표 30] 학습된 λ 체크포인트의 여유와 실제 붕괴</div>
 
 <table>
 <tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th>정확도</th><th>붕괴형 출력</th></tr>
@@ -324,7 +317,7 @@
 <tr><td>Full</td><td>평가</td><td>fp16</td><td>—</td><td>51.31%</td><td>0</td></tr>
 <tr><td>Full</td><td>평가</td><td>bf16</td><td>—</td><td>51.02%</td><td>0</td></tr>
 </table>
-<div class="cap">[표 32] 배포 조건 정확도의 종단 검증</div>
+<div class="cap">[표 31] 배포 조건 정확도의 종단 검증</div>
 
 <table>
 <tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>McNemar</th><th>fp16 붕괴형</th></tr>
@@ -333,7 +326,7 @@
 <tr><td>Full</td><td>평가</td><td>3.63배</td><td>51.31%</td><td>51.02%</td><td>7 대 4</td><td>p=0.5465</td><td>0</td></tr>
 <tr><td>Full</td><td>원본</td><td>2.92배</td><td>52.38%</td><td>52.87%</td><td>4 대 9</td><td>p=0.267</td><td>0</td></tr>
 </table>
-<div class="cap">[표 33] fp16과 bf16의 짝지은 정확도 비교</div>
+<div class="cap">[표 32] fp16과 bf16의 짝지은 정확도 비교</div>
 
 <table>
 <tr><th>진술의 부분</th><th>근거</th><th>강도와 범위</th></tr>
@@ -342,4 +335,4 @@
 <tr><td><b>예고하는 값은 순전파 한 번</b></td><td>Ⅳ장 1절 정의, Ⅶ장 도구, Ⅶ장 2절 — 초과 비율이 6모델에서 평균 오차 2.1%p로 PyTorch fp16 붕괴율을 추정. 강타입 TensorRT 엔진(A100·Orin)에서도 맞고, 관행 약타입 엔진은 해상도에 따라 양쪽으로 어긋난다(한계 11)</td><td>정의이므로 논쟁 여지가 적다. 실무 기여는 &quot;어느 형식에서, 어느 통계량으로 재는가&quot;까지 정한 데 있다</td></tr>
 <tr><td><b>움직이는 수단은 여럿이다</b></td><td>Ⅳ장 5절 — λ 용량-반응, 자기 정렬로 효과의 50%, LoRA 범위 확장은 반대 방향. Ⅳ장 4절 — 학습 없는 사후 교정. Ⅵ장 — 형식 전환. Ⅴ장 3절 — 제작사의 세대 개선</td><td>강하다. 다만 손실 설계 축은 단일 계열이다(Ⅷ장 3절 한계 1)</td></tr>
 </table>
-<div class="cap">[표 34] 기여 진술의 부분별 근거와 강도</div>
+<div class="cap">[표 33] 기여 진술의 부분별 근거와 강도</div>
