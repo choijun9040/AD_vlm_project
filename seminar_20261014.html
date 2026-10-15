@@ -398,9 +398,15 @@ blockquote b{color:var(--bad)}
     <tr><th>조건</th><th class="n">붕괴율</th><th class="n">가중치 메모리</th><th class="n">지연 p50</th></tr>
     <tr><td>fp32 대조군</td><td class="n">0.0%</td><td class="n">2,760 MiB</td><td class="n">441.0 ms</td></tr>
     <tr class="hi"><td><b>fp16 관행</b> (<span class="mono">--fp16</span>)</td><td class="n"><b>92.8%</b></td><td class="n">1,385 MiB</td><td class="n">139.7 ms</td></tr>
+    <tr class="ok"><td><b>bf16</b> (같은 그래프)</td><td class="n"><b>0.0%</b></td><td class="n"><b>1,385 MiB</b></td><td class="n">197.4 ms</td></tr>
   </table>
   <p class="small">기준선 학생, 원본 해상도, TensorRT 10.13, A100.
-  <b>92.8%만 250장이고 나머지 칸은 50장</b>이다.</p>
+  <b>92.8%만 250장이고 나머지 칸은 50장</b>이다.
+  지연은 <b>붕괴가 없는 같은 그래프에서만</b> 비교한다 — 교정 그래프로 재면 bf16이 fp16의
+  <b>1.375배</b>(149.5 대 205.5 ms), 버전을 올려도 1.344배다. 표의 139.7과 197.4를 나눠 쓰지 않는다.</p>
+  <div class="key"><b>가중치 메모리가 fp16과 똑같은 1,385 MiB인데 붕괴만 사라진다.</b>
+  모델이 작아져서가 아니라 <b>형식의 상한만</b> 3.4×10³⁸으로 올라갔기 때문이다 —
+  표현 범위가 원인이라는 <b>독립적인 확인</b>이다.</div>
   <p><b>사전 등록한 예상은 빗나갔다.</b> “빌더가 해당 레이어를 fp32로 남겨 회피할 것”이라 적었는데
   관행 설정에서 그대로 붕괴했다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
   <div class="note">PyTorch fp16 붕괴율 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
