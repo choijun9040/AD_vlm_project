@@ -472,7 +472,9 @@ blockquote b{color:var(--bad)}
     <tr><td>Task only</td><td>원본</td><td>bf16</td><td>—</td><td class="n">49.95%</td><td class="n">0</td></tr>
     <tr class="ok"><td>Full</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>52.38%</b></td><td class="n">0</td></tr>
   </table>
-  <p class="small">1,029문항 · 708 키프레임(검증 11,309문항에서 11개마다 하나). 전체 대비 대표성 0.33%p.
+  <p class="small"><b>PyTorch 추론(A100), 전체 모델.</b> 앞 장의 붕괴율·지연은 비전 인코더만
+  내보낸 TensorRT 엔진에서 쟀고, 정확도는 언어 모델까지 돌려야 하므로 여기서만 잰다.<br>
+  1,029문항 · 708 키프레임(검증 11,309문항에서 11개마다 하나). 전체 대비 대표성 0.33%p.
   아홉 조건 중 넷만 실었다 — 뺀 다섯은 평가 해상도 조건 넷과 Full의 원본 bf16(52.87%)이다.</p>
   <div class="grid g3">
     <div class="card"><b>교정 비용</b><p class="small">무교정 bf16 대비 <b>+0.78%p</b>,
