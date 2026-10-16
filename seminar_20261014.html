@@ -330,29 +330,7 @@ blockquote b{color:var(--bad)}
 </div></section>
 
 <section class="slide"><div class="inner">
-  <div class="snum">13 · 독립 사례</div>
-  <h2>같은 현상이 다른 계열에서도 보고됐다</h2>
-  <p class="lede">vLLM 이슈 <b>#40290</b>(2026-04-19) — <b>Gemma 4</b> 비전 인코더를 fp16으로 돌리면
-  이미지 입력에 <span class="mono">&lt;pad&gt;</span> 토큰만 반복해서 나온다.</p>
-  <div class="grid g2">
-    <div class="card"><b>다른 계열이다</b><p class="small">제작사도(Google), 비전 인코더도(SigLIP),
-      넘치는 층도(표준화 단계) 본 연구와 다르다. <b>본 연구와 접점이 없는 보고다.</b></p></div>
-    <div class="card"><b>그런데 기전이 같다</b><p class="small">저장된 가중치가 fp16 범위
-      가장자리에 있어(<span class="mono">std_bias</span> ≈ 53,760) 연산 중간값이 한계를 넘고,
-      내부가 <span class="mono">inf</span>·<span class="mono">NaN</span>이 되어 <b>출력이 통째로
-      사라진다.</b></p></div>
-  </div>
-  <div class="key"><b>본 연구가 만든 현상도, 한 모델의 특이점도 아니다.</b>
-  fp16 표현 범위 초과는 계열을 가리지 않고 같은 방식으로 기능을 지운다.
-  <b>처방까지 같다</b> — 제안된 수정은 <b>비전 타워만 bf16으로 두는 것</b>이고,
-  보고자가 적용해 정상 출력을 확인했다(이슈는 아직 열려 있다).</div>
-  <p class="small"><b>다만 일반 법칙으로 쓰지 않는다.</b> 두 사례 모두 <b>한 모델의 사전학습
-  가중치가 가진 성질</b>이며, 본 연구가 직접 받아 확인한 것은 그 가중치 두 텐서뿐이다 —
-  <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
-</div></section>
-
-<section class="slide"><div class="inner">
-  <div class="snum">14 · 수단</div>
+  <div class="snum">13 · 수단</div>
   <h2>여유는 설계로 움직인다</h2>
   <figure><img src="figures/fig3_lambda_dose_response.png" alt="λ 용량-반응">
     <figcaption>799장, 평가 해상도, 중앙값(bf16). 시드와 학습률 궤적 고정, 각 5,000스텝.</figcaption></figure>
@@ -371,6 +349,28 @@ blockquote b{color:var(--bad)}
   ② 정렬 <b>대상</b>(자기 정렬), ③ 학습 없는 <b>사후 가중치 교정</b>(앞 장), ④ <b>형식 전환</b>(bf16).
   방향이 반대인 것도 있다 — LoRA를 비전 인코더까지 넓히면 여유가 2.18배 → 1.38배로 <b>줄었다</b>
   (다만 샘플링 변경과 함께 바뀌어 원인은 분리되지 않는다).</p>
+</div></section>
+
+<section class="slide"><div class="inner">
+  <div class="snum">14 · 독립 사례</div>
+  <h2>같은 현상이 다른 계열에서도 보고됐다</h2>
+  <p class="lede">vLLM 이슈 <b>#40290</b>(2026-04-19) — <b>Gemma 4</b> 비전 인코더를 fp16으로 돌리면
+  이미지 입력에 <span class="mono">&lt;pad&gt;</span> 토큰만 반복해서 나온다.</p>
+  <div class="grid g2">
+    <div class="card"><b>다른 계열이다</b><p class="small">제작사도(Google), 비전 인코더도(SigLIP),
+      넘치는 층도(표준화 단계) 본 연구와 다르다. <b>본 연구와 접점이 없는 보고다.</b></p></div>
+    <div class="card"><b>그런데 기전이 같다</b><p class="small">저장된 가중치가 fp16 범위
+      가장자리에 있어(<span class="mono">std_bias</span> ≈ 53,760) 연산 중간값이 한계를 넘고,
+      내부가 <span class="mono">inf</span>·<span class="mono">NaN</span>이 되어 <b>출력이 통째로
+      사라진다.</b></p></div>
+  </div>
+  <div class="key"><b>본 연구가 만든 현상도, 한 모델의 특이점도 아니다.</b>
+  fp16 표현 범위 초과는 계열을 가리지 않고 같은 방식으로 기능을 지운다.
+  <b>처방까지 같다</b> — 제안된 수정은 <b>비전 타워만 bf16으로 두는 것</b>이고,
+  보고자가 적용해 정상 출력을 확인했다(이슈는 아직 열려 있다).</div>
+  <p class="small"><b>다만 일반 법칙으로 쓰지 않는다.</b> 두 사례 모두 <b>한 모델의 사전학습
+  가중치가 가진 성질</b>이며, 본 연구가 직접 받아 확인한 것은 그 가중치 두 텐서뿐이다 —
+  <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
 </div></section>
 
 <section class="slide"><div class="inner">
@@ -431,6 +431,8 @@ blockquote b{color:var(--bad)}
   표현 범위가 원인이라는 <b>독립적인 확인</b>이다.</div>
   <p><b>사전 등록한 예상은 빗나갔다.</b> “빌더가 해당 레이어를 fp32로 남겨 회피할 것”이라 적었는데
   관행 설정에서 그대로 붕괴했다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
+  <p class="small">앞서 본 <b>#40290의 처방과 같다</b> — 그쪽은 비전 타워만 bf16으로 두는 것이고,
+  여기서는 같은 그래프를 통째로 bf16으로 빌드했다.</p>
   <div class="note">PyTorch fp16 붕괴율 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
   <b>PyTorch만의 아티팩트가 아니다.</b> 그리고 TensorRT 11부터는 모든 빌드가 강타입이라
   빌더가 위험한 레이어를 fp32로 남겨 줄 여지는 <b>더 줄어든다.</b></div>
