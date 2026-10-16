@@ -331,27 +331,22 @@ blockquote b{color:var(--bad)}
 
 <section class="slide"><div class="inner">
   <div class="snum">13 · 독립 사례</div>
-  <h2>같은 실패가 우리와 무관한 곳에서 보고됐다</h2>
+  <h2>같은 현상이 다른 계열에서도 보고됐다</h2>
   <p class="lede">vLLM 이슈 <b>#40290</b>(2026-04-19) — <b>Gemma 4</b> 비전 인코더를 fp16으로 돌리면
-  모든 이미지의 출력이 <span class="mono">&lt;pad&gt;</span>만 나온다. 본 연구와 접점이 없는
-  보고다.</p>
-  <table>
-    <tr><th></th><th>본 연구</th><th>vLLM #40290</th></tr>
-    <tr><td><b>제작사·모델</b></td><td>Alibaba · Qwen2.5-VL-3B</td><td>Google · Gemma 4</td></tr>
-    <tr><td><b>비전 인코더</b></td><td>Qwen ViT</td><td>SigLIP</td></tr>
-    <tr><td><b>넘치는 곳</b></td><td>마지막 블록 MLP <span class="mono">down_proj</span></td>
-        <td>표준화 <span class="mono">(h − std_bias)</span>의 뺄셈 중간값</td></tr>
-    <tr><td><b>원인</b></td><td>사전학습 가중치의 849번 행</td>
-        <td>저장된 bf16 가중치 <span class="mono">std_bias</span> (53,760)</td></tr>
-    <tr><td><b>증상</b></td><td>출력 NaN → 토큰 0 반복</td><td>출력이 <span class="mono">&lt;pad&gt;</span>만</td></tr>
-    <tr class="hi"><td><b>왜 못 막나</b></td><td>출력을 줄이면 이미 늦다 (fixB)</td>
-        <td><span class="mono">std_scale</span>이 <b>뺄셈 뒤에</b> 온다</td></tr>
-  </table>
-  <div class="key"><b>제작사도, 인코더 계열도, 터지는 층도 다르다.</b> 그런데 실패 양식이 같고
-  <b>개입 위치가 성패를 가르는 구조</b>까지 같다. 본 연구가 만든 현상이 아니라는 뜻이다.</div>
-  <p class="small"><b>그렇다고 일반 법칙으로 쓰지 않는다.</b> 두 사례 모두 <b>한 모델의 사전학습
-  가중치가 가진 성질</b>이고, 본 연구는 가중치 두 텐서만 직접 받아 확인했을 뿐 활성
-  <span class="mono">h</span>는 재지 못했다 — <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
+  이미지 입력에 <span class="mono">&lt;pad&gt;</span> 토큰만 반복해서 나온다.</p>
+  <div class="grid g2">
+    <div class="card"><b>다른 계열이다</b><p class="small">제작사도(Google), 비전 인코더도(SigLIP),
+      넘치는 층도(표준화 단계) 본 연구와 다르다. <b>본 연구와 접점이 없는 보고다.</b></p></div>
+    <div class="card"><b>그런데 기전이 같다</b><p class="small">저장된 가중치가 fp16 범위
+      가장자리에 있어(<span class="mono">std_bias</span> ≈ 53,760) 연산 중간값이 한계를 넘고,
+      내부가 <span class="mono">inf</span>·<span class="mono">NaN</span>이 되어 <b>출력이 통째로
+      사라진다.</b></p></div>
+  </div>
+  <div class="key"><b>본 연구가 만든 현상도, 한 모델의 특이점도 아니다.</b>
+  fp16 표현 범위 초과는 계열을 가리지 않고 같은 방식으로 기능을 지운다.</div>
+  <p class="small"><b>다만 일반 법칙으로 쓰지 않는다.</b> 두 사례 모두 <b>한 모델의 사전학습
+  가중치가 가진 성질</b>이며, 본 연구가 직접 받아 확인한 것은 그 가중치 두 텐서뿐이다 —
+  <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
 </div></section>
 
 <section class="slide"><div class="inner">
