@@ -72,6 +72,11 @@ tr.ok td{background:var(--good-soft)}
   border-radius:0 8px 8px 0;margin:16px 0;font-size:14.5px}
 .key{border-left:3px solid var(--bad);background:var(--bad-soft);padding:14px 18px;
   border-radius:0 8px 8px 0;margin:18px 0}
+pre{background:var(--card);border:1px solid var(--rule);border-left:3px solid var(--good);
+  border-radius:0 8px 8px 0;padding:14px 16px;margin:16px 0;overflow-x:auto;
+  font-family:"IBM Plex Mono",monospace;font-size:13px;line-height:1.75;color:var(--ink-2)}
+pre b{color:var(--ink);font-weight:600}
+pre .c{color:var(--mute)}
 figure{margin:18px 0}
 figure img{width:100%;border:1px solid var(--rule);border-radius:8px;background:#fff}
 figcaption{font-size:13px;color:var(--mute);margin-top:8px}
@@ -489,6 +494,15 @@ blockquote b{color:var(--bad)}
     <tr><td class="mono">fix</td><td>필요한 MLP 축소 배수를 산출해 <b>곱 이전</b> 가중치를 교정(<span class="mono">--verify</span>면 재측정)</td></tr>
     <tr><td class="mono">selftest</td><td>모델 없이 판정 세 분기와 배수 풀이를 시험</td></tr>
   </table>
+<pre><span class="c"># 내 체크포인트가 배포 조건에서 안전한가</span>
+python scripts/headroom_guard.py <b>diagnose</b> --checkpoint checkpoints/student_baseline_v2/epoch_1
+
+<span class="c"># 공개 저장소도 그대로 — max_pixels를 주지 않으면 모델 자신의 설정을 쓴다</span>
+python scripts/headroom_guard.py <b>diagnose</b> --repo Qwen/Qwen2.5-VL-3B-Instruct-AWQ \
+    --dtype float16 --max_pixels 1440000
+
+<span class="c"># 넘친다면 — 배수를 풀어 곱 이전 가중치를 고치고 다시 잰다</span>
+python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2.0 --verify</pre>
   <div class="grid g2">
     <div class="card"><b>임계값을 없앴다</b><p class="small">형식 상한을 넘는 <b>이미지의 비율</b>이 곧 붕괴율 추정치다
       — 6개 모델 평균 오차 <b>2.1%p</b>(최대 6.4%p). 사용자가 받는 값이 “몇 %가 무너지는가”다.</p></div>
