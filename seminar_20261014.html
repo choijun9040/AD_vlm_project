@@ -60,6 +60,8 @@ th,td{border-bottom:1px solid var(--rule);padding:8px 10px;text-align:left}
 th{font-weight:600;color:var(--ink-2);border-bottom:2px solid var(--rule);font-size:13.5px}
 td.n,th.n{text-align:right;font-family:"IBM Plex Mono",monospace;font-variant-numeric:tabular-nums}
 tr.hi td{background:var(--bad-soft)}
+tr.bad td{background:var(--bad-soft);color:var(--bad);font-weight:600}
+tr.bad td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
 tr.ok td{background:var(--good-soft)}
 .chip{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12.5px;font-weight:600;
   font-family:"IBM Plex Mono",monospace}
@@ -331,27 +333,29 @@ blockquote b{color:var(--bad)}
 
 <section class="slide"><div class="inner">
   <div class="snum">13 · 독립 사례</div>
-  <h2>같은 실패가 우리와 무관한 곳에서 보고됐다</h2>
-  <p class="lede">vLLM 이슈 <b>#40290</b>(2026-04-19) — <b>Gemma 4</b> 비전 인코더를 fp16으로 돌리면
-  모든 이미지의 출력이 <span class="mono">&lt;pad&gt;</span>만 나온다. 본 연구와 접점이 없는
-  보고다.</p>
+  <h2>vLLM #40290 — 같은 축으로 설명되는 다른 계열의 붕괴</h2>
+  <p class="lede">Gemma 4 비전 인코더를 fp16으로 돌리면 <b>모든 이미지</b>의 출력이
+  <span class="mono">&lt;pad&gt;</span>만 나온다(2026-04-19 보고). 본 연구와 접점이 없는 사례인데,
+  <b>표현 범위 여유로 그대로 읽힌다.</b></p>
+  <div class="card" style="text-align:center;font-size:17px">
+    SigLIP 표준화 &nbsp;
+    <span class="mono"><b>( h − std_bias )</b> × std_scale</span>
+  </div>
   <table>
-    <tr><th></th><th>본 연구</th><th>vLLM #40290</th></tr>
-    <tr><td><b>제작사·모델</b></td><td>Alibaba · Qwen2.5-VL-3B</td><td>Google · Gemma 4</td></tr>
-    <tr><td><b>비전 인코더</b></td><td>Qwen ViT</td><td>SigLIP</td></tr>
-    <tr><td><b>넘치는 곳</b></td><td>마지막 블록 MLP <span class="mono">down_proj</span></td>
-        <td>표준화 <span class="mono">(h − std_bias)</span>의 뺄셈 중간값</td></tr>
-    <tr><td><b>원인</b></td><td>사전학습 가중치의 849번 행</td>
-        <td>저장된 bf16 가중치 <span class="mono">std_bias</span> (53,760)</td></tr>
-    <tr><td><b>증상</b></td><td>출력 NaN → 토큰 0 반복</td><td>출력이 <span class="mono">&lt;pad&gt;</span>만</td></tr>
-    <tr class="hi"><td><b>왜 못 막나</b></td><td>출력을 줄이면 이미 늦다 (fixB)</td>
-        <td><span class="mono">std_scale</span>이 <b>뺄셈 뒤에</b> 온다</td></tr>
+    <tr><th>단계</th><th class="n">값</th><th>여유</th></tr>
+    <tr><td>fp16 표현 한계</td><td class="n">65,504</td><td>—</td></tr>
+    <tr class="hi"><td>가중치 <span class="mono">std_bias</span>의 최댓값</td><td class="n">53,760</td>
+        <td><b>1.218배</b> — 빼기도 전에 한계에 걸쳐 있다</td></tr>
+    <tr class="bad"><td><span class="mono">h − std_bias</span> 중간값</td><td class="n">한계 초과</td>
+        <td><b>0 미만</b> — 여기서 <span class="mono">inf</span>가 된다</td></tr>
   </table>
-  <div class="key"><b>제작사도, 인코더 계열도, 터지는 층도 다르다.</b> 그런데 실패 양식이 같고
-  <b>개입 위치가 성패를 가르는 구조</b>까지 같다. 본 연구가 만든 현상이 아니라는 뜻이다.</div>
-  <p class="small"><b>그렇다고 일반 법칙으로 쓰지 않는다.</b> 두 사례 모두 <b>한 모델의 사전학습
-  가중치가 가진 성질</b>이고, 본 연구는 가중치 두 텐서만 직접 받아 확인했을 뿐 활성
-  <span class="mono">h</span>는 재지 못했다 — <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
+  <div class="key"><b>줄여 줄 연산은 있는데 자리가 틀렸다.</b>
+  <span class="mono">std_scale</span>을 곱하면 크기가 내려가지만 그것은 <b>뺄셈 뒤</b>에 온다 —
+  이미 <span class="mono">inf</span>가 된 값을 줄이는 셈이다. <b>앞 장의 fixB와 같은 꼴</b>이다.</div>
+  <p class="small">넘치는 것은 활성만이 아니다 — 여기서는 <b>저장된 bf16 가중치</b>가 fp16 범위
+  가장자리에 있었고, 그래서 도구는 가중치·활성 양쪽을 블록과 <b>블록 뒤</b>에서 모두 잰다.
+  다만 본 연구가 직접 받아 확인한 것은 그 두 텐서뿐이고 활성 <span class="mono">h</span>는 재지
+  못했다 — <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
 </div></section>
 
 <section class="slide"><div class="inner">
