@@ -98,8 +98,9 @@ Qwen2.5-VL-7B 교사를 3B 학생으로 증류하면서 데이터·LoRA 구성·
 (format_max ÷ max|activation|)는 원본 해상도에서 0.88배부터 2.92배까지 갈렸다(이미지별 최대의 중앙값). 여유가
 1배 아래인 학생은 fp16에서 이미지의 94.8%에 대해 출력을 통째로 잃었고, 과제 정확도가 49.95%(bf16)에서
 1.36%(fp16)로 떨어졌다. 같은 두 학생의 INT8 양자화 SNR은 출력을 잃는 쪽이 32.23 dB, 출력을 잃지 않는 쪽이
-22.88 dB로, **표준 압축 지표는 위험을 역방향으로 가리켰다.** 이는 양자화 도구가 검사하는 부분과 양자화에서
-제외되어 fp16으로 실행되는 부분이 서로 다르기 때문이다. 실무에서는 언어 모델 백본을 4비트로 강하게
+22.88 dB로, **표준 압축 지표는 위험을 역방향으로 가리켰다.**
+
+이는 양자화 도구가 검사하는 부분과 양자화에서 제외되어 fp16으로 실행되는 부분이 서로 다르기 때문이다. 실무에서는 언어 모델 백본을 4비트로 강하게
 양자화하면서도 **비전 인코더는 양자화에서 빼 fp16/bf16으로 두는** 구성이 흔하다. 양자화 도구는 자기가
 누른 층만 보고하므로, 비전 인코더는 보고서에 "안전"으로 적히는 것이 아니라 **항목 자체가 없다.** 따라서
 이 위험은 어떤 지표에도 남지 않으며, **배포할 형식과 해상도에서 그 층을 직접 재야만 드러난다.**
@@ -110,9 +111,9 @@ Qwen2.5-VL-7B 교사를 3B 학생으로 증류하면서 데이터·LoRA 구성·
 설정·인코더 설계·가중치·모델 계열 어느 것으로도 예측되지 않았다. 비전 인코더를 양자화에서 뺀 공개 파생본은
 기반 모델의 여유를 그대로 물려받았다.
 
-이 진단을 도구 `headroom_guard`로 구현했다. 도구는 활성 크기를 넘치지 않는 형식(bf16)에서 재고, 형식 상한을
-넘는 이미지의 비율로 상실률을 추정하며(PyTorch fp16 기준 6개 모델 평균 오차 2.1%p), 대상이 지원하는 형식에 맞춰 형식 전환이나
-가중치 교정을 권고한다. 배포 조건에서 도구가 교정한 가중치는 정확도를 1.36%에서 50.73%로 되돌렸다. 비전
+이 진단을 도구 `headroom_guard`로 구현했다. 도구는 활성 크기를 넘치지 않는 형식(bf16)에서 재고, 형식
+상한을 넘는 이미지의 비율로 상실률을 추정하며(PyTorch fp16 기준 6개 모델 평균 오차 2.1%p), 대상이
+지원하는 형식에 맞춰 형식 전환이나 가중치 교정을 권고한다. 배포 조건에서 도구가 교정한 가중치는 정확도를 1.36%에서 50.73%로 되돌렸다. 비전
 인코더를 ONNX로 내보내 TensorRT fp16 엔진으로 실행해도 같은 상실이 재현되었다. 엣지 보드(Jetson Orin Nano
 8GB)의 강타입 엔진도 A100과 같은 비율로 출력을 잃었고(802,816 해상도, 24.4%), 교정 엔진은 출력을 잃지 않았다.
 
@@ -141,8 +142,9 @@ baseline are indistinguishable in accuracy (50.30–51.69%), yet the
 0.88× to 2.92× at native resolution (median over images). The student below 1× loses its output entirely on
 94.8% of images in fp16, and its task accuracy falls from 49.95% (bf16) to 1.36% (fp16). For the same two
 students, INT8 quantization SNR is 32.23 dB for the one that collapses and 22.88 dB for the one that does not:
-**the standard compression metric ranks the risk in reverse.** This happens because the part that quantization
-tools inspect differs from the part that is excluded from quantization and runs in fp16. In practice it is
+**the standard compression metric ranks the risk in reverse.**
+
+This happens because the part that quantization tools inspect differs from the part that is excluded from quantization and runs in fp16. In practice it is
 common to quantize the language backbone aggressively to 4 bits while **leaving the vision encoder
 unquantized in fp16/bf16**. Because a quantization tool reports only the layers it touched, the vision
 encoder is not listed as "safe" — **it is absent from the report entirely.** The risk therefore appears in
