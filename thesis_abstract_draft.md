@@ -30,7 +30,8 @@ Qwen2.5-VL-7B 교사를 3B 학생으로 증류하면서 데이터·LoRA 구성·
 1.36%(fp16)로 떨어졌다. 같은 두 학생의 INT8 양자화 SNR은 출력을 잃는 쪽이 32.23 dB, 출력을 잃지 않는 쪽이
 22.88 dB로, **표준 압축 지표는 위험을 역방향으로 가리켰다.** 이는 양자화 도구가 검사하는 부분과 양자화에서
 제외되어 fp16으로 실행되는 부분이 서로 다르기 때문이다. 실무에서는 언어 모델 백본을 4비트로 강하게
-양자화하면서도 **비전 인코더는 양자화에서 빼 fp16/bf16으로 두는** 구성이 흔하다.
+양자화하면서도 **비전 인코더는 양자화에서 빼 fp16/bf16으로 두는** 구성이 흔하다. 양자화 도구는 자기가
+누른 층만 보고하므로, 비전 인코더는 보고서에 "안전"으로 적히는 것이 아니라 **항목 자체가 없다.**
 
 오버플로 지점은 마지막 블록 MLP의 출력 투영 안, 사전학습 가중치에 고정된 한 채널로 특정되었다. 곱이
 만들어지기 전에 입력을 줄이면 학습 없이 상실이 사라졌고, 출력을 줄이면 사라지지 않았다. 여유는 특징 정렬
@@ -71,7 +72,8 @@ students, INT8 quantization SNR is 32.23 dB for the one that collapses and 22.88
 **the standard compression metric ranks the risk in reverse.** This happens because the part that quantization
 tools inspect differs from the part that is excluded from quantization and runs in fp16. In practice it is
 common to quantize the language backbone aggressively to 4 bits while **leaving the vision encoder
-unquantized in fp16/bf16**.
+unquantized in fp16/bf16**. Because a quantization tool reports only the layers it touched, the vision
+encoder is not listed as "safe" — **it is absent from the report entirely.**
 
 The overflow is localized to a single channel of the last block's MLP output projection, fixed in the
 pretrained weights. Scaling the inputs before their product removes the collapse without training; scaling
