@@ -192,7 +192,7 @@ blockquote b{color:var(--bad)}
   여섯 유형 중 넷만 실었다 — 뺀 둘은 변형 간 차이가 작다(비교 63~65%, 상태 51~53%).</p>
   <div class="note"><b>세 변형의 폭은 0.35%p다.</b> 시드를 고정하지 않았으므로 이 차이는 시드 잡음과
   구별할 수 없다 — <b>순위를 주장하지 않는다.</b></div>
-  <p><b>그런데 이 가운데 하나는 fp16으로 배포하는 순간 대부분의 이미지에서 출력을 잃는다.</b></p>
+  <p><b>그런데 이 가운데 하나는 fp16으로 배포하는 순간 대부분의 이미지에서 출력을 상실한다.</b></p>
 </div></section>
 
 <section class="slide"><div class="inner">
@@ -232,7 +232,7 @@ blockquote b{color:var(--bad)}
     <tr><td class="n">231</td><td>200,704 (평가)</td><td class="n">3.2%</td><td class="n">0</td><td class="n">0</td></tr>
     <tr><td class="n">120</td><td>100,352</td><td class="n">0.8%</td><td class="n">0</td><td class="n">0</td></tr>
   </table>
-  <p class="small">표의 다섯 행이 그림의 다섯 점이다. 남은 두 계열은 원본에서만 출력을 잃는다 —
+  <p class="small">표의 다섯 행이 그림의 다섯 점이다. 남은 두 계열은 원본에서만 출력을 상실한다 —
   <span class="mono">Task + out.KD</span> 20.4%, <span class="mono">Task + L_atc</span> 28.8%
   (평가 해상도의 L_atc 0.4%를 빼면 그 아래는 모두 0).</p>
   <p>상실은 <b>이미지 단위로 전부 아니면 전무</b>이고 같은 장면의 연속 키프레임에서 뭉친다.
@@ -435,7 +435,7 @@ blockquote b{color:var(--bad)}
   모델이 작아져서가 아니라 <b>형식의 상한만</b> 3.4×10³⁸으로 올라갔기 때문이다 —
   표현 범위가 원인이라는 <b>독립적인 확인</b>이다.</div>
   <p><b>사전 등록한 예상은 빗나갔다.</b> “빌더가 해당 레이어를 fp32로 남겨 회피할 것”이라 적었는데
-  관행 설정에서 그대로 출력을 잃었다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
+  관행 설정에서 그대로 출력을 상실했다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
   <p class="small">앞서 본 <b>#40290의 처방과 같다</b> — 그쪽은 비전 타워만 bf16으로 두는 것이고,
   여기서는 같은 그래프를 통째로 bf16으로 빌드했다.</p>
   <div class="note">PyTorch fp16 상실률 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
@@ -456,7 +456,7 @@ blockquote b{color:var(--bad)}
     <tr class="ok"><td>401,408</td><td>Full · Task only 교정본</td><td class="n"><b>0.0%</b></td><td class="n">0.0%</td><td class="n">503 ms</td></tr>
     <tr><td>원본 1,440,000</td><td>세 모델</td><td class="n"><b>빌드 불가</b></td><td class="n">92.4% · 0% · 0%</td><td class="n">—</td></tr>
   </table>
-  <p><b>802,816에서는 출력을 잃은 장 수까지 같았다</b>(양쪽 61장). 401,408에서는 23 대 25장으로 조금 갈린다.
+  <p><b>802,816에서는 출력을 상실한 장 수까지 같았다</b>(양쪽 61장). 401,408에서는 23 대 25장으로 조금 갈린다.
   범위를 분명히 적는다 — 이것은 <b>강타입</b> 빌드 조건이고,
   관행 <span class="mono">--fp16</span>은 보드에서 <b>어느 해상도로도 빌드되지 않았다</b>.
   원본 해상도는 강타입으로도 열 번 모두 실패했다.</p>
@@ -482,7 +482,7 @@ blockquote b{color:var(--bad)}
     <div class="card"><b>이산성</b><p class="small">708 키프레임 중 <b>689개는 전부 상실</b>,
       19개는 전부 정상. <b>섞인 경우 0건.</b></p></div>
     <div class="card"><b>표준 평가가 가린 것</b><p class="small">평가 해상도라도 fp16이면
-      48.49% 대 50.63% — 차이는 <b>전부 출력을 잃은 45문항</b>에서 온다. 그걸 빼면 차이가 없다.</p></div>
+      48.49% 대 50.63% — 차이는 <b>전부 출력을 상실한 45문항</b>에서 온다. 그걸 빼면 차이가 없다.</p></div>
   </div>
 </div></section>
 
@@ -541,7 +541,7 @@ python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2
       학습했다. 0.35%p 폭은 시드 잡음과 구별되지 않는다. 활성 크기·상실률 차이는 규모가 커서 이 제약을
       받지 않는다.</p></div>
     <div class="card"><b>실기기 범위</b><p class="small">보드 하나(Orin Nano 8GB) · 런타임 하나(TensorRT 10.3) ·
-      <b>강타입</b> 엔진 · 메모리가 허락한 두 해상도. “실차 배포에서 출력을 잃는다”고 단정하지 않는다.</p></div>
+      <b>강타입</b> 엔진 · 메모리가 허락한 두 해상도. “실차 배포에서 출력을 상실한다”고 단정하지 않는다.</p></div>
     <div class="card"><b>처방의 수명</b><p class="small">bf16 커널이 성숙해 지연 비용이 사라지면 “bf16으로
       빌드하라”가 재지 않고도 통하는 처방이 된다. 관측한 두 버전에서는 격차가 유지됐다.</p></div>
   </div>
@@ -571,7 +571,7 @@ python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2
   <h2>자주 받는 질문</h2>
   <table>
     <tr><th>질문</th><th>답</th></tr>
-    <tr><td>그냥 bf16 쓰면 되지 않나</td><td>맞다, 가장 단순한 해법이다. 다만 출력을 잃지 않는 fp16 엔진 대비
+    <tr><td>그냥 bf16 쓰면 되지 않나</td><td>맞다, 가장 단순한 해법이다. 다만 출력을 상실하지 않는 fp16 엔진 대비
       지연이 <b>1.34~1.38배</b>이고, 쓸 수 없는 대상도 있다. 그리고 <b>어느 쪽이 필요한지는 재야 안다.</b></td></tr>
     <tr><td>정확도 순위가 Full이 1등 아닌가</td><td>아니다. 51.69 / 51.40 / 51.34%는 <b>n=1</b>이라
       구별되지 않는다. 이 논문의 주장은 정확도 순위가 아니라 <b>정확도로는 안 보이는 축</b>이 있다는 것이다.</td></tr>
