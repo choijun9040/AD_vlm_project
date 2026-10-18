@@ -102,9 +102,9 @@ dB, 출력을 잃지 않는 쪽이 22.88 dB로, **표준 압축 지표는 위험
 
 이는 양자화 도구가 검사하는 부분과 양자화에서 제외되어 fp16으로 실행되는 부분이 서로 다르기
 때문이다. 실무에서는 언어 모델 백본을 4비트로 강하게 양자화하면서도 **비전 인코더는 양자화에서
-빼 fp16/bf16으로 두는** 구성이 흔하다. 양자화 도구는 자기가 누른 층만 보고하므로, 비전 인코더는
-보고서에 "안전"으로 적히는 것이 아니라 **항목 자체가 없다.** 따라서 이 위험은 어떤 지표에도 남지
-않으며, **배포할 형식과 해상도에서 그 층을 직접 재야만 드러난다.**
+빼 fp16/bf16으로 두는** 구성이 흔하다. 양자화 도구는 자기가 양자화한 층만 보고한다. 비전
+인코더는 평가 대상에서 제외되기 때문에 그 위험은 보고서에 드러나지 않는다. 따라서 이 위험은
+**배포할 형식과 해상도에서 그 층을 직접 재야만 드러난다.**
 
 오버플로 지점은 마지막 블록 MLP의 출력 투영 안, 사전학습 가중치에 고정된 한 채널로 특정되었다.
 곱이 만들어지기 전에 입력을 줄이면 학습 없이 상실이 사라졌고, 출력을 줄이면 사라지지 않았다.
@@ -150,11 +150,10 @@ the risk in reverse.**
 
 This happens because the part that quantization tools inspect differs from the part that is
 excluded from quantization and runs in fp16. In practice it is common to quantize the language
-backbone aggressively to 4 bits while **leaving the vision encoder unquantized in fp16/bf16**.
-Because a quantization tool reports only the layers it touched, the vision encoder is not listed
-as "safe" — **it is absent from the report entirely.** The risk therefore appears in no metric:
-**it surfaces only by measuring that layer directly, in the format and at the resolution of
-deployment.**
+backbone aggressively to 4 bits while **leaving the vision encoder unquantized in fp16/bf16**. A
+quantization tool reports only the layers it quantized. Because the vision encoder lies outside
+that scope, its risk never appears in the report. **It surfaces only by measuring that layer
+directly, in the format and at the resolution of deployment.**
 
 The overflow is localized to a single channel of the last block's MLP output projection, fixed
 in the pretrained weights. Scaling the inputs before their product removes the collapse without

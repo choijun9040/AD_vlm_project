@@ -288,8 +288,8 @@ blockquote b{color:var(--bad)}
     <tr class="hi"><td><b>비전 인코더</b></td><td><span class="chip bad">아니오</span></td><td><b>예</b></td></tr>
   </table>
   <p>공개 양자화 VLM에서 흔한 설정은 비전 인코더를 양자화에서 <b>빼고</b>(<span class="mono">modules_to_not_convert</span>)
-  저장 dtype을 fp16으로 둔다. 양자화 도구는 자기가 누른 층만 보고하므로 비전 인코더는
-  보고서에 “안전”으로 적히는 것이 아니라 <b>항목 자체가 없다.</b></p>
+  저장 dtype을 fp16으로 둔다. 양자화 도구는 자기가 양자화한 층만 보고한다. 비전 인코더는
+  <b>평가 대상에서 제외되기 때문에 그 위험은 보고서에 드러나지 않는다.</b></p>
   <div class="note">그러므로 이 장의 주장은 <b>“지표가 틀렸다”가 아니다.</b> 그렇게 쓰면
   <i>“fp16 배포인데 왜 INT8 지표를 보나”</i>에 무너진다. 실제 주장은 <b>검사 대상과 실행 형식이
   어긋나 있다</b>는 것이다.</div>
