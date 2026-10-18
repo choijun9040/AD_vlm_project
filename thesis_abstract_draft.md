@@ -27,14 +27,15 @@ Qwen2.5-VL-7B 교사를 3B 학생으로 증류하면서 데이터·LoRA 구성·
 않았으나(50.30~51.69%), 비전 인코더 마지막 블록의 **표현 범위 여유**(format_max ÷
 max|activation|)는 원본 해상도에서 0.88배부터 2.92배까지 차이를 보였다(이미지별 최대의 중앙값).
 여유가 1배 아래인 학생은 fp16에서 이미지의 94.8%에 대해 출력을 상실했고, 과제 정확도가
-49.95%(bf16)에서 1.36%(fp16)로 떨어졌다. 같은 두 학생의 INT8 양자화 SNR은 출력을 잃는 쪽이 32.23
-dB, 출력을 잃지 않는 쪽이 22.88 dB로, **표준 압축 지표는 위험을 역방향으로 가리켰다.**
+49.95%(bf16)에서 1.36%(fp16)로 떨어졌다. 0.88배와 2.92배의 두 학생에서 INT8 양자화 SNR은 출력을
+상실한 쪽이 32.23 dB, 상실하지 않은 쪽이 22.88 dB로, **표준 압축 지표는 위험을 역방향으로
+가리켰다.**
 
-이는 양자화 도구가 검사하는 부분과 양자화에서 제외되어 fp16으로 실행되는 부분이 서로 다르기
-때문이다. 실무에서는 언어 모델 백본을 4비트로 강하게 양자화하면서도 **비전 인코더는 양자화에서
-빼 fp16/bf16으로 두는** 구성이 흔하다. 양자화 도구는 자기가 양자화한 층만 보고한다. 비전
-인코더는 평가 대상에서 제외되기 때문에 그 위험은 보고서에 드러나지 않는다. 따라서 이 위험은
-**배포할 형식과 해상도에서 그 층을 직접 재야만 드러난다.**
+이는 검사받는 부분과 실제로 fp16으로 실행되는 부분이 서로 다르기 때문이다. 실무에서는 언어 모델
+백본을 4비트로 강하게 양자화하면서도 **비전 인코더는 양자화에서 빼 fp16/bf16으로 두는** 구성이
+흔하다. 양자화 도구는 자기가 양자화한 층만 보고한다. 비전 인코더는 평가 대상에서 제외되기 때문에
+그 위험은 보고서에 드러나지 않는다. 따라서 이 위험은 **배포할 형식과 해상도에서 그 층을 직접
+재야만 드러난다.**
 
 오버플로 지점은 마지막 블록 MLP의 출력 투영 안, 사전학습 가중치에 고정된 한 채널로 특정되었다.
 곱이 만들어지기 전에 입력을 줄이면 학습 없이 상실이 사라졌고, 출력을 줄이면 사라지지 않았다.
@@ -47,7 +48,7 @@ dB, 출력을 잃지 않는 쪽이 22.88 dB로, **표준 압축 지표는 위험
 오차 2.1%p), 대상이 지원하는 형식에 맞춰 형식 전환이나 가중치 교정을 권고한다. 배포 조건에서
 도구가 교정한 가중치는 정확도를 1.36%에서 50.73%로 되돌렸다. 비전 인코더를 ONNX로 내보내
 TensorRT fp16 엔진으로 실행해도 같은 상실이 재현되었다. 엣지 보드(Jetson Orin Nano 8GB)의 강타입
-엔진도 A100과 같은 비율로 출력을 잃었고(802,816 해상도, 24.4%), 교정 엔진은 출력을 잃지 않았다.
+엔진도 A100과 같은 비율로 출력을 상실했고(802,816 해상도, 24.4%), 교정 엔진은 상실하지 않았다.
 
 압축된 주행 VLM의 저정밀 배포에서 부족한 것은 여유를 움직이는 수단이 아니라 **그것을 재는
 일**이다.
@@ -73,16 +74,16 @@ the non-distilled baseline are indistinguishable in accuracy (50.30–51.69%), y
 **representable-range headroom** (format_max ÷ max|activation|) of the vision encoder's last
 block ranges from 0.88× to 2.92× at native resolution (median over images). The student below 1×
 loses its output entirely on 94.8% of images in fp16, and its task accuracy falls from 49.95%
-(bf16) to 1.36% (fp16). For the same two students, INT8 quantization SNR is 32.23 dB for the one
-that collapses and 22.88 dB for the one that does not: **the standard compression metric ranks
-the risk in reverse.**
+(bf16) to 1.36% (fp16). For the two students at 0.88× and 2.92×, INT8 quantization SNR is 32.23
+dB for the one that collapses and 22.88 dB for the one that does not: **the standard compression
+metric ranks the risk in reverse.**
 
-This happens because the part that quantization tools inspect differs from the part that is
-excluded from quantization and runs in fp16. In practice it is common to quantize the language
-backbone aggressively to 4 bits while **leaving the vision encoder unquantized in fp16/bf16**. A
-quantization tool reports only the layers it quantized. Because the vision encoder lies outside
-that scope, its risk never appears in the report. **It surfaces only by measuring that layer
-directly, in the format and at the resolution of deployment.**
+This happens because the part that is inspected differs from the part that actually runs in
+fp16. In practice it is common to quantize the language backbone aggressively to 4 bits while
+**leaving the vision encoder unquantized in fp16/bf16**. A quantization tool reports only the
+layers it quantized. Because the vision encoder lies outside that scope, its risk never appears
+in the report. **It surfaces only by measuring that layer directly, in the format and at the
+resolution of deployment.**
 
 The overflow is localized to a single channel of the last block's MLP output projection, fixed
 in the pretrained weights. Scaling the inputs before their product removes the collapse without
