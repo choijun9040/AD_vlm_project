@@ -1,9 +1,9 @@
-"""자연 발생 모델들의 fp16 붕괴율 — 검출 곡선에 얹을 '합성이 아닌' 점들.
+"""자연 발생 모델들의 fp16 상실률 — 검출 곡선에 얹을 '합성이 아닌' 점들.
 
-**왜 필요한가.** `scripts/detection_curve.py`가 만드는 여유-붕괴 곡선은 우리가
+**왜 필요한가.** `scripts/detection_curve.py`가 만드는 여유-상실 곡선은 우리가
 `baseline_v2`의 MLP 가중치를 직접 줄여 만든 **합성 연속체**다. "자기가 만든 교란으로
 자기 임계값을 보정했다"는 반론이 바로 성립한다. 공개 모델들은 여유가 1.7배에서
-50배까지 자연스럽게 흩어져 있으므로, 같은 조건에서 **실제 fp16 붕괴율**만 재면
+50배까지 자연스럽게 흩어져 있으므로, 같은 조건에서 **실제 fp16 상실률**만 재면
 합성 곡선 위에 자연 발생 점을 얹어 대조할 수 있다.
 
 두 곡선이 겹치면 보정이 합성 교란의 산물이 아님을 보인다. 어긋나면 **그 사실이
@@ -12,9 +12,9 @@
 
 **사전 등록 (결과 보기 전, 2026-09-15).**
   - 자연 점이 합성 곡선 위에 얹히면 → 검출 곡선의 임계값을 그대로 채택한다.
-  - 자연 점만 더 일찍(= 더 큰 여유에서) 붕괴하면 → **합성 곡선이 낙관적**이라는
+  - 자연 점만 더 일찍(= 더 큰 여유에서) 상실하면 → **합성 곡선이 낙관적**이라는
     뜻이므로 임계값을 자연 점 기준으로 올린다. 도구에 불리하지만 그대로 쓴다.
-  - 자연 점이 더 늦게 붕괴하면 → 합성 곡선이 보수적이다. **임계값을 내리지 않는다**
+  - 자연 점이 더 늦게 상실하면 → 합성 곡선이 보수적이다. **임계값을 내리지 않는다**
     (안전 쪽 오차는 유지한다)는 점을 명시하고, 보수성의 크기만 보고한다.
 
 실행:
@@ -53,7 +53,7 @@ def pctl(sv, q):
 
 
 def measure(repo, paths, max_pixels):
-    """fp16으로 타워를 올려 이미지별 붕괴 여부와 마지막 블록 max를 잰다."""
+    """fp16으로 타워를 올려 이미지별 상실 여부와 마지막 블록 max를 잰다."""
     import headroom_guard as HG
     from transformers import AutoProcessor
 
@@ -114,7 +114,7 @@ def main():
     paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.limit]
     print(f"이미지 {len(paths)}장\n")
 
-    # 6장에서 이미 잰 bf16 여유를 붙여 (여유, 붕괴율) 쌍을 만든다.
+    # 6장에서 이미 잰 bf16 여유를 붙여 (여유, 상실률) 쌍을 만든다.
     fam = json.loads(Path("eval_results/other_vlm_families_profile.json").read_text())
 
     out_path = Path(args.out)
@@ -129,7 +129,7 @@ def main():
             r["headroom_p50_bf16"] = f.get("headroom_p50")
             r["headroom_p95_bf16"] = f.get("headroom_p95")
             res[tag] = r
-            print(f"  붕괴율 {r['collapse_rate']*100:.1f}%  "
+            print(f"  상실률 {r['collapse_rate']*100:.1f}%  "
                   f"(여유 p50 {r['headroom_p50_bf16']:.2f}배, "
                   f"p95 {r['headroom_p95_bf16']:.2f}배)", flush=True)
         except Exception as e:
@@ -144,7 +144,7 @@ def main():
                 shutil.rmtree(d, ignore_errors=True); print(f"  캐시 정리: {d.name}")
 
     print("\n" + "=" * 78)
-    print(f"{'모델':<22}{'여유 p50':>10}{'여유 p95':>10}{'fp16 붕괴율':>13}")
+    print(f"{'모델':<22}{'여유 p50':>10}{'여유 p95':>10}{'fp16 상실률':>13}")
     print("-" * 78)
     for tag, r in res.items():
         if "collapse_rate" not in r:

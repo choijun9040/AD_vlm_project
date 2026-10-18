@@ -1,7 +1,7 @@
 """
-실행 경로별 붕괴율과 엣지 보드 지연 (학위 논문 6.9절, 그림 6-1).
+실행 경로별 상실률과 엣지 보드 지연 (학위 논문 6.9절, 그림 6-1).
 
-  (a) 기준선 학생의 fp16 붕괴율을 실제 비전 토큰 수(480 · 966 · 1,824)에 대해 실행 경로별로 겹친다.
+  (a) 기준선 학생의 fp16 상실률을 실제 비전 토큰 수(480 · 966 · 1,824)에 대해 실행 경로별로 겹친다.
       초과 비율(bf16 추정) · PyTorch fp16 · TensorRT 강타입(A100) · TensorRT 관행 `--fp16`(A100) · Orin 강타입.
       강타입은 PyTorch를 따라가고 관행 빌드만 해상도에 따라 양쪽으로 어긋난다는 것, Orin 점이 A100 강타입에
       겹친다는 것이 그림의 요지다. Full과 교정본은 모든 경로·해상도에서 0%라 선으로 그리지 않고 주석으로 적는다.
@@ -98,7 +98,7 @@ def main():
     fig, (a, b) = plt.subplots(nr, nc, figsize=L["figsize"],
                                gridspec_kw={"width_ratios": [1.6, 1]} if nc == 2 else None)
 
-    # (a) 붕괴율
+    # (a) 상실률
     a.plot(tokens, exceed, color=INK2, lw=1.0, ls=(0, (3, 2)), marker="x", ms=L["ms"] - 1, zorder=2)
     a.plot(tokens, pyt, color=PYT, lw=L["lw"], marker="o", ms=L["ms"], zorder=3)
     a.plot(tokens, typed, color=TYPED, lw=L["lw"], marker="s", ms=L["ms"] - 0.5, zorder=4)
@@ -156,7 +156,7 @@ def main():
         o = orin.get(t)
         ob = f"{o['collapse']:.1f} ({o['n']}장, {o['lat']:.0f} ms)" if o else "빌드 불가"
         print(f"  {t:5d}  {exceed[i]:6.1f}  {pyt[i]:6.1f}  {typed[i]:6.1f}  {weak[i]:6.1f}  {ob}")
-    print("  Orin Full·교정본 붕괴율:", {t: orin[t]["others"] for t in ox})
+    print("  Orin Full·교정본 상실률:", {t: orin[t]["others"] for t in ox})
 
 
 if __name__ == "__main__":

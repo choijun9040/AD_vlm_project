@@ -18,7 +18,7 @@
 
 pairs:
   - id: gate-statistic
-    claim: "게이트 판정은 최악 여유로 한다 — p50으로 걸면 λ=0.0(p50 1.14·최악 0.87, 11% 붕괴)을 놓친다"
+    claim: "게이트 판정은 최악 여유로 한다 — p50으로 걸면 λ=0.0(p50 1.14·최악 0.87, 11% 상실)을 놓친다"
     docs: [thesis_ch7_ch8_draft.md]
     docs_must_contain: ["최악 여유"]
     code:
@@ -52,7 +52,7 @@ pairs:
   # ④는 L16이, ⑨는 C5가 실제로 그 부류였다.
 
   - id: two-dtype-split
-    claim: "크기는 넘치지 않는 형식(bf16)에서 재고 붕괴는 목표 형식에서 잰다 (7.2① · 설계 원칙 2)"
+    claim: "크기는 넘치지 않는 형식(bf16)에서 재고 상실은 목표 형식에서 잰다 (7.2① · 설계 원칙 2)"
     docs: [thesis_ch7_ch8_draft.md]
     docs_must_contain: ["크기는 bf16에서"]
     code:
@@ -89,7 +89,7 @@ pairs:
       file: scripts/headroom_guard.py
       function: plan_fix
       must_use: ["solve_factor"]
-    broke_once: "깨진 적은 없다. 근사값으로 되돌리면 교정량이 과소·과대가 되고 교정본의 0% 붕괴가 흔들린다"
+    broke_once: "깨진 적은 없다. 근사값으로 되돌리면 교정량이 과소·과대가 되고 교정본의 0% 상실이 흔들린다"
 
   - id: silent-load-guard
     claim: "조용히 틀리는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (7.2⑨)"

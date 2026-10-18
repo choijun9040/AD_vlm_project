@@ -136,7 +136,7 @@ def generate_answer(model, processor, image_path: str, question: str, max_new_to
         "pred":     processor.batch_decode(gen_ids.unsqueeze(0), skip_special_tokens=True)[0].strip(),
         "pred_raw": processor.batch_decode(gen_ids.unsqueeze(0), skip_special_tokens=False)[0],
         "n_gen_tokens": n_gen,
-        "emitted_eos":  stopped,          # EOS를 한 번이라도 뱉었는가 (종료 신호 붕괴 진단)
+        "emitted_eos":  stopped,          # EOS를 한 번이라도 뱉었는가 (종료 신호 상실 진단)
         "hit_cap":      n_gen >= max_new_tokens and not stopped,
     }
 

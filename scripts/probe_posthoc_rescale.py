@@ -8,7 +8,7 @@ LLM에 전달된다. **균일 스케일은 정규화가 흡수하므로** blk31�
 해석 방침은 `thesis_outline_20260910.md` §6에 결과 확인 전 사전 등록되어 있다.
 
 두 가지를 잰다.
-  (i) 원본 해상도에서 fp16 붕괴율 — 리스케일이 붕괴를 막는가
+  (i) 원본 해상도에서 fp16 상실률 — 리스케일이 상실을 막는가
   (ii) NuScenes-QA 정확도 — bf16 기준으로, 리스케일이 기능을 해치는가
 
 실행:
@@ -143,7 +143,7 @@ def main():
     ap.add_argument("--dump_predictions", action="store_true",
                     help="조건별 문항 정오를 JSONL로 남긴다 (McNemar 검정용)")
     ap.add_argument("--skip_collapse", action="store_true",
-                    help="붕괴율 측정을 건너뛰고 정확도만 잰다 (이미 측정했을 때)")
+                    help="상실률 측정을 건너뛰고 정확도만 잰다 (이미 측정했을 때)")
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -154,7 +154,7 @@ def main():
     base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
     model = PeftModel.from_pretrained(base, CKPT).to("cuda").eval()
 
-    # --- (i) 붕괴율: 원본 해상도 ---
+    # --- (i) 상실률: 원본 해상도 ---
     proc_native = AutoProcessor.from_pretrained(BASE_3B, max_pixels=1440000, min_pixels=3136)
     cache = build_pixel_cache(proc_native, paths, 16)
 
@@ -167,12 +167,12 @@ def main():
     want = [keep[c.strip().lower()] for c in args.conds.split(",")]
     CONDS = [c for c in ALL_CONDS if any(c[0].startswith(w) for w in want)]
     if args.skip_collapse:
-        print("  붕괴율 측정 건너뜀 (--skip_collapse)", flush=True)
+        print("  상실률 측정 건너뜀 (--skip_collapse)", flush=True)
     else:
         for label, sc, md in CONDS:
             r = collapse_rate(model, cache, sc, md)
             res["collapse"][label] = r
-            print(f"  [{label:16s}] fp16 붕괴 {r['nan']}/{r['n']} = {r['nan_rate']*100:5.1f}%   "
+            print(f"  [{label:16s}] fp16 상실 {r['nan']}/{r['n']} = {r['nan_rate']*100:5.1f}%   "
                   f"blk31 p50={r['blk31_p50'] or float('nan'):,.0f}", flush=True)
     del cache
 
@@ -195,7 +195,7 @@ def main():
     Path(args.out).write_text(json.dumps(res, indent=2, ensure_ascii=False))
     base_acc = res["accuracy"]["무개입"]
     print("\n" + "=" * 74)
-    print(f"{'조건':22s}{'붕괴율':>10}{'정확도':>10}{'Δ정확도':>10}")
+    print(f"{'조건':22s}{'상실률':>10}{'정확도':>10}{'Δ정확도':>10}")
     print("-" * 74)
     for label, _, _ in CONDS:
         cd = res["collapse"].get(label)

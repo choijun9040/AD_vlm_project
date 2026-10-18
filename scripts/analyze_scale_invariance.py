@@ -13,9 +13,9 @@
 
 (2) **순위 상관**
     해상도 스윕(6모델 × 5해상도 = 30점)에서
-      - 절대 크기 ↔ fp16 붕괴율
-      - 이상치 비율 ↔ fp16 붕괴율
-    의 Spearman 상관을 계산한다. 전자만 붕괴를 설명해야 한다.
+      - 절대 크기 ↔ fp16 상실률
+      - 이상치 비율 ↔ fp16 상실률
+    의 Spearman 상관을 계산한다. 전자만 상실을 설명해야 한다.
 
 실행:
     python scripts/analyze_scale_invariance.py --n_images 20
@@ -116,9 +116,9 @@ def part1(n_images):
 
 def part2():
     print("\n" + "=" * 78)
-    print("(2) 순위 상관 — 무엇이 fp16 붕괴를 설명하는가")
+    print("(2) 순위 상관 — 무엇이 fp16 상실을 설명하는가")
     print("=" * 78)
-    # 해상도 스윕: 절대 크기와 붕괴율
+    # 해상도 스윕: 절대 크기와 상실률
     mag, collapse, labels = [], [], []
     for f in sorted(glob.glob("eval_results/resolution_sweep/res_*.json")):
         mp = int(re.search(r"res_(\d+)", f).group(1))
@@ -131,9 +131,9 @@ def part2():
             collapse.append(v["passes"]["float16"]["nan_rate"])
             labels.append(f"{k}@{mp//784}")
     rho_mag = spearman(mag, collapse)
-    print(f"\n  절대 크기(blk31 p50) ↔ 붕괴율 : Spearman ρ = {rho_mag:+.3f}   (n={len(mag)})")
+    print(f"\n  절대 크기(blk31 p50) ↔ 상실률 : Spearman ρ = {rho_mag:+.3f}   (n={len(mag)})")
 
-    # 이상치 비율은 평가 해상도에서만 측정됨 → 6모델 기준 원본 해상도 붕괴율과 대조
+    # 이상치 비율은 평가 해상도에서만 측정됨 → 6모델 기준 원본 해상도 상실률과 대조
     try:
         q = json.load(open("eval_results/int8_quant_error.json"))
         native = json.load(open("eval_results/resolution_sweep/res_1440000.json"))
@@ -145,9 +145,9 @@ def part2():
             coll2.append(native[k]["passes"]["float16"]["nan_rate"])
             lab2.append(k)
         rho_ratio = spearman(ratio, coll2)
-        print(f"  이상치 비율(blk31 max/rms) ↔ 붕괴율 : Spearman ρ = {rho_ratio:+.3f}   (n={len(ratio)})")
-        print("\n  모델별 대조 (원본 해상도 붕괴율 기준)")
-        print(f"    {'모델':22s}{'blk31 max':>11}{'max/rms':>10}{'붕괴율':>9}")
+        print(f"  이상치 비율(blk31 max/rms) ↔ 상실률 : Spearman ρ = {rho_ratio:+.3f}   (n={len(ratio)})")
+        print("\n  모델별 대조 (원본 해상도 상실률 기준)")
+        print(f"    {'모델':22s}{'blk31 max':>11}{'max/rms':>10}{'상실률':>9}")
         for k, r, c in sorted(zip(lab2, ratio, coll2), key=lambda t: -t[2]):
             m = native[k]["passes"]["bfloat16"]["by_layer"]["31"]["p50"]
             print(f"    {k:22s}{m:>11,.0f}{r:>10.1f}{c*100:>8.1f}%")

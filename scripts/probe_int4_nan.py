@@ -1,5 +1,5 @@
 """
-INT4 수치 붕괴 지점 추적 프로브
+INT4 수치 상실 지점 추적 프로브
 =================================
 AWQ INT4 체크포인트가 특정 이미지에서만 `!!!!`(토큰 id 0) 만 뱉는 현상의 원인을
 찾는다. 생성이 아니라 **prefill 한 번**만 돌리면서 vision tower와 LLM 디코더의
@@ -95,7 +95,7 @@ def main():
 
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)
     paths = {
-        "붕괴 이미지": str(token_to_images[args.bad_token]["CAM_FRONT"]),
+        "상실 이미지": str(token_to_images[args.bad_token]["CAM_FRONT"]),
         "정상 이미지": str(token_to_images[args.good_token]["CAM_FRONT"]),
     }
 

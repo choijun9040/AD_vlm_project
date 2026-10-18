@@ -13,11 +13,11 @@ SNR이 낮게(위험하게) 평가된다는 것이 기여의 실체이므로, �
 캡션에 적는다(그림은 표와 같은 p50).
 
 표현: 여섯 개체를 **색으로 구별하지 않는다.** 산점도는 모든 쌍이 인접하므로(dataviz: 범주색은
-all-pairs에서 3개까지) 개체는 **점마다 직접 붙인 이름**으로 식별하고, 채움으로 붕괴 여부를 나타낸다
-(채움 = 원본 해상도 fp16에서 붕괴 > 0, 속 빈 점 = 0%). 점과 글자는 중립 잉크.
+all-pairs에서 3개까지) 개체는 **점마다 직접 붙인 이름**으로 식별하고, 채움으로 상실 여부를 나타낸다
+(채움 = 원본 해상도 fp16에서 상실 > 0, 속 빈 점 = 0%). 점과 글자는 중립 잉크.
 
 데이터(원본 해상도 max_pixels 1,440,000):
-  여유·붕괴율  eval_results/resolution_sweep/res_1440000.json   (250장)
+  여유·상실률  eval_results/resolution_sweep/res_1440000.json   (250장)
   INT8 SNR    eval_results/int8_quant_error_native.json          (200장)
 
 실행:
@@ -139,9 +139,9 @@ def main():
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):
         fig.savefig(f"{out}.{ext}", dpi=300, bbox_inches="tight")
-    print(f"여유·붕괴 {n_res}장, SNR {n_q}장 → {out}.png/.pdf  ρ(텐서) {ra:+.3f} · ρ(채널) {rb:+.3f}")
+    print(f"여유·상실 {n_res}장, SNR {n_q}장 → {out}.png/.pdf  ρ(텐서) {ra:+.3f} · ρ(채널) {rb:+.3f}")
     for r in sorted(rows, key=lambda r: r["headroom"]):
-        print(f"  {r['key']:22} 여유 {r['headroom']:.2f}  붕괴 {r['collapse']:5.1f}%  "
+        print(f"  {r['key']:22} 여유 {r['headroom']:.2f}  상실 {r['collapse']:5.1f}%  "
               f"SNR 텐서 {r['snr_t']:.2f} · 채널 {r['snr_c']:.2f}")
 
 

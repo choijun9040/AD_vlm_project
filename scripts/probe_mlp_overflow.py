@@ -1,14 +1,14 @@
 """
 blk31 MLP 내부 오버플로 지점 특정 + 사후 수정 재시도
 ======================================================
-사후 리스케일 실험에서 blk31 **출력**을 1/3로 줄여도 fp16 붕괴율이 94.4% → 94.8%로
+사후 리스케일 실험에서 blk31 **출력**을 1/3로 줄여도 fp16 상실률이 94.4% → 94.8%로
 그대로였다. 오버플로가 hook보다 먼저, 즉 MLP **내부**에서 일어나기 때문으로 보인다.
 
 비전 MLP 구조: `down_proj( act_fn(gate_proj(x)) * up_proj(x) )` (bias 없음).
 따라서 후보 지점은 넷이다 — gate_proj 출력, up_proj 출력, 둘의 곱, down_proj 출력.
 
   (1) **진단**: 각 지점에 hook을 걸고 fp16으로 통과시켜 inf/NaN이 **처음** 나타나는 곳을 센다.
-  (2) **수정 재시도**: 진단된 지점보다 **앞에서** 스케일을 줄이면 붕괴를 막을 수 있는가.
+  (2) **수정 재시도**: 진단된 지점보다 **앞에서** 스케일을 줄이면 상실을 막을 수 있는가.
       - fixA: gate·up 출력을 각각 1/√s → 곱이 1/s (down_proj 계산 전에 축소)
       - fixB: down_proj 출력만 1/s (이미 실패한 조건, 대조군)
 
@@ -131,14 +131,14 @@ def main():
         r = run(model, cache, mode, args.scale)
         out["runs"][mode] = r
         stages = {k: v for k, v in r["first_inf_stage"].items() if v}
-        print(f"\n[{mode}] 붕괴 {r['n_bad']}/{r['n']} = {r['collapse_rate']*100:.1f}%")
+        print(f"\n[{mode}] 상실 {r['n_bad']}/{r['n']} = {r['collapse_rate']*100:.1f}%")
         print(f"    최초 inf 지점: {stages if stages else '없음'}")
         print("    단계별 max|x| p50: " + "  ".join(
             f"{k}={v:,.0f}" for k, v in r["stage_max_p50"].items() if v is not None), flush=True)
 
     Path(args.out).write_text(json.dumps(out, indent=2, ensure_ascii=False))
     print("\n" + "=" * 74)
-    print(f"{'조건':8s}{'붕괴율':>10}   최초 inf 지점")
+    print(f"{'조건':8s}{'상실률':>10}   최초 inf 지점")
     print("-" * 74)
     for m in ("none", "fixB", "fixA"):
         r = out["runs"][m]

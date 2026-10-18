@@ -1,7 +1,7 @@
 """TensorRT가 fp16 빌드에서 **오버플로 레이어를 자동으로 fp32로 남기는가** (7장 7.2, 약점 F).
 
 **왜 필수인가.** 본 논문은 "fp16 배포에서 비전 타워 마지막 블록이 표현 범위를 넘어
-붕괴한다"고 주장한다. 그런데 `trtexec --fp16`은 fp16을 *허용*하는 것이지 강제가 아니며,
+출력을 잃는다"고 주장한다. 그런데 `trtexec --fp16`은 fp16을 *허용*하는 것이지 강제가 아니며,
 TensorRT는 정확도를 위해 레이어별로 fp32를 남길 수 있다. **자동으로 회피된다면
 "아무도 재지 않아 위험하다"는 문제 제기 자체가 약해진다.** 심사에서 나올 질문이고
 지금 답이 없다.
@@ -79,7 +79,7 @@ def build(onnx_path, mode, workspace_gb=24, log_path=None):
     if mode == "bf16":
         # **가장 명백한 대안.** bf16은 지수부가 fp32와 같아 한계가 3.4e38이므로
         # 이 오버플로가 원리상 일어나지 않는다. 심사에서 "그냥 bf16 쓰면 되지 않나"가
-        # 나올 질문이므로 붕괴율과 **지연시간**을 함께 재 답을 준비한다.
+        # 나올 질문이므로 상실률과 **지연시간**을 함께 재 답을 준비한다.
         if not hasattr(trt.BuilderFlag, "BF16"):
             raise RuntimeError("이 TensorRT 빌드에 BF16 플래그가 없다")
         cfg.set_flag(trt.BuilderFlag.BF16)
@@ -161,7 +161,7 @@ def _runner(engine, cudart):
 
 def run(engine, inputs, engine2=None):
     """engine2가 있으면 **분할 엔진**이다(2026-10-01, 사전 등록 6.4d): 1부 출력을 2부 입력으로
-    넘기고 붕괴는 2부의 최종 출력에서 판정한다. 두 엔진 사이 텐서는 엔진의 입출력 형식(기본 fp32)을
+    넘기고 상실은 2부의 최종 출력에서 판정한다. 두 엔진 사이 텐서는 엔진의 입출력 형식(기본 fp32)을
     그대로 따른다."""
     # cuda-python 13.x부터 경로가 cuda.bindings.runtime으로 바뀌었다(구버전은 cuda.cudart).
     try:
@@ -221,7 +221,7 @@ def main():
         except Exception as e:
             # 한 조건이 실패해도 나머지는 계속한다. 특히 strict는 TRT 10.12부터
             # layer.precision이 deprecated(강타입으로 대체)라 실패할 수 있는데,
-            # **관행 조건이 이미 붕괴를 재현하면 strict는 없어도 결론이 선다.**
+            # **관행 조건이 이미 상실을 재현하면 strict는 없어도 결론이 선다.**
             print(f"  [{mode}] 실패 — {type(e).__name__}: {str(e)[:120]}")
             res["modes"][mode] = {"failed": f"{type(e).__name__}: {str(e)[:200]}",
                                   "build_log": logp}
@@ -230,7 +230,7 @@ def main():
         nan_rate, absmax, lat = run(eng, inputs, eng2)
         n_half, n_float = prec.get("Half", 0), prec.get("Float", 0)
         wmb = prec.get("_weights_mb")
-        print(f"  [{mode}] 붕괴 {nan_rate*100:.1f}%   유한 max 중앙값 "
+        print(f"  [{mode}] 상실 {nan_rate*100:.1f}%   유한 max 중앙값 "
               f"{absmax if absmax is None else f'{absmax:,.0f}'}   "
               f"텐서 Half {n_half} / Float {n_float}   "
               f"가중치 {wmb:,.0f} MiB" if wmb else "" + f"   로그 {logp}")
@@ -250,24 +250,24 @@ def main():
     if "nan_rate" in m.get("fp16", {}) and "nan_rate" in m.get("strict", {}):
         a, b = m["fp16"]["nan_rate"], m["strict"]["nan_rate"]
         if b > 0.5 and a < 0.1:
-            print("판정: **엄격에서만 붕괴** — TensorRT 기본 정책이 오버플로를 회피한다.")
+            print("판정: **엄격에서만 상실** — TensorRT 기본 정책이 오버플로를 회피한다.")
             print("  → 주장을 축소하지 말고 **조건을 특정**할 것:")
             print("     '순수 fp16 경로에서 발생하며, TensorRT 기본 정책은 이를 우연히 회피한다.'")
             print("     같은 가중치가 런타임 설정에 따라 갈리므로 **여유 측정의 필요성은 커진다.**")
         elif a > 0.5:
-            print("판정: **관행 설정에서도 붕괴** — 주장이 실제 배포 도구에서 성립한다.")
+            print("판정: **관행 설정에서도 상실** — 주장이 실제 배포 도구에서 성립한다.")
         else:
             print("판정: **둘 다 안전** — fp16 경로가 만들어지지 않았을 수 있다.")
             print("  빌드 로그에서 마지막 블록 레이어의 정밀도를 직접 확인할 것.")
     elif "nan_rate" in m.get("fp16", {}):
         a = m["fp16"]["nan_rate"]
         if a > 0.5:
-            print("판정: **관행 설정(--fp16)에서 붕괴가 재현된다.** 빌더의 레이어별")
+            print("판정: **관행 설정(--fp16)에서 상실이 재현된다.** 빌더의 레이어별")
             print("  정밀도 선택이 이 오버플로를 막지 못한다. strict 조건은 '관행에서")
             print("  안전할 때'만 필요했으므로 빌드 실패해도 결론에 영향이 없다.")
         else:
             print("판정: 관행 설정에서 안전 — strict가 필요하나 빌드하지 못했다.")
-    print("A100 PyTorch 기준값: baseline_v2 원본 해상도 94.8% 붕괴")
+    print("A100 PyTorch 기준값: baseline_v2 원본 해상도 94.8% 상실")
     print("=" * 64)
 
 

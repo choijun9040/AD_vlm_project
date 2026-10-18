@@ -117,13 +117,13 @@ blockquote b{color:var(--bad)}
   <div class="snum">01 · 한 장 요약</div>
   <h2>같은 모델, 같은 이미지에서 두 지표가 반대를 가리킨다</h2>
   <table>
-    <tr><th>모델</th><th class="n">fp16 여유</th><th class="n">fp16 붕괴율</th><th class="n">INT8 SNR</th><th>지표가 하는 말</th></tr>
+    <tr><th>모델</th><th class="n">fp16 여유</th><th class="n">fp16 상실률</th><th class="n">INT8 SNR</th><th>지표가 하는 말</th></tr>
     <tr class="hi"><td>Task only (과제 손실만)</td><td class="n">0.88배</td><td class="n">94.8%</td><td class="n">32.23 dB</td><td>“가장 안전”</td></tr>
     <tr class="ok"><td>Full (정렬+시간 증류)</td><td class="n">2.92배</td><td class="n">0.0%</td><td class="n">22.88 dB</td><td>“가장 위험”</td></tr>
   </table>
   <p class="small">원본 해상도(<span class="mono">max_pixels</span> 1,440,000), 마지막 블록. 여유는 p50·bf16 측정.
-  <b>여유·붕괴율은 250장, INT8 SNR은 200장</b>(앞 200장이라 부분집합이다).</p>
-  <div class="key"><b>붕괴율 94.8%인 모델이 SNR로는 9.35 dB 더 안전해 보인다.</b>
+  <b>여유·상실률은 250장, INT8 SNR은 200장</b>(앞 200장이라 부분집합이다).</p>
+  <div class="key"><b>상실률 94.8%인 모델이 SNR로는 9.35 dB 더 안전해 보인다.</b>
   구별하지 못하는 것이 아니라 <b>순서가 반대</b>다. 여섯 모델 Spearman ρ = −1.000.</div>
 </div></section>
 
@@ -214,7 +214,7 @@ blockquote b{color:var(--bad)}
   <p>강조한 두 행(<span class="mono">Task CE only</span> ↔ <span class="mono">Full</span>)이 중간층에서
   <b>약 62배</b>, 마지막 블록에서 <b>약 2.8배</b> 차이다. fp16 한계를 결정하는 것은 마지막 블록이다.
   이 해상도에서는 아직 어느 모델도 65,504를 넘지 않는다 — <b>넘기는 것은 배포 해상도다</b>(다음 장).</p>
-  <div class="note"><b>측정 형식을 나눈다.</b> 크기는 넘치지 않는 bf16에서 재고 붕괴만 fp16에서 관측한다.
+  <div class="note"><b>측정 형식을 나눈다.</b> 크기는 넘치지 않는 bf16에서 재고 상실만 fp16에서 관측한다.
   <b>위 그림과는 다른 조건</b>(배포할 원본 해상도, 250장)에서 같은 <span class="mono">Task only</span>를 fp16으로
   재면 13장만 살아남아 중앙값이 내려가고 <b>여유 0.88배가 1.03배로 “안전”해 보인다</b> — 생존 편향이다.</div>
 </div></section>
@@ -222,7 +222,7 @@ blockquote b{color:var(--bad)}
 <section class="slide"><div class="inner">
   <div class="snum">07 · 이산성</div>
   <h2>해상도에 절벽이 있다</h2>
-  <figure><img src="figures/fig2_resolution_collapse.png" alt="해상도별 활성과 붕괴율">
+  <figure><img src="figures/fig2_resolution_collapse.png" alt="해상도별 활성과 상실률">
     <figcaption>250장. (a) 마지막 블록 활성 중앙값(bf16), (b) fp16에서 출력이 NaN이 된 이미지 비율.</figcaption></figure>
   <table>
     <tr><th class="n">비전 토큰</th><th>입력 픽셀 상한</th><th class="n">Task CE only</th><th class="n">Pre-trained</th><th class="n">Task + L_align · Full</th></tr>
@@ -232,10 +232,10 @@ blockquote b{color:var(--bad)}
     <tr><td class="n">231</td><td>200,704 (평가)</td><td class="n">3.2%</td><td class="n">0</td><td class="n">0</td></tr>
     <tr><td class="n">120</td><td>100,352</td><td class="n">0.8%</td><td class="n">0</td><td class="n">0</td></tr>
   </table>
-  <p class="small">표의 다섯 행이 그림의 다섯 점이다. 남은 두 계열은 원본에서만 붕괴한다 —
+  <p class="small">표의 다섯 행이 그림의 다섯 점이다. 남은 두 계열은 원본에서만 출력을 잃는다 —
   <span class="mono">Task + out.KD</span> 20.4%, <span class="mono">Task + L_atc</span> 28.8%
   (평가 해상도의 L_atc 0.4%를 빼면 그 아래는 모두 0).</p>
-  <p>붕괴는 <b>이미지 단위로 전부 아니면 전무</b>이고 같은 장면의 연속 키프레임에서 뭉친다.
+  <p>상실은 <b>이미지 단위로 전부 아니면 전무</b>이고 같은 장면의 연속 키프레임에서 뭉친다.
   802,816 → 1,440,000 구간에서 급격히 늘어 <b>안전 해상도에 절벽</b>이 있다.</p>
 </div></section>
 
@@ -244,7 +244,7 @@ blockquote b{color:var(--bad)}
   <h2>표준 압축 지표는 역방향을 가리킨다</h2>
   <figure><img src="figures/fig4_metric_inversion.png" alt="여유와 INT8 SNR의 역전">
     <figcaption>원본 해상도. 가로축 여유(p50·bf16, 250장), 세로축 INT8 양자화 SNR 중앙값(200장).
-    채운 점은 붕괴가 있는 모델.</figcaption></figure>
+    채운 점은 상실이 있는 모델.</figcaption></figure>
   <div class="grid g3">
     <div class="card"><div class="snum" style="margin:0">텐서 단위 SNR</div>
       <div class="big" style="color:var(--bad)">−1.000</div>
@@ -322,16 +322,16 @@ blockquote b{color:var(--bad)}
   <div class="snum">12 · 검증</div>
   <h2>개입 위치가 결과를 가른다</h2>
   <table>
-    <tr><th>개입</th><th class="n">곱 <span class="mono">act(gate)⊙up</span></th><th class="n">down_proj 출력</th><th class="n">붕괴율</th></tr>
+    <tr><th>개입</th><th class="n">곱 <span class="mono">act(gate)⊙up</span></th><th class="n">down_proj 출력</th><th class="n">상실률</th></tr>
     <tr><td>없음</td><td class="n">4,588</td><td class="n">63,200</td><td class="n">94.4%</td></tr>
     <tr class="hi"><td>MLP <b>출력</b>을 1/3 (fixB)</td><td class="n">4,588</td><td class="n">63,360</td><td class="n">94.8%</td></tr>
     <tr class="ok"><td><b>gate·up을 각각 1/√3</b> (fixA)</td><td class="n">1,530</td><td class="n">24,800</td><td class="n">0.0%</td></tr>
   </table>
-  <p class="small">기준선에 건 사후 개입. 붕괴율은 <b>원본 해상도</b> 250장, fp16. 활성은 bf16.</p>
+  <p class="small">기준선에 건 사후 개입. 상실률은 <b>원본 해상도</b> 250장, fp16. 활성은 bf16.</p>
   <p>출력 스케일링은 <b>실패한다</b> — 오버플로가 <span class="mono">down_proj</span> 안에서 이미 일어나므로
-  무한대를 나누는 셈이다. <b>곱이 만들어지기 전에</b> 줄이면 붕괴가 사라진다.</p>
+  무한대를 나누는 셈이다. <b>곱이 만들어지기 전에</b> 줄이면 상실이 사라진다.</p>
   <div class="key"><b>이 비대칭이 오버플로 지점 가설을 검증한다</b> — 위치가 틀렸다면 두 개입이 같은 결과를 냈어야 한다.
-  그리고 <b>학습 없이</b> 가중치 편집만으로 붕괴가 0%가 된다.</div>
+  그리고 <b>학습 없이</b> 가중치 편집만으로 상실이 0%가 된다.</div>
 </div></section>
 
 <section class="slide"><div class="inner">
@@ -375,7 +375,7 @@ blockquote b{color:var(--bad)}
   보고자가 적용해 정상 출력을 확인했다(이슈는 아직 열려 있다).</div>
   <p class="small"><b>다만 일반 법칙으로 쓰지 않는다.</b> 두 사례 모두 <b>한 모델의 사전학습
   가중치가 가진 성질</b>이며, 본 연구가 직접 받아 확인한 것은 그 가중치 두 텐서뿐이다 —
-  <b>붕괴 자체는 본 연구의 측정이 아니다.</b></p>
+  <b>상실 자체는 본 연구의 측정이 아니다.</b></p>
 </div></section>
 
 <section class="slide"><div class="inner">
@@ -422,31 +422,31 @@ blockquote b{color:var(--bad)}
   <div class="snum">17 · 런타임</div>
   <h2>TensorRT는 이 오버플로를 막지 않는다</h2>
   <table>
-    <tr><th>조건</th><th class="n">붕괴율</th><th class="n">가중치 메모리</th><th class="n">지연 p50</th></tr>
+    <tr><th>조건</th><th class="n">상실률</th><th class="n">가중치 메모리</th><th class="n">지연 p50</th></tr>
     <tr><td>fp32 대조군</td><td class="n">0.0%</td><td class="n">2,760 MiB</td><td class="n">441.0 ms</td></tr>
     <tr class="hi"><td><b>fp16 관행</b> (<span class="mono">--fp16</span>)</td><td class="n"><b>92.8%</b></td><td class="n">1,385 MiB</td><td class="n">139.7 ms</td></tr>
     <tr class="ok"><td><b>bf16</b> (같은 그래프)</td><td class="n"><b>0.0%</b></td><td class="n"><b>1,385 MiB</b></td><td class="n">197.4 ms</td></tr>
   </table>
   <p class="small">기준선 학생, 원본 해상도, TensorRT 10.13, A100.
   <b>92.8%만 250장이고 나머지 칸은 50장</b>이다.
-  지연은 <b>붕괴가 없는 같은 그래프에서만</b> 비교한다 — 교정 그래프로 재면 bf16이 fp16의
+  지연은 <b>상실이 없는 같은 그래프에서만</b> 비교한다 — 교정 그래프로 재면 bf16이 fp16의
   <b>1.375배</b>(149.5 대 205.5 ms), 버전을 올려도 1.344배다. 표의 139.7과 197.4를 나눠 쓰지 않는다.</p>
-  <div class="key"><b>가중치 메모리가 fp16과 똑같은 1,385 MiB인데 붕괴만 사라진다.</b>
+  <div class="key"><b>가중치 메모리가 fp16과 똑같은 1,385 MiB인데 상실만 사라진다.</b>
   모델이 작아져서가 아니라 <b>형식의 상한만</b> 3.4×10³⁸으로 올라갔기 때문이다 —
   표현 범위가 원인이라는 <b>독립적인 확인</b>이다.</div>
   <p><b>사전 등록한 예상은 빗나갔다.</b> “빌더가 해당 레이어를 fp32로 남겨 회피할 것”이라 적었는데
-  관행 설정에서 그대로 붕괴했다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
+  관행 설정에서 그대로 출력을 잃었다. 가중치 메모리가 정확히 절반이므로 실제로 fp16으로 변환됐다.</p>
   <p class="small">앞서 본 <b>#40290의 처방과 같다</b> — 그쪽은 비전 타워만 bf16으로 두는 것이고,
   여기서는 같은 그래프를 통째로 bf16으로 빌드했다.</p>
-  <div class="note">PyTorch fp16 붕괴율 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
+  <div class="note">PyTorch fp16 상실률 <b>94.8%</b>와 TensorRT <b>92.8%</b>가 2.0%p 차이다 —
   <b>PyTorch만의 아티팩트가 아니다.</b> 그리고 TensorRT 11부터는 모든 빌드가 강타입이라
   빌더가 위험한 레이어를 fp32로 남겨 줄 여지는 <b>더 줄어든다.</b></div>
 </div></section>
 
 <section class="slide"><div class="inner">
   <div class="snum">18 · 실기기</div>
-  <h2>Jetson Orin Nano에서도 같은 붕괴, 같은 교정</h2>
-  <figure><img src="figures/fig6_runtime_collapse.png" alt="실행 경로별 붕괴율과 엣지 보드 지연">
+  <h2>Jetson Orin Nano에서도 같은 상실, 같은 교정</h2>
+  <figure><img src="figures/fig6_runtime_collapse.png" alt="실행 경로별 상실률과 엣지 보드 지연">
     <figcaption>250장, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합.</figcaption></figure>
   <table>
     <tr><th>해상도</th><th>모델</th><th class="n">Orin Nano</th><th class="n">A100 강타입</th><th class="n">지연 p50</th></tr>
@@ -456,7 +456,7 @@ blockquote b{color:var(--bad)}
     <tr class="ok"><td>401,408</td><td>Full · Task only 교정본</td><td class="n"><b>0.0%</b></td><td class="n">0.0%</td><td class="n">503 ms</td></tr>
     <tr><td>원본 1,440,000</td><td>세 모델</td><td class="n"><b>빌드 불가</b></td><td class="n">92.4% · 0% · 0%</td><td class="n">—</td></tr>
   </table>
-  <p><b>802,816에서는 붕괴한 장 수까지 같았다</b>(양쪽 61장). 401,408에서는 23 대 25장으로 조금 갈린다.
+  <p><b>802,816에서는 출력을 잃은 장 수까지 같았다</b>(양쪽 61장). 401,408에서는 23 대 25장으로 조금 갈린다.
   범위를 분명히 적는다 — 이것은 <b>강타입</b> 빌드 조건이고,
   관행 <span class="mono">--fp16</span>은 보드에서 <b>어느 해상도로도 빌드되지 않았다</b>.
   원본 해상도는 강타입으로도 열 번 모두 실패했다.</p>
@@ -466,23 +466,23 @@ blockquote b{color:var(--bad)}
   <div class="snum">19 · 회복</div>
   <h2>배포 조건에서 정확도가 돌아온다</h2>
   <table>
-    <tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th class="n">정확도</th><th class="n">붕괴형 출력</th></tr>
+    <tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th class="n">정확도</th><th class="n">상실형 출력</th></tr>
     <tr class="hi"><td>Task only</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>1.36%</b></td><td class="n">1,001 / 1,029</td></tr>
     <tr class="ok"><td>Task only</td><td>원본</td><td>fp16</td><td><b>도구</b></td><td class="n"><b>50.73%</b></td><td class="n"><b>0</b></td></tr>
     <tr><td>Task only</td><td>원본</td><td>bf16</td><td>—</td><td class="n">49.95%</td><td class="n">0</td></tr>
     <tr class="ok"><td>Full</td><td>원본</td><td>fp16</td><td>—</td><td class="n"><b>52.38%</b></td><td class="n">0</td></tr>
   </table>
-  <p class="small"><b>PyTorch 추론(A100), 전체 모델.</b> 앞 장의 붕괴율·지연은 비전 인코더만
+  <p class="small"><b>PyTorch 추론(A100), 전체 모델.</b> 앞 장의 상실률·지연은 비전 인코더만
   내보낸 TensorRT 엔진에서 쟀고, 정확도는 언어 모델까지 돌려야 하므로 여기서만 잰다.<br>
   1,029문항 · 708 키프레임(검증 11,309문항에서 11개마다 하나). 전체 대비 대표성 0.33%p.
   아홉 조건 중 넷만 실었다 — 뺀 다섯은 평가 해상도 조건 넷과 Full의 원본 bf16(52.87%)이다.</p>
   <div class="grid g3">
     <div class="card"><b>교정 비용</b><p class="small">무교정 bf16 대비 <b>+0.78%p</b>,
       McNemar <b>p=0.34</b>(불일치 54쌍). “공짜”라고 쓰지 않는다 — 비유의는 동등성의 증거가 아니다.</p></div>
-    <div class="card"><b>이산성</b><p class="small">708 키프레임 중 <b>689개는 전부 붕괴</b>,
+    <div class="card"><b>이산성</b><p class="small">708 키프레임 중 <b>689개는 전부 상실</b>,
       19개는 전부 정상. <b>섞인 경우 0건.</b></p></div>
     <div class="card"><b>표준 평가가 가린 것</b><p class="small">평가 해상도라도 fp16이면
-      48.49% 대 50.63% — 차이는 <b>전부 붕괴한 45문항</b>에서 온다. 그걸 빼면 차이가 없다.</p></div>
+      48.49% 대 50.63% — 차이는 <b>전부 출력을 잃은 45문항</b>에서 온다. 그걸 빼면 차이가 없다.</p></div>
   </div>
 </div></section>
 
@@ -506,7 +506,7 @@ python scripts/headroom_guard.py <b>diagnose</b> --repo Qwen/Qwen2.5-VL-3B-Instr
 <span class="c"># 넘친다면 — 배수를 풀어 곱 이전 가중치를 고치고 다시 잰다</span>
 python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2.0 --verify</pre>
   <div class="grid g2">
-    <div class="card"><b>임계값을 없앴다</b><p class="small">형식 상한을 넘는 <b>이미지의 비율</b>이 곧 붕괴율 추정치다
+    <div class="card"><b>임계값을 없앴다</b><p class="small">형식 상한을 넘는 <b>이미지의 비율</b>이 곧 상실률 추정치다
       — 6개 모델 평균 오차 <b>2.1%p</b>(최대 6.4%p). 사용자가 받는 값이 “몇 %가 무너지는가”다.</p></div>
     <div class="card"><b>남은 매직 넘버를 적어 둔다</b><p class="small">경계 경고 <b>1.25</b>와 교정 목표 <b>2.0</b>은
       측정이 아니라 <b>설계 판단</b>이다. 관측된 경계는 1.00~1.05뿐. 이 문장을 도움말과 판정 출력에도 적는다.</p></div>
@@ -538,10 +538,10 @@ python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2
       연구다. 한계 근처의 여유는 <b>Qwen2.5-VL 세대</b>에서만 관찰됐다 — 세대 특성일 가능성을 인정한다.
       손실 설계가 여유를 움직인다는 주장도 이 계열에서만 검증했다.</p></div>
     <div class="card"><b>변형 간 정확도 순위</b><p class="small">다섯 변형을 <b>시드 고정 없이 한 번씩</b>만
-      학습했다. 0.35%p 폭은 시드 잡음과 구별되지 않는다. 활성 크기·붕괴율 차이는 규모가 커서 이 제약을
+      학습했다. 0.35%p 폭은 시드 잡음과 구별되지 않는다. 활성 크기·상실률 차이는 규모가 커서 이 제약을
       받지 않는다.</p></div>
     <div class="card"><b>실기기 범위</b><p class="small">보드 하나(Orin Nano 8GB) · 런타임 하나(TensorRT 10.3) ·
-      <b>강타입</b> 엔진 · 메모리가 허락한 두 해상도. “실차 배포에서 붕괴한다”고 단정하지 않는다.</p></div>
+      <b>강타입</b> 엔진 · 메모리가 허락한 두 해상도. “실차 배포에서 출력을 잃는다”고 단정하지 않는다.</p></div>
     <div class="card"><b>처방의 수명</b><p class="small">bf16 커널이 성숙해 지연 비용이 사라지면 “bf16으로
       빌드하라”가 재지 않고도 통하는 처방이 된다. 관측한 두 버전에서는 격차가 유지됐다.</p></div>
   </div>
@@ -558,7 +558,7 @@ python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2
   <b>순전파 한 번</b>으로 계산되고, 그 값을 <b>움직이는 수단도 여럿</b>이다.</blockquote>
   <div class="grid g3">
     <div class="card"><b>① 측정 규칙</b><p class="small">무엇을(마지막 블록·그 뒤 출력), 어느 형식에서(크기는
-      bf16·붕괴는 목표 형식), 어느 통계량으로(판정은 최악·초과 비율), 몇 장으로(100장).</p></div>
+      bf16·상실은 목표 형식), 어느 통계량으로(판정은 최악·초과 비율), 몇 장으로(100장).</p></div>
     <div class="card"><b>② 통제된 증거</b><p class="small">손실 항만 다른 다섯 학생 위에서 역전·이산성·
       오버플로 지점·움직이는 수단을 각각 측정하고, 공개 모델로 상속과 예측 불가능성을 확인.</p></div>
     <div class="card"><b>③ 도구와 절차</b><p class="small"><span class="mono">headroom_guard</span>와 비전 인코더
@@ -571,7 +571,7 @@ python scripts/headroom_guard.py <b>fix</b> --checkpoint ... --target_headroom 2
   <h2>자주 받는 질문</h2>
   <table>
     <tr><th>질문</th><th>답</th></tr>
-    <tr><td>그냥 bf16 쓰면 되지 않나</td><td>맞다, 가장 단순한 해법이다. 다만 붕괴하지 않는 fp16 엔진 대비
+    <tr><td>그냥 bf16 쓰면 되지 않나</td><td>맞다, 가장 단순한 해법이다. 다만 출력을 잃지 않는 fp16 엔진 대비
       지연이 <b>1.34~1.38배</b>이고, 쓸 수 없는 대상도 있다. 그리고 <b>어느 쪽이 필요한지는 재야 안다.</b></td></tr>
     <tr><td>정확도 순위가 Full이 1등 아닌가</td><td>아니다. 51.69 / 51.40 / 51.34%는 <b>n=1</b>이라
       구별되지 않는다. 이 논문의 주장은 정확도 순위가 아니라 <b>정확도로는 안 보이는 축</b>이 있다는 것이다.</td></tr>

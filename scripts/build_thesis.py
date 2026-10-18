@@ -53,8 +53,8 @@ TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 # 번호와 키를 분리해야 그림을 끼워 넣어도 캡션 파일을 건드리지 않는다.
 FIGURES = [
     ("1", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
-    ("2", "4-2", "figures/fig2_resolution_collapse.png", "(fp16 붕괴율, 250장, 이미지 단위로 출력이 NaN이면 붕괴)"),
-    ("3", "4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 마지막 블록, 여유는 p50·bf16 측정. 여유·붕괴율은 250장, INT8 지표는 200장)"),
+    ("2", "4-2", "figures/fig2_resolution_collapse.png", "(fp16 상실률, 250장, 이미지 단위로 출력이 NaN이면 상실)"),
+    ("3", "4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 마지막 블록, 여유는 p50·bf16 측정. 여유·상실률은 250장, INT8 지표는 200장)"),
     ("4", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
     ("5", "6-1", "figures/fig6_runtime_collapse.png", "(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
     ("6", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
@@ -215,7 +215,7 @@ def style_chapters(text):
     # 바뀐 `Ⅹ장` 뒤에 수량 서술이 오면 이미지 수를 장으로 바꾼 것이다 — 「Ⅱ장 달랐다」
     # (참조 꼴 전체를 화이트리스트로 적으면 「Ⅳ장 이후의」·「Ⅶ장 도구」까지 걸려 경고가 무뎌진다)
     ROM = "".join(ROMAN[1:])
-    QTY_VERB = r"\s*(?:달랐|발산|남았|빠졌|섞였|유한|정상|붕괴|되었|였|이었|씩|뿐)"
+    QTY_VERB = r"\s*(?:달랐|발산|남았|빠졌|섞였|유한|정상|상실|되었|였|이었|씩|뿐)"
     bad = []
     for m in re.finditer(rf"[{ROM}](?:[·~][{ROM}])*장{QTY_VERB}", text):
         s0 = max(0, m.start() - 20)

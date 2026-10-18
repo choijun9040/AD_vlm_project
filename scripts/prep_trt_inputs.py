@@ -2,7 +2,7 @@
 
 TRT 전용 venv에는 transformers가 없다(기존 환경을 건드리지 않기 위해 분리했다).
 그래서 **A100 프로파일과 완전히 같은 전처리**를 여기서 해 두고 배열만 넘긴다.
-전처리가 달라지면 붕괴율 비교가 무의미해지므로 같은 processor 설정을 쓴다.
+전처리가 달라지면 상실률 비교가 무의미해지므로 같은 processor 설정을 쓴다.
 
 실행:
     python scripts/prep_trt_inputs.py --limit 250 --max_pixels 1440000

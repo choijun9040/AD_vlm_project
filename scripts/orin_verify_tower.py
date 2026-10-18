@@ -1,10 +1,10 @@
 """
-Orin Nano에서 비전 타워 TensorRT 엔진의 fp16 붕괴율을 잰다 (논문 7장).
+Orin Nano에서 비전 타워 TensorRT 엔진의 fp16 상실률을 잰다 (논문 7장).
 ==========================================================================
 A100 기준값(원본 해상도 1,440,000, 같은 250장):
-    student_baseline_v2  94.8% 붕괴 / student_full  0.0%
+    student_baseline_v2  94.8% 상실 / student_full  0.0%
 
-**전처리를 A100과 동일하게 유지하는 것이 이 스크립트의 핵심이다.** 붕괴는 활성 크기에
+**전처리를 A100과 동일하게 유지하는 것이 이 스크립트의 핵심이다.** 상실은 활성 크기에
 의존하고 활성 크기는 해상도에 의존하므로, 전처리가 조금만 달라도 비교가 무의미해진다.
 그래서 보드에서도 같은 `AutoProcessor`를 쓴다(CPU만 쓰므로 GPU 메모리와 무관하다).
 
@@ -164,7 +164,7 @@ def main():
                           "max_abs": float(np.abs(finite).max()) if finite.size else None})
         peak = max(peak, peak_mem_mib())
         if i % 25 == 0:
-            print(f"  {i}/{len(paths)}  붕괴 {len(nan_imgs)}  "
+            print(f"  {i}/{len(paths)}  상실 {len(nan_imgs)}  "
                   f"지연 중앙값 {np.median(lat):.0f} ms")
 
     lat = np.array(lat)
@@ -183,7 +183,7 @@ def main():
         "nan_images": nan_imgs[:20],
     }
     print("\n" + "=" * 60)
-    print(f"붕괴율      {res['nan_rate']*100:.1f}%  ({res['nan_count']}/{res['n']})")
+    print(f"상실률      {res['nan_rate']*100:.1f}%  ({res['nan_count']}/{res['n']})")
     print(f"지연        p50 {res['latency_ms']['p50']:.0f} ms / "
           f"p95 {res['latency_ms']['p95']:.0f} ms")
     print(f"메모리 증가  {res['mem_mib']['delta']:.0f} MiB (피크 {res['mem_mib']['peak']:.0f})")

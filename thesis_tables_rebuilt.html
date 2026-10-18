@@ -79,7 +79,7 @@
 <tr><td>200,704 (평가)</td><td>924</td><td>3.2%</td><td>0</td><td>0.4%</td><td>0</td><td>0</td><td>0</td></tr>
 <tr><td>100,352</td><td>480</td><td>0.8%</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
 </table>
-<div class="cap">[표 6] 입력 해상도별 fp16 붕괴율</div><div class="cond">(fp16 붕괴율, 250장, 이미지 단위로 출력이 NaN이면 붕괴; [그림 2])</div>
+<div class="cap">[표 6] 입력 해상도별 fp16 상실률</div><div class="cond">(fp16 상실률, 250장, 이미지 단위로 출력이 NaN이면 상실; [그림 2])</div>
 
 <table>
 <tr><th>모델</th><th>여유</th><th>해석</th></tr>
@@ -91,7 +91,7 @@
 <div class="cap">[표 7] 원본 해상도에서의 모델별 여유와 해석</div>
 
 <table>
-<tr><th>변형</th><th>여유</th><th>붕괴율</th><th>max/rms</th><th>INT8 SNR (텐서 단위)</th></tr>
+<tr><th>변형</th><th>여유</th><th>상실률</th><th>max/rms</th><th>INT8 SNR (텐서 단위)</th></tr>
 <tr><td>Pre-trained</td><td>0.95배</td><td>69.6%</td><td>173.2</td><td>31.56 dB</td></tr>
 <tr><td>Task only</td><td><b>0.88배</b></td><td><b>94.8%</b></td><td>147.2</td><td><b>32.23 dB</b></td></tr>
 <tr><td>Task + out.KD</td><td>1.10배</td><td>20.4%</td><td>208.3</td><td>30.41 dB</td></tr>
@@ -99,7 +99,7 @@
 <tr><td>Task + L_align</td><td>2.89배</td><td><b>0.0%</b></td><td>173.7</td><td>25.72 dB</td></tr>
 <tr><td>Full</td><td><b>2.92배</b></td><td><b>0.0%</b></td><td>238.2</td><td><b>22.88 dB</b></td></tr>
 </table>
-<div class="cap">[표 8] 여유·붕괴율과 표준 압축 지표</div><div class="cond">(원본 해상도, 마지막 블록, 여유는 p50·bf16 측정. 여유·붕괴율은 250장, INT8 지표는 200장; [그림 3])</div>
+<div class="cap">[표 8] 여유·상실률과 표준 압축 지표</div><div class="cond">(원본 해상도, 마지막 블록, 여유는 p50·bf16 측정. 여유·상실률은 250장, INT8 지표는 200장; [그림 3])</div>
 
 <table>
 <tr><th></th><th>양자화 검사를 받는가</th><th>fp16으로 실행되는가</th></tr>
@@ -119,12 +119,12 @@
 <div class="cap">[표 10] 마지막 블록 최댓값의 성분 분해</div>
 
 <table>
-<tr><th>개입</th><th>곱 <code>act(gate)⊙up</code></th><th><code>down_proj</code> 출력</th><th>붕괴율 (원본 해상도)</th></tr>
+<tr><th>개입</th><th>곱 <code>act(gate)⊙up</code></th><th><code>down_proj</code> 출력</th><th>상실률 (원본 해상도)</th></tr>
 <tr><td>없음</td><td>4,588</td><td>63,200</td><td>94.4%</td></tr>
 <tr><td>MLP <b>출력</b>을 1/3 (fixB)</td><td>4,588</td><td>63,360</td><td>94.8%</td></tr>
 <tr><td><b>gate·up를 각각 1/√3</b> (fixA, 곱이 1/3)</td><td><b>1,530</b></td><td><b>24,800</b></td><td><b>0.0%</b></td></tr>
 </table>
-<div class="cap">[표 11] 사후 개입 위치에 따른 활성과 붕괴율</div><div class="cond">(250장, fp16. 「없음」의 94.4%는 [표 6]의 94.8%와 <b>한 장 차이</b>(236 대 237)다 — 같은</div>
+<div class="cap">[표 11] 사후 개입 위치에 따른 활성과 상실률</div><div class="cond">(250장, fp16. 「없음」의 94.4%는 [표 6]의 94.8%와 <b>한 장 차이</b>(236 대 237)다 — 같은</div>
 
 <table>
 <tr><th>λ</th><th>blk24</th><th><b>blk31</b></th><th>λ=0 대비</th><th>fp16 여유</th></tr>
@@ -215,21 +215,21 @@
 <div class="cap">[표 20] 내보낸 ONNX 그래프와 대조 결과</div>
 
 <table>
-<tr><th>조건</th><th>붕괴율</th><th>가중치 메모리</th><th>지연 p50</th></tr>
+<tr><th>조건</th><th>상실률</th><th>가중치 메모리</th><th>지연 p50</th></tr>
 <tr><td>fp32 대조군</td><td><b>0.0%</b></td><td>2,760 MiB</td><td>441.0 ms</td></tr>
 <tr><td><b>fp16 관행</b></td><td><b>92.8%</b>¹</td><td><b>1,385 MiB</b></td><td>139.7 ms</td></tr>
 <tr><td>fp16 엄격</td><td>빌드 실패(아래)</td><td>—</td><td>—</td></tr>
 </table>
-<div class="cap">[표 21] TensorRT 정밀도 조건별 붕괴율·메모리·지연</div><div class="cond">(<code>student_baseline_v2</code>, 원본 해상도, TensorRT 10.13, A100. 붕괴율 92.8%만 250장, 나머지는 50장)</div>
+<div class="cap">[표 21] TensorRT 정밀도 조건별 상실률·메모리·지연</div><div class="cond">(<code>student_baseline_v2</code>, 원본 해상도, TensorRT 10.13, A100. 상실률 92.8%만 250장, 나머지는 50장)</div>
 
 <table>
-<tr><th>선택</th><th>붕괴율</th><th>지연 p50</th><th>가중치 메모리</th><th>정확도 (원본 해상도, 1,029문항)</th></tr>
+<tr><th>선택</th><th>상실률</th><th>지연 p50</th><th>가중치 메모리</th><th>정확도 (원본 해상도, 1,029문항)</th></tr>
 <tr><td>fp32</td><td>0.0%</td><td>441.0 ms</td><td>2,760 MiB</td><td>—</td></tr>
 <tr><td>fp16 무교정</td><td>92.8%¹</td><td>139.7 ms</td><td>1,385 MiB</td><td>1.36% (PyTorch)</td></tr>
 <tr><td><b>fp16 + 도구 교정</b></td><td><b>0.0%</b></td><td><b>149.5 ms</b></td><td>1,385 MiB</td><td><b>50.73%</b> (PyTorch)</td></tr>
 <tr><td>bf16 무교정</td><td>0.0%</td><td>197.4 ms</td><td>1,385 MiB</td><td>49.95% (PyTorch)</td></tr>
 </table>
-<div class="cap">[표 22] 배포 선택지 넷의 비교</div><div class="cond">(붕괴율·지연·메모리는 TensorRT 10.13·50장, ¹만 250장(Ⅵ장 3절 각주). 정확도는 같은 가중치의 PyTorch 배포 조건 측정, Ⅶ장 3절)</div>
+<div class="cap">[표 22] 배포 선택지 넷의 비교</div><div class="cond">(상실률·지연·메모리는 TensorRT 10.13·50장, ¹만 250장(Ⅵ장 3절 각주). 정확도는 같은 가중치의 PyTorch 배포 조건 측정, Ⅶ장 3절)</div>
 
 <table>
 <tr><th>시도</th><th>그래프 (모두 관행 <code>--fp16</code>)</th><th>실패 지점 (빌드 로그)</th></tr>
@@ -247,7 +247,7 @@
 <tr><td>802,816</td><td>29.2%</td><td>25.6%</td><td><b>24.4%</b></td><td>4.0%</td><td>3.6%</td></tr>
 <tr><td>401,408</td><td>10.8%</td><td>10.4%</td><td><b>10.0%</b></td><td>15.2%</td><td>17.2%</td></tr>
 </table>
-<div class="cap">[표 24] 실행 경로별 붕괴율과 초과 비율</div><div class="cond">(<code>Task only</code> 학생, 250장, TensorRT 10.13, A100. Full과 교정본은 모든 칸에서 0%. **관행 열이 둘인 것은</div>
+<div class="cap">[표 24] 실행 경로별 상실률과 초과 비율</div><div class="cond">(<code>Task only</code> 학생, 250장, TensorRT 10.13, A100. Full과 교정본은 모든 칸에서 0%. **관행 열이 둘인 것은</div>
 
 <table>
 <tr><th>해상도</th><th>모델</th><th>Orin Nano</th><th>A100 강타입</th><th>지연 p50 (Orin)</th></tr>
@@ -269,7 +269,7 @@
 <div class="cap">[표 26] headroom_guard의 명령</div>
 
 <table>
-<tr><th>모델</th><th>초과 비율</th><th>실제 붕괴율</th><th>오차</th></tr>
+<tr><th>모델</th><th>초과 비율</th><th>실제 상실률</th><th>오차</th></tr>
 <tr><td>Pre-trained 3B</td><td>72.0%</td><td>69.6%</td><td>+2.4%p</td></tr>
 <tr><td>Task only</td><td>95.6%</td><td>94.8%</td><td>+0.8%p</td></tr>
 <tr><td>Task + out.KD</td><td>23.2%</td><td>20.4%</td><td>+2.8%p</td></tr>
@@ -277,7 +277,7 @@
 <tr><td>Task + L_align</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
 <tr><td>Full</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
 </table>
-<div class="cap">[표 27] 초과 비율과 실제 붕괴율</div>
+<div class="cap">[표 27] 초과 비율과 실제 상실률</div>
 
 <table>
 <tr><th>판정</th><th>조건</th></tr>
@@ -297,16 +297,16 @@
 <div class="cap">[표 29] 모델 계열별 도구 적용 결과</div><div class="cond">(10~30장. Ⅴ장 2절의 3.88·4.49·50.86배와 소수점이 다른 것은 표본 수와 SmolVLM의 해상도 조건 차이다)</div>
 
 <table>
-<tr><th>λ</th><th>여유 p50</th><th><b>최악</b></th><th>초과 비율</th><th><b>실제 붕괴</b></th></tr>
+<tr><th>λ</th><th>여유 p50</th><th><b>최악</b></th><th>초과 비율</th><th><b>실제 상실</b></th></tr>
 <tr><td><b>0</b></td><td>1.14</td><td><b>0.87</b></td><td>14.0%</td><td><b>11.0%</b></td></tr>
 <tr><td>0.5</td><td>1.91</td><td>1.33</td><td>0.0%</td><td>0.0%</td></tr>
 <tr><td>1.0</td><td>2.32</td><td>1.57</td><td>0.0%</td><td>0.0%</td></tr>
 <tr><td>2.0</td><td>4.04</td><td>2.78</td><td>0.0%</td><td>0.0%</td></tr>
 </table>
-<div class="cap">[표 30] 학습된 λ 체크포인트의 여유와 실제 붕괴</div>
+<div class="cap">[표 30] 학습된 λ 체크포인트의 여유와 실제 상실</div>
 
 <table>
-<tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th>정확도</th><th>붕괴형 출력</th></tr>
+<tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th>정확도</th><th>상실형 출력</th></tr>
 <tr><td>Task only</td><td>원본</td><td>fp16</td><td>—</td><td><b>1.36%</b></td><td>1,001 / 1,029</td></tr>
 <tr><td>Task only</td><td>원본</td><td>fp16</td><td><b>도구</b></td><td><b>50.73%</b></td><td><b>0</b></td></tr>
 <tr><td>Task only</td><td>원본</td><td>bf16</td><td>—</td><td>49.95%</td><td>0</td></tr>
@@ -320,9 +320,9 @@
 <div class="cap">[표 31] 배포 조건 정확도의 종단 검증</div>
 
 <table>
-<tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>McNemar</th><th>fp16 붕괴형</th></tr>
+<tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>McNemar</th><th>fp16 상실형</th></tr>
 <tr><td>Task only</td><td>평가</td><td>1.35배</td><td>48.49%</td><td>50.63%</td><td>14 대 36</td><td>p=0.0030</td><td>45</td></tr>
-<tr><td>Task only (붕괴 문항 제외)</td><td>평가</td><td>—</td><td>50.71%</td><td>50.30%</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>Task only (상실 문항 제외)</td><td>평가</td><td>—</td><td>50.71%</td><td>50.30%</td><td>—</td><td>—</td><td>—</td></tr>
 <tr><td>Full</td><td>평가</td><td>3.63배</td><td>51.31%</td><td>51.02%</td><td>7 대 4</td><td>p=0.5465</td><td>0</td></tr>
 <tr><td>Full</td><td>원본</td><td>2.92배</td><td>52.38%</td><td>52.87%</td><td>4 대 9</td><td>p=0.267</td><td>0</td></tr>
 </table>
@@ -330,9 +330,9 @@
 
 <table>
 <tr><th>진술의 부분</th><th>근거</th><th>강도와 범위</th></tr>
-<tr><td><b>표준 지표가 역방향을 가리킨다</b></td><td>Ⅳ장 3절 — 같은 모델·같은 이미지에서 INT8 SNR 32.23 대 22.88 dB, 붕괴율 94.8% 대 0.0%(원본 해상도). Ⅴ장 2절 — 검사받는 부분과 터지는 부분이 서로소인 설정이 공개 저장소에 흔하다</td><td>가장 강하다. 다만 5변형의 완전 역전(ρ = −1.000)은 여유 <b>p50 기준</b>이고, 최악값으로 재면 인접한 한 쌍이 뒤집혀 −0.900이다. 군 사이의 역전은 유지된다</td></tr>
-<tr><td><b>실패는 이산적이다</b></td><td>Ⅳ장 2절 — 이미지 단위 붕괴, 해상도 절벽. Ⅶ장 3절 — 키프레임 안 혼재 0건, 붕괴형 정답 0개, 붕괴를 빼면 형식 차이 소멸. Ⅴ장 1절 — 이산성 때문에 INT4 정확도 1.39%가 양자화 탓으로 오인됐다</td><td>매우 강하다</td></tr>
-<tr><td><b>예고하는 값은 순전파 한 번</b></td><td>Ⅳ장 1절 정의, Ⅶ장 도구, Ⅶ장 2절 — 초과 비율이 6모델에서 평균 오차 2.1%p로 PyTorch fp16 붕괴율을 추정. 강타입 TensorRT 엔진(A100·Orin)에서도 맞고, 관행 약타입 엔진은 해상도에 따라 양쪽으로 어긋난다(한계 11)</td><td>정의이므로 논쟁 여지가 적다. 실무 기여는 &quot;어느 형식에서, 어느 통계량으로 재는가&quot;까지 정한 데 있다</td></tr>
+<tr><td><b>표준 지표가 역방향을 가리킨다</b></td><td>Ⅳ장 3절 — 같은 모델·같은 이미지에서 INT8 SNR 32.23 대 22.88 dB, 상실률 94.8% 대 0.0%(원본 해상도). Ⅴ장 2절 — 검사받는 부분과 터지는 부분이 서로소인 설정이 공개 저장소에 흔하다</td><td>가장 강하다. 다만 5변형의 완전 역전(ρ = −1.000)은 여유 <b>p50 기준</b>이고, 최악값으로 재면 인접한 한 쌍이 뒤집혀 −0.900이다. 군 사이의 역전은 유지된다</td></tr>
+<tr><td><b>실패는 이산적이다</b></td><td>Ⅳ장 2절 — 이미지 단위 상실, 해상도 절벽. Ⅶ장 3절 — 키프레임 안 혼재 0건, 상실형 출력의 정답 0개, 상실을 빼면 형식 차이 소멸. Ⅴ장 1절 — 이산성 때문에 INT4 정확도 1.39%가 양자화 탓으로 오인됐다</td><td>매우 강하다</td></tr>
+<tr><td><b>예고하는 값은 순전파 한 번</b></td><td>Ⅳ장 1절 정의, Ⅶ장 도구, Ⅶ장 2절 — 초과 비율이 6모델에서 평균 오차 2.1%p로 PyTorch fp16 상실률을 추정. 강타입 TensorRT 엔진(A100·Orin)에서도 맞고, 관행 약타입 엔진은 해상도에 따라 양쪽으로 어긋난다(한계 11)</td><td>정의이므로 논쟁 여지가 적다. 실무 기여는 &quot;어느 형식에서, 어느 통계량으로 재는가&quot;까지 정한 데 있다</td></tr>
 <tr><td><b>움직이는 수단은 여럿이다</b></td><td>Ⅳ장 5절 — λ 용량-반응, 자기 정렬로 효과의 50%, LoRA 범위 확장은 반대 방향. Ⅳ장 4절 — 학습 없는 사후 교정. Ⅵ장 — 형식 전환. Ⅴ장 3절 — 제작사의 세대 개선</td><td>강하다. 다만 손실 설계 축은 단일 계열이다(Ⅷ장 3절 한계 1)</td></tr>
 </table>
 <div class="cap">[표 33] 기여 진술의 부분별 근거와 강도</div>

@@ -37,7 +37,7 @@ VARIANTS = {
     "student_spatial":     "checkpoints/student_spatial/epoch_1",
     "student_full":        "checkpoints/student_full/epoch_1",
 }
-# blk23 = L_align이 정렬하는 층, blk31 = fp16 붕괴가 나는 층
+# blk23 = L_align이 정렬하는 층, blk31 = fp16 상실이 나는 층
 LAYERS = (23, 31)
 PROJS = ("gate_proj", "up_proj", "down_proj")
 

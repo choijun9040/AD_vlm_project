@@ -1,13 +1,13 @@
 """
-그림 2 — 입력 해상도에 따른 활성 크기와 fp16 붕괴율
+그림 2 — 입력 해상도에 따른 활성 크기와 fp16 상실률
 ======================================================
 `_orchestrate_resolution_sweep.sh`가 남긴 `eval_results/resolution_sweep/res_*.json`을
 읽어 두 개의 패널을 그린다.
 
   (a) 마지막 vision block의 max|activation| 중앙값 vs 입력 해상도 + fp16 표현 한계선
-  (b) 이미지 단위 fp16 붕괴(NaN) 발생률 vs 입력 해상도
+  (b) 이미지 단위 fp16 상실(NaN) 발생률 vs 입력 해상도
 
-(a)가 원인, (b)가 결과다. 여유가 없는 모델만 한계선을 넘고 그 순간 붕괴율이 치솟는다.
+(a)가 원인, (b)가 결과다. 여유가 없는 모델만 한계선을 넘고 그 순간 상실률이 치솟는다.
 x축은 max_pixels 대신 실제 vision token 수로 둔다 — 활성 크기를 좌우하는 것이
 픽셀 수가 아니라 self-attention이 처리하는 토큰 수이기 때문이다.
 
@@ -127,7 +127,7 @@ def main():
     ax_a.set_ylabel(r"max$|$activation$|$, final block")
     ax_a.set_title("(a) activation magnitude", fontsize=L["base_fs"], pad=6)
 
-    # --- (b) 붕괴율 ---
+    # --- (b) 상실률 ---
     for key, label_d, label_s, color, ls, lw, mk in SERIES:
         xs, ys = points(key, lambda e: e["passes"]["float16"]["nan_rate"] * 100)
         if not xs:
@@ -178,7 +178,7 @@ def main():
     for key, *_ in SERIES:
         xs, rates = points(key, lambda e: e["passes"]["float16"]["nan_rate"] * 100)
         if xs:
-            print(f"  {key:22s} 붕괴율 " + " ".join(f"{r:6.1f}%" for r in rates)
+            print(f"  {key:22s} 상실률 " + " ".join(f"{r:6.1f}%" for r in rates)
                   + ("" if len(xs) == len(mps) else f"   (측정된 해상도 {len(xs)}/{len(mps)})"))
 
 

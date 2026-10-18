@@ -15,7 +15,7 @@ headroom_guard — 저정밀 배포 전 표현 범위 여유를 진단하고 교
 대안을 제시하지 않으면 도구가 정직하지 않다.
 
 **두 dtype을 나눠 쓴다 (설계 원칙 2).** 활성 **크기**는 넘치지 않는 dtype(bf16)에서 재고,
-**붕괴**는 목표 dtype(fp16)에서 잰다. 목표 dtype에서 크기를 재면 이미 발산한 이미지의
+**상실**는 목표 dtype(fp16)에서 잰다. 목표 dtype에서 크기를 재면 이미 발산한 이미지의
 값이 inf/NaN이라 참값을 알 수 없고, 필요한 축소량을 **과소평가**한다
 (실측: 10장 중 8장이 발산한 상태로 풀어 목표 2.0배 대신 1.74배에 그쳤다).
 여유의 정의 `format_max ÷ max|activation|`에서 분모는 **참값**이어야 한다.
@@ -226,7 +226,7 @@ def profile(tower, cache, dtype, fmax_dtype=None):
         p50 = st.median(vals) if vals else float("nan")
         worst = max(vals) if vals else float("nan")
         # **초과 비율** — 이미지별 max가 형식 상한을 넘는 비율.
-        # 게이트 보정(2026-09-15)에서 이 값이 실제 붕괴율을 250장·6개 모델 기준
+        # 게이트 보정(2026-09-15)에서 이 값이 실제 상실률을 250장·6개 모델 기준
         # 평균 2.1%p(최대 6.4%p) 오차로 맞혔다. 임계값도 통계량 선택도 필요 없는
         # **직접 추정치**이므로 도구의 1차 출력으로 쓴다.
         exceed = (sum(1 for v in vals if v > fmax) + (len(rec[i]) - len(vals))) / \
@@ -342,7 +342,7 @@ def plan_fix(per_block, target, tower=None, cache=None, dtype="float16"):
     보고 있어 문서와 어긋나 있었다. 최악을 쓰는 이유는 여백이 커서가 아니라
     **임계값이 물리적 의미(형식 상한 1.0)를 가져 모델 간에 옮겨 가기 때문**이다.
     λ=0.0 체크포인트가 그 필요성을 실증한다 — p50 여유 1.14로 한계 위처럼
-    보이는데 최악이 0.87이라 11%가 붕괴한다. **p50만 보면 놓친다.**
+    보이는데 최악이 0.87이라 11%가 출력을 잃는다. **p50만 보면 놓친다.**
 
     축소 배수 자체는 이 변경의 영향을 받지 않는다. `solve_factor()`가 이미
     모든 이미지에 대해 부등식을 풀기 때문이다(최악 기준 해).
@@ -415,7 +415,7 @@ def print_verdict(lastb, nimg):
     hw = lastb.get("headroom_worst")
     ub = zero_obs_upper_bound(nimg)
     print(f"\n[판정] 마지막 블록 (기준: 초과 비율, {nimg}장)")
-    print(f"  초과 비율 {exc*100:.1f}%  ← 붕괴율 추정치 "
+    print(f"  초과 비율 {exc*100:.1f}%  ← 상실률 추정치 "
           f"(실측 대조 평균 오차 2.1%p, 6개 모델)")
     if hw:
         print(f"  여유  p50 {lastb['headroom']:.2f}배 · 최악 {hw:.2f}배")
@@ -540,7 +540,7 @@ def main():
         paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][:args.limit]
     print(f"[이미지] {len(paths)}장")
 
-    # 크기는 넘치지 않는 dtype에서, 붕괴는 목표 dtype에서 잰다 (docstring 참조)
+    # 크기는 넘치지 않는 dtype에서, 상실은 목표 dtype에서 잰다 (docstring 참조)
     MAG = "bfloat16" if args.dtype == "float16" else args.dtype
     if args.repo:
         tower = load_tower_repo(args.repo, MAG, args.trust_remote_code)
@@ -552,7 +552,7 @@ def main():
     g0 = cache_mag[0][1]
     print(f"[형상] pixel_values={tuple(cache_mag[0][0].shape)}  "
           f"grid={g0.tolist() if g0 is not None else '없음'}")
-    print(f"[측정] 크기={MAG} (참값)  붕괴={args.dtype}\n")
+    print(f"[측정] 크기={MAG} (참값)  상실={args.dtype}\n")
 
     before, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
     risky = plan_fix(before, args.target_headroom,
@@ -650,7 +650,7 @@ def main():
     exc, nimg = lastb["exceed_rate"], lastb.get("n_images", len(cache_mag))
     print_verdict(lastb, nimg)
 
-    # 붕괴는 목표 dtype으로 갈아끼워 잰다
+    # 상실은 목표 dtype으로 갈아끼워 잰다
     def collapse_in_target():
         tower.to(getattr(torch, args.dtype))
         c = build_cache(proc, paths, args.dtype)
@@ -676,7 +676,7 @@ def main():
             print(f"{name:>4}{b['max_worst']:>15,.0f}{hw:>10.2f}배{mark}")
     print(f"\n[진단] 위험 블록 {len(risky)}개 "
           f"(기준: **최악** 여유 < {args.target_headroom})")
-    print(f"       현재 붕괴율 {nan_before*100:.1f}%  ({len(paths)}장)")
+    print(f"       현재 상실률 {nan_before*100:.1f}%  ({len(paths)}장)")
 
     res = {"target": args.repo or args.checkpoint, "dtype": args.dtype,
            "max_pixels": ip.max_pixels, "n_images": len(paths),
@@ -712,7 +712,7 @@ def main():
                 after, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
                 nan_after = collapse_in_target()
                 last = after[-1]
-                print(f"\n[검증] 붕괴율 {nan_before*100:.1f}% → **{nan_after*100:.1f}%**")
+                print(f"\n[검증] 상실률 {nan_before*100:.1f}% → **{nan_after*100:.1f}%**")
                 print(f"       마지막 블록 여유 {before[-1]['headroom']:.2f}배 → "
                       f"{last['headroom']:.2f}배")
                 res["after"] = {"per_block": after, "nan_rate": nan_after}

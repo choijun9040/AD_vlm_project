@@ -87,7 +87,7 @@ def main():
     tokens = int(cache[0][1][0][1] * cache[0][1][0][2] // 4)
     results["_meta"]["vision_tokens"] = tokens
     out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
-    print(f"{tag} 기준 (vision token ≈ {tokens}) — 마지막 블록 p50과 fp16 여유·붕괴율")
+    print(f"{tag} 기준 (vision token ≈ {tokens}) — 마지막 블록 p50과 fp16 여유·상실률")
     print(f"{'모델':22s}{'blk31 p50':>12}{'여유':>9}{'fp16 NaN':>11}")
     print("-" * 78)
     for name, *_ in targets:

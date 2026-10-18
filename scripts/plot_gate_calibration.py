@@ -1,5 +1,5 @@
 """
-판정 기준 보정 그림 (학위 논문 7장 7.3·7.4절) — 최악 여유 대 fp16 붕괴율.
+판정 기준 보정 그림 (학위 논문 7장 7.3·7.4절) — 최악 여유 대 fp16 상실률.
 
 `fig_detection_curve*.png`(2026-09-15)를 대체한다. 옛 그림은 게이트를 최악 통계량으로
 통일하기(2026-09-17) 전이라 p50과 최악을 나란히 그리고 "current threshold 2.0"을 판정
@@ -10,7 +10,7 @@
   (1) 전이는 형식 상한 그 자체(최악 여유 1.00~1.05)에서 일어난다 — 합성 연속체
   (2) 학습으로 만들어진 체크포인트(λ 스윕 넷)가 같은 곡선 위에 놓인다 — 자연 발생 점
 
-데이터(모두 100장, 이미지를 줄이지 않는 원본 해상도 1600×900, 크기는 bf16·붕괴는 fp16):
+데이터(모두 100장, 이미지를 줄이지 않는 원본 해상도 1600×900, 크기는 bf16·상실은 fp16):
   합성  eval_results/detection_curve.json, detection_curve_fine.json  (겹치는 배수는 한 번만)
   자연  eval_results/guard_sweep_align{0.0,0.5,1.0,2.0}.json           (마지막 블록 최악 여유, nan_rate)
 
@@ -130,7 +130,7 @@ def main():
         fig.savefig(f"{out}.{ext}", dpi=300, bbox_inches="tight")
     print(f"합성 {len(syn)}점 · 자연 {len(nat)}점 → {out}.png/.pdf")
     first_safe = min(h for h, c in syn if c == 0)
-    print(f"합성 최초 무붕괴 최악 여유 {first_safe:.3f} · 자연: "
+    print(f"합성 최초 무상실 최악 여유 {first_safe:.3f} · 자연: "
           + ", ".join(f"λ{l} {h:.2f}/{c:.0f}%" for l, h, c in nat))
 
 

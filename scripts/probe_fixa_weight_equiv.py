@@ -6,7 +6,7 @@ ONNX로 내보내려면 이를 **가중치 편집**으로 옮겨야 하는데, �
 (`Qwen2_5_VLMLP(config, bias=True)`) weight와 bias를 **함께** 나눠야 등가다.
 weight만 나누면 bias가 남아 다른 연산이 된다.
 
-이 스크립트는 세 조건의 fp16 붕괴율을 같은 250장에서 비교한다:
+이 스크립트는 세 조건의 fp16 상실률을 같은 250장에서 비교한다:
     무개입 / 훅 fixA / 가중치 편집 fixA(weight+bias)
 그리고 대조로 **weight만** 편집한 잘못된 판본도 함께 잰다 — 다르게 나와야 정상이다.
 
@@ -104,7 +104,7 @@ def main():
         cache.append((enc["pixel_values"].to("cuda", torch.float16),
                       enc["image_grid_thw"].to("cuda")))
 
-    print(f"\n{'조건':<34}{'붕괴율':>10}")
+    print(f"\n{'조건':<34}{'상실률':>10}")
     r = collapse(tower, cache)
     print(f"{'무개입':<34}{r*100:>9.1f}%")
 
