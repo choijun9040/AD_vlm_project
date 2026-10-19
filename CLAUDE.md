@@ -102,9 +102,11 @@ Pipeline order (each stage depends on the previous stage's checkpoint):
    (v2 — vision-attn-LoRA fairness fix, see below), and `_v3`/`_v4` (KD
    hyperparameter fix — see "KD-only EOS collapse" note further below).
    **`student_kd_only_v4` is the checkpoint used in the 5-way comparison**;
-   v2/v3 were a failure trail, not valid results, and their weights were
-   **deleted on 2026-09-14 to free disk** — the diagnosis they supported is
-   fully written up below and in `eval_results/`, so only the narrative remains.
+   v2/v3 were a failure trail, not valid results. **Correction (2026-10-19):** an
+   earlier version of this file said their weights were deleted on 2026-09-14 —
+   **they are still on disk** (`student_kd_only_v2/`: `epoch_1` + `step_5000`~`25000`,
+   1.1 GB; `student_kd_only_v3/`: `step_5000` only, 173 MB). The diagnosis they
+   supported is fully written up below and in `eval_results/`; nothing depends on them.
 5. **`scripts/train_baseline.py`** — ablation: student 3B fine-tuned directly
    on task loss only, no teacher involved. Produces
    `checkpoints/student_baseline/` (v1) and `checkpoints/student_baseline_v2/`
@@ -184,18 +186,19 @@ forced-generation EOS probe at increasing checkpoints (`step_5000` through
 `epoch_1`): EOS reaches rank 1 with 0.4–1.0 probability across sample
 questions, matching baseline behavior. `checkpoints/student_kd_only_v4/`
 is the checkpoint used in the final 5-way table (see Evaluation below).
-`_v2` and `_v3` were the failure trail; **their weights were deleted on
-2026-09-14** (disk pressure from ONNX exports) once the EOS-probe diagnosis
-above was complete. Reproducing them would need a full retrain (~9.5 h each);
-nothing downstream depends on them.
+`_v2` and `_v3` were the failure trail. **Their weights are still on disk**
+(see the 2026-10-19 correction in pipeline step 4 — the planned 2026-09-14 deletion
+did not happen). Nothing downstream depends on them, so they are safe to delete
+if disk is needed.
 
-**Also deleted on 2026-09-14**: `checkpoints/student_distill/` — a pre-`_v2`
+**Still on disk (correction 2026-10-19 — earlier text said these were deleted):**
+`checkpoints/student_distill/` (943 MB, `epoch_1` + `step_5000`~`25000`) — a pre-`_v2`
 run whose `training_state.pt` still carried `lambda_hazard: 1.0`, i.e. the
 retired `HazardWeightedKDLoss` design; it appears in no comparison.
-`checkpoints_awq/` (16 GB) was kept for chapter 6's re-measurement and **deleted on
-2026-09-15** once that run finished and all five `*_4bit_awq_bfloat16_*.json` results
-were on disk. Regenerating it means re-running the AWQ quantization from the LoRA
-checkpoints; nothing currently planned needs it. The v1 pair (`student_baseline`, `student_kd_only`) was also **kept**;
+`checkpoints_awq/` (16 GB, five AWQ variants) — kept for chapter 6's re-measurement;
+that run finished and all five `*_4bit_awq_bfloat16_*.json` results are on disk, so
+nothing currently planned needs it. Both are deletion candidates when disk is short
+(2026-10-19: 17 GB free, 99% used) — confirm with the user before deleting. The v1 pair (`student_baseline`, `student_kd_only`) was also **kept**;
 their activation profile **is done** (`eval_results/v1_vs_v2_profile.json`; the accuracy
 comparison was dropped as appendix-level). Result: the v1 (LLM-only LoRA) variant has ~10%
 *lower* activation than pretrained, and the rise appears at v2 (1.58×; headroom 2.18× → 1.38×,
