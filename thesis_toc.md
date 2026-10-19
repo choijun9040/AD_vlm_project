@@ -215,7 +215,7 @@ vision-language model, autonomous driving, deployment verification
 표 30. 학습된 λ 체크포인트의 여유와 실제 상실
 표 31. 배포 조건 정확도의 종단 검증
 표 32. fp16과 bf16의 짝지은 정확도 비교
-표 33. 기여 진술의 부분별 근거와 강도
+표 33. 기여별 근거와 강도
 
 ---
 
