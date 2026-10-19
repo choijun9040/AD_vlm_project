@@ -93,11 +93,12 @@ Abstract
 전에 이러한 출력 상실 위험을 판별하는 방법이 필요하다.
 
 기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표(양자화 신호대잡음비, 이상치
-비율)로 평가한다. 그러나 양자화 오차 지표는 텐서 내 값의 상대적 분포만을 반영하는 스케일
-불변량이므로 활성값의 절대 크기에 의존하는 fp16 표현 범위 초과를 판별할 수 없다. 또한 실무에서는
-언어 모델을 4비트로 양자화하면서 비전 인코더는 양자화 대상에서 제외하여 fp16으로 실행하는 구성이
-널리 쓰이므로, 양자화 오차 평가는 정작 fp16으로 실행되는 비전 인코더에 적용되지 않는다. 과제
-정확도 역시 평가 해상도와 bf16 형식에서 측정되어 배포 조건의 출력 상실을 반영하지 못한다.
+비율)로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16 상한을 넘어 출력이
+상실되는지**를 판별하지 못한다. 양자화 오차 지표는 텐서 내 값의 상대적 분포만을 반영하는 스케일
+불변량이어서 절대 크기를 보지 않고, 과제 정확도는 평가 해상도와 bf16 형식, 즉 오버플로가
+일어나지 않는 조건에서 측정되기 때문이다. 또한 실무에서는 언어 모델을 4비트로 양자화하면서 비전
+인코더는 양자화 대상에서 제외하여 fp16으로 실행하는 구성이 널리 쓰이므로, 양자화 오차 평가는
+정작 fp16으로 실행되는 비전 인코더에 적용되지 않는다.
 
 본 논문은 이를 해결하기 위해 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고,
 배포 형식의 상한을 초과하는 이미지의 비율로 출력 상실률을 예측하는 진단 지표를 제안한다. 아울러
@@ -139,13 +140,14 @@ limit destroys the model's entire output for that image. A method to identify th
 low-precision deployment is therefore needed.
 
 Existing work judges deployment readiness by task accuracy and quantization-error metrics such
-as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics are
-scale-invariant, reflecting only the relative distribution of values within a tensor, and
-therefore cannot detect fp16 overflow, which depends on absolute magnitude. Moreover, common
-practice quantizes the language model to 4 bits while excluding the vision encoder from
-quantization and running it in fp16, so quantization-error evaluation is never applied to the
-component that actually runs in fp16. Task accuracy, measured at evaluation resolution in bf16,
-likewise misses failures under deployment conditions.
+as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics, however, cannot
+tell **whether activation magnitudes exceed the fp16 limit and destroy the output**.
+Quantization-error metrics are scale-invariant, reflecting only the relative distribution of
+values within a tensor, so they ignore absolute magnitude; task accuracy is measured at
+evaluation resolution in bf16, where overflow does not occur. Moreover, common practice
+quantizes the language model to 4 bits while excluding the vision encoder from quantization and
+running it in fp16, so quantization-error evaluation is never applied to the component that
+actually runs in fp16.
 
 To address this, we define a per-layer **representable-range headroom** (format maximum ÷
 maximum activation magnitude) and propose a diagnostic that predicts the collapse rate as the
