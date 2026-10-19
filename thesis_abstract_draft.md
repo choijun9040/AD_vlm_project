@@ -61,7 +61,7 @@ Orin Nano 8GB의 강타입 엔진에서도 확인되었다. 또한 특징 정렬
 
 ## Abstract
 
-**Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
+**Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
 Vision-Language Models**
 
 Deploying autonomous-driving vision-language models (VLMs) in vehicles requires both model

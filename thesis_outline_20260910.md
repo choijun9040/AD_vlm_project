@@ -27,7 +27,7 @@
 >
 > **「비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정」**
 >
-> *Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
+> *Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 >
 > 아래는 2026-09-17 확정 당시의 제목과 근거다. 「측정과 진단」은 「진단 및 교정」으로, 범위는 「자율주행」을
 > 빼고 「비전-언어 모델」로 넓어졌다.

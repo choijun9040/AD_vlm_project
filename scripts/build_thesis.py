@@ -359,7 +359,7 @@ def main():
     today = dt.date.today().isoformat()
     head = (f"<!-- 자동 생성: scripts/build_thesis.py ({today}). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->\n\n"
             "# 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정\n\n"
-            "*Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*\n\n"
+            "*Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*\n\n"
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
     # 구성 순서 (2026-10-12 학교 양식) — 졸업생 논문(2026-08):
     #   표지 → 속표지 → 차례 → Abstract → 표 차례 → 그림 차례 → 본문 → 참고 문헌 → 감사의 글

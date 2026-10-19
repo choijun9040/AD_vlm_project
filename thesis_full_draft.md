@@ -2,7 +2,7 @@
 
 # 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정
 
-*Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
+*Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 
 석사학위논문 초안 · 합본 생성 2026-10-19 · 학교 양식 적용 전
 
@@ -130,7 +130,7 @@ Orin Nano 8GB의 강타입 엔진에서도 확인되었다. 또한 특징 정렬
 
 # Abstract
 
-**Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
+**Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
 Vision-Language Models**
 
 Deploying autonomous-driving vision-language models (VLMs) in vehicles requires both model
