@@ -91,7 +91,7 @@ Abstract
 반정밀도(fp16) 연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전
 인코더의 활성값이 이를 초과하는 오버플로가 일어나면 해당 이미지에 대한 모델 출력 전체가
 상실된다. 따라서 압축 모델을 저정밀로 배포하기 전에 이러한 출력 상실 위험을 판별하는 방법이
-필요하다.
+필요하다. 본 논문은 자율주행 VLM을 사례로 이 문제를 다룬다.
 
 기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표(양자화 신호대잡음비, 이상치
 비율)로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16 상한을 넘어 출력이
@@ -140,7 +140,8 @@ Deploying vision-language models (VLMs) on edge devices such as vehicles require
 compression through knowledge distillation and half-precision (fp16) inference. Because fp16 can
 represent magnitudes only up to 65,504, an activation in the vision encoder that exceeds this
 limit (an overflow) destroys the model's entire output for that image. A method to identify this
-risk before low-precision deployment is therefore needed.
+risk before low-precision deployment is therefore needed. This thesis addresses the problem
+using autonomous-driving VLMs as a case study.
 
 Existing work judges deployment readiness by task accuracy and quantization-error metrics such
 as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics, however, cannot
