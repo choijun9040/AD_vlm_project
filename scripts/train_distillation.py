@@ -95,6 +95,15 @@ CONFIG = {
     # 중 하나 — 전체attention이라 패치 간 전역 문맥 반영, merger 직전(31)보다 덜 추상화됨)
     "align_layer_idx":  23,
 
+    # L_hr (2026-10-19, 파일럿 E1): 표현 범위 여유 손실. 0이면 훅도 걸지 않아 기존 실행과 같다.
+    # blk31(마지막 비전 블록) 출력의 이미지별 상위 k개 |h| 평균 m이 format_max/τ를 넘는 만큼만
+    # ReLU(m/(format_max/τ) − 1)²로 벌한다. 학습 해상도(200,704)가 배포(1,440,000)보다 작아
+    # 활성이 덜 커지므로 τ는 배포 목표보다 높게 둔다(사전 등록: 개요 §6, τ=3.0).
+    "lambda_hr":        0.0,
+    "hr_target":        3.0,
+    "hr_topk":          1,      # 1 = 정확한 최댓값(진단 지표 max|activation|과 같은 양)
+    "hr_layer_idx":     31,
+
     # L_atc: teacher에게 줄 프레임 수(현재 포함). temporal_k=1이면 teacher도 student와
     # 완전히 동일한 단일 프레임만 보게 되어(dataloader가 teacher_* 필드 자체를 생성하지 않음),
     # +L_align 단독 ablation 시 이 값을 1로 낮추면 데이터 파이프라인(이미지 로딩+토큰화)과
@@ -283,6 +292,54 @@ def _normalize_config(config):
 # 2. 모델 빌드
 # =============================================================================
 
+class HeadroomLoss(nn.Module):
+    """
+    L_hr: 표현 범위 여유 손실 (2026-10-19, 파일럿 E1).
+
+    오버플로 지점이 마지막 비전 블록 MLP 안이고(논문 Ⅳ장 4절) 그 크기가 블록 출력에 그대로
+    드러나므로, student `visual.blocks[layer_idx]` 출력을 훅으로 잡아 이미지별 최대 크기를 본다.
+    기본은 **정확한 최댓값**(k=1)이다 — 진단 지표가 재는 양(max|activation|)과 같아야 학습 목표와
+    판정이 어긋나지 않는다. k>1의 상위 k개 평균은 값 하나만 튀면 k분의 1로 희석되어(예: 40,000이
+    k=8에서 5,875) 한계를 넘었는데도 손실이 0이 될 수 있다(2026-10-19 단위 시험에서 확인).
+
+        m_b    = mean(topk(|h_b|, k))      # k=1이면 max|h_b|
+        L_hr   = mean_b ReLU(m_b / (format_max / τ) − 1)²
+
+    활성이 format_max/τ 아래면 0이라 정상 범위의 표현은 건드리지 않는다. 교사가 필요 없다.
+    """
+
+    def __init__(self, layer_idx: int = 31, target: float = 3.0, topk: int = 1,
+                 format_max: float = 65504.0):
+        super().__init__()
+        self.layer_idx = layer_idx
+        self.limit = format_max / target
+        self.topk = topk
+        self._captured = None
+        self._hook = None
+        self.last_peak = 0.0      # 로그용: 배치 안 최대 m_b
+
+    def register_hook(self, student_model):
+        def hook(module, inp, out):
+            self._captured = out
+        blocks = student_model.base_model.model.visual.blocks
+        self._hook = blocks[self.layer_idx].register_forward_hook(hook)
+
+    def clear(self):
+        self._captured = None
+
+    def forward(self, image_grid_thw):
+        h = self._captured                       # (sum_b n_patch_b, 1280), merge 이전
+        counts = (image_grid_thw[:, 0] * image_grid_thw[:, 1] * image_grid_thw[:, 2]).tolist()
+        losses, peaks = [], []
+        for p in torch.split(h, counts, dim=0):
+            v = p.abs().reshape(-1).float()
+            m = torch.topk(v, min(self.topk, v.numel())).values.mean()
+            peaks.append(m.detach())
+            losses.append(F.relu(m / self.limit - 1.0) ** 2)
+        self.last_peak = torch.stack(peaks).max().item()
+        return torch.stack(losses).mean()
+
+
 def build_teacher(config):
     print(f"\n[Teacher] 로드: {config['teacher_base']}")
 
@@ -447,6 +504,15 @@ def train(config):
     # vision block hook은 accelerator.prepare로 모델이 최종 배치된 뒤 등록
     align_criterion.register_hooks(teacher, student)
 
+    # L_hr — λ=0이면 만들지도 않는다(기존 실행과 같은 경로)
+    hr_criterion = None
+    if config.get("lambda_hr", 0.0) > 0:
+        hr_criterion = HeadroomLoss(
+            layer_idx=config["hr_layer_idx"], target=config["hr_target"],
+            topk=config["hr_topk"],
+        )
+        hr_criterion.register_hook(accelerator.unwrap_model(student))
+
     output_dir = Path(config["output_dir"])
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -479,6 +545,8 @@ def train(config):
     print(f"  lambda_align:      {config['lambda_align']}")
     print(f"  lambda_atc:        {config['lambda_atc']}")
     print(f"  align_layer_idx:   {config['align_layer_idx']}")
+    print(f"  lambda_hr:         {config.get('lambda_hr', 0.0)}"
+          f" (τ={config.get('hr_target')}, topk={config.get('hr_topk')}, layer={config.get('hr_layer_idx')})")
     print(f"  temporal_k:        {config['temporal_k']}")
     print("=" * 60 + "\n")
 
@@ -488,7 +556,7 @@ def train(config):
 
     for epoch in range(1, config["num_epochs"] + 1):
         student.train()
-        epoch_losses = {"total": 0.0, "task": 0.0, "align": 0.0, "atc": 0.0}
+        epoch_losses = {"total": 0.0, "task": 0.0, "align": 0.0, "atc": 0.0, "hr": 0.0}
         epoch_steps  = 0
 
         for step, batch in enumerate(dataloader):
@@ -561,14 +629,21 @@ def train(config):
                     teacher_q_len=teacher_q_len,
                     student_q_len=q_len,
                 )
+                if hr_criterion is not None:
+                    loss_hr = hr_criterion(image_grid_thw)
+                else:
+                    loss_hr = torch.zeros((), device=loss_task.device)
                 loss_total = (
                     loss_task
                     + config["lambda_align"] * loss_align
                     + config["lambda_atc"] * loss_atc
+                    + config.get("lambda_hr", 0.0) * loss_hr
                 )
 
                 accelerator.backward(loss_total)
                 align_criterion.clear()
+                if hr_criterion is not None:
+                    hr_criterion.clear()
 
                 if accelerator.sync_gradients:
                     accelerator.clip_grad_norm_(
@@ -606,6 +681,7 @@ def train(config):
             epoch_losses["task"]     += loss_task.item()
             epoch_losses["align"]    += loss_align.item()
             epoch_losses["atc"]      += loss_atc.item()
+            epoch_losses["hr"]       += loss_hr.item()
             epoch_steps += 1
 
             if accelerator.sync_gradients:
@@ -620,8 +696,9 @@ def train(config):
                         f"[Epoch {epoch}/{config['num_epochs']}] "
                         f"step {global_step}/{total_steps} | "
                         f"loss {avg['total']:.4f} "
-                        f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f}) | "
-                        f"lr {lr_now:.2e} | "
+                        f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f} hr={avg['hr']:.4f}) | "
+                        + (f"peak {hr_criterion.last_peak:,.0f} | " if hr_criterion is not None else "")
+                        + f"lr {lr_now:.2e} | "
                         f"DriveLM {drivelm_cnt}/{config['batch_size']}"
                     )
 
@@ -764,17 +841,25 @@ if __name__ == "__main__":
                         help="이 optimizer step에서 조기 종료 (LR 스케줄은 그대로 유지)")
     parser.add_argument("--seed", type=int, default=None,
                         help="데이터 순서·LoRA 초기화 고정. λ 스윕처럼 한 변수만 비교할 때 필수")
+    parser.add_argument("--lambda_hr", type=float, default=None,
+                        help="표현 범위 여유 손실 L_hr 가중치 (기본 0 = 끔, 파일럿 E1)")
+    parser.add_argument("--hr_target", type=float, default=None,
+                        help="L_hr 목표 여유 τ — 학습 해상도 기준 (기본 3.0)")
+    parser.add_argument("--hr_topk", type=int, default=None,
+                        help="이미지별 최대 크기의 상위 k 평균 (기본 1 = 정확한 최댓값)")
     args = parser.parse_args()
 
     CONFIG.update(VARIANTS[args.variant])
-    for key in ("lambda_align", "lambda_atc", "output_dir", "max_steps", "seed"):
+    for key in ("lambda_align", "lambda_atc", "output_dir", "max_steps", "seed",
+                "lambda_hr", "hr_target", "hr_topk"):
         if getattr(args, key) is not None:
             CONFIG[key] = getattr(args, key)
     print(
         f"[variant={args.variant}] output_dir={CONFIG['output_dir']} "
         f"lambda_align={CONFIG['lambda_align']} lambda_atc={CONFIG['lambda_atc']} "
         f"temporal_k={CONFIG['temporal_k']} "
-        f"max_steps={CONFIG['max_steps']} seed={CONFIG['seed']}"
+        f"max_steps={CONFIG['max_steps']} seed={CONFIG['seed']} "
+        f"lambda_hr={CONFIG['lambda_hr']} hr_target={CONFIG['hr_target']}"
     )
 
     train(CONFIG)
