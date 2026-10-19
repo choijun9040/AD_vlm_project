@@ -270,29 +270,58 @@ fp16의 표현 한계는 65,504다. 어떤 층의 활성값이 이를 넘으면 
 
 ## 2. 논지와 기여
 
-본 논문의 기여는 하나다.
+### 기존 연구의 한계
 
-> **압축된 주행 VLM을 저정밀로 배포할 때 표현 범위 초과로 인한 기능 상실이 일어나며,
-> 표준 압축 지표는 이 위험을 역방향으로 가리킨다. 이 실패는 정확도의 점진적 저하가
-> 아니라 이산적이고, 그것을 예고하는 값은 순전파 한 번으로 계산되며 그 값을 움직이는
-> 수단도 여럿이다. 부족한 것은 수단이 아니라 측정이다.**
+저정밀 배포를 다루는 기존 연구는 크게 두 갈래다. 양자화 연구는 활성 이상치를 줄이거나 우회해
+양자화 오차를 낮추는 방법을 제안하고, 그 효과를 양자화 SNR과 이상치 비율로 평가한다(Ⅱ장 2절).
+반정밀도 수치 안정성 연구는 언어 모델의 어텐션처럼 특정 연산의 오버플로를 알고리즘으로
+완화한다(Ⅱ장 2절). 증류 연구는 압축된 모델의 품질을 과제 정확도로 보고한다(Ⅱ장 1절).
 
-이 진술은 네 부분으로 읽으며, **순서가 곧 근거의 강도**다.
+이 평가 체계에는 세 가지 한계가 있다. 첫째, 양자화 오차 지표는 스케일 불변량이므로 활성값의
+절대 크기로 결정되는 fp16 표현 범위 초과를 원리적으로 판별할 수 없다. 둘째, 실무에서는 언어 모델을
+4비트로 양자화하면서 비전 인코더는 양자화 대상에서 제외해 fp16으로 실행하므로(AWQ[4] 저장소의 흔한
+구성), 양자화 오차 평가는 정작 fp16으로 실행되는 비전 인코더에 적용되지 않는다. 셋째, 증류 연구의
+정확도는 평가 해상도와 bf16 형식에서 측정되어 배포 조건의 출력 상실을 반영하지 못한다. 결과적으로
+**압축된 VLM이 fp16 배포에서 출력을 상실할지를 배포 전에 판별하는 기준이 없다**(Ⅱ장 4절).
 
-1. **표준 지표가 역방향을 가리킨다.** 기여의 실체다. 논증이 아니라 같은 모델·같은 이미지에서
-   잰 두 수치의 대조이므로 가장 강하다(Ⅳ장).
-2. **실패는 이산적이다.** 상실은 이미지 단위로 일어나고 한 이미지 안에서 정상과 섞이지 않는다
-   (생성 단위 확인은 Ⅶ장). 이산적이므로 교란 변수 하나가 집계 지표 전체를 뒤집는다(Ⅴ장).
-3. **예고하는 값은 순전파 한 번으로 계산된다.** 층 출력의 표현 범위 여유
-   `format_max ÷ max|activation|`이다. 나눗셈 하나이므로 지표 제안을 기여로 내세우지 않는다 —
-   **"그렇다면 무엇을 대신 재야 하는가"에 대한 실무적 답**이다.
-4. **여유를 움직이는 수단은 여럿이다.** 정렬 손실의 가중치와 대상, 학습 없는 사후 가중치
-   재조정, 형식 전환(bf16)이 모두 여유를 바꾼다(Ⅳ·Ⅵ장). 수단이 흔한데도 상실이 배포까지 가는
-   이유는 **재지 않기 때문**이며, 이것이 "부족한 것은 측정"이라는 결론의 근거다.
+### 본 논문의 제안
 
-논지를 실무로 잇기 위해 **배포 검증 절차**(Ⅵ장 — 비전 인코더를 고정 형상 ONNX로 내보내
-TensorRT에서 정밀도 조건별로 상실을 재는 절차)와 **배포 전 진단 도구** `headroom_guard`(Ⅶ장)를
-만든다. 도구는 여유를 재고, 위험하면 교정 배율을 계산하며, 판정 근거를 함께 출력한다.
+이 문제를 해결하기 위해 본 논문은 두 가지를 제안한다.
+
+1. **표현 범위 여유 기반 진단 지표.** 층별 표현 범위 여유 `format_max ÷ max|activation|`을 넘치지
+   않는 형식(bf16)에서 측정하고, 배포 형식의 상한을 넘는 이미지의 비율로 출력 상실률을 예측한다.
+   계산 비용은 순전파 한 번이다(Ⅳ장 1절, Ⅶ장 2절).
+2. **곱셈 이전 가중치 교정.** 오버플로가 비전 인코더 마지막 블록 MLP의 출력 투영 안에서 일어남을
+   규명하고, 그 입력이 만들어지는 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하여 학습 없이
+   출력 상실을 제거한다(Ⅳ장 4절).
+
+두 방법을 배포 전 진단·교정 도구 `headroom_guard`로 구현하고(Ⅶ장), 비전 인코더를 고정 형상 ONNX로
+내보내 TensorRT 엔진과 엣지 보드에서 검증하는 절차를 함께 제시한다(Ⅵ장).
+
+### 기존 방법 대비 결과
+
+| 비교 항목 | 기존 방법 | 제안 방법 |
+|---|---|---|
+| 출력 상실 예측 | INT8 양자화 SNR은 위험 순위를 정반대로 제시(6개 모델, Spearman[5] ρ = −1.000), 이상치 비율은 상실률과 일관된 관계 없음, 과제 정확도는 50.30~51.69%로 구별 불가 | 형식 상한 초과 비율이 6개 모델의 상실률을 평균 오차 2.1%p로 예측 |
+| 출력 상실 제거 | MLP 출력 측 축소: 상실률 94.8% 유지 | 곱셈 이전 교정: 상실률 0.0% |
+| 배포 조건 정확도 | 무교정 fp16 1.36% | 교정 fp16 50.73% — 오버플로 없는 bf16(49.95%)과 유의한 차이 없음(McNemar[6] p=0.34) |
+| 추론 지연 | bf16 형식 전환: fp16 대비 1.34~1.38배 | fp16 형식 유지 |
+
+(원본 해상도. 상실률·여유는 250장, INT8 지표는 200장, 정확도는 NuScenes-QA 1,029문항. Ⅳ·Ⅵ·Ⅶ장)
+
+### 기여
+
+1. 표준 압축 지표가 fp16 출력 상실 위험을 정반대로 가리킴을 손실 항만 다른 통제 비교로 보이고, 그
+   원인이 지표의 스케일 불변성과 검사 대상·실행 형식의 불일치에 있음을 규명하였다(Ⅳ장).
+2. 출력 상실을 예측하는 표현 범위 여유 기반 진단 지표를 제안하고 6개 모델에서 검증하였다(Ⅳ·Ⅶ장).
+3. 학습 없는 곱셈 이전 가중치 교정을 제안하고, PyTorch·TensorRT·엣지 보드에서 출력 상실 제거와
+   정확도 회복을 확인하였다(Ⅳ·Ⅵ·Ⅶ장).
+4. 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서 4.61배로 커짐을 보여(평가 해상도), 증류
+   설계 단계에서도 위험을 줄일 수 있음을 확인하였다(Ⅳ장 5절).
+
+지식 증류는 새로운 증류 방법으로서가 아니라, **손실 항만 다른 다섯 학생이라는 통제 실험 기반**으로
+쓰였다(Ⅲ장). 네 번째 기여는 단일 모델 계열·단일 시드 결과이므로 앞의 셋보다 근거가 약하다(Ⅷ장 3절
+한계 1).
 
 ## 3. 연구 범위
 
@@ -340,16 +369,16 @@ TensorRT에서 정밀도 조건별로 상실을 재는 절차)와 **배포 전 �
 ## 1. 주행 VLM 경량화와 효율화 연구
 
 **특징 정렬 증류.** 중간층 특징을 학습 가능한 사상(projection)과 함께 정합시키는 설계는
-FitNets[4] 이래 확립된 방법이다. 본 연구의 정렬 손실 `L_align`도 이 계열에 속하며, 그 구조를
+FitNets[7] 이래 확립된 방법이다. 본 연구의 정렬 손실 `L_align`도 이 계열에 속하며, 그 구조를
 새로운 기여로 주장하지 않는다.
 
-**주행 VLM 증류.** Drive-KD[5]는 두 교사–학생 조합(InternVL3-8B[6] → 1B,
+**주행 VLM 증류.** Drive-KD[8]는 두 교사–학생 조합(InternVL3-8B[9] → 1B,
 Qwen2.5-VL-7B → 3B) 가운데 하나로 본 연구와 같은 조합을 쓰며, 층별 어텐션 신호(주로 텍스트에서
-비전으로의 어텐션)를 증류한다. 배포 정밀도는 다루지 않는다. EM-VLM4AD[7]는 DriveLM[8]으로 학습한 경량 주행 VQA 모델로, 코드와 가중치가 공개되어
-있어 본 연구에서 참조 비교에 사용했다(Ⅲ장 4절). MiniDrive[9]는 공개 저장소에 코드와 가중치가
+비전으로의 어텐션)를 증류한다. 배포 정밀도는 다루지 않는다. EM-VLM4AD[10]는 DriveLM[11]으로 학습한 경량 주행 VQA 모델로, 코드와 가중치가 공개되어
+있어 본 연구에서 참조 비교에 사용했다(Ⅲ장 4절). MiniDrive[12]는 공개 저장소에 코드와 가중치가
 없어 재현할 수 없었으므로 인용 비교에만 쓴다.
 
-**멀티프레임 교사에서 단일프레임 학생으로.** SCPNet[10]은
+**멀티프레임 교사에서 단일프레임 학생으로.** SCPNet[13]은
 멀티프레임 교사의 시간 지식을 단일프레임 학생에 증류해, 배포 시 추론 비용을 늘리지 않으면서
 시간 정보를 전이하는 구조를 자율주행에서 이미 제시했다. 본 연구의 시간 맥락 손실 `L_atc`는
 그 구조를 LiDAR 기반 시맨틱 장면 완성에서 **카메라 기반 생성형 VQA**로 옮긴 것이며,
@@ -362,12 +391,12 @@ Qwen2.5-VL-7B → 3B) 가운데 하나로 본 연구와 같은 조합을 쓰며,
 ### 자율주행 VLM 효율화 서베이
 
 최근 서베이들은 주행용 VLM·VLA의 효율화를 주요 과제로 다룬다. 「A Survey on Vision-Language-Action
-Models for Autonomous Driving」[11]은 모델이 수십억 파라미터로 커질수록 증류나 MoE
+Models for Autonomous Driving」[14]은 모델이 수십억 파라미터로 커질수록 증류나 MoE
 희소화가 필요해질 것이라 본다. 「Vision-Language-Action Models for Autonomous Driving: Past, Present,
-and Future」[12]는 모델 구조와 시스템 효율 절에서 지연과 연산 부담을 과제로 든다.
-「A Survey on Efficient Vision-Language-Action Models」[13]는 구조적 희소화와 행동
+and Future」[15]는 모델 구조와 시스템 효율 절에서 지연과 연산 부담을 과제로 든다.
+「A Survey on Efficient Vision-Language-Action Models」[16]는 구조적 희소화와 행동
 표현의 충실도 사이에 절충이 있어 과도한 가지치기와 저비트 양자화가 행동 충실도를 해칠 수 있다고
-지적한다. 「Rethinking Language's Role in Efficient VLA for Autonomous Vehicles」[14]는
+지적한다. 「Rethinking Language's Role in Efficient VLA for Autonomous Vehicles」[17]는
 효율–안전 프론티어가 정량화되어 있지 않고, 효율 지표와 주행 성능 지표가 같은 논문에 함께
 등장하는 일이 드물다고 지적한다.
 
@@ -377,26 +406,26 @@ and Future」[12]는 모델 구조와 시스템 효율 절에서 지연과 연�
 ## 2. 저정밀 배포와 활성 이상치
 
 **미세조정 방식과 압축 친화성.** 미세조정 방식이 사후 압축의 성패에 영향을 준다는 점은
-CrAFT[15]가 sharpness 최소화 목적함수로 이미 보였다. 학습·미세조정 단계에서
+CrAFT[18]가 sharpness 최소화 목적함수로 이미 보였다. 학습·미세조정 단계에서
 활성 이상치를 다루는 방법들도 제안되어 왔다 — 가중치 행렬 사이의 구조적 증폭을 제어해 극단적
-활성을 완화하는 Colinearity Decay[16], 회전으로 이상치를 제거한 뒤 미세조정하는
-RoLoRA[17]와 RoSTE[18], 문제 활성의 동적 범위를 제한하는
-QuantTune[19].
+활성을 완화하는 Colinearity Decay[19], 회전으로 이상치를 제거한 뒤 미세조정하는
+RoLoRA[20]와 RoSTE[21], 문제 활성의 동적 범위를 제한하는
+QuantTune[22].
 이들은 모두 **양자화 친화성을 목적으로 설계한 기법**이며, 대상은 영상 분류용 ViT 또는 언어
 모델이다.
 
-**거대 활성.** 트랜스포머의 특정 채널에 매우 큰 활성이 나타나는 현상은 Massive Activations[20]와 후속 연구들이 보고해 왔고, 암묵적 편향으로 기능한다는 해석이 제시되었다.
+**거대 활성.** 트랜스포머의 특정 채널에 매우 큰 활성이 나타나는 현상은 Massive Activations[23]와 후속 연구들이 보고해 왔고, 암묵적 편향으로 기능한다는 해석이 제시되었다.
 모델 계열에 따라 최대 활성이 네 자릿수까지 차이 난다는 측정도 있다(Measuring Maximum
-Activations[21]). 그러나 이들 연구는 활성 크기를 아키텍처와 사전학습의 산물로
+Activations[24]). 그러나 이들 연구는 활성 크기를 아키텍처와 사전학습의 산물로
 다루며, **같은 아키텍처를 서로 다른 목적함수로 미세조정했을 때 크기가 달라지는지는 측정하지
-않았다.** 비전 인코더 쪽에서는 RegCache[22]가 대규모 사전학습 비전 인코더의
+않았다.** 비전 인코더 쪽에서는 RegCache[25]가 대규모 사전학습 비전 인코더의
 이상치를 학습 없이 완화하는 활성 양자화 방법을 제안했지만, 서로 다르게 미세조정한 체크포인트를
 비교하지는 않는다. 소형 VLM을 비전 인코더·프로젝터·언어 모델로 나눠 양자화하고 Jetson Orin
-NX·AGX에서 평가한 연구[23]는 구성 요소별 양자화 오차와 지연을 분리해 보였다.
+NX·AGX에서 평가한 연구[26]는 구성 요소별 양자화 오차와 지연을 분리해 보였다.
 본 연구가 보는 것은 그와 달리 **양자화에서 제외되어 반정밀도로 남는 비전 인코더**다.
 
-**반정밀도 추론의 오버플로.** fp16 추론에서의 수치 오버플로 자체는 알려진 문제다. PASA[24]는 어텐션 입력의 큰 진폭을 원인으로 지목하고 알고리즘적 완화를 제안했다.
-vLLM 이슈 #40290[25]은 Gemma 4 비전 인코더를 fp16으로 돌리면 모든 이미지의 출력이 무너지는 현상을
+**반정밀도 추론의 오버플로.** fp16 추론에서의 수치 오버플로 자체는 알려진 문제다. PASA[27]는 어텐션 입력의 큰 진폭을 원인으로 지목하고 알고리즘적 완화를 제안했다.
+vLLM 이슈 #40290[28]은 Gemma 4 비전 인코더를 fp16으로 돌리면 모든 이미지의 출력이 무너지는 현상을
 보고했는데, 본 연구와 **같은 기전**이다. 넘치는 곳은 SigLIP 표준화 `(h − std_bias) × std_scale`의
 뺄셈 중간값이며, 원인은 **저장된 bf16 가중치** `std_bias`(|max| 53,760, fp16 대비 1.218배)이고,
 그것을 줄여 줄 `std_scale`이 뺄셈 **뒤에** 온다. 이 가중치는 두 텐서만 내려받아 직접 확인했으나,
@@ -405,7 +434,7 @@ vLLM 이슈 #40290[25]은 Gemma 4 비전 인코더를 fp16으로 돌리면 모�
 가중치가 가진 성질**을 다룬다.
 
 **증류와 양자화 강건성.** 자동차 영역에서는 증류한 소형 모델이 교사보다 INT8 양자화에
-강건하다는 관측이 있다(Edge AI for VRU Safety[26]). 다만 손실 종류를 통제
+강건하다는 관측이 있다(Edge AI for VRU Safety[29]). 다만 손실 종류를 통제
 비교하지 않았고 메커니즘을 제시하지 않았으며, 과제는 객체 검출이다.
 
 > **본 연구와의 차이.** 이 계열의 지표는 대부분 **이상치 비율(동적 범위)**을 본다. 본 연구는
@@ -416,7 +445,7 @@ vLLM 이슈 #40290[25]은 Gemma 4 비전 인코더를 fp16으로 돌리면 모�
 
 ## 3. 평가 프로토콜
 
-**DriveLM**(nuScenes[27] 기반)은 장면별 키프레임에 인지·예측·계획·행동 네 과제의 질의응답을
+**DriveLM**(nuScenes[30] 기반)은 장면별 키프레임에 인지·예측·계획·행동 네 과제의 질의응답을
 붙인 데이터셋으로, 본 연구의 학습 데이터이자 활성 측정 이미지의 출처다. 공개된 검증 분할
 (`v1_1_val_nus_q_only.json`, 149개 장면·799개 키프레임)은 **정답이 비어 있고**, 정답 채점
 경로였던 공식 리더보드는 CVPR 2024 챌린지와 함께 닫혔다. 그래서 정확도 평가에는 쓸 수 없다.
@@ -426,8 +455,8 @@ vLLM 이슈 #40290[25]은 Gemma 4 비전 인코더를 fp16으로 돌리면 모�
 평가에 쓴다(Ⅲ장 3절). DriveLM 검증 장면은 학습에 쓴 696개 장면과 겹치지 않으므로 장면 단위로
 분리된 평가다.
 
-**CODA-LM[28]**은 자율주행 코너 케이스 VQA로, 본 연구에서는 활성 크기의 도메인 일반성을 확인하는
-보조 축으로 쓴다. CODA[29] 자체는 이미지의 약 9%를 nuScenes에서 가져왔으므로 완전히 독립된
+**CODA-LM[31]**은 자율주행 코너 케이스 VQA로, 본 연구에서는 활성 크기의 도메인 일반성을 확인하는
+보조 축으로 쓴다. CODA[32] 자체는 이미지의 약 9%를 nuScenes에서 가져왔으므로 완전히 독립된
 도메인은 아니다. 본 연구가 확인한 것은 사용한 143장이 **우리 학습 이미지와 겹치지 않는다**는
 것(이미지 해시 대조)이며, 두 데이터셋의 독립성이 아니다.
 
@@ -454,7 +483,7 @@ vLLM 이슈 #40290[25]은 Gemma 4 비전 인코더를 fp16으로 돌리면 모�
 
 ## 1. 증류 파이프라인 구성
 
-**교사**는 Qwen2.5-VL-7B-Instruct를 LoRA[30]로 미세조정한 모델이다(rank 16, alpha 32, dropout
+**교사**는 Qwen2.5-VL-7B-Instruct를 LoRA[33]로 미세조정한 모델이다(rank 16, alpha 32, dropout
 0.05, 학습 가능 파라미터 47,589,376개). **학생**은 Qwen2.5-VL-3B-Instruct이며, 다섯 변형 모두
 같은 LoRA 구성(rank 16, alpha 32, dropout 0.05)을 쓴다. 대상 모듈은 언어 디코더의
 `q/k/v/o_proj`와 `gate/up/down_proj`에 더해 **비전 인코더의 어텐션(`qkv`, `proj`)**까지다.
@@ -665,12 +694,12 @@ bf16은 지수 범위가 약 3.39×10³⁸이라 이 크기에서 넘치지 않�
 
 **해상도를 병기한다.** Qwen2.5-VL[2]은 입력 해상도에 따라 패치 수가 바뀌고, 활성 크기와 상실은
 해상도에 강하게 의존한다(Ⅳ장 2절). 본 논문은 두 조건을 쓴다 — **평가 해상도**(`max_pixels`
-200,704, Ⅲ장의 정확도 조건)와 **원본 해상도**(`max_pixels` 1,440,000, nuScenes[27] 원본 1600×900이
+200,704, Ⅲ장의 정확도 조건)와 **원본 해상도**(`max_pixels` 1,440,000, nuScenes[30] 원본 1600×900이
 줄지 않는 조건). 조건이 다른 두 수치를 한 문장에 놓지 않는다.
 
 ## 2. 활성 크기와 이산적 실패
 
-DriveLM[8] 검증 키프레임 799장(평가 해상도)에서 비전 인코더 블록별 최대 활성의 중앙값을 쟀다.
+DriveLM[11] 검증 키프레임 799장(평가 해상도)에서 비전 인코더 블록별 최대 활성의 중앙값을 쟀다.
 
 
 | 모델 | blk16 | blk24 | blk28 | **blk31 (마지막)** |
@@ -700,7 +729,7 @@ DriveLM[8] 검증 키프레임 799장(평가 해상도)에서 비전 인코더 �
   활성이 작아지는 것은 교사를 닮아서가 아니라 **부수 효과**다.
 
 기준선의 마지막 블록이 사전학습 모델보다 크다(33,792 → 50,176). 이것을 "과제 손실 미세조정이
-활성을 키운다"로 읽으면 안 된다. 언어 디코더에만 LoRA[30]를 건 이전 판 기준선(v1)은 오히려 사전학습
+활성을 키운다"로 읽으면 안 된다. 언어 디코더에만 LoRA[33]를 건 이전 판 기준선(v1)은 오히려 사전학습
 대비 활성이 10% 낮았고(250장, 평가 해상도: 33,312 → 30,024), 증가는 **비전 어텐션 LoRA 추가와
 표본 조정 변경이 함께 들어간 v2에서** 나타났다(→ 47,296). 두 요인은 분리되지 않았다(Ⅲ장 2절, Ⅳ장 5절).
 
@@ -772,7 +801,7 @@ fp16에서 마지막 블록의 활성이 65,504를 넘으면 그 값은 무한�
 **[그림 3]** 마지막 블록 fp16 여유와 INT8 양자화 SNR의 역전. 원본 해상도 (`max_pixels` 1,440,000). 가로축은 이미지별 최대의 **중앙값**으로 계산한 여유(크기는 **bf16**, 250장), 세로축은 INT8 양자화 SNR의 중앙값(200장)이다. 채운 점은 fp16에서 상실이 있는 모델, 속 빈 점은 상실 0%이며 라벨의 %가 원본 해상도 상실률이다. (a) **텐서 단위** SNR은 여유와 완전히 역순이고, (b) **채널 단위**에서는 `Task + L_align`에서 단조성이 깨지지만(ρ = −0.657) 두 끝점의 역전은 남는다. 통계량·입도에 따른 단서는 Ⅳ장 3절에 적었다. 여섯 모델은 색이 아니라 직접 붙인 이름으로 구별한다.
 
 **텐서 단위 INT8 SNR은 다섯 변형에서 역전한다.** 여유(p50)가 작을수록 SNR이 높다
-(0.88배 → 32.23 dB, 2.92배 → 22.88 dB, 사이 세 점도 단조 — 사전학습을 포함한 6모델 Spearman[31]
+(0.88배 → 32.23 dB, 2.92배 → 22.88 dB, 사이 세 점도 단조 — 사전학습을 포함한 6모델 Spearman[5]
 ρ = −1.000). 상실률 94.8%인 기준선이 상실 0%인 Full보다 9.35 dB 높게 평가된다. **구별하지 못하는
 것이 아니라 순서가 반대다.**
 
@@ -867,7 +896,7 @@ INT8 지표를 보는가"라는 반문에 무너지고, 남는 것은 자명한 
 - **활성 이상치도 같은 채널이다.** 원본 해상도 50장에서 마지막 블록 출력의 최대 활성 채널은
   **50장 전부 849번**이고, 그 값의 중앙값은 **73,448**로 fp16 한계를 넘는다.
 - **이 행은 이 체크포인트 고유가 아니다.** Qwen2.5-VL-7B(교사)도 849번(9.55배), 이전 세대
-  Qwen2-VL-2B[32]는 759번(14.80배)에서 같은 형태의 단일 행 이상치를 보인다. 3B와 7B는 비전 설정이
+  Qwen2-VL-2B[34]는 759번(14.80배)에서 같은 형태의 단일 행 이상치를 보인다. 3B와 7B는 비전 설정이
   같지만 노름 벡터를 대조하면 가중치가 다르다(최대 차이 0.949) — 독립적으로 학습된 두 모델이
   같은 번호에 이상치를 만들었다.
 
@@ -905,7 +934,7 @@ fixA는 가중치 편집으로 구현할 수 있다. 비전 MLP에는 bias가 �
 나눠야 등가다. Ⅵ장의 TensorRT 검증과 Ⅶ장의 도구는 이 가중치 편집판을 쓴다.
 
 **정확도 변화는 측정 한계 이하다.** 배포 조건(원본 해상도·fp16)의 교정본을 오버플로가 없는 bf16
-무교정본과 같은 1,029문항으로 짝지으면 +0.78%p, McNemar[33] p=0.34다(Ⅶ장). 비유의는 동등성의 증거가
+무교정본과 같은 1,029문항으로 짝지으면 +0.78%p, McNemar[6] p=0.34다(Ⅶ장). 비유의는 동등성의 증거가
 아니므로 "공짜"라고 쓰지 않는다 — 두 조건의 답이 갈리는 문항이 실제로 있다.
 
 ## 5. 여유를 움직이는 수단
@@ -991,7 +1020,7 @@ fixA는 가중치 편집으로 구현할 수 있다. 비전 MLP에는 bias가 �
 
 ## 1. INT4 정확도 1.39%의 원인 규명
 
-다섯 학생을 AWQ[34]로 INT4 양자화해 평가하자 기준선이 **1.39%**, 시간만이 30.49%로 무너졌다. 표면적으로는
+다섯 학생을 AWQ[4]로 INT4 양자화해 평가하자 기준선이 **1.39%**, 시간만이 30.49%로 무너졌다. 표면적으로는
 "INT4가 특정 학생을 망친다"로 읽힌다. 그러나 이 실행에는 교란 변수가 둘 있었다 — (i) AWQ 저장본을
 fp16으로 로드해 비전 인코더가 fp16으로 돌았고, (ii) 처리기를 체크포인트에서 만들어 입력 해상도가
 원본 해상도로 올라가 있었다. 같은 AWQ 체크포인트를 bf16으로 로드하고 처리기를 기반 모델에서
@@ -1110,7 +1139,7 @@ LLaVA-1.5-7B[35]는 기반과 AWQ가 여유 p50 **321.10배**·최악 291.13배�
 
 Phi 쪽은 가중치가 비트 단위로 같지 **않은데도** 여유가 같다 — 재저장 반올림이 활성 최대에 닿지
 않는다. 두 계열 모두 여유가 수백 배인 고정 해상도 인코더이므로, 확인한 것은 **상속**이지 위험이
-아니다. 세 번째로 계획한 InternVL3[6] 쌍은 기반 저장소에 접근할 수 없어 재지 못했다.
+아니다. 세 번째로 계획한 InternVL3[9] 쌍은 기반 저장소에 접근할 수 없어 재지 못했다.
 
 상속은 세는 방식을 바꾼다. "저장소 27개 중 몇 개가 위험한가"가 아니라 **"기반 모델이 위험하면
 비전 인코더를 양자화에서 뺀 그 파생본 전부가 위험하다"**이다. 실무 권고도 명확해진다 — 파생본마다
@@ -1150,7 +1179,7 @@ Qwen2.5-VL은 이들보다 약 40배 낮다. GLM-4.1V는 처리기 출력 형상
 3.88로 열 배 다르다. **같은 설계, 다른 학습.** 가변 해상도 설계는 전제일 뿐 원인이 아니다.
 
 **블록 뒤까지 쟀다.** 위 값은 비전 블록의 마지막 출력에서 잰 것이다. 블록 뒤 연산이 크기를 키우는
-계열이 있다면(vLLM #40290[25]의 Gemma 4) 위 "안전"은 과대평가다. 그래서 여섯 계열의 블록 뒤 연산을 따로
+계열이 있다면(vLLM #40290[28]의 Gemma 4) 위 "안전"은 과대평가다. 그래서 여섯 계열의 블록 뒤 연산을 따로
 재니 **전부 크기를 줄였다**(배율 0.0009~0.0945). 비전 인코더의 마지막 단계가 패치 표현을 언어 모델의
 임베딩 크기로 내리는 일이라 구조적으로 감쇠하며, 블록 뒤에 LayerNorm 하나만 있어 차원을 줄이지
 않는 Kimi-VL만 배율이 한 자릿수 크다는 점이 이 설명을 뒷받침한다. 판정은 여섯 모두 바뀌지 않았다.
@@ -1333,7 +1362,7 @@ fp16과 같은 1,385 MiB이면서 **상실이 0.0%**로 사라진다. 활성 크
 (상실률·지연·메모리는 TensorRT 10.13·50장, ¹만 250장(Ⅵ장 3절 각주). 정확도는 같은 가중치의 PyTorch 배포 조건 측정, Ⅶ장 3절)
 
 fp32는 안전하지만 교정 fp16보다 약 2.95배 느리고 메모리가 두 배다. fp16 무교정은 출력을 상실한다. 교정 fp16과 bf16은
-정확도로 구별되지 않으므로(+0.78%p, McNemar[33] p=0.34), 선택 기준은 **지연 대 가중치 편집의 위험**으로 좁혀진다.
+정확도로 구별되지 않으므로(+0.78%p, McNemar[6] p=0.34), 선택 기준은 **지연 대 가중치 편집의 위험**으로 좁혀진다.
 교정은 fp16의 속도를 지키지만 완전한 등가가 아니고(Ⅶ장 1절), bf16은 가중치를 건드리지 않지만 이 런타임에서는
 느리다. **어느 쪽을 고르든 먼저 여유를 재야 선택지가 생긴다**는 것이 [표 22]의 요지다. 그리고 대상이 bf16을 지원하지
 않는 경우(DLA[41] 오프로드)에는 오른쪽 마지막 행이 선택지에서 빠진다.
@@ -1484,17 +1513,17 @@ python scripts/headroom_guard.py fix --checkpoint ... --target_headroom 2.0 --ve
 달성했다(Ⅳ장 1절의 생존 편향과 같은 현상이다).
 
 **② 모델 기본 설정을 기본값으로 쓴다.** `--max_pixels`를 주지 않으면 모델 자신의 처리기 설정을
-쓴다. Qwen2.5-VL-3B[2]의 기본 상한은 12,845,056으로 nuScenes[27] 원본(1,440,000)보다 커서 이미지가
+쓴다. Qwen2.5-VL-3B[2]의 기본 상한은 12,845,056으로 nuScenes[30] 원본(1,440,000)보다 커서 이미지가
 줄지 않는다. 즉 **"모델을 받아 그대로 쓰는 경로"의 위험을 기본으로 보여 준다.**
 
 **③ 계열 차이는 이름 패턴으로 흡수하고, 모르는 것은 모른다고 적는다.** 블록 목록과 MLP 구조를
 이름으로 찾는다 — 게이트형 `(gate_proj, up_proj) → down_proj`(Qwen2.5-VL, LLaMA 계열)와 단순형
-`fc1 → fc2`(Qwen2-VL[32], CLIP 계열). 인식하지 못하는 구조는 건너뛰고 기록하며, **"미인식 = 안전"이
+`fc1 → fc2`(Qwen2-VL[34], CLIP 계열). 인식하지 못하는 구조는 건너뛰고 기록하며, **"미인식 = 안전"이
 아님을 출력에 명시한다.** 실측으로 두 군데를 고쳤다 — 블록 목록 이름이 `blocks`가 아닌 계열
 (Idefics3의 `encoder.layers`)과, 처리기가 5차원 입력(배치, 타일, 채널, 높이, 너비)을 내는 계열.
 
 **④ 블록 뒤 출력도 재고 나쁜 쪽으로 판정한다.** 비전 인코더의 마지막 블록 뒤에 크기를 키우는
-연산이 있으면(vLLM #40290[25]의 Gemma 4) 블록만 보는 판정은 안전을 과대평가한다. 반대로 크기를 줄이는
+연산이 있으면(vLLM #40290[28]의 Gemma 4) 블록만 보는 판정은 안전을 과대평가한다. 반대로 크기를 줄이는
 계열(Qwen2.5-VL의 merger)에서 타워 출력만 보면 위험을 놓친다. 그래서 두 지점을 모두 재고 여유가
 작은 쪽으로 판정한다. 측정한 여섯 계열은 모두 블록 뒤에서 크기를 줄였다(Ⅴ장 3절).
 
@@ -1528,12 +1557,12 @@ python scripts/headroom_guard.py diagnose --dtype float16 --available_formats fl
 함께 나눈다(Ⅳ장 4절).
 
 **⑧ 교정은 권하지 않고 비용과 함께 보고한다.** 곱이 만들어지기 전에 줄이면 오버플로는 사라지지만
-잔차 분기와 MLP 분기의 비율이 바뀐다. 배포 조건에서 짝지어 잰 정확도 변화는 +0.78%p(McNemar[33]
+잔차 분기와 MLP 분기의 비율이 바뀐다. 배포 조건에서 짝지어 잰 정확도 변화는 +0.78%p(McNemar[6]
 p=0.34)로 측정 한계 이하지만, 두 조건의 답이 갈리는 문항 54쌍이 있다(Ⅶ장 3절). 따라서 도구는
 "자동으로 고쳐 준다"고 주장하지 않는다. 채택은 사용자가 정한다.
 
 **⑨ 조용히 틀리는 적재를 막는다.** 측정 과정에서 조용히 틀린 숫자를 낼 수 있는 경로가 셋
-있었다 — 공개 저장소의 키 규약 불일치로 인한 랜덤 초기화, 교정 가중치를 LoRA[30] 미병합 모델에 적재,
+있었다 — 공개 저장소의 키 규약 불일치로 인한 랜덤 초기화, 교정 가중치를 LoRA[33] 미병합 모델에 적재,
 타워 탐색이 언어 모델 임베딩을 집는 경우. 도구는 공개 저장소를 적재할 때 가중치가 실제로
 들어왔는지 검사하고, 교정 가중치는 엄격 모드로 적재한다. 셋 중 둘은 저자의 버그였다. 검사를
 넣는 것은 선택이 아니라 필수였다.
@@ -1832,10 +1861,10 @@ SNR 32.30 → 29.98 → 23.45 dB). 다만 n=3에서 완전 역전이 우연일 �
 체크포인트 다섯 곳에서 같은 방향임을 확인했고(감소율 68.2% → 약 62%로 포화, 역전 없음), 효과가
 사라지는 것이 아니라 안정화된다. 중간점의 모양을 전체 학습에서 다시 재지는 않았다.
 
-**7. 데이터 출처가 둘이다.** nuScenes가 주축이고 CODA-LM[28]으로 한 축을 더했다. 토큰 수를 고정한 채 장면만
+**7. 데이터 출처가 둘이다.** nuScenes가 주축이고 CODA-LM[31]으로 한 축을 더했다. 토큰 수를 고정한 채 장면만
 바꾼 후방 카메라에서도(0.86배, 96.8% 상실 대 정렬 두 변형 0%), nuScenes 밖 CODA-LM에서도(0.94배, 72.0%
 대 0%) 순서가 유지됐다. CODA-LM 143장이 우리 학습 이미지 24,432장과 겹치지 않음은 양성 대조를 둔
-이미지 해시 대조로 확인했다. 다만 CODA[29] 자체는 약 9%를 nuScenes에서 가져왔다.
+이미지 해시 대조로 확인했다. 다만 CODA[32] 자체는 약 9%를 nuScenes에서 가져왔다.
 
 **8. 공개 저장소 조사의 분모와 측정 범위.** 13.7%의 분모는 config를 읽을 수 있었던 197개이며(후보
 281개 중), 자기선택 표본이다. 위험 구성 27개 중 직접 잰 것은 9개이고, 나머지는 대형 모델(디스크)이거나
@@ -1896,7 +1925,7 @@ fp16으로 남아 실제로 넘치는 부분이 서로 다르기 때문이다. �
 오버플로는 마지막 블록 MLP 안, 사전학습 가중치에 박힌 한 채널에서 일어났다. 그 채널로 들어가는 입력을
 곱이 만들어지기 전에 줄이면 학습 없이도 상실이 사라졌고, 출력을 줄이면 사라지지 않았다(Ⅳ장). 여유는
 특징 정렬 손실의 가중치에 따라 단조롭게 움직였고, 정렬 대상을 교사가 아닌 학생 자신으로 두어도 효과의
-절반이 재현되었으며, LoRA[30]를 비전 인코더까지 넓히는 흔한 선택은 여유를 줄였다(Ⅳ장). 같은 제작사의 다음
+절반이 재현되었으며, LoRA[33]를 비전 인코더까지 넓히는 흔한 선택은 여유를 줄였다(Ⅳ장). 같은 제작사의 다음
 세대 모델은 여유를 크게 늘렸다(Ⅴ장). 저장소 설정, 인코더 설계, 가중치, 모델 계열 가운데 어느 것도
 여유를 예측하지 못했다(Ⅴ장).
 
@@ -1985,37 +2014,37 @@ PyTorch만의 현상이 아니라 실제 배포 런타임의 기본 설정에서
 [1] G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," in *NIPS 2014 Deep Learning Workshop*, 2015. (arXiv:1503.02531)
 [2] S. Bai, K. Chen, X. Liu, et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
 [3] T. Qian, J. Chen, L. Zhuo, et al., "NuScenes-QA: A Multi-Modal Visual Question Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI Conf. on Artificial Intelligence*, vol. 38, no. 5, pp. 4542–4550, 2024.
-[4] A. Romero, N. Ballas, S. E. Kahou, et al., "FitNets: Hints for Thin Deep
-[5] W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
-[6] J. Zhu, W. Wang, Z. Chen, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes for Open-Source Multimodal Models," arXiv:2504.10479, 2025.
-[7] A. Gopalkrishnan, R. Greer, M. Trivedi, "Multi-Frame, Lightweight & Efficient Vision-Language Models
-[8] C. Sima, K. Renz, K. Chitta, et al., "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024. (Oral)
-[9] E. Zhang, X. Dai, M. Huang, et al., "MiniDrive: More Efficient Vision-Language Models with
-[10] Z. Xia, Y. Liu, X. Li, et al., "SCPNet: Semantic Scene Completion on
-[11] S. Jiang, Z. Huang, K. Qian, et al., "A Survey on Vision-Language-Action Models for Autonomous Driving," arXiv:2506.24044, 2025.
-[12] T. Hu, X. Liu, S. Wang, et al., "Vision-Language-Action Models for Autonomous Driving: Past, Present, and Future," arXiv:2512.16760, 2025.
-[13] Z. Yu, B. Wang, P. Zeng, et al., "A Survey on Efficient Vision-Language-Action Models," *IEEE Trans. Pattern Anal. Mach. Intell.* (accepted), 2025. (arXiv:2510.24795)
-[14] T. Guo, L. Su, "Rethinking Language's Role in Efficient VLA for Autonomous Vehicles: Toward Smarter, Trustworthy Driving," in *Proc. EMNLP*, 2026. (arXiv:2608.30144)
-[15] J. H. Heo, S. Azizi, A. Fayyazi, et al., "CrAFT: Compression-Aware Fine-Tuning for Efficient
-[16] J. Tong, G. Liang, P. Sun, et al., "Colinearity Decay: Training Quantization-Friendly ViTs with
-[17] X. Huang, Z. Liu, S.-Y. Liu, et al., "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
-[18] Q. Wei, C.-Y. Yau, H.-T. Wai, et al., "RoSTE: An Efficient Quantization-Aware Supervised Fine-Tuning Approach for Large Language Models," in *Proc. ICML*, 2025. (arXiv:2502.09003)
-[19] J.-M. Chen, Y.-H. Chao, Y.-J. Wang, et al., "QuantTune: Optimizing Model Quantization with Adaptive Outlier-Driven Fine Tuning," arXiv:2403.06497, 2024.
-[20] M. Sun, X. Chen, J. Z. Kolter, et al., "Massive Activations in Large Language Models," in *Proc. Conference on Language Modeling (COLM)*, 2024. (arXiv:2402.17762)
-[21] L. Chen, H. Tian, X. Chen, et al., "Measuring Maximum Activations in Open Large Language Models," arXiv:2605.15572, 2026.
-[22] S. Kim, T. Yeom, J. Kim, et al., "Activation Quantization of Vision Encoders Needs Prefixing Registers," in *Proc. ECCV*, 2026. (arXiv:2510.04547)
-[23] H. Shin, C. Kim, R. Kim, et al., "Rethinking Small VLM Quantization: From Component-Wise Analysis to Hardware-Aware Edge Deployment," in *ICML 2026 Workshop on Hypothesis Testing*, 2026. (arXiv:2607.08029)
-[24] L. Cheng, Q. Liao, F. Wu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
-[25] vLLM Project, "[Bug]: Gemma 4 (31B/26B-A4B) vision outputs only \<pad\> under fp16 — vision_tower standardize overflows," GitHub Issue #40290, 2026-04-19. https://github.com/vllm-project/vllm/issues/40290
-[26] A. Karjol, D. M. Hanna, "Edge AI for Automotive Vulnerable Road User Safety: Deployable Detection via Knowledge Distillation," arXiv:2604.26857, 2026.
-[27] H. Caesar, V. Bankiti, A. H. Lang, et al., "nuScenes: A Multimodal Dataset for Autonomous Driving," in *Proc. CVPR*, 2020. (arXiv:1903.11027)
-[28] K. Chen, Y. Li, W. Zhang, et al., "Automated Evaluation of Large Vision-Language Models on Self-driving Corner Cases," in *Proc. WACV*, 2025. (arXiv:2404.10595)
-[29] K. Li, K. Chen, H. Wang, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
-[30] E. J. Hu, Y. Shen, P. Wallis, et al., "LoRA: Low-Rank Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
-[31] C. Spearman, "The Proof and Measurement of Association between Two Things," *The American Journal of Psychology*, vol. 15, no. 1, pp. 72–101, 1904.
-[32] P. Wang, S. Bai, S. Tan, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution," arXiv:2409.12191, 2024.
-[33] Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages," *Psychometrika*, vol. 12, no. 2, pp. 153–157, 1947.
-[34] J. Lin, J. Tang, H. Tang, et al., "AWQ: Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc. MLSys*, 2024. (Best Paper Award)
+[4] J. Lin, J. Tang, H. Tang, et al., "AWQ: Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc. MLSys*, 2024. (Best Paper Award)
+[5] C. Spearman, "The Proof and Measurement of Association between Two Things," *The American Journal of Psychology*, vol. 15, no. 1, pp. 72–101, 1904.
+[6] Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or Percentages," *Psychometrika*, vol. 12, no. 2, pp. 153–157, 1947.
+[7] A. Romero, N. Ballas, S. E. Kahou, et al., "FitNets: Hints for Thin Deep
+[8] W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
+[9] J. Zhu, W. Wang, Z. Chen, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes for Open-Source Multimodal Models," arXiv:2504.10479, 2025.
+[10] A. Gopalkrishnan, R. Greer, M. Trivedi, "Multi-Frame, Lightweight & Efficient Vision-Language Models
+[11] C. Sima, K. Renz, K. Chitta, et al., "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024. (Oral)
+[12] E. Zhang, X. Dai, M. Huang, et al., "MiniDrive: More Efficient Vision-Language Models with
+[13] Z. Xia, Y. Liu, X. Li, et al., "SCPNet: Semantic Scene Completion on
+[14] S. Jiang, Z. Huang, K. Qian, et al., "A Survey on Vision-Language-Action Models for Autonomous Driving," arXiv:2506.24044, 2025.
+[15] T. Hu, X. Liu, S. Wang, et al., "Vision-Language-Action Models for Autonomous Driving: Past, Present, and Future," arXiv:2512.16760, 2025.
+[16] Z. Yu, B. Wang, P. Zeng, et al., "A Survey on Efficient Vision-Language-Action Models," *IEEE Trans. Pattern Anal. Mach. Intell.* (accepted), 2025. (arXiv:2510.24795)
+[17] T. Guo, L. Su, "Rethinking Language's Role in Efficient VLA for Autonomous Vehicles: Toward Smarter, Trustworthy Driving," in *Proc. EMNLP*, 2026. (arXiv:2608.30144)
+[18] J. H. Heo, S. Azizi, A. Fayyazi, et al., "CrAFT: Compression-Aware Fine-Tuning for Efficient
+[19] J. Tong, G. Liang, P. Sun, et al., "Colinearity Decay: Training Quantization-Friendly ViTs with
+[20] X. Huang, Z. Liu, S.-Y. Liu, et al., "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
+[21] Q. Wei, C.-Y. Yau, H.-T. Wai, et al., "RoSTE: An Efficient Quantization-Aware Supervised Fine-Tuning Approach for Large Language Models," in *Proc. ICML*, 2025. (arXiv:2502.09003)
+[22] J.-M. Chen, Y.-H. Chao, Y.-J. Wang, et al., "QuantTune: Optimizing Model Quantization with Adaptive Outlier-Driven Fine Tuning," arXiv:2403.06497, 2024.
+[23] M. Sun, X. Chen, J. Z. Kolter, et al., "Massive Activations in Large Language Models," in *Proc. Conference on Language Modeling (COLM)*, 2024. (arXiv:2402.17762)
+[24] L. Chen, H. Tian, X. Chen, et al., "Measuring Maximum Activations in Open Large Language Models," arXiv:2605.15572, 2026.
+[25] S. Kim, T. Yeom, J. Kim, et al., "Activation Quantization of Vision Encoders Needs Prefixing Registers," in *Proc. ECCV*, 2026. (arXiv:2510.04547)
+[26] H. Shin, C. Kim, R. Kim, et al., "Rethinking Small VLM Quantization: From Component-Wise Analysis to Hardware-Aware Edge Deployment," in *ICML 2026 Workshop on Hypothesis Testing*, 2026. (arXiv:2607.08029)
+[27] L. Cheng, Q. Liao, F. Wu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
+[28] vLLM Project, "[Bug]: Gemma 4 (31B/26B-A4B) vision outputs only \<pad\> under fp16 — vision_tower standardize overflows," GitHub Issue #40290, 2026-04-19. https://github.com/vllm-project/vllm/issues/40290
+[29] A. Karjol, D. M. Hanna, "Edge AI for Automotive Vulnerable Road User Safety: Deployable Detection via Knowledge Distillation," arXiv:2604.26857, 2026.
+[30] H. Caesar, V. Bankiti, A. H. Lang, et al., "nuScenes: A Multimodal Dataset for Autonomous Driving," in *Proc. CVPR*, 2020. (arXiv:1903.11027)
+[31] K. Chen, Y. Li, W. Zhang, et al., "Automated Evaluation of Large Vision-Language Models on Self-driving Corner Cases," in *Proc. WACV*, 2025. (arXiv:2404.10595)
+[32] K. Li, K. Chen, H. Wang, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
+[33] E. J. Hu, Y. Shen, P. Wallis, et al., "LoRA: Low-Rank Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
+[34] P. Wang, S. Bai, S. Tan, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution," arXiv:2409.12191, 2024.
 [35] H. Liu, C. Li, Y. Li, et al., "Improved Baselines with Visual Instruction Tuning," in *Proc. CVPR*, 2024. (arXiv:2310.03744)
 [36] M. Abdin, J. Aneja, H. Awadalla, et al., "Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone," arXiv:2404.14219v4, 2024.
 [37] S. Bai, Y. Cai, R. Chen, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
