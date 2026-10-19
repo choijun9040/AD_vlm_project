@@ -726,7 +726,7 @@ def train(config):
             print(
                 f"\n[max_steps={max_steps} 도달, 조기 종료] "
                 f"avg_loss={avg['total']:.4f} "
-                f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f})\n"
+                f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f} hr={avg['hr']:.4f})\n"
             )
             break
 
@@ -734,7 +734,7 @@ def train(config):
         print(
             f"\n[Epoch {epoch} 완료] "
             f"avg_loss={avg['total']:.4f} "
-            f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f})\n"
+            f"(task={avg['task']:.3f} align={avg['align']:.3f} atc={avg['atc']:.3f} hr={avg['hr']:.4f})\n"
         )
         _save_checkpoint(
             accelerator, student, atc_criterion, align_criterion, processor,
