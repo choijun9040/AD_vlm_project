@@ -55,7 +55,7 @@ Orin Nano 8GB의 강타입 엔진에서도 확인되었다. 또한 특징 정렬
 없으며, 배포 형식과 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을 사전에 진단하고
 교정해야 함을 보여준다.
 
-**주요어**: 표현 범위 여유, 저정밀 추론, 지식 증류, 비전-언어 모델, 자율주행, 배포 검증
+**주요어**: 표현 범위 여유, 저정밀 추론, 지식 증류, 비전-언어 모델, 자율주행, 오버플로 교정
 
 ---
 
@@ -110,4 +110,4 @@ measured in the deployment format and resolution to diagnose and correct the col
 beforehand.
 
 **Keywords**: representable-range headroom, low-precision inference, knowledge distillation,
-vision-language model, autonomous driving, deployment verification
+vision-language model, autonomous driving, overflow correction
