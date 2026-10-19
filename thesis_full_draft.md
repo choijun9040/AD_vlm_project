@@ -103,7 +103,10 @@ Abstract
 본 논문은 이를 해결하기 위해 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고,
 배포 형식의 상한을 초과하는 이미지의 비율로 출력 상실률을 예측하는 진단 지표를 제안한다. 아울러
 오버플로 발생 지점의 분석에 근거하여, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습
-없는 교정 방법을 제안하고, 이를 배포 전 진단·교정 도구로 구현하였다.
+없는 교정 방법을 제안하고, 이를 배포 전 진단·교정 도구로 구현하였다. 이 교정은 해당 연산을
+대체하는 기존 수치 안정화 기법과 달리 가중치 편집만으로 이루어져 추론 그래프와 런타임을 바꾸지
+않는다. 자율주행 VLM을 사례로 삼았으나, 두 방법은 비전 인코더를 저정밀로 실행하는 VLM에 계열과
+무관하게 적용된다.
 
 Qwen2.5-VL-7B 교사 모델로부터 손실 함수만을 달리한 다섯 개의 3B 학생 모델을 증류하여 검증하였다.
 특징 증류 모델과 증류 없는 기준 모델의 정확도는 50.30~51.69%로 구별되지 않았으나, 원본
@@ -154,7 +157,10 @@ maximum activation magnitude) and propose a diagnostic that predicts the collaps
 fraction of images exceeding the target format's limit. Based on an analysis of where the
 overflow occurs, we further propose a training-free correction that scales the weights before
 the multiplication in the gated MLP, and implement both as a pre-deployment diagnosis and
-correction tool.
+correction tool. Unlike existing numerical-stability techniques that replace the offending
+operation, the correction is a weight edit alone and leaves the inference graph and runtime
+unchanged. Although we study autonomous-driving VLMs, both methods apply to any VLM that runs
+its vision encoder at low precision, regardless of model family.
 
 We validated the approach on five 3B students distilled from a Qwen2.5-VL-7B teacher that differ
 only in their loss functions. The feature-distilled students and the non-distilled baseline are
