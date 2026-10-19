@@ -6,12 +6,12 @@
 >
 > **작성 규칙.** 수치마다 조건(해상도·통계량)을 짧게 붙인다. 확인된 것은 A100의 TensorRT fp16 엔진까지다.
 > Orin은 강타입 엔진으로 확인한 결과 한 문장을 넣었다(6.5절, 2026-10-02). 관행 빌드 불가 등 조건은 본문에 둔다.
-> 분량은 **국문 1,225자**(공백 제외)·**영문 478단어**이고 양쪽 다 **7단락·주요어 6개**다(제목·주요어 포함, 2026-10-02 재집계 — 이전 판의 「약 1,160자·약 450단어」는 그 뒤 고친 본문을 따라오지 못한 값이었다). **학교 규정에서 확인할 것 넷**: 분량 상한 · 단락 수 제한(한 단락만 받는 규정도 있다) · 주요어 개수(보통 다섯이라 **하나를 줄여야 할 수 있다**) · 영문 초록의 위치와 제목 반복 여부. 규정이 정해지면 맞춘다.
+> 분량은 **국문 1,392자**(공백 제외)·**영문 533단어**이고 양쪽 다 **8단락·주요어 6개**다(제목·주요어 포함, 2026-10-19 재집계 — 10-02 판의 「1,225자·478단어·7단락」은 지도교수 피드백 재구성과 결과 단락 분리 이전 값이다). **학교 규정에서 확인할 것 넷**: 분량 상한 · 단락 수 제한(한 단락만 받는 규정도 있다) · 주요어 개수(보통 다섯이라 **하나를 줄여야 할 수 있다**) · 영문 초록의 위치와 제목 반복 여부. 규정이 정해지면 맞춘다.
 >
 > **정확도 문장의 범위.** "다섯 학생이 정확도로 구별되지 않는다"로 쓰지 않는다 — 출력 증류 학생(46.74%)은
 > 뚜렷이 낮다(3.4절). 구별되지 않는 것은 특징 증류 세 학생과 기준선(50.30~51.69%)이다.
 
-> **2026-10-19 재구성 (지도교수 피드백).** 초록을 「연구 내용·필요성 → 기존 연구의 문제점 → 제안 → 기존 대비 실험 결과 → 결론」 다섯 단락으로 다시 썼다. 비교 기준은 **기존 평가 지표**(과제 정확도, INT8 양자화 SNR, 이상치 비율)와 **기존 대안**(bf16 형식 전환, 출력 측 축소)이다. 구어 표현(「고치는」·「빼」·「재야만」·「보고서에 드러나지 않는다」)은 학술 표현으로 바꿨다. 같은 날 17:46~18:21에 고친 판(「오버플로 교정」·「수치 오버플로」 주요어, 첫 단락의 오버플로 정의·적용 범위, 결론의 bf16 측정 규칙, 결과 단락 분리 등)은 사용자 결정으로 되돌리고 커밋 339c5e0 판을 쓴다.
+> **2026-10-19 재구성 (지도교수 피드백).** 초록을 「연구 내용·필요성 → 기존 연구의 문제점 → 제안 → 기존 대비 실험 결과 → 결론」 다섯 단락으로 다시 썼다. 비교 기준은 **기존 평가 지표**(과제 정확도, INT8 양자화 SNR, 이상치 비율)와 **기존 대안**(bf16 형식 전환, 출력 측 축소)이다. 구어 표현(「고치는」·「빼」·「재야만」·「보고서에 드러나지 않는다」)은 학술 표현으로 바꿨다. 같은 날 17:46~18:21에 고친 판(「오버플로 교정」·「수치 오버플로」 주요어, 첫 단락의 오버플로 정의·적용 범위, 결론의 bf16 측정 규칙, 결과 단락 분리 등)은 사용자 결정으로 되돌리고 커밋 339c5e0 판을 쓴다. 그 판 위에 새 제목 기준 검토 넷을 적용했다: 첫 단락에서 현상을 「오버플로」로 부르고, 첫 문장의 범위를 「차량과 같은 엣지 장치」로 넓히고(자율주행은 실험 사례로 남김), 주요어에 「수치 오버플로」·「가중치 교정」을 넣고 「지식 증류」·「배포 검증」을 뺐으며, 결과 단락을 기존 지표의 실패와 제안 방법의 결과 두 단락으로 나눴다.
 >
 ---
 
@@ -19,10 +19,11 @@
 
 **비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정**
 
-자율주행용 비전-언어 모델(VLM)을 차량에 탑재하려면 지식 증류를 통한 모델 경량화와 반정밀도(fp16)
-연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전 인코더의 활성값이
-이를 초과하면 해당 이미지에 대한 모델 출력 전체가 상실된다. 따라서 압축 모델을 저정밀로 배포하기
-전에 이러한 출력 상실 위험을 판별하는 방법이 필요하다.
+비전-언어 모델(VLM)을 차량과 같은 엣지 장치에 배포하려면 지식 증류를 통한 모델 경량화와
+반정밀도(fp16) 연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전
+인코더의 활성값이 이를 초과하는 오버플로가 일어나면 해당 이미지에 대한 모델 출력 전체가
+상실된다. 따라서 압축 모델을 저정밀로 배포하기 전에 이러한 출력 상실 위험을 판별하는 방법이
+필요하다.
 
 기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표(양자화 신호대잡음비, 이상치
 비율)로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16 상한을 넘어 출력이
@@ -43,19 +44,21 @@ Qwen2.5-VL-7B 교사 모델로부터 손실 함수만을 달리한 다섯 개의
 fp16에서 이미지의 94.8%에 대해 출력이 상실되어 정확도가 49.95%(bf16)에서 1.36%로 하락하였다.
 기존 지표인 텐서 단위 INT8 양자화 SNR은 상실률 94.8%인 모델을 32.23 dB, 0%인 모델을 22.88 dB로
 평가하여 위험 순위를 정반대로 제시하였고(6개 모델, 스피어만 순위상관 −1.000), 이상치 비율은
-상실률과 일관된 관계를 보이지 않았다. 반면 제안 지표는 6개 모델의 상실률을 평균 2.1%p의 오차로
-예측하였다. 제안 교정 방법은 출력 상실을 제거하여 배포 조건의 정확도를 1.36%에서 50.73%로
-회복하였으며, 이는 오버플로가 없는 bf16 실행(49.95%)과 통계적으로 유의한 차이가 없었다. 기존
-대안인 bf16 형식 전환은 fp16 대비 1.34~1.38배의 추론 지연을 유발하나, 제안 방법은 fp16 형식을
-유지하여 이러한 지연 증가를 피하였다. 같은 출력 상실과 교정 효과는 TensorRT fp16 엔진과 Jetson
-Orin Nano 8GB의 강타입 엔진에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가
-1.79배에서 4.61배로 증가하여(평가 해상도), 증류 설계 단계에서도 여유를 확보할 수 있음을 보였다.
+상실률과 일관된 관계를 보이지 않았다.
+
+반면 제안 지표는 6개 모델의 상실률을 평균 2.1%p의 오차로 예측하였다. 제안 교정 방법은 출력
+상실을 제거하여 배포 조건의 정확도를 1.36%에서 50.73%로 회복하였으며, 이는 오버플로가 없는 bf16
+실행(49.95%)과 통계적으로 유의한 차이가 없었다. 기존 대안인 bf16 형식 전환은 fp16 대비
+1.34~1.38배의 추론 지연을 유발하나, 제안 방법은 fp16 형식을 유지하여 이러한 지연 증가를
+피하였다. 같은 출력 상실과 교정 효과는 TensorRT fp16 엔진과 Jetson Orin Nano 8GB의 강타입
+엔진에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서 4.61배로
+증가하여(평가 해상도), 증류 설계 단계에서도 여유를 확보할 수 있음을 보였다.
 
 이상의 결과는 압축된 VLM의 저정밀 배포 적합성을 정확도와 양자화 오차 지표만으로 판단할 수
 없으며, 배포 형식과 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을 사전에 진단하고
 교정해야 함을 보여준다.
 
-**주요어**: 표현 범위 여유, 저정밀 추론, 지식 증류, 비전-언어 모델, 자율주행, 배포 검증
+**주요어**: 표현 범위 여유, 수치 오버플로, 저정밀 추론, 가중치 교정, 비전-언어 모델, 자율주행
 
 ---
 
@@ -64,11 +67,11 @@ Orin Nano 8GB의 강타입 엔진에서도 확인되었다. 또한 특징 정렬
 **Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
 Vision-Language Models**
 
-Deploying autonomous-driving vision-language models (VLMs) in vehicles requires both model
+Deploying vision-language models (VLMs) on edge devices such as vehicles requires both model
 compression through knowledge distillation and half-precision (fp16) inference. Because fp16 can
 represent magnitudes only up to 65,504, an activation in the vision encoder that exceeds this
-limit destroys the model's entire output for that image. A method to identify this risk before
-low-precision deployment is therefore needed.
+limit (an overflow) destroys the model's entire output for that image. A method to identify this
+risk before low-precision deployment is therefore needed.
 
 Existing work judges deployment readiness by task accuracy and quantization-error metrics such
 as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics, however, cannot
@@ -94,20 +97,22 @@ block at native resolution ranges from 0.88× to 2.92×; the student below 1× c
 of images in fp16, and its accuracy falls from 49.95% (bf16) to 1.36%. The existing per-tensor
 INT8 quantization SNR rates the student with a 94.8% collapse rate at 32.23 dB and the one with
 0% at 22.88 dB, ranking the risk in exact reverse (six models, Spearman −1.000), and the
-outlier ratio shows no consistent relation to collapse. The proposed diagnostic predicts the
-collapse rate of six models with a mean error of 2.1 percentage points. The proposed correction
-eliminates the collapse and restores deployment-condition accuracy from 1.36% to 50.73%, with no
-statistically significant difference from overflow-free bf16 execution (49.95%). Whereas the
-existing alternative of switching to bf16 increases latency by 1.34–1.38× relative to fp16, the
-proposed method keeps fp16 and avoids this cost. The same collapse and correction were confirmed
-on a TensorRT fp16 engine and on a strongly typed engine on a Jetson Orin Nano 8GB. Raising the
-weight of the feature-alignment loss also increases headroom from 1.79× to 4.61× (evaluation
-resolution), showing that headroom can also be secured at the distillation design stage.
+outlier ratio shows no consistent relation to collapse.
+
+The proposed diagnostic predicts the collapse rate of six models with a mean error of 2.1
+percentage points. The proposed correction eliminates the collapse and restores
+deployment-condition accuracy from 1.36% to 50.73%, with no statistically significant difference
+from overflow-free bf16 execution (49.95%). Whereas the existing alternative of switching to
+bf16 increases latency by 1.34–1.38× relative to fp16, the proposed method keeps fp16 and
+avoids this cost. The same collapse and correction were confirmed on a TensorRT fp16 engine and
+on a strongly typed engine on a Jetson Orin Nano 8GB. Raising the weight of the
+feature-alignment loss also increases headroom from 1.79× to 4.61× (evaluation resolution),
+showing that headroom can also be secured at the distillation design stage.
 
 These results show that low-precision deployment readiness of compressed VLMs cannot be judged
 by accuracy and quantization-error metrics alone, and that representable-range headroom must be
 measured in the deployment format and resolution to diagnose and correct the collapse risk
 beforehand.
 
-**Keywords**: representable-range headroom, low-precision inference, knowledge distillation,
-vision-language model, autonomous driving, deployment verification
+**Keywords**: representable-range headroom, numerical overflow, low-precision inference, weight
+correction, vision-language model, autonomous driving 
