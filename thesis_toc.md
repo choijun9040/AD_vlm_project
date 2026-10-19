@@ -1,8 +1,8 @@
 <!-- 자동 생성: scripts/build_thesis.py (2026-10-19). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
-# 자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단
+# 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정
 
-*Measuring and Diagnosing Representable-Range Headroom for Low-Precision Deployment of Autonomous-Driving Vision-Language Models*
+*Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 
 석사학위논문 목차 · 합본 생성 2026-10-19 · 학교 양식 적용 전
 
@@ -85,7 +85,7 @@ Abstract
 
 # 국문 초록
 
-**자율주행 비전-언어 모델의 저정밀 배포를 위한 표현 범위 여유 측정과 진단**
+**비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정**
 
 자율주행용 비전-언어 모델(VLM)을 차량에 탑재하려면 지식 증류를 통한 모델 경량화와 반정밀도(fp16)
 연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전 인코더의 활성값이
@@ -130,8 +130,8 @@ Orin Nano 8GB의 강타입 엔진에서도 확인되었다. 또한 특징 정렬
 
 # Abstract
 
-**Measuring and Diagnosing Representable-Range Headroom for Low-Precision Deployment of
-Autonomous-Driving Vision-Language Models**
+**Representation Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
+Vision-Language Models**
 
 Deploying autonomous-driving vision-language models (VLMs) in vehicles requires both model
 compression through knowledge distillation and half-precision (fp16) inference. Because fp16 can
