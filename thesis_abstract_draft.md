@@ -11,7 +11,7 @@
 > **정확도 문장의 범위.** "다섯 학생이 정확도로 구별되지 않는다"로 쓰지 않는다 — 출력 증류 학생(46.74%)은
 > 뚜렷이 낮다(3.4절). 구별되지 않는 것은 특징 증류 세 학생과 기준선(50.30~51.69%)이다.
 
-> **2026-10-19 재구성 (지도교수 피드백).** 초록을 「연구 내용·필요성 → 기존 연구의 문제점 → 제안 → 기존 대비 실험 결과 → 결론」 다섯 단락으로 다시 썼다. 비교 기준은 **기존 평가 지표**(과제 정확도, INT8 양자화 SNR, 이상치 비율)와 **기존 대안**(bf16 형식 전환, 출력 측 축소)이다. 구어 표현(「고치는」·「빼」·「재야만」·「보고서에 드러나지 않는다」)은 학술 표현으로 바꿨다.
+> **2026-10-19 재구성 (지도교수 피드백).** 초록을 「연구 내용·필요성 → 기존 연구의 문제점 → 제안 → 기존 대비 실험 결과 → 결론」 다섯 단락으로 다시 썼다. 비교 기준은 **기존 평가 지표**(과제 정확도, INT8 양자화 SNR, 이상치 비율)와 **기존 대안**(bf16 형식 전환, 출력 측 축소)이다. 구어 표현(「고치는」·「빼」·「재야만」·「보고서에 드러나지 않는다」)은 학술 표현으로 바꿨다. 같은 날 새 제목에 맞춰 첫 단락에서 「fp16 오버플로」·「output collapse」를 정의하고, 필요성을 「진단하고 교정하는」 방법으로, 적용 범위(방법은 VLM 일반·위험 실측은 Qwen2.5-VL 세대)를 첫 단락으로 옮겼다.
 >
 ---
 
@@ -21,8 +21,11 @@
 
 자율주행용 비전-언어 모델(VLM)을 차량에 탑재하려면 지식 증류를 통한 모델 경량화와 반정밀도(fp16)
 연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전 인코더의 활성값이
-이를 초과하면 해당 이미지에 대한 모델 출력 전체가 상실된다. 따라서 압축 모델을 저정밀로 배포하기
-전에 이러한 출력 상실 위험을 판별하는 방법이 필요하다.
+이를 초과하면(**fp16 오버플로**) 해당 이미지에 대한 모델 출력 전체가 상실된다. 따라서 압축
+모델을 저정밀로 배포하기 전에 이러한 출력 상실 위험을 진단하고 교정하는 방법이 필요하다.
+자율주행 VLM은 이 문제의 사례이며, 제안하는 진단과 교정은 비전 인코더를 저정밀로 실행하는 VLM에
+계열과 무관하게 적용된다. 다만 상한에 근접한 활성은 측정한 모델 가운데 Qwen2.5-VL 세대에서만
+관찰되었다.
 
 기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표(양자화 신호대잡음비, 이상치
 비율)로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16 상한을 넘어 출력이
@@ -37,8 +40,7 @@
 오버플로 발생 지점의 분석에 근거하여, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습
 없는 교정 방법을 제안하고, 이를 배포 전 진단·교정 도구로 구현하였다. 이 교정은 해당 연산을
 대체하는 기존 수치 안정화 기법과 달리 가중치 편집만으로 이루어져 추론 그래프와 런타임을 바꾸지
-않는다. 자율주행 VLM을 사례로 삼았으나, 두 방법은 비전 인코더를 저정밀로 실행하는 VLM에 계열과
-무관하게 적용된다.
+않는다.
 
 Qwen2.5-VL-7B 교사 모델로부터 손실 함수만을 달리한 다섯 개의 3B 학생 모델을 증류하여 검증하였다.
 특징 증류 모델과 증류 없는 기준 모델의 정확도는 50.30~51.69%로 구별되지 않았으나, 원본
@@ -70,8 +72,12 @@ Vision-Language Models**
 Deploying autonomous-driving vision-language models (VLMs) in vehicles requires both model
 compression through knowledge distillation and half-precision (fp16) inference. Because fp16 can
 represent magnitudes only up to 65,504, an activation in the vision encoder that exceeds this
-limit destroys the model's entire output for that image. A method to identify this risk before
-low-precision deployment is therefore needed.
+limit (**fp16 overflow**) destroys the model's entire output for that image (output collapse). A
+method to diagnose and correct this risk before low-precision deployment is therefore needed.
+Autonomous-driving VLMs serve as the case study; the proposed diagnosis and correction apply to
+any VLM that runs its vision encoder at low precision, regardless of model family, although
+activations near the limit were observed only in the Qwen2.5-VL generation among the models
+measured.
 
 Existing work judges deployment readiness by task accuracy and quantization-error metrics such
 as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics, however, cannot
@@ -90,8 +96,7 @@ overflow occurs, we further propose a training-free correction that scales the w
 the multiplication in the gated MLP, and implement both as a pre-deployment diagnosis and
 correction tool. Unlike existing numerical-stability techniques that replace the offending
 operation, the correction is a weight edit alone and leaves the inference graph and runtime
-unchanged. Although we study autonomous-driving VLMs, both methods apply to any VLM that runs
-its vision encoder at low precision, regardless of model family.
+unchanged.
 
 We validated the approach on five 3B students distilled from a Qwen2.5-VL-7B teacher that differ
 only in their loss functions. The feature-distilled students and the non-distilled baseline are
