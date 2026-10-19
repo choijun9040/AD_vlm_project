@@ -90,44 +90,41 @@ Abstract
 비전-언어 모델(VLM)을 차량과 같은 엣지 장치에 배포하려면 지식 증류를 통한 모델 경량화와
 반정밀도(fp16) 연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전
 인코더의 활성값이 이를 초과하는 오버플로가 일어나면 해당 이미지에 대한 모델 출력 전체가
-상실된다. 따라서 압축 모델을 저정밀로 배포하기 전에 이러한 출력 상실 위험을 진단하고 교정하는
-방법이 필요하다. 본 논문은 자율주행 VLM을 사례로 이 문제를 다룬다.
+상실된다. 따라서 압축 모델을 저정밀로 배포하기 전에 이러한 출력 상실 위험을 판별하는 방법이
+필요하다. 본 논문은 자율주행 VLM을 사례로 이 문제를 다룬다.
 
-기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표, 즉 양자화
-신호대잡음비(SNR)와 이상치 비율로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16
-상한을 넘어 출력이 상실되는지**를 판별하지 못한다. 양자화 오차 지표는 텐서 내 값의 상대적
-분포만을 반영하는 스케일 불변량이어서 절대 크기를 보지 않고, 과제 정확도는 평가 해상도와 bf16
-형식, 즉 오버플로가 일어나지 않는 조건에서 측정되기 때문이다. 또한 실무에서는 언어 모델을
-4비트로 양자화하면서 비전 인코더는 양자화 대상에서 제외하여 fp16으로 실행하는 구성이 쓰이는데,
-이 경우 양자화 오차 평가는 정작 fp16으로 실행되는 비전 인코더에 적용되지 않는다.
+기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표(양자화 신호대잡음비, 이상치
+비율)로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16 상한을 넘어 출력이
+상실되는지**를 판별하지 못한다. 양자화 오차 지표는 텐서 내 값의 상대적 분포만을 반영하는 스케일
+불변량이어서 절대 크기를 보지 않고, 과제 정확도는 평가 해상도와 bf16 형식, 즉 오버플로가
+일어나지 않는 조건에서 측정되기 때문이다. 또한 실무에서는 언어 모델을 4비트로 양자화하면서 비전
+인코더는 양자화 대상에서 제외하여 fp16으로 실행하는 구성이 널리 쓰이므로, 양자화 오차 평가는
+정작 fp16으로 실행되는 비전 인코더에 적용되지 않는다.
 
-본 논문은 이를 해결하기 위해 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고
-이를 넘치지 않는 형식(bf16)에서 측정하여, 배포 형식의 상한을 초과하는 이미지의 비율로 출력
-상실률을 예측하는 진단 지표를 제안한다. 아울러 오버플로 발생 지점의 분석에 근거하여, 게이트형
-MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습 없는 교정 방법을 제안하고, 이를 배포 전
-진단·교정 도구로 구현하였다.
+본 논문은 이를 해결하기 위해 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고,
+배포 형식의 상한을 초과하는 이미지의 비율로 출력 상실률을 예측하는 진단 지표를 제안한다. 아울러
+오버플로 발생 지점의 분석에 근거하여, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습
+없는 교정 방법을 제안하고, 이를 배포 전 진단·교정 도구로 구현하였다.
 
 Qwen2.5-VL-7B 교사 모델로부터 손실 함수만을 달리한 다섯 개의 3B 학생 모델을 증류하여 검증하였다.
 특징 증류 모델과 증류 없는 기준 모델의 정확도는 50.30~51.69%로 구별되지 않았으나, 원본
-해상도에서 비전 인코더 마지막 블록의 여유(이미지 중앙값)는 0.88~2.92배로 달랐으며, 여유가 1
-미만인 모델은 fp16에서 이미지의 94.8%에 대해 출력이 상실되어 원본 해상도의 정확도가
-49.95%(bf16)에서 1.36%로 하락하였다(1,029문항). 기존 지표인 텐서 단위 INT8 양자화 SNR은 상실률
-94.8%인 모델을 32.23 dB, 0%인 모델을 22.88 dB로 평가하여 위험 순위를 정반대로
-제시하였고(사전학습 모델과 다섯 학생의 6개 모델에서 여유와 SNR의 스피어만 순위상관 −1.000),
-이상치 비율은 상실률과 일관된 관계를 보이지 않았다.
+해상도에서 비전 인코더 마지막 블록의 여유는 0.88~2.92배로 달랐으며, 여유가 1 미만인 모델은
+fp16에서 이미지의 94.8%에 대해 출력이 상실되어 정확도가 49.95%(bf16)에서 1.36%로 하락하였다.
+기존 지표인 텐서 단위 INT8 양자화 SNR은 상실률 94.8%인 모델을 32.23 dB, 0%인 모델을 22.88 dB로
+평가하여 위험 순위를 정반대로 제시하였고(6개 모델, 스피어만 순위상관 −1.000), 이상치 비율은
+상실률과 일관된 관계를 보이지 않았다.
 
-반면 제안 지표는 6개 모델의 상실률을 평균 2.1%p(최대 6.4%p, PyTorch fp16 기준)의 오차로
-예측하였다. 제안 교정 방법은 출력 측 축소로는 제거되지 않던(94.8%) 출력 상실을 제거하여 배포
-조건의 정확도를 1.36%에서 50.73%로 회복하였으며, 이는 오버플로가 없는 bf16 실행(49.95%)과
-통계적으로 유의한 차이가 없었다. 기존 대안인 bf16 형식 전환은 TensorRT에서 fp16 대비
+반면 제안 지표는 6개 모델의 상실률을 평균 2.1%p의 오차로 예측하였다. 제안 교정 방법은 출력
+상실을 제거하여 배포 조건의 정확도를 1.36%에서 50.73%로 회복하였으며, 이는 오버플로가 없는 bf16
+실행(49.95%)과 통계적으로 유의한 차이가 없었다. 기존 대안인 bf16 형식 전환은 fp16 대비
 1.34~1.38배의 추론 지연을 유발하나, 제안 방법은 fp16 형식을 유지하여 이러한 지연 증가를
 피하였다. 같은 출력 상실과 교정 효과는 TensorRT fp16 엔진과 Jetson Orin Nano 8GB의 강타입
-엔진(축소 해상도)에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서
-4.61배로 증가하여(평가 해상도), 증류 설계 단계에서도 여유를 확보할 수 있음을 보였다.
+엔진에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서 4.61배로
+증가하여(평가 해상도), 증류 설계 단계에서도 여유를 확보할 수 있음을 보였다.
 
 이상의 결과는 압축된 VLM의 저정밀 배포 적합성을 정확도와 양자화 오차 지표만으로 판단할 수
-없으며, 배포 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을 사전에 진단하고 교정해야 함을
-보여준다.
+없으며, 배포 형식과 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을 사전에 진단하고
+교정해야 함을 보여준다.
 
 **주요어**: 표현 범위 여유, 수치 오버플로, 저정밀 추론, 가중치 교정, 비전-언어 모델, 자율주행
 
@@ -142,51 +139,50 @@ Vision-Language Models**
 Deploying vision-language models (VLMs) on edge devices such as vehicles requires both model
 compression through knowledge distillation and half-precision (fp16) inference. Because fp16 can
 represent magnitudes only up to 65,504, an activation in the vision encoder that exceeds this
-limit (an overflow) destroys the model's entire output for that image (output collapse). A
-method to diagnose and correct this risk before low-precision deployment is therefore needed.
-This thesis addresses the problem using autonomous-driving VLMs as a case study.
+limit (an overflow) destroys the model's entire output for that image. A method to identify this
+risk before low-precision deployment is therefore needed. This thesis addresses the problem
+using autonomous-driving VLMs as a case study.
 
 Existing work judges deployment readiness by task accuracy and quantization-error metrics such
 as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics, however, cannot
 tell **whether activation magnitudes exceed the fp16 limit and destroy the output**.
 Quantization-error metrics are scale-invariant, reflecting only the relative distribution of
 values within a tensor, so they ignore absolute magnitude; task accuracy is measured at
-evaluation resolution in bf16, where overflow does not occur. Moreover, a configuration used in
-practice quantizes the language model to 4 bits while excluding the vision encoder from
-quantization and running it in fp16; in that case quantization-error evaluation is never applied
-to the component that actually runs in fp16.
+evaluation resolution in bf16, where overflow does not occur. Moreover, common practice
+quantizes the language model to 4 bits while excluding the vision encoder from quantization and
+running it in fp16, so quantization-error evaluation is never applied to the component that
+actually runs in fp16.
 
 To address this, we define a per-layer **representable-range headroom** (format maximum ÷
-maximum activation magnitude), measured in a non-overflowing format (bf16), and propose a
-diagnostic that predicts the collapse rate as the fraction of images exceeding the target
-format's limit. Based on an analysis of where the overflow occurs, we further propose a
-training-free correction that scales the weights before the multiplication in the gated MLP, and
-implement both as a pre-deployment diagnosis and correction tool.
+maximum activation magnitude) and propose a diagnostic that predicts the collapse rate as the
+fraction of images exceeding the target format's limit. Based on an analysis of where the
+overflow occurs, we further propose a training-free correction that scales the weights before
+the multiplication in the gated MLP, and implement both as a pre-deployment diagnosis and
+correction tool.
 
-We validated the approach on five 3B students that differ only in their loss functions,
-distilled from a Qwen2.5-VL-7B teacher. The feature-distilled students and the non-distilled
-baseline are indistinguishable in accuracy (50.30–51.69%), yet the median per-image headroom of
-the vision encoder's last block at native resolution ranges from 0.88× to 2.92×; the student
-below 1× collapses on 94.8% of images in fp16, and its native-resolution accuracy falls from
-49.95% (bf16) to 1.36% (1,029 questions). The existing per-tensor INT8 quantization SNR rates
-the student with a 94.8% collapse rate at 32.23 dB and the one with 0% at 22.88 dB, ranking the
-risk in exact reverse (six models: the pretrained model and the five students; Spearman −1.000
-between headroom and SNR), and the outlier ratio shows no consistent relation to collapse.
+We validated the approach on five 3B students distilled from a Qwen2.5-VL-7B teacher that differ
+only in their loss functions. The feature-distilled students and the non-distilled baseline are
+indistinguishable in accuracy (50.30–51.69%), yet the headroom of the vision encoder's last
+block at native resolution ranges from 0.88× to 2.92×; the student below 1× collapses on 94.8%
+of images in fp16, and its accuracy falls from 49.95% (bf16) to 1.36%. The existing per-tensor
+INT8 quantization SNR rates the student with a 94.8% collapse rate at 32.23 dB and the one with
+0% at 22.88 dB, ranking the risk in exact reverse (six models, Spearman −1.000), and the
+outlier ratio shows no consistent relation to collapse.
 
 The proposed diagnostic predicts the collapse rate of six models with a mean error of 2.1
-percentage points (maximum 6.4; PyTorch fp16). The proposed correction eliminates the collapse,
-which scaling the MLP output instead leaves at 94.8%, and restores deployment-condition accuracy
-from 1.36% to 50.73%, with no statistically significant difference from overflow-free bf16
-execution (49.95%). Whereas the existing alternative of switching to bf16 increases TensorRT
-latency by 1.34–1.38× relative to fp16, the proposed method keeps fp16 and avoids this cost.
-The same collapse and correction were confirmed on a TensorRT fp16 engine and on a strongly
-typed engine on a Jetson Orin Nano 8GB (at reduced resolution). Raising the weight of the
+percentage points. The proposed correction eliminates the collapse and restores
+deployment-condition accuracy from 1.36% to 50.73%, with no statistically significant difference
+from overflow-free bf16 execution (49.95%). Whereas the existing alternative of switching to
+bf16 increases latency by 1.34–1.38× relative to fp16, the proposed method keeps fp16 and
+avoids this cost. The same collapse and correction were confirmed on a TensorRT fp16 engine and
+on a strongly typed engine on a Jetson Orin Nano 8GB. Raising the weight of the
 feature-alignment loss also increases headroom from 1.79× to 4.61× (evaluation resolution),
 showing that headroom can also be secured at the distillation design stage.
 
 These results show that low-precision deployment readiness of compressed VLMs cannot be judged
 by accuracy and quantization-error metrics alone, and that representable-range headroom must be
-measured at the deployment resolution to diagnose and correct the collapse risk beforehand.
+measured in the deployment format and resolution to diagnose and correct the collapse risk
+beforehand.
 
 **Keywords**: representable-range headroom, numerical overflow, low-precision inference, weight
 correction, vision-language model, autonomous driving 
@@ -316,7 +312,7 @@ fp16의 표현 한계는 65,504다. 어떤 층의 활성값이 이를 넘으면 
 
 | 비교 항목 | 기존 방법 | 제안 방법 |
 |---|---|---|
-| 출력 상실 예측 | INT8 양자화 SNR은 위험 순위를 정반대로 제시(6개 모델에서 여유와 SNR의 Spearman[5] ρ = −1.000), 이상치 비율은 상실률과 일관된 관계 없음, 과제 정확도는 50.30~51.69%로 구별 불가 | 형식 상한 초과 비율이 6개 모델의 상실률을 평균 오차 2.1%p(최대 6.4%p, PyTorch fp16)로 예측 |
+| 출력 상실 예측 | INT8 양자화 SNR은 위험 순위를 정반대로 제시(6개 모델, Spearman[5] ρ = −1.000), 이상치 비율은 상실률과 일관된 관계 없음, 과제 정확도는 50.30~51.69%로 구별 불가 | 형식 상한 초과 비율이 6개 모델의 상실률을 평균 오차 2.1%p로 예측 |
 | 출력 상실 제거 | MLP 출력 측 축소: 상실률 94.8% 유지 | 곱셈 이전 교정: 상실률 0.0% |
 | 배포 조건 정확도 | 무교정 fp16 1.36% | 교정 fp16 50.73% — 오버플로 없는 bf16(49.95%)과 유의한 차이 없음(McNemar[6] p=0.34) |
 | 추론 지연 | bf16 형식 전환: fp16 대비 1.34~1.38배 | fp16 형식 유지 |
@@ -1937,8 +1933,8 @@ Qwen2.5-VL-7B[2] 교사로부터 손실 항만 달리한 다섯 3B 학생을 증
 대상에서 제외하고 fp16으로 실행하도록 적힌 설정은 조사한 공개 양자화 저장소 197개 중 13.7%였고, 이는
 배포 시 fp16으로 변환하는 경우를 세지 않은 하한이다(Ⅴ장).
 
-제안한 진단 지표는 형식 상한을 넘는 이미지의 비율로 상실률을 추정하며, 6개 모델에서 평균 오차 2.1%p(최대
-6.4%p)였다(PyTorch fp16 기준 — 강타입 TensorRT 엔진에서도 맞고, 관행 약타입 빌드에서는 엔진에서 직접
+제안한 진단 지표는 형식 상한을 넘는 이미지의 비율로 상실률을 추정하며, 6개 모델에서 평균 오차
+2.1%p였다(PyTorch fp16 기준 — 강타입 TensorRT 엔진에서도 맞고, 관행 약타입 빌드에서는 엔진에서 직접
 측정해야 한다, Ⅶ장). 오버플로는 마지막 블록 MLP 안, 사전학습 가중치에 고정된 한 채널에서 일어났으며, 그
 입력을 곱셈 이전 단계에서 축소하는 제안 교정은 학습 없이 상실을 제거한 반면 출력 측 축소는 제거하지
 못했다(Ⅳ장). 배포 조건에서 교정한 가중치는 정확도 1.36%를 50.73%로 회복하였고, 이는 오버플로 없는 bf16
@@ -1962,8 +1958,9 @@ fp16을 유지하였다. 같은 상실과 교정 효과를 TensorRT 엔진과 �
 4. **증류 설계의 효과.** 특징 정렬 손실이 여유를 넓힘을 보여, 증류 단계에서도 위험을 줄일 수 있음을
    확인하였다(단일 계열 결과).
 
-이상의 결과는 압축된 VLM의 저정밀 배포 적합성을 정확도와 양자화 오차 지표만으로 판단할 수 없으며, 배포
-해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을 사전에 진단하고 교정해야 함을 보여준다.
+이상의 결과는 압축된 VLM의 저정밀 배포 적합성을 정확도와 양자화 오차 지표만으로 판단할 수 없으며,
+배포 형식과 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을 사전에 진단하고 교정해야 함을
+보여준다.
 
 ## 2. 범위와 남은 문제
 
