@@ -1,0 +1,38 @@
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+[2026-10-20 07:05:59] 시작 pretrained
+[build_token_to_images] 총 토큰 수: 799
+[설정] pretrained  이미지 100장  max_pixels=1,440,000
+[크기 bf16]  최악 여유 14.94배 @ L30.out (max 4,384, 위치 {'text': 100})  초과 비율 최대 0.0%
+[상실 fp16]  비유한 로짓 이미지 0.0%   (bf16 기준 0.0%)
+→ eval_results/llm_headroom_pretrained.json
+[2026-10-20 07:11:17] 시작 baseline_v2
+[build_token_to_images] 총 토큰 수: 799
+[설정] baseline_v2  이미지 100장  max_pixels=1,440,000
+[크기 bf16]  최악 여유 14.52배 @ L30.out (max 4,512, 위치 {'text': 100})  초과 비율 최대 0.0%
+[상실 fp16]  비유한 로짓 이미지 0.0%   (bf16 기준 0.0%)
+→ eval_results/llm_headroom_baseline_v2.json
+[2026-10-20 07:27:14] 시작 kd_only_v4
+[build_token_to_images] 총 토큰 수: 799
+[설정] kd_only_v4  이미지 100장  max_pixels=1,440,000
+[크기 bf16]  최악 여유 14.52배 @ L30.out (max 4,512, 위치 {'text': 100})  초과 비율 최대 0.0%
+[상실 fp16]  비유한 로짓 이미지 0.0%   (bf16 기준 0.0%)
+→ eval_results/llm_headroom_kd_only_v4.json
+[2026-10-20 08:00:07] 시작 temporal
+[build_token_to_images] 총 토큰 수: 799
+[설정] temporal  이미지 100장  max_pixels=1,440,000
+[크기 bf16]  최악 여유 14.73배 @ L30.out (max 4,448, 위치 {'text': 100})  초과 비율 최대 0.0%
+[상실 fp16]  비유한 로짓 이미지 0.0%   (bf16 기준 0.0%)
+→ eval_results/llm_headroom_temporal.json
+[2026-10-20 08:38:24] 시작 spatial
+[build_token_to_images] 총 토큰 수: 799
+[설정] spatial  이미지 100장  max_pixels=1,440,000
+[크기 bf16]  최악 여유 14.83배 @ L30.out (max 4,416, 위치 {'text': 100})  초과 비율 최대 0.0%
+[상실 fp16]  비유한 로짓 이미지 0.0%   (bf16 기준 0.0%)
+→ eval_results/llm_headroom_spatial.json
+[2026-10-20 09:20:53] 시작 full
+[build_token_to_images] 총 토큰 수: 799
+[설정] full  이미지 100장  max_pixels=1,440,000
+[크기 bf16]  최악 여유 14.94배 @ L30.out (max 4,384, 위치 {'text': 100})  초과 비율 최대 0.0%
+[상실 fp16]  비유한 로짓 이미지 0.0%   (bf16 기준 0.0%)
+→ eval_results/llm_headroom_full.json
+[2026-10-20 09:49:51] B 완료
