@@ -1,0 +1,37 @@
+# 작업별 GPU 메모리 예약(GB) — 결과 파일 이름의 glob 패턴, 위에서부터 처음 맞는 줄. 대기열이 매번 다시 읽는다(고쳐도 재시작 불필요).
+# 2026-10-21: 비전 측정은 언어 모델을 GPU에 올리지 않게 바꿨다(vision_only_cuda, 이미지별 값 비트 대조 같음).
+# 실측: 언어 모델까지 올리던 때 원본 해상도 스윕 12~13.5 GB, 802,816 스윕 9.6~9.8 GB, 정확도 12~13.5 GB, B 21.7 GB, 교정 풀기(원본 캐시 두 벌) 36.8 GB.
+*_native_*nuscenesqa_val.json 15
+*_eval_*nuscenesqa_val.json 12
+res_1440000* 8
+res_802816__* 5
+res_401408__* 4
+res_200704__* 3
+res_100352__* 3
+v1_vs_v2* 4
+align_target* 4
+training_trajectory__* 4
+int8_quant_error_native* 16
+mlp_overflow* 16
+fixa_weight_equiv* 30
+channel849* 30
+blk31_* 8
+norm2_direction_* 8
+llm_headroom_* 28
+guard_sweep_align* 40
+guard_dla_demo* 40
+headroom_guard_fix_base3b* 40
+detection_curve__* 40
+gemma4_vision_* 16
+gemma4_e2e_* 62
+altimages_CAM_BACK* 24
+vision_tower_direct_pixtral* 36
+vision_tower_direct_kimi* 48
+bridge_newhf* 48
+guard_qwen2vl_* 32
+headroom_guard_smolvlm* 32
+natural_collapse* 32
+other_vlm_families* 32
+int8_across_families* 32
+vision_tower_* 32
+* 24

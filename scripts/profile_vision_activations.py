@@ -91,6 +91,17 @@ def get_visual(model):
     raise AttributeError("vision tower(visual)를 찾지 못했다")
 
 
+def vision_only_cuda(model):
+    """비전 인코더만 GPU로 올린다 — 언어 모델(약 6 GB)은 CPU에 둔다.
+
+    이 측정들은 비전 인코더만 쓴다. 같은 가중치·같은 커널이므로 측정값은 그대로이고(2026-10-21 이미지별 값 비트 대조),
+    GPU 메모리가 작업당 약 6 GB 줄어 평가 데이터 전부 측정의 동시 작업 수를 늘릴 수 있다.
+    """
+    model.eval()
+    get_visual(model).to("cuda")
+    return model
+
+
 def percentile(sorted_vals, q):
     if not sorted_vals:
         return None
@@ -107,7 +118,7 @@ def profile_model(name, base_id, adapter, pixel_cache, image_names, log_every, d
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(base_id, torch_dtype=torch.bfloat16)
     if adapter:
         model = PeftModel.from_pretrained(model, adapter)
-    model = model.to("cuda").eval()
+    model = vision_only_cuda(model)
 
     visual = get_visual(model)
     depth = len(visual.blocks)

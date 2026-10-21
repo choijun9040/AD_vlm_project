@@ -34,7 +34,7 @@ import awq_compat
 from dataloader import build_token_to_images
 from profile_vision_activations import (
     DRIVELM_VAL_JSON, BASE_3B, BASE_7B, MAX_PIXELS, MIN_PIXELS,
-    build_pixel_cache, get_visual, percentile,
+    build_pixel_cache, get_visual, percentile, vision_only_cuda,
 )
 
 # 재는 층: align이 작용하는 구간(16/23/24/28)과 fp16 한계에 걸리는 마지막 블록(31)
@@ -76,7 +76,7 @@ def profile(name, base_id, adapter, pixel_cache, log_every):
     model = Qwen2_5_VLForConditionalGeneration.from_pretrained(base_id, torch_dtype=torch.bfloat16)
     if adapter:
         model = PeftModel.from_pretrained(model, adapter)
-    model = model.to("cuda").eval()
+    model = vision_only_cuda(model)
     visual = get_visual(model)
     print(f"  로드 {time.time() - t0:.0f}s", flush=True)
 

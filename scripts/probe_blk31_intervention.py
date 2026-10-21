@@ -34,7 +34,7 @@ sys.path.append(str(Path(__file__).parent))
 import awq_compat
 from dataloader import build_token_to_images
 from profile_vision_activations import (
-    DRIVELM_VAL_JSON, BASE_3B, MAX_PIXELS, MIN_PIXELS, build_pixel_cache,
+    DRIVELM_VAL_JSON, BASE_3B, MAX_PIXELS, MIN_PIXELS, build_pixel_cache, vision_only_cuda,
     get_visual, percentile,
 )
 
@@ -110,7 +110,7 @@ def main():
     for name, path in CKPT.items():
         print(f"\n[{name}] 로드", flush=True)
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
-        model = PeftModel.from_pretrained(base, path).to("cuda").eval()
+        model = vision_only_cuda(PeftModel.from_pretrained(base, path))
 
         conds = [("무개입", 1.0)]
         if name == "baseline_v2":

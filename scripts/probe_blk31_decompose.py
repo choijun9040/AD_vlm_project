@@ -29,7 +29,7 @@ sys.path.append(str(Path(__file__).parent))
 import awq_compat
 from dataloader import build_token_to_images
 from profile_vision_activations import (
-    DRIVELM_VAL_JSON, BASE_3B, MAX_PIXELS, MIN_PIXELS, build_pixel_cache,
+    DRIVELM_VAL_JSON, BASE_3B, MAX_PIXELS, MIN_PIXELS, build_pixel_cache, vision_only_cuda,
     get_visual, percentile,
 )
 
@@ -117,7 +117,7 @@ def main():
     for name, path in VARIANTS.items():
         print(f"\n[{name}]", flush=True)
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
-        model = PeftModel.from_pretrained(base, path).to("cuda").eval()
+        model = vision_only_cuda(PeftModel.from_pretrained(base, path))
         for label, sc in SCALES:
             pi = per_image.setdefault((name, label, sc), []) if args.per_image else None
             r = run(model, cache, sc, pi)

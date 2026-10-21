@@ -31,7 +31,7 @@ sys.path.append(str(Path(__file__).parent))
 import awq_compat
 from dataloader import build_token_to_images
 from profile_vision_activations import (
-    DRIVELM_VAL_JSON, BASE_3B, MAX_PIXELS, MIN_PIXELS, build_pixel_cache,
+    DRIVELM_VAL_JSON, BASE_3B, MAX_PIXELS, MIN_PIXELS, build_pixel_cache, vision_only_cuda,
     get_visual, percentile,
 )
 
@@ -114,7 +114,7 @@ def main():
     for name, path in VARIANTS.items():
         print(f"\n[{name}] 로드", flush=True)
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
-        model = PeftModel.from_pretrained(base, path).to("cuda").eval()
+        model = vision_only_cuda(PeftModel.from_pretrained(base, path))
 
         ref = capture(model, cache, 1.0)
         # 무개입에서 잔차 대 attn 크기 비 — norm2 입력의 구성비
