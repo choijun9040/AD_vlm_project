@@ -50,11 +50,11 @@ def load_vision(model_dir, dtype):
     return vm.eval().to("cuda", getattr(torch, dtype))
 
 
-def build_inputs(model_dir, max_soft_tokens, limit):
+def build_inputs(model_dir, max_soft_tokens, limit, offset=0):
     from transformers import AutoImageProcessor
     ip = AutoImageProcessor.from_pretrained(model_dir, max_soft_tokens=max_soft_tokens)
     tok = build_token_to_images(DRIVELM_VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][:limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][offset:offset + limit]
     cache = []
     for p in paths:
         enc = ip(images=[Image.open(p).convert("RGB")], return_tensors="pt")
@@ -156,11 +156,13 @@ def main():
     ap.add_argument("--model_dir", required=True)
     ap.add_argument("--max_soft_tokens", type=int, default=280)
     ap.add_argument("--limit", type=int, default=100)
+    ap.add_argument("--offset", type=int, default=0,
+                    help="이미지 시작 위치. A1 확인 실험은 100(첫 실험의 100장과 겹치지 않게)")
     ap.add_argument("--out_dir", default="eval_results")
     args = ap.parse_args()
-    tag = f"{Path(args.model_dir).name}_st{args.max_soft_tokens}"
+    tag = f"{Path(args.model_dir).name}_st{args.max_soft_tokens}" + (f"_off{args.offset}" if args.offset else "")
 
-    paths, cache = build_inputs(args.model_dir, args.max_soft_tokens, args.limit)
+    paths, cache = build_inputs(args.model_dir, args.max_soft_tokens, args.limit, args.offset)
     print(f"[설정] {tag}  이미지 {len(paths)}장  pixel_values={tuple(cache[0][0].shape)}")
 
     # 1) 크기 — bf16 블록, 블록 뒤는 기준 구현대로 fp32
@@ -212,7 +214,7 @@ def main():
           f"(ii) 교정 후 상실 {collapse_rate(fin_iic):.1%}   bf16 대비 코사인 최소 "
           f"{min(fin_cos) if fin_cos else float('nan'):.6f}")
 
-    out = {"tag": tag, "model_dir": args.model_dir, "max_soft_tokens": args.max_soft_tokens,
+    out = {"tag": tag, "model_dir": args.model_dir, "max_soft_tokens": args.max_soft_tokens, "offset": args.offset,
            "n_images": len(paths), "pixel_values_shape": list(cache[0][0].shape),
            "magnitude": mag, "predicted_exceed_rate": pred,
            "collapse_i_reference": collapse_rate(fin_i), "collapse_ii_no_upcast": collapse_rate(fin_ii),
