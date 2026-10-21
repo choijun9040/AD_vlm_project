@@ -342,7 +342,8 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             maxes.append(rec["t"].float().abs().max().item())
             # **타워 반환값도 잰다 (2026-09-18 추가).** `blocks[-1]`만 보면
             # 블록 뒤 연산이 크기를 키우는 계열에서 **안전으로 오판한다**
-            # (vLLM #40290의 Gemma 4: `(h − std_bias)`에서 std_bias가 53,760).
+            # (vLLM #40290의 Gemma 4: 블록 뒤 pooler의 `× √1152`에서 넘친다 — 2026-10-21 실측.
+            #  이전 주석의 「`(h − std_bias)`에서 std_bias가 53,760」은 넘치는 곳을 잘못 적었다).
             # 반대로 줄이는 계열(Qwen merger)에서는 타워 출력만 보면 과대평가한다.
             # 그래서 **둘 다 기록하고 나쁜 쪽을 판정에 쓴다.**
             ot, op = tower_out_max(out, exclude_ptrs=(rec["t"].data_ptr(),))
