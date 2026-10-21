@@ -151,6 +151,8 @@ def main():
     # 문항 수가 1,000이어도 독립 표본은 79이므로 이항 신뢰구간이 지나치게 좁아지고,
     # 템플릿 분포도 치우친다(comparison 15.7% → 12.4%).
     # --stride K는 K개마다 하나씩 뽑아 전체 키프레임에 고르게 퍼진 부분집합을 만든다.
+    parser.add_argument("--shard", type=int, default=0, help="--num_shards와 함께: 몇 번째 조각(0부터)")
+    parser.add_argument("--num_shards", type=int, default=None, help="전체를 N등분해 한 조각만 잰다 (조각을 합치면 전체)")
     parser.add_argument("--stride", type=int, default=None,
                         help="K개마다 1문항씩 추출 (전체 키프레임에 고르게 퍼진 부분집합)")
     parser.add_argument("--max_new_tokens", type=int, default=16)
@@ -244,6 +246,12 @@ def main():
               f"{scenes}개 키프레임 (전체 799)")
     if args.limit:
         samples = samples[: args.limit]
+    # **--shard K --num_shards N (2026-10-21).** 전체를 N등분한 K번째 연속 구간만 잰다. 긴 실행(11,309문항, 수십 시간)이
+    # 컨테이너 재시작으로 처음부터 다시 되는 것을 막으려고 나눈다. N개 조각을 합치면 원래 표본과 같다.
+    if args.num_shards:
+        n_all = len(samples); a = args.shard * n_all // args.num_shards; b = (args.shard + 1) * n_all // args.num_shards
+        samples = samples[a:b]
+        print(f"[조각] {args.shard}/{args.num_shards} → 문항 {a}~{b - 1} ({len(samples)}개)")
     print(f"평가 대상 샘플 수: {len(samples)}")
 
     out_dir = Path(args.out_dir)
@@ -260,6 +268,8 @@ def main():
         ckpt_tag += "_" + args.tag
     if args.limit:                       # 전체 실행 결과를 스모크 실행이 덮어쓰지 않도록
         ckpt_tag += f"_limit{args.limit}"
+    if args.num_shards:
+        ckpt_tag += f"_shard{args.shard}of{args.num_shards}"
 
     dump_f = None
     if args.dump_predictions:
@@ -349,7 +359,7 @@ def main():
             "lora_dtype": args.lora_dtype if precision == "lora_bf16" else None,
             "quantized_load_dtype": args.dtype if precision != "lora_bf16" else None,
             "model_dtype_effective": str(next(model.parameters()).dtype).replace("torch.", ""),
-            "stride": args.stride, "limit": args.limit,
+            "stride": args.stride, "limit": args.limit, "shard": args.shard, "num_shards": args.num_shards,
             "vision_state": args.vision_state,
             "max_new_tokens": args.max_new_tokens,
         },

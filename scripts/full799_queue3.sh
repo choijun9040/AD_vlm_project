@@ -65,6 +65,8 @@ worker(){
     [ $ran -eq 0 ] && sleep 60
   done
 }
+# --- 시작 정리: 미완료 작업의 시도 횟수를 0으로 — 대기열이 다시 뜬 것은 대개 컨테이너 재시작이고, 그때 죽은 실행은 실패가 아니다 ---
+for a in $O/.attempts_*; do [ -f "$a" ] || continue; k=${a#$O/.attempts_}; [ -f "$O/.done_$k" ] || rm -f "$a"; done
 # --- 시작 정리: 살아 있는 실행은 예약을 이어받고, 죽은 잠금은 지운다 ---
 for d in $O/.lock_* $O/.grp_*; do [ -d "$d" ] || continue; rm -rf "$d"; done   # 1판 잠금(작업자 pid)은 모두 지우고 아래에서 다시 잡는다
 while IFS='|' read -r name out gpu disk grp cmd; do

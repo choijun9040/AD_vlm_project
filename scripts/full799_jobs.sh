@@ -8,9 +8,9 @@ FIX=checkpoints/baseline_v2_fixa_native_tower_full799.pt
 SIX="base_3b student_baseline_v2 student_kd_only_v4 student_temporal student_spatial student_full"
 j(){ echo "$1|$2|$3|$4|$5|$6"; }
 # --- 1단계: 비전 인코더 ---
-j "해상도 스윕 1440000 (6모델)" $O/res_1440000.json 32 2 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels 1440000 --only $SIX --out $O/res_1440000.json --dump $O/res_1440000_per_image.jsonl"
-for MP in 802816 401408 200704 100352; do for m in $SIX; do
-  G=14; [ $MP = 802816 ] && G=24; [ $MP = 401408 ] && G=18
+# 원본 해상도도 모델별로 나눈다 (2026-10-21 컨테이너 재시작으로 6모델 묶음 실행을 잃은 뒤)
+for MP in 1440000 802816 401408 200704 100352; do for m in $SIX; do
+  G=14; [ $MP = 1440000 ] && G=32; [ $MP = 802816 ] && G=24; [ $MP = 401408 ] && G=18
   j "해상도 스윕 $MP $m" $O/res_${MP}__$m.json $G 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels $MP --only $m --out $O/res_${MP}__$m.json --dump $O/res_${MP}__${m}_per_image.jsonl"
 done; done
 j "결정성 점검" $O/res_1440000_rep2.json 32 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels 1440000 --only student_baseline_v2 --out $O/res_1440000_rep2.json --dump $O/res_1440000_rep2_per_image.jsonl"
@@ -36,7 +36,9 @@ for f in 1.0 0.85 0.72 0.62 0.55 0.48 0.42 0.36 0.3 0.24 0.18 0.92 0.88 0.82 0.7
 done
 # --- 2단계: 정확도 11,309문항 ---
 NAT="--max_pixels 1440000 --min_pixels 3136"
-ev(){ j "정확도 $1 $2" $O/${1}_epoch_1_${2}_nuscenesqa_val.json 20 1 gpu "$PY scripts/eval_nuscenesqa_val.py --checkpoint checkpoints/$1/epoch_1 --dump_predictions --log_every 1000 --out_dir $O $3 --tag $2"; }
+# 정확도는 8조각으로 나눈다(조각당 약 1,414문항) — 컨테이너가 다시 켜져도 잃는 것이 한 조각 안이 되도록 (2026-10-21)
+NSH=8
+ev(){ for k in $(seq 0 $((NSH-1))); do j "정확도 $1 $2 조각 $k/$NSH" $O/${1}_epoch_1_${2}_shard${k}of${NSH}_nuscenesqa_val.json 20 1 gpu "$PY scripts/eval_nuscenesqa_val.py --checkpoint checkpoints/$1/epoch_1 --dump_predictions --log_every 1000 --out_dir $O $3 --tag $2 --shard $k --num_shards $NSH"; done; }
 ev student_baseline_v2 native_fp16      "$NAT --lora_dtype float16"
 ev student_baseline_v2 native_fp16_fixa "$NAT --lora_dtype float16 --vision_state $FIX"
 ev student_baseline_v2 native_bf16      "$NAT --lora_dtype bfloat16"
