@@ -224,6 +224,7 @@ correction, vision-language model, autonomous driving
 표 31. 배포 조건 정확도의 종단 검증
 표 32. fp16과 bf16의 짝지은 정확도 비교
 표 33. 기여별 근거와 강도
+표 34. 형식과 스케일 방식에 따른 위험의 성격
 
 ---
 
