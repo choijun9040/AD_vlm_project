@@ -4,6 +4,10 @@
 cd /workspace/vlm_project_2; export HF_HOME=/workspace/hf_home
 # 메모리 단편화를 줄여 같은 사용량에서 메모리 부족이 덜 나게 한다 (2026-10-21)
 export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
+# CPU 스레드를 제한한다 (2026-10-21). PyTorch는 기본으로 코어 수(128)만큼 스레드를 만들어 측정 하나가 260개를 넘게 쓰고,
+# 여러 측정이 128코어를 다투며 느려졌다. 컨테이너의 스레드 한도(pids.max 3,840)에 가까워진 것도 재시작의 후보 원인이다.
+# 스레드 수는 GPU 계산과 전처리 결과에 영향을 주지 않는다.
+export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12 OPENBLAS_NUM_THREADS=12 NUMEXPR_NUM_THREADS=12 TOKENIZERS_PARALLELISM=false
 PY=/workspace/venv_main/bin/python; PG=/workspace/venv_gemma/bin/python; PT=/workspace/venv_trt/bin/python
 O=eval_results/full799; mkdir -p $O logs
 log(){ echo "[$(date '+%F %T')] $*"; }
