@@ -38,7 +38,7 @@ done
 NAT="--max_pixels 1440000 --min_pixels 3136"
 # 정확도는 8조각으로 나눈다(조각당 약 1,414문항) — 컨테이너가 다시 켜져도 잃는 것이 한 조각 안이 되도록 (2026-10-21)
 NSH=8
-ev(){ for k in $(seq 0 $((NSH-1))); do j "정확도 $1 $2 조각 $k/$NSH" $O/${1}_epoch_1_${2}_shard${k}of${NSH}_nuscenesqa_val.json 20 1 gpu "$PY scripts/eval_nuscenesqa_val.py --checkpoint checkpoints/$1/epoch_1 --dump_predictions --log_every 1000 --out_dir $O $3 --tag $2 --shard $k --num_shards $NSH"; done; }
+ev(){ for k in $(seq 0 $((NSH-1))); do j "정확도 $1 $2 조각 $k/$NSH" $O/${1}_epoch_1_${2}_shard${k}of${NSH}_nuscenesqa_val.json 20 1 acc "$PY scripts/eval_nuscenesqa_val.py --checkpoint checkpoints/$1/epoch_1 --dump_predictions --log_every 1000 --out_dir $O $3 --tag $2 --shard $k --num_shards $NSH"; done; }
 ev student_baseline_v2 native_fp16      "$NAT --lora_dtype float16"
 ev student_baseline_v2 native_fp16_fixa "$NAT --lora_dtype float16 --vision_state $FIX"
 ev student_baseline_v2 native_bf16      "$NAT --lora_dtype bfloat16"
