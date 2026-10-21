@@ -2,6 +2,8 @@
 # 이어 하기: 결과 파일이 있으면 건너뛴다. 중복 방지: 같은 결과를 쓰는 프로세스가 돌고 있으면 끝날 때까지 기다린다.
 # 재시도: 실패하면 한 번 더 한다. 자원: GPU 여유 메모리·디스크가 모자라면 기다린다.
 cd /workspace/vlm_project_2; export HF_HOME=/workspace/hf_home
+# 메모리 단편화를 줄여 같은 사용량에서 메모리 부족이 덜 나게 한다 (2026-10-21)
+export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 PY=/workspace/venv_main/bin/python; PG=/workspace/venv_gemma/bin/python; PT=/workspace/venv_trt/bin/python
 O=eval_results/full799; mkdir -p $O logs
 log(){ echo "[$(date '+%F %T')] $*"; }
