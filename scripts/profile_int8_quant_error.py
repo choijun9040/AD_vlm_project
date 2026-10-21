@@ -40,6 +40,9 @@ from profile_vision_activations import (
 # 재는 층: align이 작용하는 구간(16/23/24/28)과 fp16 한계에 걸리는 마지막 블록(31)
 LAYERS = (16, 23, 24, 28, 31)
 
+# 직전 profile()의 이미지별 값 — --per_image 저장용 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)
+LAST_PER_IMAGE = None
+
 MODELS = [
     ("base_3b",             BASE_3B, None,                                      "미세조정 없음"),
     ("student_baseline_v2", BASE_3B, "checkpoints/student_baseline_v2/epoch_1", "task CE only"),
@@ -110,6 +113,8 @@ def profile(name, base_id, adapter, pixel_cache, log_every):
         h.remove()
     del model
     torch.cuda.empty_cache()
+    global LAST_PER_IMAGE
+    LAST_PER_IMAGE = acc
 
     def summ(v):
         sv = sorted(x for x in v if math.isfinite(x))
@@ -139,12 +144,16 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=None,
                     help="미지정이면 평가 해상도 기본값(profile_vision_activations.MAX_PIXELS)")
     ap.add_argument("--min_pixels", type=int, default=None)
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="이미지별·층별 max·rms·max/rms·SNR(tensor/chan)과 장면 토큰을 jsonl로 저장('w'). "
+                         "장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
 
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)
-    paths = [str(v["CAM_FRONT"]) for v in token_to_images.values() if "CAM_FRONT" in v][: args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in token_to_images.values() if "CAM_FRONT" in v][args.offset: args.offset + args.limit]
     print(f"대상 이미지: {len(paths)}장")
 
     mxp = args.max_pixels or MAX_PIXELS
@@ -159,11 +168,28 @@ def main():
     results["_meta"] = {"n_images": len(paths), "layers": list(LAYERS),
                         "max_pixels": mxp, "min_pixels": mnp}
 
+    pi_f = None
+    if args.per_image:
+        from scene_map import image_to_scene
+        scenes = image_to_scene()
+        names = [Path(p).name for p in paths]
+        pi_f = open(args.per_image, "w")
     for name, base_id, adapter, note in MODELS:
         r = profile(name, base_id, adapter, cache, args.log_every)
         results[name] = {"loss": note, "adapter": adapter, "by_layer": r}
         out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
         print(f"  저장: {out_path}", flush=True)
+        if pi_f:
+            for j, nm in enumerate(names):
+                pi_f.write(json.dumps({
+                    "model": name, "image": nm, "scene": scenes.get(nm),
+                    "max_pixels": mxp, "min_pixels": mnp,
+                    **{f"blk{i}": {k: v[j] for k, v in LAST_PER_IMAGE[i].items()} for i in LAYERS},
+                }) + "\n")
+            pi_f.flush()
+    if pi_f:
+        pi_f.close()
+        print(f"이미지별: {args.per_image}")
 
     print("\n" + "=" * 92)
     print(f"{'모델':22s}{'손실':20s}{'blk31 max/rms':>15}{'SNR/tensor':>12}{'SNR/chan':>11}")

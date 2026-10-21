@@ -47,6 +47,10 @@ def main():
     ap.add_argument("--min_pixels", type=int, default=3136)
     ap.add_argument("--channel", type=int, default=849)
     ap.add_argument("--out", default="eval_results/channel849.json")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="이미지별 최대 활성 채널·전역 최대·지정 채널 최대·비율과 장면 토큰을 jsonl로 "
+                         "저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -88,7 +92,7 @@ def main():
     proc = AutoProcessor.from_pretrained(BASE, max_pixels=args.max_pixels,
                                          min_pixels=args.min_pixels)
     tok = build_token_to_images(VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][:args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset:args.offset + args.limit]
     print(f"  이미지 {len(paths)}장, max_pixels={args.max_pixels}")
 
     captured = {}
@@ -97,6 +101,7 @@ def main():
     h = tower.blocks[-1].mlp.register_forward_hook(hook)
 
     argmax_ch, ch_share, c_absmax, glob_absmax = Counter(), [], [], []
+    img_argmax = []                                        # 이미지별 최대 채널 (--per_image용)
     with torch.no_grad():
         for p in paths:
             enc = proc.image_processor(images=[Image.open(p).convert("RGB")],
@@ -106,6 +111,7 @@ def main():
             a = captured["mlp"].abs()                      # (seq, 1280)
             per_ch = a.max(dim=0).values                   # 채널별 최대
             argmax_ch[int(per_ch.argmax())] += 1
+            img_argmax.append(int(per_ch.argmax()))
             g = float(per_ch.max())
             c = float(per_ch[C])
             glob_absmax.append(g); c_absmax.append(c); ch_share.append(c / g)
@@ -140,6 +146,17 @@ def main():
            "verdict": verdict}
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for j, p in enumerate(paths):
+                nm = Path(p).name
+                f.write(json.dumps({"checkpoint": args.checkpoint, "channel": C,
+                                    "max_pixels": args.max_pixels, "image": nm, "scene": sc.get(nm),
+                                    "argmax_channel": img_argmax[j], "global_absmax": glob_absmax[j],
+                                    "channel_absmax": c_absmax[j], "share": ch_share[j]}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

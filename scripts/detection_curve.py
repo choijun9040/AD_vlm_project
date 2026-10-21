@@ -145,6 +145,10 @@ def main():
     ap.add_argument("--fig", default="figures/fig_detection_curve.png")
     ap.add_argument("--factors", default=None,
                     help="쉼표로 구분한 배수 목록. 전이 구간을 촘촘히 다시 훑을 때 쓴다")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="배수·이미지별 blocks[-1] max|act|(bf16, 비유한이면 inf)·fp16 타워 출력 유한 여부를 "
+                         "이미지 이름·장면 토큰과 함께 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     global FACTORS
@@ -161,7 +165,7 @@ def main():
     print(f"[설정] max_pixels={mp:,}  체크포인트={args.checkpoint}")
 
     tok = build_token_to_images(DRIVELM_VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.limit]
     print(f"[이미지] {len(paths)}장 전처리 중...", flush=True)
 
     # 두 dtype 사본을 **미리 GPU에 올려 둔다** (250장 × 7296 × 1176 × 2바이트 ≈ 4.3 GB씩).
@@ -287,6 +291,18 @@ def main():
     Path(args.out).parent.mkdir(exist_ok=True)
     Path(args.out).write_text(json.dumps(out, indent=2, ensure_ascii=False))
     print(f"\n저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        with open(args.per_image, "w") as fo:
+            for r in rows:
+                for p, mx, fin in zip(paths, r["per_image_max"], r["per_image_finite"]):
+                    nm = Path(p).name
+                    fo.write(json.dumps({"checkpoint": args.checkpoint, "max_pixels": mp,
+                                         "factor": r["factor"], "image": nm, "scene": sc.get(nm),
+                                         "blk_last_max_bf16": mx, "finite_fp16": fin,
+                                         "nonfinite_fp16": not fin}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
     # ---- 그림 ----
     try:

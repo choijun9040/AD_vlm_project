@@ -29,12 +29,13 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=1440000)
     ap.add_argument("--min_pixels", type=int, default=3136)
     ap.add_argument("--out", default="trt_inputs.npz")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
     args = ap.parse_args()
 
     proc = AutoProcessor.from_pretrained(BASE, max_pixels=args.max_pixels,
                                          min_pixels=args.min_pixels)
     tok = build_token_to_images(VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][:args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset:args.offset + args.limit]
     print(f"[전처리] {len(paths)}장, max_pixels={args.max_pixels}")
 
     arrs, shape = {}, None
@@ -52,7 +53,12 @@ def main():
         if (i + 1) % 50 == 0:
             print(f"  {i+1}/{len(paths)}", flush=True)
 
+    # 이미지 이름을 함께 저장한다 (평가 데이터 전부로 통일, 사전 등록 4fddeb4) — 키 정렬 순서와 같은 순서.
+    # '_'로 시작하는 키는 입력이 아니다: trt_precision_probe.py는 이 키를 입력에서 빼고 이름으로 읽는다.
+    kept = {f"{i:04d}": Path(p).name for i, p in enumerate(paths)}
+    arrs["_names"] = np.array([kept[k] for k in sorted(arrs)])
     np.savez(args.out, **arrs)
+    arrs.pop("_names")
     mb = Path(args.out).stat().st_size / 2**20
     print(f"저장: {args.out}  ({len(arrs)}장, {mb:,.0f} MiB)")
     if len(arrs) < len(paths):

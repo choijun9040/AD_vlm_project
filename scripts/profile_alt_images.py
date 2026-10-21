@@ -46,18 +46,39 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=1440000, help="원본 해상도 조건")
     ap.add_argument("--only", nargs="*", default=None)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--val_only", action="store_true",
+                    help="후보를 그 카메라의 DriveLM val 키프레임 이미지로 한정하고 **표준 순서**(섞지 않음, "
+                         "build_token_to_images 순서)로 쓴다. --limit 799면 그 카메라의 val 전부. "
+                         "없으면 예전 동작(디렉터리 전체에서 seed로 무작위 표본)")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치")
+    ap.add_argument("--per_image", default=None,
+                    help="모델·dtype·이미지별 층 max(전 층)·출력 max·NaN·최초 비유한 층과 장면 토큰을 jsonl로 "
+                         "저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
 
     src = Path(args.image_dir) if args.image_dir else Path(SAMPLES_DIR, args.camera)
     tag = args.tag or (Path(args.image_dir).name if args.image_dir else args.camera)
-    files = sorted(p for p in src.glob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
-    if not files:
-        raise SystemExit(f"{src} 에 이미지가 없다")
-    random.Random(args.seed).shuffle(files)
-    paths = [str(p) for p in files[: args.limit]]
-    print(f"대상: {tag} {len(paths)}장 (seed={args.seed}), max_pixels={args.max_pixels}")
+    if args.val_only:
+        if args.image_dir:
+            raise SystemExit("--val_only는 --camera(nuScenes 카메라)에만 쓴다 — --image_dir와 함께 쓸 수 없다")
+        from dataloader import build_token_to_images
+        from profile_vision_activations import DRIVELM_VAL_JSON
+        tok = build_token_to_images(DRIVELM_VAL_JSON)
+        files = [Path(v[args.camera]) for v in tok.values() if args.camera in v]
+        if not files:
+            raise SystemExit(f"DriveLM val에 {args.camera} 이미지가 없다")
+        paths = [str(p) for p in files[args.offset: args.offset + args.limit]]
+        print(f"대상: {tag} {len(paths)}장 (DriveLM val 키프레임, 표준 순서, offset={args.offset}), "
+              f"max_pixels={args.max_pixels}")
+    else:
+        files = sorted(p for p in src.glob("*") if p.suffix.lower() in (".jpg", ".jpeg", ".png"))
+        if not files:
+            raise SystemExit(f"{src} 에 이미지가 없다")
+        random.Random(args.seed).shuffle(files)
+        paths = [str(p) for p in files[args.offset: args.offset + args.limit]]
+        print(f"대상: {tag} {len(paths)}장 (seed={args.seed}), max_pixels={args.max_pixels}")
 
     processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=args.max_pixels,
                                               min_pixels=args.min_pixels)
@@ -70,15 +91,28 @@ def main():
     results["_meta"] = {"source": tag, "n_images": len(paths),
                         "max_pixels": args.max_pixels, "min_pixels": args.min_pixels,
                         "seed": args.seed}
+    if args.val_only:
+        results["_meta"].update({"val_only": True, "order": "build_token_to_images",
+                                 "offset": args.offset, "seed": None})
 
     targets = [m for m in MODELS if (not args.only or m[0] in args.only)
                and not m[0].startswith("awq_")]
+    dump_f, scenes = None, None
+    if args.per_image:
+        from scene_map import image_to_scene
+        scenes = image_to_scene()
+        dump_f = open(args.per_image, "w")
     for name, base_id, adapter, note in targets:
-        r = profile_model(name, base_id, adapter, cache, names, 0)
+        r = profile_model(name, base_id, adapter, cache, names, 0, dump_f, scenes)
         r["loss"] = note
         results[name] = r
         out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
         print(f"  저장: {out_path}", flush=True)
+        if dump_f:
+            dump_f.flush()
+    if dump_f:
+        dump_f.close()
+        print(f"이미지별: {args.per_image}")
 
     FP16 = 65504.0
     print("\n" + "=" * 78)

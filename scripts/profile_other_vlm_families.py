@@ -137,7 +137,9 @@ def find_blocks(tower):
 
 
 @torch.no_grad()
-def profile(tag, repo, note, image_paths, max_pixels):
+def profile(tag, repo, note, image_paths, max_pixels, per_image=None):
+    """per_image: 리스트를 주면 이미지별 (마지막·직전 블록 max, 못 잡았으면 None)를 덧붙인다
+    — 집계에는 영향 없음 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)."""
     print(f"\n{'=' * 70}\n[{tag}] {repo}\n  {note}\n{'=' * 70}", flush=True)
     from PIL import Image
 
@@ -263,6 +265,9 @@ def profile(tag, repo, note, image_paths, max_pixels):
             last_max.append(rec[depth - 1].float().abs().max().item())
         if depth - 2 in rec:
             prev_max.append(rec[depth - 2].float().abs().max().item())
+        if per_image is not None:
+            per_image.append({"last_block_max": last_max[-1] if depth - 1 in rec else None,
+                              "prev_block_max": prev_max[-1] if depth - 2 in rec else None})
 
     for h in hs:
         h.remove()
@@ -300,16 +305,26 @@ def main():
                          "대형 위험 구성을 '자원이 나면 자동 진행'시키기 위한 가드다.")
     ap.add_argument("--cleanup", action="store_true",
                     help="모델별 프로파일 후 HF 캐시를 지운다 (디스크가 빠듯할 때)")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="모델·이미지별 마지막·직전 블록 max(bf16)와 장면 토큰을 jsonl로 저장('w'). "
+                         "--out에 이미 완료된 모델은 건너뛰므로 그 모델의 행은 없다 — 전부 새로 재려면 "
+                         "새 --out 경로를 함께 줄 것")
     args = ap.parse_args()
 
     awq_compat.patch()
     tok = build_token_to_images(DRIVELM_VAL_JSON)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.limit]
     print(f"대상 이미지 {len(paths)}장, max_pixels={args.max_pixels}")
 
     out_path = Path(args.out)
     out_path.parent.mkdir(exist_ok=True)
     results = json.loads(out_path.read_text()) if out_path.exists() else {}
+    pi_f = None
+    if args.per_image:
+        from scene_map import image_to_scene
+        scenes = image_to_scene()
+        pi_f = open(args.per_image, "w")
 
     for tag, repo, note in TARGETS:
         # **성공한 것만** 건너뛴다. 실패·건너뜀 기록이 있으면 재시도한다
@@ -333,8 +348,9 @@ def main():
                                 "skipped": f"디스크 부족 (여유 {free_gb:.1f} GB)"}
                 out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
                 continue
+        pi = [] if pi_f else None
         try:
-            results[tag] = profile(tag, repo, note, paths, args.max_pixels)
+            results[tag] = profile(tag, repo, note, paths, args.max_pixels, pi)
             out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
             r = results[tag]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
@@ -347,6 +363,14 @@ def main():
                             "failed": f"{type(e).__name__}: {str(e)[:200]}"}
             out_path.write_text(json.dumps(results, indent=2, ensure_ascii=False))
         finally:
+            if pi_f:
+                failed = "failed" in results.get(tag, {})
+                for p, row in zip(paths, pi):
+                    nm = Path(p).name
+                    pi_f.write(json.dumps({"model": tag, "repo": repo, "dtype": "bfloat16",
+                                           "max_pixels": args.max_pixels, "image": nm,
+                                           "scene": scenes.get(nm), **row, "failed": failed}) + "\n")
+                pi_f.flush()
             if args.cleanup and "[keep]" not in note:
                 import shutil, os
                 cache = os.environ.get("HF_HOME") or os.path.expanduser("~/.cache/huggingface")
@@ -364,6 +388,9 @@ def main():
         print(f"{tag:22s}{r['depth']:>7}{r['last_block_p50']:>17,.0f}{r['headroom_p50']:>10.2f}배")
     print("=" * 78)
     print(f"저장: {out_path}")
+    if pi_f:
+        pi_f.close()
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

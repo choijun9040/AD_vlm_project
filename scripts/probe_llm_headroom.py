@@ -46,8 +46,11 @@ def load(checkpoint, dtype):
     return m
 
 
-def pick_inputs(limit):
-    """headroom_guard와 같은 이미지 순서(DriveLM 검증 키프레임 순), 이미지마다 첫 NuScenes-QA 문항."""
+def pick_inputs(limit, offset=0):
+    """headroom_guard와 같은 이미지 순서(DriveLM 검증 키프레임 순), 이미지마다 첫 NuScenes-QA 문항.
+
+    offset: 그 순서에서 시작 위치 — [offset:offset+limit]. (검증 키프레임 799장 모두 문항이 있어
+    문항 필터가 순서를 바꾸지 않는다.)"""
     tok = build_token_to_images(DRIVELM_VAL)
     qs = json.load(open(NUSCENESQA_VAL))["questions"]
     first_q = {}
@@ -57,9 +60,9 @@ def pick_inputs(limit):
     for t, cams in tok.items():
         if "CAM_FRONT" in cams and t in first_q:
             items.append((t, str(cams["CAM_FRONT"]), first_q[t]))
-        if len(items) >= limit:
+        if len(items) >= offset + limit:
             break
-    return items
+    return items[offset:]
 
 
 def hook_points(model):
@@ -74,7 +77,8 @@ def hook_points(model):
 
 
 @torch.no_grad()
-def run(model, processor, items, record_pos):
+def run(model, processor, items, record_pos, logit_flags=None):
+    """logit_flags: 리스트를 주면 이미지별 비유한 로짓 여부를 덧붙인다 — 집계에는 영향 없음."""
     pts = hook_points(model)
     rec = {k: [] for k in pts}
     where = {k: [] for k in pts}
@@ -105,8 +109,11 @@ def run(model, processor, items, record_pos):
                         return_tensors="pt").to("cuda")
         cur["ids"] = inp["input_ids"][0]
         out = model(**inp)
-        if not torch.isfinite(out.logits).all():
+        nfl = not torch.isfinite(out.logits).all()
+        if nfl:
             nonfinite_logits += 1
+        if logit_flags is not None:
+            logit_flags.append(bool(nfl))
     for h in hs:
         h.remove()
     return rec, where, nonfinite_logits / len(items)
@@ -136,22 +143,28 @@ def main():
     ap.add_argument("--limit", type=int, default=100)
     ap.add_argument("--max_pixels", type=int, default=NATIVE_MAX_PIXELS)
     ap.add_argument("--out_dir", default="eval_results")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="이미지별 지점 max(bf16·fp16, 비유한이면 inf)·bf16 argmax 위치 종류·비유한 로짓 여부와 "
+                         "장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     from transformers import AutoProcessor
     processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=args.max_pixels, min_pixels=MIN_PIXELS)
-    items = pick_inputs(args.limit)
+    items = pick_inputs(args.limit, args.offset)
     print(f"[설정] {args.tag}  이미지 {len(items)}장  max_pixels={args.max_pixels:,}")
 
     # 1) 크기 — 전체 bf16
     m = load(args.checkpoint, "bfloat16")
-    rec, where, nf_bf16 = run(m, processor, items, record_pos=True)
+    flags_bf16 = [] if args.per_image else None
+    rec, where, nf_bf16 = run(m, processor, items, record_pos=True, logit_flags=flags_bf16)
     mag = summarize(rec, where)
     del m; torch.cuda.empty_cache()
 
     # 2) 상실 — 언어 모델 fp16, 비전 bf16
     m = load(args.checkpoint, "float16")
-    rec16, where16, nf_fp16 = run(m, processor, items, record_pos=False)
+    flags_fp16 = [] if args.per_image else None
+    rec16, where16, nf_fp16 = run(m, processor, items, record_pos=False, logit_flags=flags_fp16)
     del m; torch.cuda.empty_cache()
 
     worst = min((r for r in mag if r["headroom_worst"]), key=lambda r: r["headroom_worst"])
@@ -170,6 +183,22 @@ def main():
     p = Path(args.out_dir) / f"llm_headroom_{args.tag}.json"
     p.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     print(f"→ {p}")
+    if args.per_image:
+        # fp16 통과는 위치를 기록하지 않으므로(record_pos=False) argmax 종류는 bf16만 남긴다
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        with open(args.per_image, "w") as fo:
+            for j, (tok_, path, q) in enumerate(items):
+                nm = Path(path).name
+                fo.write(json.dumps({
+                    "tag": args.tag, "checkpoint": args.checkpoint, "max_pixels": args.max_pixels,
+                    "image": nm, "scene": sc.get(nm), "sample_token": tok_, "question": q,
+                    "point_max_bf16": {k: v[j] for k, v in rec.items()},
+                    "argmax_kind_bf16": {k: v[j] for k, v in where.items()},
+                    "point_max_fp16_llm": {k: v[j] for k, v in rec16.items()},
+                    "nonfinite_logits_bf16": flags_bf16[j], "nonfinite_logits_fp16_llm": flags_fp16[j],
+                }) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

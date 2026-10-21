@@ -48,7 +48,8 @@ def t_of(out):
 
 
 @torch.no_grad()
-def run(model, cache, scale):
+def run(model, cache, scale, per_image=None):
+    """per_image: 리스트를 주면 이미지별 값(중앙값 내기 전)을 덧붙인다 — 집계에는 영향 없음."""
     visual = get_visual(model)
     blk31 = visual.blocks[31]
     rec = {}
@@ -90,6 +91,8 @@ def run(model, cache, scale):
 
     for x in hs:
         x.remove()
+    if per_image is not None:
+        per_image.extend({k: v[j] for k, v in acc.items()} for j in range(len(cache)))
     med = lambda v: percentile(sorted(v), 0.5)
     return {k: med(v) for k, v in acc.items()}
 
@@ -98,21 +101,26 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n_images", type=int, default=30)
     ap.add_argument("--out", default="eval_results/blk31_decompose.json")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="변형·조건·이미지별 성분 max|x|(resid/attn/mlp/out/norm1/norm2)·최댓값 좌표의 부호 있는 성분값과 장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
     tok = build_token_to_images(DRIVELM_VAL_JSON)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.n_images]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.n_images]
     proc = AutoProcessor.from_pretrained(BASE_3B, max_pixels=MAX_PIXELS, min_pixels=MIN_PIXELS)
     cache = build_pixel_cache(proc, paths, 16)
 
     out = {"n_images": len(paths), "results": {}}
+    per_image = {}
     for name, path in VARIANTS.items():
         print(f"\n[{name}]", flush=True)
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
         model = PeftModel.from_pretrained(base, path).to("cuda").eval()
         for label, sc in SCALES:
-            r = run(model, cache, sc)
+            pi = per_image.setdefault((name, label, sc), []) if args.per_image else None
+            r = run(model, cache, sc, pi)
             out["results"][f"{name}|{label}"] = r
             print(f"  {label:12s} resid={r['resid']:>10,.0f} attn={r['attn']:>8,.0f} "
                   f"mlp={r['mlp']:>10,.0f} → blk31={r['out']:>10,.0f}   "
@@ -149,6 +157,16 @@ def main():
         print(f"{n:14s}{a['norm1']:>14.2f}{b['norm1']:>13.2f}{a['norm2']:>14.2f}{b['norm2']:>13.2f}")
     print("=" * 96)
     print(f"저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc_map = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for key, rows in per_image.items():
+                for p, row in zip(paths, rows):
+                    nm = Path(p).name
+                    f.write(json.dumps({"variant": key[0], "condition": key[1], "resid_scale": key[2], "image": nm, "scene": sc_map.get(nm),
+                                        **row}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

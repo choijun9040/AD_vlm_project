@@ -50,7 +50,8 @@ TARGETS = [
 
 
 @torch.no_grad()
-def measure(repo, paths, max_pixels):
+def measure(repo, paths, max_pixels, per_image=None):
+    """per_image: 리스트를 주면 이미지별 max·rms·max/rms·SNR을 덧붙인다 — 집계에는 영향 없음."""
     import headroom_guard as HG
     from transformers import AutoProcessor
 
@@ -86,6 +87,8 @@ def measure(repo, paths, max_pixels):
         acc["ratio"].append(mx / max(rms, 1e-12))
         acc["snr_tensor"].append(int8_snr(x, per_channel=False))
         acc["snr_channel"].append(int8_snr(x, per_channel=True))
+        if per_image is not None:
+            per_image.append({k: v[-1] for k, v in acc.items()})
     h.remove()
     del tower
     torch.cuda.empty_cache()
@@ -107,22 +110,40 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=1440000)
     ap.add_argument("--out", default="eval_results/int8_across_families.json")
     ap.add_argument("--cleanup", action="store_true", default=True)
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="모델·이미지별 마지막 블록 max·rms·max/rms·SNR(tensor/chan)과 장면 토큰을 jsonl로 "
+                         "저장('w'). --out에 이미 완료된 모델은 건너뛰므로 그 모델의 행은 없다 — 전부 새로 "
+                         "재려면 새 --out 경로를 함께 줄 것")
     args = ap.parse_args()
 
     awq_compat.patch()
     tok = build_token_to_images(DRIVELM_VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.limit]
     print(f"이미지 {len(paths)}장\n")
 
     out_path = Path(args.out)
     res = json.loads(out_path.read_text()) if out_path.exists() else {}
+    pi_f = None
+    if args.per_image:
+        from scene_map import image_to_scene
+        scenes = image_to_scene()
+        pi_f = open(args.per_image, "w")
     for tag, repo, keep in TARGETS:
         if tag in res and "snr_tensor" in res[tag]:
             print(f"[{tag}] 이미 완료 — 건너뜀"); continue
         print(f"\n{'='*70}\n[{tag}] {repo}\n{'='*70}", flush=True)
+        pi = [] if pi_f else None
         try:
-            r = measure(repo, paths, args.max_pixels)
+            r = measure(repo, paths, args.max_pixels, pi)
             res[tag] = r
+            if pi_f:
+                for p, row in zip(paths, pi):
+                    nm = Path(p).name
+                    pi_f.write(json.dumps({"model": tag, "repo": repo, "dtype": "bfloat16",
+                                           "max_pixels": args.max_pixels, "image": nm,
+                                           "scene": scenes.get(nm), **row}) + "\n")
+                pi_f.flush()
             print(f"  여유 {r['headroom_p50']:.2f}배 · max/rms {r['ratio']['p50']:.1f} · "
                   f"SNR(tensor) {r['snr_tensor']['p50']:.2f} dB · "
                   f"SNR(chan) {r['snr_channel']['p50']:.2f} dB", flush=True)
@@ -147,6 +168,9 @@ def main():
               f"{r['snr_tensor']['p50']:>10.2f}{r['snr_channel']['p50']:>10.2f}")
     print("=" * 78)
     print(f"저장: {out_path}")
+    if pi_f:
+        pi_f.close()
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

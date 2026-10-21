@@ -159,6 +159,9 @@ def main():
     ap.add_argument("--offset", type=int, default=0,
                     help="이미지 시작 위치. A1 확인 실험은 100(첫 실험의 100장과 겹치지 않게)")
     ap.add_argument("--out_dir", default="eval_results")
+    ap.add_argument("--per_image", default=None,
+                    help="이미지별 값(지점별 max — bf16 크기·fp16 (i)/(ii)·교정 후, 비유한 여부 (i)/(ii)/교정 (ii), "
+                         "이미지별 코사인)과 장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
     tag = f"{Path(args.model_dir).name}_st{args.max_soft_tokens}" + (f"_off{args.offset}" if args.offset else "")
 
@@ -171,7 +174,7 @@ def main():
     mag = summarize(rec_b)
     # 2) 상실 — fp16 두 경로
     vh = load_vision(args.model_dir, "float16")
-    _, fin_i = profile(vh, cache, upcast=True)
+    rec_i, fin_i = profile(vh, cache, upcast=True)
     rec_ii, fin_ii = profile(vh, cache, upcast=False)
     worst_row = min((r for r in mag if r["headroom_worst"]), key=lambda r: r["headroom_worst"])
     exceed_any = [max(1 if (not math.isfinite(rec_b[n][j]) or rec_b[n][j] > FP16_MAX) else 0 for n in rec_b)
@@ -202,10 +205,13 @@ def main():
     _, fin_32 = profile(v32, cache, upcast=True)
     _, fin_32c = profile(apply_residual_rescale(v32, c), cache, upcast=True)
     del v32
-    post = {"equivalence_cos_min_fp32": min(cosines(fin_32, fin_32c)),
-            "noise_floor_cos_min_bf16_vs_fp32": min(cosines(fin_32, fin_b)),
-            "deploy_cos_min_fp16_i_reference_vs_fp32": min(x for x in cosines(fin_32, fin_i) if math.isfinite(x)),
-            "deploy_cos_min_fp16_ii_fixed_vs_fp32": min(x for x in cosines(fin_32, fin_iic) if math.isfinite(x))}
+    # 이미지별 코사인을 먼저 두고 최소를 낸다 — 값은 이전과 같고 --per_image에도 쓴다
+    cos32 = {"fp32_fix_vs_fp32": cosines(fin_32, fin_32c), "bf16_vs_fp32": cosines(fin_32, fin_b),
+             "fp16_i_vs_fp32": cosines(fin_32, fin_i), "fp16_ii_fixed_vs_fp32": cosines(fin_32, fin_iic)}
+    post = {"equivalence_cos_min_fp32": min(cos32["fp32_fix_vs_fp32"]),
+            "noise_floor_cos_min_bf16_vs_fp32": min(cos32["bf16_vs_fp32"]),
+            "deploy_cos_min_fp16_i_reference_vs_fp32": min(x for x in cos32["fp16_i_vs_fp32"] if math.isfinite(x)),
+            "deploy_cos_min_fp16_ii_fixed_vs_fp32": min(x for x in cos32["fp16_ii_fixed_vs_fp32"] if math.isfinite(x))}
     print(f"[사후]  fp32 등가성 {post['equivalence_cos_min_fp32']:.6f}  bf16 잡음 하한 {post['noise_floor_cos_min_bf16_vs_fp32']:.6f}  "
           f"fp16(i) 기준 구현 {post['deploy_cos_min_fp16_i_reference_vs_fp32']:.6f}  "
           f"fp16(ii) 교정 {post['deploy_cos_min_fp16_ii_fixed_vs_fp32']:.6f}  (모두 fp32 원본 대비 최소 코사인)")
@@ -229,6 +235,29 @@ def main():
     p = Path(args.out_dir) / f"gemma4_vision_{tag}.json"
     p.write_text(json.dumps(out, ensure_ascii=False, indent=1))
     print(f"→ {p}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        nf = lambda f: not bool(torch.isfinite(f).all())
+        with open(args.per_image, "w") as fo:
+            for j, path in enumerate(paths):
+                nm = Path(path).name
+                fo.write(json.dumps({
+                    "tag": tag, "model_dir": args.model_dir, "max_soft_tokens": args.max_soft_tokens,
+                    "image": nm, "scene": sc.get(nm), "fix_c": c,
+                    # 지점별 max|·| (비유한이면 inf) — 크기 bf16 / fp16 (i) / fp16 (ii) / 교정 후 bf16 / 교정 후 fp16 (ii)
+                    "point_max_bf16": {n: v[j] for n, v in rec_b.items()},
+                    "point_max_fp16_i": {n: v[j] for n, v in rec_i.items()},
+                    "point_max_fp16_ii": {n: v[j] for n, v in rec_ii.items()},
+                    "point_max_bf16_fixed": {n: v[j] for n, v in rec_bc.items()},
+                    "point_max_fp16_ii_fixed": {n: v[j] for n, v in rec_iic.items()},
+                    "exceed_any_bf16": bool(exceed_any[j]),
+                    "nonfinite_fp16_i": nf(fin_i[j]), "nonfinite_fp16_ii": nf(fin_ii[j]),
+                    "nonfinite_fp16_ii_fixed": nf(fin_iic[j]),
+                    "cos_bf16_fixed_vs_bf16": cos_eq[j], "cos_fp16_ii_fixed_vs_bf16": cos_ii[j],
+                    **{f"cos_{k}": v[j] for k, v in cos32.items()},
+                }) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

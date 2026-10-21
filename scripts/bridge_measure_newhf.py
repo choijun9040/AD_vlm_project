@@ -165,7 +165,9 @@ def _tower_stats(tmaxes, block_worst):
             "gain_vs_block_worst": tv[-1] / block_worst if block_worst else None}
 
 
-def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
+def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False, per_image=None):
+    """per_image: 리스트를 주면 이미지별 (마지막 블록 max, 타워 반환 전체 max, 블록 제외 max)를
+    덧붙인다 — 집계에는 영향 없음 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)."""
     from transformers import AutoConfig, AutoImageProcessor
     print(f"\n{'='*70}\n[{repo}]\n{'='*70}", flush=True)
     cfg = AutoConfig.from_pretrained(repo, trust_remote_code=trust)
@@ -207,6 +209,9 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             av, pv2 = tower_out_max(out, exclude_ptrs=(rec["t"].data_ptr(),))
             tmaxes.append(av if av is not None else float("nan"))
             pmaxes.append(pv2 if pv2 is not None else float("nan"))
+            if per_image is not None:
+                per_image.append({"last_block_max": maxes[-1], "tower_out_max": av,
+                                  "post_block_max": pv2})
     del tower; gc.collect(); torch.cuda.empty_cache()
 
     s = sorted(maxes)
@@ -231,6 +236,10 @@ def main():
     ap.add_argument("--out", default="eval_results/bridge_newhf.json")
     ap.add_argument("--cleanup", action="store_true")
     ap.add_argument("--trust_remote_code", action="store_true")
+    ap.add_argument("--per_image", default=None,
+                    help="저장소·이미지별 마지막 블록 max(bf16)·타워 반환 전체 max·블록 제외 max와 장면 토큰을 "
+                         "jsonl로 저장('w'). 장면은 scripts/scene_map.py로 붙이며, 그 모듈이나 DriveLM JSON이 "
+                         "없는 환경이면 null로 남긴다. 이미지 목록은 scripts/make_image_paths.py로 만든다")
     args = ap.parse_args()
 
     paths = json.loads(Path(args.paths).read_text())
@@ -240,9 +249,23 @@ def main():
 
     out = Path(args.out)
     res = json.loads(out.read_text()) if out.exists() else {}
-    for repo in args.repos:
+    pi_f = None
+    if args.per_image:
+        # 장면 매핑만 예외적으로 저장소 모듈을 쓴다 — 측정값에는 관여하지 않는다
+        scenes = {}
         try:
-            res[repo] = profile(repo, paths, args.max_pixels, trust=args.trust_remote_code)
+            import sys
+            sys.path.append(str(Path(__file__).parent))
+            from scene_map import image_to_scene
+            scenes = image_to_scene()
+        except Exception as e:
+            print(f"  [경고] 장면 매핑 실패({type(e).__name__}: {e}) — scene은 null", flush=True)
+        pi_f = open(args.per_image, "w")
+    for repo in args.repos:
+        pi = [] if pi_f else None
+        try:
+            res[repo] = profile(repo, paths, args.max_pixels, trust=args.trust_remote_code,
+                                per_image=pi)
             r = res[repo]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
                   f"여유 p50={r['headroom_p50']:.2f}배  최악={r['headroom_worst']:.2f}배", flush=True)
@@ -269,6 +292,15 @@ def main():
             print(f"  실패: {type(e).__name__}: {str(e)[:160]}", flush=True)
             res[repo] = {"failed": f"{type(e).__name__}: {e}"}
         out.write_text(json.dumps(res, indent=2, ensure_ascii=False))
+        if pi_f:
+            import transformers as _tf
+            failed = "failed" in res[repo]
+            for p, row in zip(paths, pi):
+                nm = Path(p).name
+                pi_f.write(json.dumps({"repo": repo, "dtype": "bfloat16", "max_pixels": args.max_pixels,
+                                       "transformers": _tf.__version__, "image": nm,
+                                       "scene": scenes.get(nm), **row, "failed": failed}) + "\n")
+            pi_f.flush()
         if args.cleanup:
             # **blob까지 지운다 (2026-09-18 수정).** models--* 디렉터리만 지우면
             # hub/blobs의 실체 파일이 참조 없이 남는다. 실측으로 고아 blob이
@@ -296,6 +328,9 @@ def main():
             if freed:
                 print(f"  고아 blob {freed/1e9:.2f} GB 회수")
     print(f"\n저장: {out}")
+    if pi_f:
+        pi_f.close()
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

@@ -51,8 +51,10 @@ def as_tensor(out):
 
 
 @torch.no_grad()
-def run(model, cache, scale):
-    """blk30 출력에 scale을 곱한 뒤 blk30/blk31 최대 활성을 잰다."""
+def run(model, cache, scale, per_image=None):
+    """blk30 출력에 scale을 곱한 뒤 blk30/blk31 최대 활성을 잰다.
+
+    per_image: 리스트를 주면 이미지별 값(중앙값 내기 전)을 덧붙인다 — 집계에는 영향 없음."""
     visual = get_visual(model)
     rec = {}
 
@@ -81,6 +83,9 @@ def run(model, cache, scale):
 
     for x in h:
         x.remove()
+    if per_image is not None:
+        per_image.extend({"blk30_pre": a, "blk30_post": b, "blk31": c}
+                         for a, b, c in zip(pre, post, b31))
     med = lambda v: percentile(sorted(v), 0.5)
     return {"blk30_pre": med(pre), "blk30_post": med(post), "blk31": med(b31)}
 
@@ -89,15 +94,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n_images", type=int, default=30)
     ap.add_argument("--out", default="eval_results/blk31_intervention.json")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="모델·조건·이미지별 blk30(개입 전·후)·blk31 max|x|과 장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
     tok = build_token_to_images(DRIVELM_VAL_JSON)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.n_images]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.n_images]
     proc = AutoProcessor.from_pretrained(BASE_3B, max_pixels=MAX_PIXELS, min_pixels=MIN_PIXELS)
     cache = build_pixel_cache(proc, paths, 16)
 
     results = {"gap": GAP, "n_images": len(paths), "conditions": {}}
+    per_image = {}
     for name, path in CKPT.items():
         print(f"\n[{name}] 로드", flush=True)
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
@@ -110,7 +119,8 @@ def main():
             conds.append((f"blk30을 {GAP:.1f}배 확대", GAP))
 
         for label, sc in conds:
-            r = run(model, cache, sc)
+            pi = per_image.setdefault((name, label, sc), []) if args.per_image else None
+            r = run(model, cache, sc, pi)
             results["conditions"][f"{name} | {label}"] = r
             print(f"  {label:24s} blk30 {r['blk30_pre']:>9,.0f} → {r['blk30_post']:>9,.0f}"
                   f"   blk31 = {r['blk31']:>10,.0f}", flush=True)
@@ -133,6 +143,16 @@ def main():
     print("  → 유지율이 높을수록 blk31은 마지막 블록의 '자체 생성'이며 중간층과 독립이다.")
     print("=" * 76)
     print(f"저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc_map = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for key, rows in per_image.items():
+                for p, row in zip(paths, rows):
+                    nm = Path(p).name
+                    f.write(json.dumps({"variant": key[0], "condition": key[1], "blk30_scale": key[2], "image": nm, "scene": sc_map.get(nm),
+                                        **row}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

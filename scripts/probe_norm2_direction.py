@@ -81,12 +81,16 @@ def capture(model, cache, scale):
     return store
 
 
-def med_cos(a_list, b_list, key):
-    """토큰별 코사인 유사도의 중앙값을 이미지마다 구해 다시 중앙값."""
+def med_cos(a_list, b_list, key, keep=None):
+    """토큰별 코사인 유사도의 중앙값을 이미지마다 구해 다시 중앙값.
+
+    keep: 리스트를 주면 이미지별 값(토큰 중앙값)을 덧붙인다 — 집계에는 영향 없음."""
     per_image = []
     for a, b in zip(a_list, b_list):
         c = F.cosine_similarity(a[key], b[key], dim=-1)
         per_image.append(float(c.median()))
+    if keep is not None:
+        keep.extend(per_image)
     return percentile(sorted(per_image), 0.5)
 
 
@@ -94,15 +98,19 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--n_images", type=int, default=20)
     ap.add_argument("--out", default="eval_results/norm2_direction.json")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="변형·스케일·이미지별 norm1/norm2/mlp 코사인(토큰 중앙값)·무개입 잔차/attn 최댓값 비와 장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
     tok = build_token_to_images(DRIVELM_VAL_JSON)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.n_images]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.n_images]
     proc = AutoProcessor.from_pretrained(BASE_3B, max_pixels=MAX_PIXELS, min_pixels=MIN_PIXELS)
     cache = build_pixel_cache(proc, paths, 16)
 
     out = {"n_images": len(paths), "results": {}}
+    per_image = {}
     for name, path in VARIANTS.items():
         print(f"\n[{name}] 로드", flush=True)
         base = Qwen2_5_VLForConditionalGeneration.from_pretrained(BASE_3B, torch_dtype=torch.bfloat16)
@@ -110,16 +118,22 @@ def main():
 
         ref = capture(model, cache, 1.0)
         # 무개입에서 잔차 대 attn 크기 비 — norm2 입력의 구성비
-        ratio = percentile(sorted(float(r["resid"].abs().max() / r["attn"].abs().max().clamp_min(1e-9))
-                                  for r in ref), 0.5)
+        ratios = [float(r["resid"].abs().max() / r["attn"].abs().max().clamp_min(1e-9)) for r in ref]
+        ratio = percentile(sorted(ratios), 0.5)
         print(f"  무개입 잔차/attn 최댓값 비 = {ratio:.1f}", flush=True)
 
         for sc in SCALES:
             cur = capture(model, cache, sc)
-            r = {"cos_norm1": med_cos(ref, cur, "norm1"),
-                 "cos_norm2": med_cos(ref, cur, "norm2"),
-                 "cos_mlp":   med_cos(ref, cur, "mlp"),
+            keep = {k: ([] if args.per_image else None) for k in ("norm1", "norm2", "mlp")}
+            r = {"cos_norm1": med_cos(ref, cur, "norm1", keep["norm1"]),
+                 "cos_norm2": med_cos(ref, cur, "norm2", keep["norm2"]),
+                 "cos_mlp":   med_cos(ref, cur, "mlp", keep["mlp"]),
                  "resid_attn_ratio": ratio}
+            if args.per_image:
+                per_image[(name, sc)] = [
+                    {"cos_norm1": keep["norm1"][j], "cos_norm2": keep["norm2"][j],
+                     "cos_mlp": keep["mlp"][j], "resid_attn_ratio": ratios[j]}
+                    for j in range(len(cache))]
             out["results"][f"{name}|x{sc:.4g}"] = r
             print(f"  스케일 x{sc:<7.4g} cos(norm1)={r['cos_norm1']:.5f}  "
                   f"cos(norm2)={r['cos_norm2']:.5f}  cos(mlp)={r['cos_mlp']:.5f}", flush=True)
@@ -132,6 +146,16 @@ def main():
     print("      norm2는 잔차+attn 혼합이라 비율 변화로 **방향**이 바뀐다(cos<1).")
     print("=" * 78)
     print(f"저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc_map = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for key, rows in per_image.items():
+                for p, row in zip(paths, rows):
+                    nm = Path(p).name
+                    f.write(json.dumps({"variant": key[0], "resid_scale": key[1], "image": nm, "scene": sc_map.get(nm),
+                                        **row}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

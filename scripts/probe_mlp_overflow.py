@@ -44,8 +44,11 @@ def t_of(o):
 
 
 @torch.no_grad()
-def run(model, cache, mode, s):
-    """mode: none | fixA(gate·up 축소) | fixB(down 출력 축소)"""
+def run(model, cache, mode, s, per_image=None):
+    """mode: none | fixA(gate·up 축소) | fixB(down 출력 축소)
+
+    per_image: 리스트를 주면 이미지별 {단계: max|x| (비유한이면 None)}, 최초 inf 단계를 덧붙인다
+    (집계에는 영향 없음 — 평가 데이터 전부로 통일, 사전 등록 4fddeb4)."""
     visual = get_visual(model.to(torch.float16))
     blk = visual.blocks[31]
     mlp = blk.mlp
@@ -85,16 +88,22 @@ def run(model, cache, mode, s):
         rec.clear()
         visual(pv.to("cuda", torch.float16), grid.to("cuda"))
         bad_at = None
+        img_max = {}
         for k in STAGES:
             t = rec.get(k)
             if t is None:
                 continue
             f = t.float()
             if torch.isnan(f).any() or torch.isinf(f).any():
+                img_max[k] = None
                 if bad_at is None:
                     bad_at = k
             else:
                 maxes[k].append(f.abs().max().item())
+                img_max[k] = maxes[k][-1]
+        if per_image is not None:
+            per_image.append({"stage_max": img_max, "first_inf_stage": bad_at,
+                              "nonfinite": bad_at is not None})
         if bad_at:
             first_bad[bad_at] += 1
             n_bad += 1
@@ -114,11 +123,15 @@ def main():
     ap.add_argument("--n_images", type=int, default=250)
     ap.add_argument("--max_pixels", type=int, default=1440000)
     ap.add_argument("--out", default="eval_results/mlp_overflow.json")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="조건·이미지별 단계 max|x|(비유한이면 null), 최초 inf 단계, 상실 여부, 장면 토큰을 "
+                         "jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
     tok = build_token_to_images(DRIVELM_VAL_JSON)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.n_images]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.n_images]
     proc = AutoProcessor.from_pretrained(BASE_3B, max_pixels=args.max_pixels, min_pixels=3136)
     cache = build_pixel_cache(proc, paths, 16)
 
@@ -127,8 +140,10 @@ def main():
     model = PeftModel.from_pretrained(base, CKPT).to("cuda").eval()
 
     out = {"checkpoint": CKPT, "scale": args.scale, "max_pixels": args.max_pixels, "runs": {}}
+    per_image = {}
     for mode in ("none", "fixB", "fixA"):
-        r = run(model, cache, mode, args.scale)
+        per_image[mode] = [] if args.per_image else None
+        r = run(model, cache, mode, args.scale, per_image[mode])
         out["runs"][mode] = r
         stages = {k: v for k, v in r["first_inf_stage"].items() if v}
         print(f"\n[{mode}] 상실 {r['n_bad']}/{r['n']} = {r['collapse_rate']*100:.1f}%")
@@ -146,6 +161,17 @@ def main():
         print(f"{m:8s}{r['collapse_rate']*100:>9.1f}%   {st if st else '없음'}")
     print("=" * 74)
     print(f"저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for mode, rows in per_image.items():
+                for p, row in zip(paths, rows):
+                    nm = Path(p).name
+                    f.write(json.dumps({"mode": mode, "checkpoint": CKPT, "scale": args.scale,
+                                        "max_pixels": args.max_pixels, "image": nm,
+                                        "scene": sc.get(nm), **row}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

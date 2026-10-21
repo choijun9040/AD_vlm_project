@@ -263,6 +263,9 @@ def main():
 
     dump_f = None
     if args.dump_predictions:
+        # 장면 토큰 — 장면 군집 부트스트랩용 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)
+        from scene_map import token_to_scene
+        tok2scene = token_to_scene(DRIVELM_VAL_JSON)
         dump_path = out_dir / f"{ckpt_tag}_predictions.jsonl"
         dump_f = dump_path.open("w")
         print(f"[예측 덤프] {dump_path}")
@@ -293,6 +296,8 @@ def main():
             dump_f.write(json.dumps({
                 "idx": i,
                 "sample_token":  s["sample_token"],
+                "scene":         tok2scene.get(s["sample_token"]),
+                "image":         Path(img_path).name,
                 "template_type": s["template_type"],
                 "question": s["question"],
                 "gt": gt,
@@ -328,10 +333,26 @@ def main():
     print(f"  평균 생성 길이 : {gen_len_sum / max(1,total):.2f} 토큰 (상한 {args.max_new_tokens})")
     print("=" * 50)
 
+    ip = processor.image_processor
     result = {
         "checkpoint": args.checkpoint,
         "precision": precision,
+        # 주의: 이 키는 옛 의미 그대로 둔다 — LoRA 경로면 --lora_dtype과 무관하게 "bfloat16"으로 적힌다.
+        # 실제로 쓴 dtype은 아래 run_conditions.model_dtype_effective를 볼 것.
         "dtype": args.dtype if precision != "lora_bf16" else "bfloat16",
+        # **실제 실행 조건 (2026-10-21 추가, 평가 데이터 전부로 통일).** 위 "dtype"은 LoRA 경로에서
+        # --lora_dtype float16 실행도 bfloat16으로 적어 왔다. 의미를 바꾸지 않고 새 키로 남긴다.
+        "run_conditions": {
+            "max_pixels": ip.max_pixels, "min_pixels": ip.min_pixels,
+            "max_pixels_arg": args.max_pixels, "min_pixels_arg": args.min_pixels,
+            "processor_from_checkpoint": args.processor_from_checkpoint,
+            "lora_dtype": args.lora_dtype if precision == "lora_bf16" else None,
+            "quantized_load_dtype": args.dtype if precision != "lora_bf16" else None,
+            "model_dtype_effective": str(next(model.parameters()).dtype).replace("torch.", ""),
+            "stride": args.stride, "limit": args.limit,
+            "vision_state": args.vision_state,
+            "max_new_tokens": args.max_new_tokens,
+        },
         "max_new_tokens": args.max_new_tokens,
         "total": total,
         "correct": correct_total,

@@ -135,6 +135,9 @@ def main():
     ap.add_argument("--tag", default="run")
     ap.add_argument("--warmup", type=int, default=3)
     ap.add_argument("--out", default=None)
+    ap.add_argument("--per_image", default=None,
+                    help="이미지별 상실 여부·유한값 max|act|·지연(ms)을 **전 이미지** jsonl로 저장('w'). "
+                         "결과 JSON의 nan_images는 앞 20장뿐이다")
     ap.add_argument("--sequential", action="store_true",
                     help="분할 엔진을 **차례로** 올린다: 1부로 전 이미지를 돌려 은닉 상태를 디스크에 두고, 1부를 내린 뒤 "
                          "2부를 올린다. 두 엔진을 한꺼번에 올릴 메모리가 없을 때(6.4h). 지연은 이미지별 1부+2부 합")
@@ -307,6 +310,32 @@ def finish(args, paths, nan_imgs, lat, per_image, base_mem, peak, sequential=Fal
     out = Path(args.out or f"orin_{args.tag}.json")
     out.write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"저장: {out}")
+    if args.per_image:
+        write_per_image(args, per_image, lat)
+
+
+def write_per_image(args, per_image, lat):
+    """이미지별 결과 전부를 jsonl로 쓴다 (평가 데이터 전부로 통일, 사전 등록 4fddeb4).
+
+    결과 JSON의 `nan_images`는 앞 20장만 남기므로, 장면 군집 부트스트랩에는 이 파일을 쓴다.
+    보드에는 DriveLM JSON이 없을 수 있어 장면 토큰은 붙일 수 있을 때만 붙인다(없으면 null —
+    이미지 이름으로 나중에 scripts/scene_map.py와 맞추면 된다)."""
+    scenes = {}
+    try:
+        import sys
+        sys.path.append(str(Path(__file__).resolve().parent))
+        sys.path.append(str(Path(__file__).resolve().parent.parent))
+        from scene_map import image_to_scene
+        scenes = image_to_scene()
+    except Exception as e:
+        print(f"  [경고] 장면 매핑 없음({type(e).__name__}) — scene은 null")
+    with open(args.per_image, "w") as f:
+        for r, ms in zip(per_image, lat):
+            f.write(json.dumps({"tag": args.tag, "engine": args.engine,
+                                "engine2": getattr(args, "engine2", None),
+                                "max_pixels": args.max_pixels, **r,
+                                "scene": scenes.get(r["image"]), "latency_ms": float(ms)}) + "\n")
+    print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

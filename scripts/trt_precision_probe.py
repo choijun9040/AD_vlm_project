@@ -159,10 +159,13 @@ def _runner(engine, cudart):
     return f
 
 
-def run(engine, inputs, engine2=None):
+def run(engine, inputs, engine2=None, per_image=None):
     """engine2가 있으면 **분할 엔진**이다(2026-10-01, 사전 등록 6.4d): 1부 출력을 2부 입력으로
     넘기고 상실은 2부의 최종 출력에서 판정한다. 두 엔진 사이 텐서는 엔진의 입출력 형식(기본 fp32)을
-    그대로 따른다."""
+    그대로 따른다.
+
+    per_image: 리스트를 주면 이미지별 (비유한 여부, 유한값 absmax, 지연 ms)를 덧붙인다 — 집계에는 영향 없음.
+    지연은 워밍업으로 버리는 처음 두 장도 그대로 남기고 `warmup` 표시를 붙인다."""
     # cuda-python 13.x부터 경로가 cuda.bindings.runtime으로 바뀌었다(구버전은 cuda.cudart).
     try:
         from cuda.bindings import runtime as cudart
@@ -178,11 +181,16 @@ def run(engine, inputs, engine2=None):
         if f2 is not None:
             out = f2(out)
         lat.append((time.perf_counter() - t0) * 1000)
-        if not np.isfinite(out).all():
+        nf = not np.isfinite(out).all()
+        if nf:
             bad += 1
         fin = out[np.isfinite(out)]
         if fin.size:
             maxes.append(float(np.abs(fin).max()))
+        if per_image is not None:
+            per_image.append({"nonfinite": bool(nf),
+                              "absmax_finite": float(np.abs(fin).max()) if fin.size else None,
+                              "latency_ms": lat[-1], "warmup": len(lat) <= 2})
     lat = sorted(lat)[2:]          # 처음 두 번은 워밍업으로 버린다
     return (bad / len(inputs), (float(np.median(maxes)) if maxes else None),
             {"p50": float(np.median(lat)), "p95": float(np.percentile(lat, 95))}
@@ -198,16 +206,32 @@ def main():
     ap.add_argument("--modes", default="fp32,fp16,bf16")
     ap.add_argument("--workspace_gb", type=int, default=24)
     ap.add_argument("--out", default="eval_results/trt_precision_probe.json")
+    ap.add_argument("--per_image", default=None,
+                    help="조건·이미지별 비유한 여부·유한값 absmax·지연과 이미지 이름(npz의 _names)·장면 토큰을 "
+                         "jsonl로 저장('w'). 이름이 없는 옛 npz면 image는 키(0000…)로 남긴다")
     args = ap.parse_args()
     _load_trt()          # 파싱이 끝난 뒤에 올린다 — --help는 여기 오지 않는다
 
     z = np.load(args.npz)
-    inputs = [z[k] for k in sorted(z.files)]
+    keys = sorted(k for k in z.files if not k.startswith("_"))   # '_names' 등은 입력이 아니다
+    inputs = [z[k] for k in keys]
+    names = [str(n) for n in z["_names"]] if "_names" in z.files else list(keys)
     print(f"[입력] {len(inputs)}장, 형상 {inputs[0].shape}")
     print(f"[ONNX] {args.onnx}\n")
 
     res = {"onnx": args.onnx, "onnx2": args.onnx2, "n_images": len(inputs),
            "trt": trt.__version__, "modes": {}}
+    pi_f = None
+    if args.per_image:
+        scenes = {}
+        try:
+            import sys
+            sys.path.append(str(Path(__file__).parent))
+            from scene_map import image_to_scene
+            scenes = image_to_scene()
+        except Exception as e:
+            print(f"  [경고] 장면 매핑 실패({type(e).__name__}: {e}) — scene은 null")
+        pi_f = open(args.per_image, "w")
     for mode in args.modes.split(","):
         mode = mode.strip()
         logp = f"logs/trt_build_{mode}.log"
@@ -227,7 +251,13 @@ def main():
                                   "build_log": logp}
             continue
         prec = layer_precisions(lines)
-        nan_rate, absmax, lat = run(eng, inputs, eng2)
+        pi = [] if pi_f else None
+        nan_rate, absmax, lat = run(eng, inputs, eng2, pi)
+        if pi_f:
+            for nm, row in zip(names, pi):
+                pi_f.write(json.dumps({"mode": mode, "onnx": args.onnx, "onnx2": args.onnx2,
+                                       "image": nm, "scene": scenes.get(nm), **row}) + "\n")
+            pi_f.flush()
         n_half, n_float = prec.get("Half", 0), prec.get("Float", 0)
         wmb = prec.get("_weights_mb")
         print(f"  [{mode}] 상실 {nan_rate*100:.1f}%   유한 max 중앙값 "
@@ -244,6 +274,9 @@ def main():
 
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"\n저장: {args.out}")
+    if pi_f:
+        pi_f.close()
+        print(f"이미지별: {args.per_image}")
 
     m = res["modes"]
     print("\n" + "=" * 64)

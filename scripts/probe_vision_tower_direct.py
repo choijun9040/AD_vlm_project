@@ -239,7 +239,9 @@ def tower_out_max(out, exclude_ptrs=()):
     return allm, postm
 
 
-def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
+def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False, per_image=None):
+    """per_image: 리스트를 주면 이미지별 (마지막 블록 max, 타워 반환 전체 max, 블록 제외 max)를
+    덧붙인다 — 집계에는 영향 없음 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)."""
     from transformers import AutoConfig, AutoProcessor
     print(f"\n{'='*70}\n[{repo}]\n{'='*70}", flush=True)
     cfg = retry_429(lambda: AutoConfig.from_pretrained(
@@ -349,6 +351,9 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False):
             ot, op = tower_out_max(out, exclude_ptrs=(rec["t"].data_ptr(),))
             tower_maxes.append(ot if ot is not None else float("nan"))
             post_maxes.append(op if op is not None else float("nan"))
+            if per_image is not None:
+                per_image.append({"last_block_max": maxes[-1], "tower_out_max": ot,
+                                  "post_block_max": op})
 
     del tower
     gc.collect()
@@ -393,17 +398,29 @@ def main():
     ap.add_argument("--trust_remote_code", action="store_true",
                     help="저장소가 들고 다니는 모델링 코드를 실행한다. "
                          "InternVL·Phi-3-V 계열에 필요하며, **잘 알려진 저장소에만** 쓸 것")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--per_image", default=None,
+                    help="저장소·이미지별 마지막 블록 max(bf16)·타워 반환 전체 max·블록 제외 max와 장면 토큰을 "
+                         "jsonl로 저장('w'). 측정이 예외로 끝난 저장소도 그때까지 잰 행은 남기고 "
+                         "\"failed\"를 붙인다")
     args = ap.parse_args()
 
     tok = build_token_to_images(DRIVELM_VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][: args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset: args.offset + args.limit]
     print(f"이미지 {len(paths)}장, max_pixels={args.max_pixels:,}")
 
     out_path = Path(args.out)
     res = json.loads(out_path.read_text()) if out_path.exists() else {}
+    pi_f = None
+    if args.per_image:
+        from scene_map import image_to_scene
+        scenes = image_to_scene()
+        pi_f = open(args.per_image, "w")
     for repo in args.repos:
+        pi = [] if pi_f else None
         try:
-            res[repo] = profile(repo, paths, args.max_pixels, trust=args.trust_remote_code)
+            res[repo] = profile(repo, paths, args.max_pixels, trust=args.trust_remote_code,
+                                per_image=pi)
             r = res[repo]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
                   f"여유 p50={r['headroom_p50']:.2f}배  "
@@ -426,6 +443,14 @@ def main():
             import traceback; traceback.print_exc()
             res[repo] = {"repo": repo, "failed": f"{type(e).__name__}: {str(e)[:250]}"}
         out_path.write_text(json.dumps(res, indent=2, ensure_ascii=False))
+        if pi_f:
+            failed = "failed" in res[repo]
+            for p, row in zip(paths, pi):
+                nm = Path(p).name
+                pi_f.write(json.dumps({"repo": repo, "dtype": "bfloat16", "max_pixels": args.max_pixels,
+                                       "image": nm, "scene": scenes.get(nm), **row,
+                                       "failed": failed}) + "\n")
+            pi_f.flush()
         if args.cleanup:
             # **blob까지 지운다 (2026-09-18 수정).** models--* 디렉터리만 지우면
             # hub/blobs의 실체 파일이 참조 없이 남는다. 실측으로 고아 blob이
@@ -464,6 +489,9 @@ def main():
             print(f"{k:<48}  실패: {r.get('failed','')[:28]}")
     print("=" * 86)
     print(f"저장: {out_path}")
+    if pi_f:
+        pi_f.close()
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":

@@ -99,7 +99,8 @@ def percentile(sorted_vals, q):
 
 
 @torch.no_grad()
-def profile_model(name, base_id, adapter, pixel_cache, image_names, log_every, dump_f=None):
+def profile_model(name, base_id, adapter, pixel_cache, image_names, log_every, dump_f=None,
+                  scenes=None):
     print(f"\n{'=' * 66}\n[{name}] base={base_id} adapter={adapter}\n{'=' * 66}", flush=True)
     t0 = time.time()
 
@@ -159,9 +160,14 @@ def profile_model(name, base_id, adapter, pixel_cache, image_names, log_every, d
             if dump_f:
                 dump_f.write(json.dumps({
                     "model": name, "dtype": dtype_name, "image": image_names[n],
+                    # 장면 토큰 — 장면 군집 부트스트랩용 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)
+                    "scene": scenes.get(image_names[n]) if scenes is not None else None,
                     **{f"blk{i}": per_layer_max[i][-1] for i in KEY_LAYERS if i < depth},
                     "visual_out": out_max[-1],
                     "nan": out_max[-1] != out_max[-1],
+                    # 이미 계산하던 이미지별 값 — 전 층 max(비유한이면 NaN)와 최초 비유한 층
+                    "blk_all": [per_layer_max[i][-1] for i in range(depth)],
+                    "first_nonfinite_block": nan_at,
                 }) + "\n")
 
             if log_every and (n + 1) % log_every == 0:
@@ -217,6 +223,10 @@ def main():
     ap.add_argument("--out", default="eval_results/vision_activation_profile.json")
     ap.add_argument("--dump", default="eval_results/vision_activation_per_image.jsonl",
                     help="이미지별 층 max 기록 (분포 그림용). 빈 문자열이면 끔")
+    ap.add_argument("--fresh", action="store_true",
+                    help="새로 잰다: --dump를 덧붙이지 않고 새로 쓰고('w'), 기존 --out JSON에 합치지 않는다. "
+                         "없으면 예전 동작(덧붙이기·합치기)")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
     args = ap.parse_args()
 
     awq_compat.patch()   # PEFT dispatcher가 awq를 import하므로 필요
@@ -224,7 +234,9 @@ def main():
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)
     paths = [str(v["CAM_FRONT"]) for v in token_to_images.values() if "CAM_FRONT" in v]
     if args.limit:
-        paths = paths[: args.limit]
+        paths = paths[args.offset: args.offset + args.limit]
+    elif args.offset:
+        paths = paths[args.offset:]
     print(f"대상 이미지: {len(paths)}장 (DriveLM val CAM_FRONT)")
 
     processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=args.max_pixels,
@@ -239,15 +251,18 @@ def main():
         targets.append((name, BASE_3B, path, f"추가 대상 ({path})"))
     out_path = Path(args.out)
     out_path.parent.mkdir(exist_ok=True)
-    results = json.loads(out_path.read_text()) if out_path.exists() else {}
+    results = json.loads(out_path.read_text()) if (out_path.exists() and not args.fresh) else {}
     results.setdefault("_meta", {})
     results["_meta"].update({
         "n_images": len(paths), "max_pixels": args.max_pixels, "min_pixels": args.min_pixels,
     })
 
-    dump_f = open(args.dump, "a") if args.dump else None
+    dump_f = open(args.dump, "w" if args.fresh else "a") if args.dump else None
+    from scene_map import image_to_scene
+    scenes = image_to_scene()
     for name, base_id, adapter, note in targets:
-        r = profile_model(name, base_id, adapter, pixel_cache, image_names, args.log_every, dump_f)
+        r = profile_model(name, base_id, adapter, pixel_cache, image_names, args.log_every, dump_f,
+                          scenes)
         r["loss"] = note
         r["adapter"] = adapter
         results[name] = r

@@ -15,6 +15,7 @@ weight만 나누면 bias가 남아 다른 연산이 된다.
 """
 
 import argparse
+import json
 import math
 import sys
 from pathlib import Path
@@ -63,13 +64,17 @@ def edit_weights(tower, scale, with_bias):
     return restore
 
 
-def collapse(tower, cache):
+def collapse(tower, cache, flags=None):
+    """flags: 리스트를 주면 이미지별 상실(비유한 출력) 여부를 덧붙인다 — 집계에는 영향 없음."""
     bad = 0
     with torch.no_grad():
         for pv, grid in cache:
             out = tower(pv, grid)
-            if not torch.isfinite(out).all():
+            nf = not torch.isfinite(out).all()
+            if nf:
                 bad += 1
+            if flags is not None:
+                flags.append(bool(nf))
     return bad / len(cache)
 
 
@@ -79,6 +84,11 @@ def main():
     ap.add_argument("--scale", type=float, default=3.0)
     ap.add_argument("--max_pixels", type=int, default=1440000)
     ap.add_argument("--min_pixels", type=int, default=3136)
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--out", default=None,
+                    help="출력하는 집계(조건별 상실률·판정)를 JSON으로 저장. 미지정이면 저장하지 않는다(예전 동작)")
+    ap.add_argument("--per_image", default=None,
+                    help="조건·이미지별 상실 여부와 장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     awq_compat.patch()
@@ -95,7 +105,7 @@ def main():
     proc = AutoProcessor.from_pretrained(BASE, max_pixels=args.max_pixels,
                                          min_pixels=args.min_pixels)
     tok = build_token_to_images(VAL)
-    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][:args.limit]
+    paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset:args.offset + args.limit]
     print(f"[캐시] {len(paths)}장 전처리")
     cache = []
     for p in paths:
@@ -104,23 +114,25 @@ def main():
         cache.append((enc["pixel_values"].to("cuda", torch.float16),
                       enc["image_grid_thw"].to("cuda")))
 
+    want = args.per_image is not None
+    flags = {k: ([] if want else None) for k in ("none", "hook_fixa", "weight_bias_fixa", "weight_only_fixa")}
     print(f"\n{'조건':<34}{'상실률':>10}")
-    r = collapse(tower, cache)
+    r = collapse(tower, cache, flags["none"])
     print(f"{'무개입':<34}{r*100:>9.1f}%")
 
     hs = hook_fixa(tower, args.scale)
-    r_hook = collapse(tower, cache)
+    r_hook = collapse(tower, cache, flags["hook_fixa"])
     for h in hs:
         h.remove()
     print(f"{'훅 fixA (원래 실험)':<34}{r_hook*100:>9.1f}%")
 
     restore = edit_weights(tower, args.scale, with_bias=True)
-    r_wb = collapse(tower, cache)
+    r_wb = collapse(tower, cache, flags["weight_bias_fixa"])
     restore()
     print(f"{'가중치 fixA (weight+bias)':<34}{r_wb*100:>9.1f}%   ← ONNX로 내보낸 것")
 
     restore = edit_weights(tower, args.scale, with_bias=False)
-    r_w = collapse(tower, cache)
+    r_w = collapse(tower, cache, flags["weight_only_fixa"])
     restore()
     print(f"{'가중치 fixA (weight만, 잘못된 판본)':<34}{r_w*100:>9.1f}%")
 
@@ -134,6 +146,27 @@ def main():
         print(f"      weight만 편집한 판본은 {r_w*100:.1f}%로 다르다 — bias 정정이 필요했음이 확인된다")
     else:
         print(f"      weight만 편집해도 같다 — 이 스케일에서는 bias 기여가 무시할 수준이다")
+
+    if args.out:
+        res = {"checkpoint": CKPT, "scale": args.scale, "max_pixels": args.max_pixels,
+               "min_pixels": args.min_pixels, "n_images": len(paths), "offset": args.offset,
+               "collapse_rate": {"none": r, "hook_fixa": r_hook,
+                                 "weight_bias_fixa": r_wb, "weight_only_fixa": r_w},
+               "hook_equals_weight_bias": abs(r_hook - r_wb) < 1e-9,
+               "weight_only_differs": abs(r_w - r_wb) > 1e-9}
+        Path(args.out).write_text(json.dumps(res, indent=2, ensure_ascii=False))
+        print(f"저장: {args.out}")
+    if want:
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for cond, fl in flags.items():
+                for p, nf in zip(paths, fl):
+                    nm = Path(p).name
+                    f.write(json.dumps({"condition": cond, "checkpoint": CKPT, "scale": args.scale,
+                                        "max_pixels": args.max_pixels, "image": nm,
+                                        "scene": sc.get(nm), "nonfinite_fp16": nf}) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":
