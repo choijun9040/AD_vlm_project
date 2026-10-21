@@ -1,0 +1,2736 @@
+{
+ "repo": "google/gemma-4-26B-A4B-it",
+ "offset": 100,
+ "n_items": 100,
+ "c": 0.25,
+ "max_magnitude": 89604.5703125,
+ "summary": {
+  "R": {
+   "invalid_rate": 0.0,
+   "accuracy": 0.26
+  },
+  "U": {
+   "invalid_rate": 1.0,
+   "accuracy": 0.0
+  },
+  "F": {
+   "invalid_rate": 0.0,
+   "accuracy": 0.26
+  },
+  "agree_F_R": 0.94,
+  "agree_U_R": 0.0,
+  "mcnemar_F_vs_R": {
+   "F_only": 0,
+   "R_only": 0,
+   "p_exact": 1.0
+  }
+ },
+ "items": {
+  "R": [
+   {
+    "token": "99a4b7bf640d4cc1bcdbfd9d6cffe4a4",
+    "q": "There is a moving thing to the back right of the moving truck; what is it?",
+    "gt": "trailer",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "39ca468b47a84e2aa946e4d6d08ed68f",
+    "q": "There is a truck that is to the front left of the moving trailer; is it the same status as the trailer that is to the back right of the barrier?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "9cc58d6731274c28a27a727a6975518d",
+    "q": "There is a parked thing that is both to the front of me and the back of the stopped thing; what is it?",
+    "gt": "trailer",
+    "pred": "Car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "3ad79c1436ab441795d4d73ae0b503d5",
+    "q": "Does the trailer to the back right of the barrier have the same status as the car to the back of the moving car?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "291d30843273487c96a7dc86f79a030f",
+    "q": "What is the without rider thing?",
+    "gt": "motorcycle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "4de831d46edf46d084ac2cecf682b11a",
+    "q": "Is the status of the truck the same as the bicycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "9018d220fc7340998efa65631a9c3cd4",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "9d0b36d611be43ffa9244ee9a4e9c5e9",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "b46095be5e6c47d2aff1a67a151fc984",
+    "q": "The stopped thing is what?",
+    "gt": "construction vehicle",
+    "pred": "bus",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "fc651dc8a36846fdba3f705117d3d0d0",
+    "q": "What is the status of the car to the back right of me?",
+    "gt": "stopped",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "2128fc958907421ca888ab014a73348a",
+    "q": "Do the truck and the bicycle have the same status?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "f3c9f3e85f384381bfced8c2a863376f",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "b06a815164ec466f9fdb525522bb3799",
+    "q": "The stopped thing is what?",
+    "gt": "construction vehicle",
+    "pred": "truck",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "77c3d98fab3e4d3ea65747caaa74d605",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "bicycle",
+    "pred": "Scooter",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "9288108d128d4579a54fb135d08b46ad",
+    "q": "There is a bicycle that is to the front left of me; what is its status?",
+    "gt": "without rider",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "08e76760a8c64a92a86686baf68f6aff",
+    "q": "What status is the car?",
+    "gt": "moving",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "5aca10a9fd0249e2a1604aa1ab8904d9",
+    "q": "What is the stopped thing?",
+    "gt": "truck",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "45df585aa5fb4972986093b353bae03f",
+    "q": "There is a stopped thing that is to the front left of the bicycle; what is it?",
+    "gt": "truck",
+    "pred": "I cannot answer this question because there is no bicycle visible in the image.",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "bdb59582e0034074bffa465525533dcb",
+    "q": "What status is the pedestrian?",
+    "gt": "standing",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "8cd9b9f28b6b44e3933216e65bbfbbd4",
+    "q": "What is the standing pedestrian?",
+    "gt": "pedestrian",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "098e97621e6b4561a58a74a8bc1a91fd",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "bicycle",
+    "pred": "bicycle",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "bca4a3f7ae0748c3b7b2f6e537c1518c",
+    "q": "Does the trailer have the same status as the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0849315c62f8452ea3614656c362c79c",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "bus",
+    "pred": "ambulance",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "5ef15615bc08428bab23b2a84e84961e",
+    "q": "Do the trailer that is to the back right of the moving truck and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "f56b256d74d5484fbb1be4ac42546a7c",
+    "q": "Do the truck and the construction vehicle have the same status?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "d078f5c7222e4f08b54822118a284d6e",
+    "q": "Is the status of the truck the same as the pedestrian?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "bc73130bbe4e4361922e99edbed1d8e6",
+    "q": "What is the stopped thing?",
+    "gt": "bus",
+    "pred": "Ambulance",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "753f633399d2419188871d3f0d145b54",
+    "q": "There is a thing that is to the front left of the trailer; is it the same status as the trailer?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "b485d79c3d6141f989ca7a3f8b6989f3",
+    "q": "Do the construction vehicle and the truck have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "b404c2454ed34328bcc92f0bbd039549",
+    "q": "There is a construction vehicle; what status is it?",
+    "gt": "stopped",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "8f9bb10025fd46e694be831e25020298",
+    "q": "Is the trailer the same status as the truck?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "582240fdf8ba49cc8186a3002d17c11b",
+    "q": "Is the status of the truck the same as the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "e14dc295bf8f4cca8bbea7fa0068b6ef",
+    "q": "What is the thing that is both to the front left of me and the back of the stopped truck?",
+    "gt": "car",
+    "pred": "I cannot answer this question because there is no stopped truck visible in the image.",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "888dd9afb9bc43e2bfbc5e92835a2b26",
+    "q": "There is a parked thing to the back of the parked truck; what is it?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "b923744651764ed194ddf7526b9b2cf6",
+    "q": "What is the moving thing that is to the back right of the parked truck and the back of me?",
+    "gt": "pedestrian",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "d43144192b63485894f7ef174cdbecac",
+    "q": "The parked thing is what?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "9c1fc0d8c93b4a8584cc4f41d2863667",
+    "q": "Do the truck and the bus have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c48c3dfec8b5454ab97303a00365a77b",
+    "q": "There is a bus; what status is it?",
+    "gt": "moving",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "25a777903d554457b6e4e5e437f21125",
+    "q": "The parked thing is what?",
+    "gt": "construction vehicle",
+    "pred": "bus",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "62fda3b441504bb69459b4d413dd239e",
+    "q": "Do the bus and the truck have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0799844f6afa4ac1840181d0c8b26f08",
+    "q": "Is the status of the truck the same as the construction vehicle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "c2e56200cb7d46b6a93fb4ec389f4ba9",
+    "q": "What status is the construction vehicle?",
+    "gt": "parked",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6711467d3a2146c0a90f6a69787d8648",
+    "q": "What is the status of the bicycle?",
+    "gt": "with rider",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "a9e8805b699142f78346ca02570450f9",
+    "q": "The parked thing is what?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c8b6a861ef0445cd8bef18eb2b7f9e89",
+    "q": "There is a construction vehicle; what status is it?",
+    "gt": "parked",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "01176d20420b404ea52769d01ad61b0c",
+    "q": "Is the status of the construction vehicle the same as the pedestrian to the front of the parked construction vehicle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "ed00973ef2814a90b76417d73362c2ed",
+    "q": "Is the status of the truck the same as the motorcycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "005d3e821c4e4e0ab03f1ea1dcbf9cc8",
+    "q": "Is the status of the bus the same as the motorcycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "ecb02ec960ee419e93ba9b7ca097f39e",
+    "q": "Is the truck the same status as the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "ad830c774eb7484a87fd2c776c570c2f",
+    "q": "Is the status of the construction vehicle the same as the truck to the back of the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "a29623dd054b4177a9d98b83c0fd23bd",
+    "q": "There is a motorcycle; what status is it?",
+    "gt": "with rider",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6648ade33185426ea5864cdf7e0f028c",
+    "q": "What is the stopped thing?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "f868336acfca41f6b3b7a3d1b6518691",
+    "q": "What number of things are there?",
+    "gt": "7",
+    "pred": "0",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "590dfd438d7349b5923a49b9d71a952a",
+    "q": "Are there any trailers?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "6a572eb7bc84490487b6fad4266bc0d4",
+    "q": "How many things are there?",
+    "gt": "5",
+    "pred": "0",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "2fd7d4c5a1c14f2baceb354cc049866c",
+    "q": "Are there any other motorcycles that in the same status as the thing that is to the front of the car?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "830cac6f99a749d0bf708f8db07e4808",
+    "q": "What status is the truck that is to the front left of me?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "5e10fe792690427ebf26e32eba6281dd",
+    "q": "There is a construction vehicle to the front left of me; what is its status?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "ae239c877672435abcdd6b538ab68b37",
+    "q": "The construction vehicle that is to the front left of the moving trailer is in what status?",
+    "gt": "parked",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "01bbf47bcb1c44ab8ae4fedd8a0e0520",
+    "q": "What is the status of the truck to the front left of me?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "77a603db4aa247329c0a1aae2a46d18f",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "16333de9bc924f1b9f893c6285077c6c",
+    "q": "There is a pedestrian to the front of me; what is its status?",
+    "gt": "standing",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "244f3bb0a98149b8a0cf4ecd1719cf31",
+    "q": "Are any pedestrians visible?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "dc8b6fde54a44147ade01e65717fb189",
+    "q": "Does the bicycle have the same status as the car that is to the front left of the without rider bicycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "c6a183ebd7a14560aa296548bf742f43",
+    "q": "What is the standing pedestrian that is to the back right of me?",
+    "gt": "pedestrian",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0181321478f94908b4b668b47b492519",
+    "q": "There is a thing to the front left of me; what is it?",
+    "gt": "car",
+    "pred": "bus stop",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "a295a63b9748438399bde0551aea5da9",
+    "q": "There is a truck; what status is it?",
+    "gt": "parked",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "1a9c83c482c84c9e874e21aab1820190",
+    "q": "There is a pedestrian that is to the back of me; what is its status?",
+    "gt": "not standing",
+    "pred": "Walking",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "be8d80abd39640f3855c62885d2130ff",
+    "q": "What is the status of the bicycle?",
+    "gt": "without rider",
+    "pred": "not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "ed00e1196ea74e0795313afc75d39dcf",
+    "q": "There is a thing that is to the front of me and the back right of the not standing pedestrian; what is it?",
+    "gt": "traffic cone",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c2233bf404b8402e86e9d2d975b81d3b",
+    "q": "Is the status of the bus to the back of the car the same as the truck?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "2ff0482416cb4997bab12b0d7700f142",
+    "q": "Do the truck that is to the front of the moving truck and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "7d59fb91838346a28e573ffdb06cde16",
+    "q": "The parked thing is what?",
+    "gt": "bus",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "af7ce8da343b4de19950c66b15ece116",
+    "q": "There is a construction vehicle to the back right of the stopped truck; does it have the same status as the truck?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6d603fae12034090907601d1409f597e",
+    "q": "How many other things are there of the same status as the truck?",
+    "gt": "2",
+    "pred": "1",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "21b8e71e403442a480abb038c491e70d",
+    "q": "There is a car to the front left of the moving bus; is it the same status as the bus?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "1a4bff6fb5ba4d04816886ab6fdce0ab",
+    "q": "The thing that is both to the front left of the stopped construction vehicle and the front of me is what?",
+    "gt": "barrier",
+    "pred": "road",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "dabbf83b9113422cb0b12542f959a6c0",
+    "q": "There is a truck that is to the front left of the with rider motorcycle; does it have the same status as the bus?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "f500fa5dbede4e3ba3c8c523748d5110",
+    "q": "There is a truck that is to the back right of the stopped truck; is its status the same as the motorcycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "781696f733bf458ca2a588fdec64a1b0",
+    "q": "Is the bus the same status as the trailer?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "57f43a802933455389ec31a2a16c551f",
+    "q": "The without rider thing is what?",
+    "gt": "motorcycle",
+    "pred": "unknown",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "16270c2e4ee142a69e9af1dfb1466867",
+    "q": "There is a bus; what status is it?",
+    "gt": "stopped",
+    "pred": "not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "00bb84f140c943059a9a1e8e372ddabe",
+    "q": "Do the trailer and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "7c976cd4bd81403b8294e51b81d52f4d",
+    "q": "Is the bus the same status as the construction vehicle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "67aad7ad948f44f8af668ea8389bdd52",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "motorcycle",
+    "pred": "bus",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6ada9478bb09410c9bccaedb6d557215",
+    "q": "Do the construction vehicle and the trailer have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c82417563e44430e9e59224e36872f4e",
+    "q": "What is the status of the motorcycle?",
+    "gt": "with rider",
+    "pred": "Not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6a26b8244fc1466f9f52387039718f6f",
+    "q": "How many things are there?",
+    "gt": "10",
+    "pred": "1",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "1f73768be216451fa02caa38b04a62b3",
+    "q": "There is a thing that is both to the back right of the parked car and the front of me; what is it?",
+    "gt": "motorcycle",
+    "pred": "road",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "4b0c2b4afa3940f78d68d5666cf93adc",
+    "q": "The motorcycle to the front of me is in what status?",
+    "gt": "with rider",
+    "pred": "Unknown",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "f03bb2a5eda24b828a35c5608cf2da4f",
+    "q": "What status is the motorcycle?",
+    "gt": "without rider",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "935ddd79f2cc4b6a81395cde46290fff",
+    "q": "What status is the car to the front of the stopped thing?",
+    "gt": "moving",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "e837c2061aa14c56bc2b1969f56dc372",
+    "q": "What is the status of the car that is to the back of the moving car?",
+    "gt": "stopped",
+    "pred": "Stopped",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "f7a93963d6cc431099c3e6943cda4d72",
+    "q": "There is a moving thing; what is it?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "45022789b1ee454da83a147a87960f94",
+    "q": "The thing that is to the front left of the moving thing is in what status?",
+    "gt": "stopped",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "5052ec0021f64f35ac8300aee5f84349",
+    "q": "What is the stopped thing?",
+    "gt": "truck",
+    "pred": "cars",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "99df68e72fe14d91b11c4ba652c55214",
+    "q": "There is a truck to the front of me; what status is it?",
+    "gt": "stopped",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0f1d636d7dc84c90b69d039dac4404f6",
+    "q": "What is the status of the car that is to the front of the stopped truck?",
+    "gt": "stopped",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0dc3d1fb0dcd4e19a2b8f6a32c9ebdcc",
+    "q": "There is a truck that is to the front of me; what status is it?",
+    "gt": "stopped",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "deeb650a84054a07917eb84e21a358de",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "truck",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   }
+  ],
+  "U": [
+   {
+    "token": "99a4b7bf640d4cc1bcdbfd9d6cffe4a4",
+    "q": "There is a moving thing to the back right of the moving truck; what is it?",
+    "gt": "trailer",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "39ca468b47a84e2aa946e4d6d08ed68f",
+    "q": "There is a truck that is to the front left of the moving trailer; is it the same status as the trailer that is to the back right of the barrier?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "9cc58d6731274c28a27a727a6975518d",
+    "q": "There is a parked thing that is both to the front of me and the back of the stopped thing; what is it?",
+    "gt": "trailer",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "3ad79c1436ab441795d4d73ae0b503d5",
+    "q": "Does the trailer to the back right of the barrier have the same status as the car to the back of the moving car?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "291d30843273487c96a7dc86f79a030f",
+    "q": "What is the without rider thing?",
+    "gt": "motorcycle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "4de831d46edf46d084ac2cecf682b11a",
+    "q": "Is the status of the truck the same as the bicycle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "9018d220fc7340998efa65631a9c3cd4",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "9d0b36d611be43ffa9244ee9a4e9c5e9",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "b46095be5e6c47d2aff1a67a151fc984",
+    "q": "The stopped thing is what?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "fc651dc8a36846fdba3f705117d3d0d0",
+    "q": "What is the status of the car to the back right of me?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "2128fc958907421ca888ab014a73348a",
+    "q": "Do the truck and the bicycle have the same status?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "f3c9f3e85f384381bfced8c2a863376f",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "b06a815164ec466f9fdb525522bb3799",
+    "q": "The stopped thing is what?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "77c3d98fab3e4d3ea65747caaa74d605",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "bicycle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "9288108d128d4579a54fb135d08b46ad",
+    "q": "There is a bicycle that is to the front left of me; what is its status?",
+    "gt": "without rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "08e76760a8c64a92a86686baf68f6aff",
+    "q": "What status is the car?",
+    "gt": "moving",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "5aca10a9fd0249e2a1604aa1ab8904d9",
+    "q": "What is the stopped thing?",
+    "gt": "truck",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "45df585aa5fb4972986093b353bae03f",
+    "q": "There is a stopped thing that is to the front left of the bicycle; what is it?",
+    "gt": "truck",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "bdb59582e0034074bffa465525533dcb",
+    "q": "What status is the pedestrian?",
+    "gt": "standing",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "8cd9b9f28b6b44e3933216e65bbfbbd4",
+    "q": "What is the standing pedestrian?",
+    "gt": "pedestrian",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "098e97621e6b4561a58a74a8bc1a91fd",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "bicycle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "bca4a3f7ae0748c3b7b2f6e537c1518c",
+    "q": "Does the trailer have the same status as the construction vehicle?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "0849315c62f8452ea3614656c362c79c",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "bus",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "5ef15615bc08428bab23b2a84e84961e",
+    "q": "Do the trailer that is to the back right of the moving truck and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "f56b256d74d5484fbb1be4ac42546a7c",
+    "q": "Do the truck and the construction vehicle have the same status?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "d078f5c7222e4f08b54822118a284d6e",
+    "q": "Is the status of the truck the same as the pedestrian?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "bc73130bbe4e4361922e99edbed1d8e6",
+    "q": "What is the stopped thing?",
+    "gt": "bus",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "753f633399d2419188871d3f0d145b54",
+    "q": "There is a thing that is to the front left of the trailer; is it the same status as the trailer?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "b485d79c3d6141f989ca7a3f8b6989f3",
+    "q": "Do the construction vehicle and the truck have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "b404c2454ed34328bcc92f0bbd039549",
+    "q": "There is a construction vehicle; what status is it?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "8f9bb10025fd46e694be831e25020298",
+    "q": "Is the trailer the same status as the truck?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "582240fdf8ba49cc8186a3002d17c11b",
+    "q": "Is the status of the truck the same as the construction vehicle?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "e14dc295bf8f4cca8bbea7fa0068b6ef",
+    "q": "What is the thing that is both to the front left of me and the back of the stopped truck?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "888dd9afb9bc43e2bfbc5e92835a2b26",
+    "q": "There is a parked thing to the back of the parked truck; what is it?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "b923744651764ed194ddf7526b9b2cf6",
+    "q": "What is the moving thing that is to the back right of the parked truck and the back of me?",
+    "gt": "pedestrian",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "d43144192b63485894f7ef174cdbecac",
+    "q": "The parked thing is what?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "9c1fc0d8c93b4a8584cc4f41d2863667",
+    "q": "Do the truck and the bus have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "c48c3dfec8b5454ab97303a00365a77b",
+    "q": "There is a bus; what status is it?",
+    "gt": "moving",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "25a777903d554457b6e4e5e437f21125",
+    "q": "The parked thing is what?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "62fda3b441504bb69459b4d413dd239e",
+    "q": "Do the bus and the truck have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "0799844f6afa4ac1840181d0c8b26f08",
+    "q": "Is the status of the truck the same as the construction vehicle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "c2e56200cb7d46b6a93fb4ec389f4ba9",
+    "q": "What status is the construction vehicle?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "6711467d3a2146c0a90f6a69787d8648",
+    "q": "What is the status of the bicycle?",
+    "gt": "with rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "a9e8805b699142f78346ca02570450f9",
+    "q": "The parked thing is what?",
+    "gt": "construction vehicle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "c8b6a861ef0445cd8bef18eb2b7f9e89",
+    "q": "There is a construction vehicle; what status is it?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "01176d20420b404ea52769d01ad61b0c",
+    "q": "Is the status of the construction vehicle the same as the pedestrian to the front of the parked construction vehicle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "ed00973ef2814a90b76417d73362c2ed",
+    "q": "Is the status of the truck the same as the motorcycle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "005d3e821c4e4e0ab03f1ea1dcbf9cc8",
+    "q": "Is the status of the bus the same as the motorcycle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "ecb02ec960ee419e93ba9b7ca097f39e",
+    "q": "Is the truck the same status as the construction vehicle?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "ad830c774eb7484a87fd2c776c570c2f",
+    "q": "Is the status of the construction vehicle the same as the truck to the back of the construction vehicle?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "a29623dd054b4177a9d98b83c0fd23bd",
+    "q": "There is a motorcycle; what status is it?",
+    "gt": "with rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "6648ade33185426ea5864cdf7e0f028c",
+    "q": "What is the stopped thing?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "f868336acfca41f6b3b7a3d1b6518691",
+    "q": "What number of things are there?",
+    "gt": "7",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "590dfd438d7349b5923a49b9d71a952a",
+    "q": "Are there any trailers?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "6a572eb7bc84490487b6fad4266bc0d4",
+    "q": "How many things are there?",
+    "gt": "5",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "2fd7d4c5a1c14f2baceb354cc049866c",
+    "q": "Are there any other motorcycles that in the same status as the thing that is to the front of the car?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "830cac6f99a749d0bf708f8db07e4808",
+    "q": "What status is the truck that is to the front left of me?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "5e10fe792690427ebf26e32eba6281dd",
+    "q": "There is a construction vehicle to the front left of me; what is its status?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "ae239c877672435abcdd6b538ab68b37",
+    "q": "The construction vehicle that is to the front left of the moving trailer is in what status?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "01bbf47bcb1c44ab8ae4fedd8a0e0520",
+    "q": "What is the status of the truck to the front left of me?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "77a603db4aa247329c0a1aae2a46d18f",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "16333de9bc924f1b9f893c6285077c6c",
+    "q": "There is a pedestrian to the front of me; what is its status?",
+    "gt": "standing",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "244f3bb0a98149b8a0cf4ecd1719cf31",
+    "q": "Are any pedestrians visible?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "dc8b6fde54a44147ade01e65717fb189",
+    "q": "Does the bicycle have the same status as the car that is to the front left of the without rider bicycle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "c6a183ebd7a14560aa296548bf742f43",
+    "q": "What is the standing pedestrian that is to the back right of me?",
+    "gt": "pedestrian",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "0181321478f94908b4b668b47b492519",
+    "q": "There is a thing to the front left of me; what is it?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "a295a63b9748438399bde0551aea5da9",
+    "q": "There is a truck; what status is it?",
+    "gt": "parked",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "1a9c83c482c84c9e874e21aab1820190",
+    "q": "There is a pedestrian that is to the back of me; what is its status?",
+    "gt": "not standing",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "be8d80abd39640f3855c62885d2130ff",
+    "q": "What is the status of the bicycle?",
+    "gt": "without rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "ed00e1196ea74e0795313afc75d39dcf",
+    "q": "There is a thing that is to the front of me and the back right of the not standing pedestrian; what is it?",
+    "gt": "traffic cone",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "c2233bf404b8402e86e9d2d975b81d3b",
+    "q": "Is the status of the bus to the back of the car the same as the truck?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "2ff0482416cb4997bab12b0d7700f142",
+    "q": "Do the truck that is to the front of the moving truck and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "7d59fb91838346a28e573ffdb06cde16",
+    "q": "The parked thing is what?",
+    "gt": "bus",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "af7ce8da343b4de19950c66b15ece116",
+    "q": "There is a construction vehicle to the back right of the stopped truck; does it have the same status as the truck?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "6d603fae12034090907601d1409f597e",
+    "q": "How many other things are there of the same status as the truck?",
+    "gt": "2",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "21b8e71e403442a480abb038c491e70d",
+    "q": "There is a car to the front left of the moving bus; is it the same status as the bus?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "1a4bff6fb5ba4d04816886ab6fdce0ab",
+    "q": "The thing that is both to the front left of the stopped construction vehicle and the front of me is what?",
+    "gt": "barrier",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "dabbf83b9113422cb0b12542f959a6c0",
+    "q": "There is a truck that is to the front left of the with rider motorcycle; does it have the same status as the bus?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "f500fa5dbede4e3ba3c8c523748d5110",
+    "q": "There is a truck that is to the back right of the stopped truck; is its status the same as the motorcycle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "781696f733bf458ca2a588fdec64a1b0",
+    "q": "Is the bus the same status as the trailer?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "57f43a802933455389ec31a2a16c551f",
+    "q": "The without rider thing is what?",
+    "gt": "motorcycle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "16270c2e4ee142a69e9af1dfb1466867",
+    "q": "There is a bus; what status is it?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "00bb84f140c943059a9a1e8e372ddabe",
+    "q": "Do the trailer and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "7c976cd4bd81403b8294e51b81d52f4d",
+    "q": "Is the bus the same status as the construction vehicle?",
+    "gt": "no",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "67aad7ad948f44f8af668ea8389bdd52",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "motorcycle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "6ada9478bb09410c9bccaedb6d557215",
+    "q": "Do the construction vehicle and the trailer have the same status?",
+    "gt": "yes",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "c82417563e44430e9e59224e36872f4e",
+    "q": "What is the status of the motorcycle?",
+    "gt": "with rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "6a26b8244fc1466f9f52387039718f6f",
+    "q": "How many things are there?",
+    "gt": "10",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "1f73768be216451fa02caa38b04a62b3",
+    "q": "There is a thing that is both to the back right of the parked car and the front of me; what is it?",
+    "gt": "motorcycle",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "4b0c2b4afa3940f78d68d5666cf93adc",
+    "q": "The motorcycle to the front of me is in what status?",
+    "gt": "with rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "f03bb2a5eda24b828a35c5608cf2da4f",
+    "q": "What status is the motorcycle?",
+    "gt": "without rider",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "935ddd79f2cc4b6a81395cde46290fff",
+    "q": "What status is the car to the front of the stopped thing?",
+    "gt": "moving",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "e837c2061aa14c56bc2b1969f56dc372",
+    "q": "What is the status of the car that is to the back of the moving car?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "f7a93963d6cc431099c3e6943cda4d72",
+    "q": "There is a moving thing; what is it?",
+    "gt": "car",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "45022789b1ee454da83a147a87960f94",
+    "q": "The thing that is to the front left of the moving thing is in what status?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "5052ec0021f64f35ac8300aee5f84349",
+    "q": "What is the stopped thing?",
+    "gt": "truck",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "99df68e72fe14d91b11c4ba652c55214",
+    "q": "There is a truck to the front of me; what status is it?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "0f1d636d7dc84c90b69d039dac4404f6",
+    "q": "What is the status of the car that is to the front of the stopped truck?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "0dc3d1fb0dcd4e19a2b8f6a32c9ebdcc",
+    "q": "There is a truck that is to the front of me; what status is it?",
+    "gt": "stopped",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   },
+   {
+    "token": "deeb650a84054a07917eb84e21a358de",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "truck",
+    "pred": "",
+    "finite": false,
+    "invalid": true,
+    "correct": false
+   }
+  ],
+  "F": [
+   {
+    "token": "99a4b7bf640d4cc1bcdbfd9d6cffe4a4",
+    "q": "There is a moving thing to the back right of the moving truck; what is it?",
+    "gt": "trailer",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "39ca468b47a84e2aa946e4d6d08ed68f",
+    "q": "There is a truck that is to the front left of the moving trailer; is it the same status as the trailer that is to the back right of the barrier?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "9cc58d6731274c28a27a727a6975518d",
+    "q": "There is a parked thing that is both to the front of me and the back of the stopped thing; what is it?",
+    "gt": "trailer",
+    "pred": "Car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "3ad79c1436ab441795d4d73ae0b503d5",
+    "q": "Does the trailer to the back right of the barrier have the same status as the car to the back of the moving car?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "291d30843273487c96a7dc86f79a030f",
+    "q": "What is the without rider thing?",
+    "gt": "motorcycle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "4de831d46edf46d084ac2cecf682b11a",
+    "q": "Is the status of the truck the same as the bicycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "9018d220fc7340998efa65631a9c3cd4",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "9d0b36d611be43ffa9244ee9a4e9c5e9",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "b46095be5e6c47d2aff1a67a151fc984",
+    "q": "The stopped thing is what?",
+    "gt": "construction vehicle",
+    "pred": "bus",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "fc651dc8a36846fdba3f705117d3d0d0",
+    "q": "What is the status of the car to the back right of me?",
+    "gt": "stopped",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "2128fc958907421ca888ab014a73348a",
+    "q": "Do the truck and the bicycle have the same status?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "f3c9f3e85f384381bfced8c2a863376f",
+    "q": "What is the stopped thing?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "b06a815164ec466f9fdb525522bb3799",
+    "q": "The stopped thing is what?",
+    "gt": "construction vehicle",
+    "pred": "truck",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "77c3d98fab3e4d3ea65747caaa74d605",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "bicycle",
+    "pred": "Scooter",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "9288108d128d4579a54fb135d08b46ad",
+    "q": "There is a bicycle that is to the front left of me; what is its status?",
+    "gt": "without rider",
+    "pred": "Missing",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "08e76760a8c64a92a86686baf68f6aff",
+    "q": "What status is the car?",
+    "gt": "moving",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "5aca10a9fd0249e2a1604aa1ab8904d9",
+    "q": "What is the stopped thing?",
+    "gt": "truck",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "45df585aa5fb4972986093b353bae03f",
+    "q": "There is a stopped thing that is to the front left of the bicycle; what is it?",
+    "gt": "truck",
+    "pred": "I cannot answer this question because there is no bicycle visible in the image.",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "bdb59582e0034074bffa465525533dcb",
+    "q": "What status is the pedestrian?",
+    "gt": "standing",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "8cd9b9f28b6b44e3933216e65bbfbbd4",
+    "q": "What is the standing pedestrian?",
+    "gt": "pedestrian",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "098e97621e6b4561a58a74a8bc1a91fd",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "bicycle",
+    "pred": "bicycle",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "bca4a3f7ae0748c3b7b2f6e537c1518c",
+    "q": "Does the trailer have the same status as the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0849315c62f8452ea3614656c362c79c",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "bus",
+    "pred": "ambulance",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "5ef15615bc08428bab23b2a84e84961e",
+    "q": "Do the trailer that is to the back right of the moving truck and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "f56b256d74d5484fbb1be4ac42546a7c",
+    "q": "Do the truck and the construction vehicle have the same status?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "d078f5c7222e4f08b54822118a284d6e",
+    "q": "Is the status of the truck the same as the pedestrian?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "bc73130bbe4e4361922e99edbed1d8e6",
+    "q": "What is the stopped thing?",
+    "gt": "bus",
+    "pred": "Ambulance",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "753f633399d2419188871d3f0d145b54",
+    "q": "There is a thing that is to the front left of the trailer; is it the same status as the trailer?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "b485d79c3d6141f989ca7a3f8b6989f3",
+    "q": "Do the construction vehicle and the truck have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "b404c2454ed34328bcc92f0bbd039549",
+    "q": "There is a construction vehicle; what status is it?",
+    "gt": "stopped",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "8f9bb10025fd46e694be831e25020298",
+    "q": "Is the trailer the same status as the truck?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "582240fdf8ba49cc8186a3002d17c11b",
+    "q": "Is the status of the truck the same as the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "e14dc295bf8f4cca8bbea7fa0068b6ef",
+    "q": "What is the thing that is both to the front left of me and the back of the stopped truck?",
+    "gt": "car",
+    "pred": "I cannot answer this question because there is no stopped truck visible in the image.",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "888dd9afb9bc43e2bfbc5e92835a2b26",
+    "q": "There is a parked thing to the back of the parked truck; what is it?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "b923744651764ed194ddf7526b9b2cf6",
+    "q": "What is the moving thing that is to the back right of the parked truck and the back of me?",
+    "gt": "pedestrian",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "d43144192b63485894f7ef174cdbecac",
+    "q": "The parked thing is what?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "9c1fc0d8c93b4a8584cc4f41d2863667",
+    "q": "Do the truck and the bus have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c48c3dfec8b5454ab97303a00365a77b",
+    "q": "There is a bus; what status is it?",
+    "gt": "moving",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "25a777903d554457b6e4e5e437f21125",
+    "q": "The parked thing is what?",
+    "gt": "construction vehicle",
+    "pred": "bus",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "62fda3b441504bb69459b4d413dd239e",
+    "q": "Do the bus and the truck have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0799844f6afa4ac1840181d0c8b26f08",
+    "q": "Is the status of the truck the same as the construction vehicle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "c2e56200cb7d46b6a93fb4ec389f4ba9",
+    "q": "What status is the construction vehicle?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6711467d3a2146c0a90f6a69787d8648",
+    "q": "What is the status of the bicycle?",
+    "gt": "with rider",
+    "pred": "Not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "a9e8805b699142f78346ca02570450f9",
+    "q": "The parked thing is what?",
+    "gt": "construction vehicle",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c8b6a861ef0445cd8bef18eb2b7f9e89",
+    "q": "There is a construction vehicle; what status is it?",
+    "gt": "parked",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "01176d20420b404ea52769d01ad61b0c",
+    "q": "Is the status of the construction vehicle the same as the pedestrian to the front of the parked construction vehicle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "ed00973ef2814a90b76417d73362c2ed",
+    "q": "Is the status of the truck the same as the motorcycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "005d3e821c4e4e0ab03f1ea1dcbf9cc8",
+    "q": "Is the status of the bus the same as the motorcycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "ecb02ec960ee419e93ba9b7ca097f39e",
+    "q": "Is the truck the same status as the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "ad830c774eb7484a87fd2c776c570c2f",
+    "q": "Is the status of the construction vehicle the same as the truck to the back of the construction vehicle?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "a29623dd054b4177a9d98b83c0fd23bd",
+    "q": "There is a motorcycle; what status is it?",
+    "gt": "with rider",
+    "pred": "none",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6648ade33185426ea5864cdf7e0f028c",
+    "q": "What is the stopped thing?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "f868336acfca41f6b3b7a3d1b6518691",
+    "q": "What number of things are there?",
+    "gt": "7",
+    "pred": "0",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "590dfd438d7349b5923a49b9d71a952a",
+    "q": "Are there any trailers?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "6a572eb7bc84490487b6fad4266bc0d4",
+    "q": "How many things are there?",
+    "gt": "5",
+    "pred": "0",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "2fd7d4c5a1c14f2baceb354cc049866c",
+    "q": "Are there any other motorcycles that in the same status as the thing that is to the front of the car?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "830cac6f99a749d0bf708f8db07e4808",
+    "q": "What status is the truck that is to the front left of me?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "5e10fe792690427ebf26e32eba6281dd",
+    "q": "There is a construction vehicle to the front left of me; what is its status?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "ae239c877672435abcdd6b538ab68b37",
+    "q": "The construction vehicle that is to the front left of the moving trailer is in what status?",
+    "gt": "parked",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "01bbf47bcb1c44ab8ae4fedd8a0e0520",
+    "q": "What is the status of the truck to the front left of me?",
+    "gt": "parked",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "77a603db4aa247329c0a1aae2a46d18f",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "16333de9bc924f1b9f893c6285077c6c",
+    "q": "There is a pedestrian to the front of me; what is its status?",
+    "gt": "standing",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "244f3bb0a98149b8a0cf4ecd1719cf31",
+    "q": "Are any pedestrians visible?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "dc8b6fde54a44147ade01e65717fb189",
+    "q": "Does the bicycle have the same status as the car that is to the front left of the without rider bicycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "c6a183ebd7a14560aa296548bf742f43",
+    "q": "What is the standing pedestrian that is to the back right of me?",
+    "gt": "pedestrian",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0181321478f94908b4b668b47b492519",
+    "q": "There is a thing to the front left of me; what is it?",
+    "gt": "car",
+    "pred": "bus_stop",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "a295a63b9748438399bde0551aea5da9",
+    "q": "There is a truck; what status is it?",
+    "gt": "parked",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "1a9c83c482c84c9e874e21aab1820190",
+    "q": "There is a pedestrian that is to the back of me; what is its status?",
+    "gt": "not standing",
+    "pred": "Walking",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "be8d80abd39640f3855c62885d2130ff",
+    "q": "What is the status of the bicycle?",
+    "gt": "without rider",
+    "pred": "not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "ed00e1196ea74e0795313afc75d39dcf",
+    "q": "There is a thing that is to the front of me and the back right of the not standing pedestrian; what is it?",
+    "gt": "traffic cone",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c2233bf404b8402e86e9d2d975b81d3b",
+    "q": "Is the status of the bus to the back of the car the same as the truck?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "2ff0482416cb4997bab12b0d7700f142",
+    "q": "Do the truck that is to the front of the moving truck and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "7d59fb91838346a28e573ffdb06cde16",
+    "q": "The parked thing is what?",
+    "gt": "bus",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "af7ce8da343b4de19950c66b15ece116",
+    "q": "There is a construction vehicle to the back right of the stopped truck; does it have the same status as the truck?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6d603fae12034090907601d1409f597e",
+    "q": "How many other things are there of the same status as the truck?",
+    "gt": "2",
+    "pred": "1",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "21b8e71e403442a480abb038c491e70d",
+    "q": "There is a car to the front left of the moving bus; is it the same status as the bus?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "1a4bff6fb5ba4d04816886ab6fdce0ab",
+    "q": "The thing that is both to the front left of the stopped construction vehicle and the front of me is what?",
+    "gt": "barrier",
+    "pred": "road",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "dabbf83b9113422cb0b12542f959a6c0",
+    "q": "There is a truck that is to the front left of the with rider motorcycle; does it have the same status as the bus?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "f500fa5dbede4e3ba3c8c523748d5110",
+    "q": "There is a truck that is to the back right of the stopped truck; is its status the same as the motorcycle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "781696f733bf458ca2a588fdec64a1b0",
+    "q": "Is the bus the same status as the trailer?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "57f43a802933455389ec31a2a16c551f",
+    "q": "The without rider thing is what?",
+    "gt": "motorcycle",
+    "pred": "unclear",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "16270c2e4ee142a69e9af1dfb1466867",
+    "q": "There is a bus; what status is it?",
+    "gt": "stopped",
+    "pred": "not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "00bb84f140c943059a9a1e8e372ddabe",
+    "q": "Do the trailer and the construction vehicle have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "7c976cd4bd81403b8294e51b81d52f4d",
+    "q": "Is the bus the same status as the construction vehicle?",
+    "gt": "no",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "67aad7ad948f44f8af668ea8389bdd52",
+    "q": "There is a without rider thing; what is it?",
+    "gt": "motorcycle",
+    "pred": "bus",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6ada9478bb09410c9bccaedb6d557215",
+    "q": "Do the construction vehicle and the trailer have the same status?",
+    "gt": "yes",
+    "pred": "No",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "c82417563e44430e9e59224e36872f4e",
+    "q": "What is the status of the motorcycle?",
+    "gt": "with rider",
+    "pred": "Not visible",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "6a26b8244fc1466f9f52387039718f6f",
+    "q": "How many things are there?",
+    "gt": "10",
+    "pred": "1",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "1f73768be216451fa02caa38b04a62b3",
+    "q": "There is a thing that is both to the back right of the parked car and the front of me; what is it?",
+    "gt": "motorcycle",
+    "pred": "road",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "4b0c2b4afa3940f78d68d5666cf93adc",
+    "q": "The motorcycle to the front of me is in what status?",
+    "gt": "with rider",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "f03bb2a5eda24b828a35c5608cf2da4f",
+    "q": "What status is the motorcycle?",
+    "gt": "without rider",
+    "pred": "None",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "935ddd79f2cc4b6a81395cde46290fff",
+    "q": "What status is the car to the front of the stopped thing?",
+    "gt": "moving",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "e837c2061aa14c56bc2b1969f56dc372",
+    "q": "What is the status of the car that is to the back of the moving car?",
+    "gt": "stopped",
+    "pred": "Stopped",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "f7a93963d6cc431099c3e6943cda4d72",
+    "q": "There is a moving thing; what is it?",
+    "gt": "car",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": true
+   },
+   {
+    "token": "45022789b1ee454da83a147a87960f94",
+    "q": "The thing that is to the front left of the moving thing is in what status?",
+    "gt": "stopped",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "5052ec0021f64f35ac8300aee5f84349",
+    "q": "What is the stopped thing?",
+    "gt": "truck",
+    "pred": "cars",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "99df68e72fe14d91b11c4ba652c55214",
+    "q": "There is a truck to the front of me; what status is it?",
+    "gt": "stopped",
+    "pred": "stationary",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0f1d636d7dc84c90b69d039dac4404f6",
+    "q": "What is the status of the car that is to the front of the stopped truck?",
+    "gt": "stopped",
+    "pred": "Moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "0dc3d1fb0dcd4e19a2b8f6a32c9ebdcc",
+    "q": "There is a truck that is to the front of me; what status is it?",
+    "gt": "stopped",
+    "pred": "moving",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   },
+   {
+    "token": "deeb650a84054a07917eb84e21a358de",
+    "q": "There is a stopped thing; what is it?",
+    "gt": "truck",
+    "pred": "car",
+    "finite": true,
+    "invalid": false,
+    "correct": false
+   }
+  ]
+ }
+}
