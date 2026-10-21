@@ -49,6 +49,7 @@ from dataloader import build_token_to_images
 
 BASE_3B = "Qwen/Qwen2.5-VL-3B-Instruct"
 DRIVELM_VAL = "data/QA_dataset_nus/v1_1_val_nus_q_only.json"
+LAST_PER_IMAGE = None
 FORMAT_MAX = {"float16": 65504.0, "bfloat16": 3.3895e38, "float32": 3.4028e38}
 
 # **스케일을 쓰는 형식은 여유 개념이 그대로 적용되지 않는다.** INT8/INT4/fp8 추론은
@@ -219,6 +220,10 @@ def profile(tower, cache, dtype, fmax_dtype=None):
             nan += 1
     for h in hs:
         h.remove()
+    # 이미지별 값 — --per_image 저장용 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)
+    global LAST_PER_IMAGE
+    LAST_PER_IMAGE = {"blocks": {i: list(rec[i]) for i in range(len(blocks))},
+                      "tower_out": list(rec[TOWER_OUT])}
 
     import statistics as st
     fmax = FORMAT_MAX[fmax_dtype or dtype]
@@ -502,6 +507,10 @@ def main():
     ap.add_argument("--verify", action="store_true", help="fix 후 재측정")
     ap.add_argument("--save_weights", default=None, help="교정된 비전 타워 state_dict 저장 경로")
     ap.add_argument("--out", default="eval_results/headroom_guard.json")
+    ap.add_argument("--per_image", default=None,
+                    help="이미지별 값(블록·타워 출력 최대, 목표 dtype 상실 여부, 장면 토큰)을 jsonl로 저장한다. "
+                         "장면 군집 부트스트랩용")
+    ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치")
     args = ap.parse_args()
     if args.cmd == "selftest":
         selftest(); return
@@ -539,7 +548,7 @@ def main():
         paths = sorted(str(p) for p in Path(args.image_dir).glob("*.jpg"))[:args.limit]
     else:
         tok = build_token_to_images(DRIVELM_VAL)
-        paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][:args.limit]
+        paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset:args.offset + args.limit]
     print(f"[이미지] {len(paths)}장")
 
     # 크기는 넘치지 않는 dtype에서, 상실은 목표 dtype에서 잰다 (docstring 참조)
@@ -653,18 +662,21 @@ def main():
     print_verdict(lastb, nimg)
 
     # 상실은 목표 dtype으로 갈아끼워 잰다
-    def collapse_in_target():
+    collapse_flags = {}
+
+    def collapse_in_target(phase="before"):
         tower.to(getattr(torch, args.dtype))
         c = build_cache(proc, paths, args.dtype)
-        n = 0
+        flags = []
         with torch.no_grad():
             for pv, grid in c:
-                if not torch.isfinite(tower_forward(tower, pv, grid)).all():
-                    n += 1
+                flags.append(not bool(torch.isfinite(tower_forward(tower, pv, grid)).all()))
         tower.to(getattr(torch, MAG))
-        return n / len(c)
+        collapse_flags[phase] = flags
+        return sum(flags) / len(c)
 
-    nan_before = collapse_in_target()
+    per_image_mag = {"before": LAST_PER_IMAGE}
+    nan_before = collapse_in_target("before")
 
     print(f"{'blk':>4}{'max|act| 최악':>15}{'여유(최악)':>11}")
     for b in before:
@@ -712,7 +724,8 @@ def main():
 
             if args.verify:
                 after, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
-                nan_after = collapse_in_target()
+                per_image_mag["after"] = LAST_PER_IMAGE
+                nan_after = collapse_in_target("after")
                 last = after[-1]
                 print(f"\n[검증] 상실률 {nan_before*100:.1f}% → **{nan_after*100:.1f}%**")
                 print(f"       마지막 블록 여유 {before[-1]['headroom']:.2f}배 → "
@@ -736,6 +749,21 @@ def main():
 
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"\n저장: {args.out}")
+    if args.per_image:
+        from scene_map import image_to_scene
+        sc = image_to_scene()
+        with open(args.per_image, "w") as f:
+            for phase, mag in per_image_mag.items():
+                nblk = len(mag["blocks"])
+                for j, p in enumerate(paths):
+                    name = Path(p).name
+                    row = {"phase": phase, "image": name, "scene": sc.get(name),
+                           "blk_last_max": mag["blocks"][nblk - 1][j],
+                           "tower_out_max": mag["tower_out"][j] if mag["tower_out"] else None,
+                           "max_any_block": max(mag["blocks"][i][j] for i in range(nblk)),
+                           "nonfinite_" + args.dtype: collapse_flags.get(phase, [None] * len(paths))[j]}
+                    f.write(json.dumps(row) + "\n")
+        print(f"이미지별: {args.per_image}")
 
 
 if __name__ == "__main__":
