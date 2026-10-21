@@ -8,6 +8,10 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 # 여러 측정이 128코어를 다투며 느려졌다. 컨테이너의 스레드 한도(pids.max 3,840)에 가까워진 것도 재시작의 후보 원인이다.
 # 스레드 수는 GPU 계산과 전처리 결과에 영향을 주지 않는다.
 export OMP_NUM_THREADS=12 MKL_NUM_THREADS=12 OPENBLAS_NUM_THREADS=12 NUMEXPR_NUM_THREADS=12 TOKENIZERS_PARALLELISM=false
+# NVIDIA MPS (2026-10-21): 여러 측정 프로세스의 커널이 GPU에서 동시에 돌게 한다. 없으면 GPU가 프로세스를 번갈아 돌려(시분할)
+# 정확도 조각 4개 병렬이 단독 실행보다 느렸다(합계 분당 19문항 대 단독 26~43). 서버는 supervisord 프로그램 mps가 띄운다.
+# 서버가 없으면 CUDA는 평소처럼 단독으로 돈다. 같은 커널을 같은 입력으로 돌리므로 측정값은 바뀌지 않는다.
+export CUDA_MPS_PIPE_DIRECTORY=/tmp/nvidia-mps CUDA_MPS_LOG_DIRECTORY=/tmp/nvidia-mps-log
 PY=/workspace/venv_main/bin/python; PG=/workspace/venv_gemma/bin/python; PT=/workspace/venv_trt/bin/python
 O=eval_results/full799; mkdir -p $O logs
 log(){ echo "[$(date '+%F %T')] $*"; }
