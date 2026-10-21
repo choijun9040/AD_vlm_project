@@ -1,5 +1,6 @@
 #!/bin/bash
 # 평가 데이터 전부로 통일 — 작업 목록 (사전 등록 4fddeb4). 한 줄 = 이름|결과 파일|GPU GB|디스크 GB|묶음|명령
+# GPU GB는 799장 전처리 캐시를 GPU에 올리는 스크립트 기준(2026-10-21 메모리 부족 1건 뒤 상향).
 # 묶음: gpu(아무 때나 병렬) · dl(공개 저장소 내려받기 — 디스크 때문에 한 번에 하나) · big(GPU를 크게 쓴다 — 한 번에 하나)
 # 이미 다른 오케스트레이터로 돌고 있던 작업(res_1440000, 정확도 기준선 fp16, B kd_only)은 같은 결과 파일 이름으로 두어 알아보게 한다.
 PY=/workspace/venv_main/bin/python; PG=/workspace/venv_gemma/bin/python; O=eval_results/full799
@@ -7,16 +8,17 @@ FIX=checkpoints/baseline_v2_fixa_native_tower_full799.pt
 SIX="base_3b student_baseline_v2 student_kd_only_v4 student_temporal student_spatial student_full"
 j(){ echo "$1|$2|$3|$4|$5|$6"; }
 # --- 1단계: 비전 인코더 ---
-j "해상도 스윕 1440000 (6모델)" $O/res_1440000.json 16 2 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels 1440000 --only $SIX --out $O/res_1440000.json --dump $O/res_1440000_per_image.jsonl"
+j "해상도 스윕 1440000 (6모델)" $O/res_1440000.json 32 2 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels 1440000 --only $SIX --out $O/res_1440000.json --dump $O/res_1440000_per_image.jsonl"
 for MP in 802816 401408 200704 100352; do for m in $SIX; do
-  j "해상도 스윕 $MP $m" $O/res_${MP}__$m.json 14 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels $MP --only $m --out $O/res_${MP}__$m.json --dump $O/res_${MP}__${m}_per_image.jsonl"
+  G=14; [ $MP = 802816 ] && G=24; [ $MP = 401408 ] && G=18
+  j "해상도 스윕 $MP $m" $O/res_${MP}__$m.json $G 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels $MP --only $m --out $O/res_${MP}__$m.json --dump $O/res_${MP}__${m}_per_image.jsonl"
 done; done
-j "결정성 점검" $O/res_1440000_rep2.json 16 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels 1440000 --only student_baseline_v2 --out $O/res_1440000_rep2.json --dump $O/res_1440000_rep2_per_image.jsonl"
+j "결정성 점검" $O/res_1440000_rep2.json 32 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --min_pixels 3136 --max_pixels 1440000 --only student_baseline_v2 --out $O/res_1440000_rep2.json --dump $O/res_1440000_rep2_per_image.jsonl"
 j "v1 대 v2" $O/v1_vs_v2_profile.json 12 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --only __none__ --extra student_baseline_v1=checkpoints/student_baseline/epoch_1 student_kd_only_v1=checkpoints/student_kd_only/epoch_1 --out $O/v1_vs_v2_profile.json --dump $O/v1_vs_v2_per_image.jsonl"
-j "INT8" $O/int8_quant_error_native.json 16 1 gpu "$PY scripts/profile_int8_quant_error.py --max_pixels 1440000 --limit 799 --log_every 0 --out $O/int8_quant_error_native.json --per_image $O/int8_native_per_image.jsonl"
-j "개입 fixA/fixB" $O/mlp_overflow.json 16 1 gpu "$PY scripts/probe_mlp_overflow.py --n_images 799 --out $O/mlp_overflow.json --per_image $O/mlp_overflow_per_image.jsonl"
-j "가중치 편집 등가" $O/fixa_weight_equiv.json 16 1 gpu "$PY scripts/probe_fixa_weight_equiv.py --limit 799 --out $O/fixa_weight_equiv.json --per_image $O/fixa_weight_equiv_per_image.jsonl"
-j "채널 849" $O/channel849.json 16 1 gpu "$PY scripts/probe_channel849.py --limit 799 --out $O/channel849.json --per_image $O/channel849_per_image.jsonl"
+j "INT8" $O/int8_quant_error_native.json 32 1 gpu "$PY scripts/profile_int8_quant_error.py --max_pixels 1440000 --limit 799 --log_every 0 --out $O/int8_quant_error_native.json --per_image $O/int8_native_per_image.jsonl"
+j "개입 fixA/fixB" $O/mlp_overflow.json 32 1 gpu "$PY scripts/probe_mlp_overflow.py --n_images 799 --out $O/mlp_overflow.json --per_image $O/mlp_overflow_per_image.jsonl"
+j "가중치 편집 등가" $O/fixa_weight_equiv.json 32 1 gpu "$PY scripts/probe_fixa_weight_equiv.py --limit 799 --out $O/fixa_weight_equiv.json --per_image $O/fixa_weight_equiv_per_image.jsonl"
+j "채널 849" $O/channel849.json 32 1 gpu "$PY scripts/probe_channel849.py --limit 799 --out $O/channel849.json --per_image $O/channel849_per_image.jsonl"
 j "blk31 분해" $O/blk31_decompose.json 16 1 gpu "$PY scripts/probe_blk31_decompose.py --n_images 799 --out $O/blk31_decompose.json --per_image $O/blk31_decompose_per_image.jsonl"
 j "잔차 개입" $O/blk31_intervention.json 16 1 gpu "$PY scripts/probe_blk31_intervention.py --n_images 799 --out $O/blk31_intervention.json --per_image $O/blk31_intervention_per_image.jsonl"
 for OFF in 0 200 400 600; do N=200; [ $OFF -eq 600 ] && N=199
@@ -24,17 +26,17 @@ for OFF in 0 200 400 600; do N=200; [ $OFF -eq 600 ] && N=199
 done
 j "정렬 대상" $O/align_target_profile.json 12 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --only __none__ --extra aligntgt_base3b=checkpoints/aligntgt_base3b/step_5000 --out $O/align_target_profile.json --dump $O/align_target_per_image.jsonl"
 for L in 0.0 0.5 1.0 2.0; do
-  j "λ 게이트 $L" $O/guard_sweep_align$L.json 24 1 gpu "$PY scripts/headroom_guard.py diagnose --checkpoint checkpoints/sweep_align$L/step_5000 --dtype float16 --max_pixels 1440000 --limit 799 --out $O/guard_sweep_align$L.json --per_image $O/guard_sweep_align${L}_per_image.jsonl"
+  j "λ 게이트 $L" $O/guard_sweep_align$L.json 32 1 gpu "$PY scripts/headroom_guard.py diagnose --checkpoint checkpoints/sweep_align$L/step_5000 --dtype float16 --max_pixels 1440000 --limit 799 --out $O/guard_sweep_align$L.json --per_image $O/guard_sweep_align${L}_per_image.jsonl"
 done
 for m in baseline_v2 kd_only_v4 temporal spatial full; do EX=""; for s in 5000 10000 15000 20000 25000; do EX="$EX student_${m}@${s}=checkpoints/student_${m}/step_${s}"; done
   j "학습 궤적 $m" $O/training_trajectory__$m.json 12 1 gpu "$PY scripts/profile_vision_activations.py --fresh --log_every 0 --only __none__ --extra$EX --out $O/training_trajectory__$m.json --dump $O/training_trajectory__${m}_per_image.jsonl"
 done
 for f in 1.0 0.85 0.72 0.62 0.55 0.48 0.42 0.36 0.3 0.24 0.18 0.92 0.88 0.82 0.78 0.75 0.69 0.66; do
-  j "합성 연속체 ×$f" $O/detection_curve__f$f.json 24 1 gpu "$PY scripts/detection_curve.py --checkpoint checkpoints/student_baseline_v2/epoch_1 --limit 799 --factors $f --out $O/detection_curve__f$f.json --fig $O/detection_curve__f$f.png --per_image $O/detection_curve__f${f}_per_image.jsonl"
+  j "합성 연속체 ×$f" $O/detection_curve__f$f.json 32 1 gpu "$PY scripts/detection_curve.py --checkpoint checkpoints/student_baseline_v2/epoch_1 --limit 799 --factors $f --out $O/detection_curve__f$f.json --fig $O/detection_curve__f$f.png --per_image $O/detection_curve__f${f}_per_image.jsonl"
 done
 # --- 2단계: 정확도 11,309문항 ---
 NAT="--max_pixels 1440000 --min_pixels 3136"
-ev(){ j "정확도 $1 $2" $O/${1}_epoch_1_${2}_nuscenesqa_val.json 16 1 gpu "$PY scripts/eval_nuscenesqa_val.py --checkpoint checkpoints/$1/epoch_1 --dump_predictions --log_every 1000 --out_dir $O $3 --tag $2"; }
+ev(){ j "정확도 $1 $2" $O/${1}_epoch_1_${2}_nuscenesqa_val.json 20 1 gpu "$PY scripts/eval_nuscenesqa_val.py --checkpoint checkpoints/$1/epoch_1 --dump_predictions --log_every 1000 --out_dir $O $3 --tag $2"; }
 ev student_baseline_v2 native_fp16      "$NAT --lora_dtype float16"
 ev student_baseline_v2 native_fp16_fixa "$NAT --lora_dtype float16 --vision_state $FIX"
 ev student_baseline_v2 native_bf16      "$NAT --lora_dtype bfloat16"
@@ -53,9 +55,9 @@ for m in gemma-4-26B-A4B-it gemma-4-31B-it; do for st in 280 1120; do
 done; done
 j "A 종단 799" $O/gemma4_e2e_26B-A4B_full799.json 60 1 big "$PG scripts/probe_gemma4_e2e.py --offset 0 --limit 799 --out $O/gemma4_e2e_26B-A4B_full799.json"
 G="--dtype float16 --limit 799"
-j "도구 기준선·DLA" $O/guard_dla_demo.json 24 1 gpu "$PY scripts/headroom_guard.py diagnose --checkpoint checkpoints/student_baseline_v2/epoch_1 $G --max_pixels 1440000 --available_formats float16,int8 --out $O/guard_dla_demo.json --per_image $O/guard_dla_demo_per_image.jsonl"
-j "도구 사전학습 3B fix" $O/headroom_guard_fix_base3b.json 24 1 gpu "$PY scripts/headroom_guard.py fix --checkpoint none $G --max_pixels 1440000 --target_headroom 2.0 --verify --out $O/headroom_guard_fix_base3b.json --per_image $O/headroom_guard_fix_base3b_per_image.jsonl"
-j "CAM_BACK 검증 799" $O/altimages_CAM_BACK_val799.json 30 1 big "$PY scripts/profile_alt_images.py --camera CAM_BACK --val_only --limit 799 --min_pixels 3136 --max_pixels 1440000 --only $SIX teacher_7b --out $O/altimages_CAM_BACK_val799.json --per_image $O/altimages_CAM_BACK_val799_per_image.jsonl"
+j "도구 기준선·DLA" $O/guard_dla_demo.json 32 1 gpu "$PY scripts/headroom_guard.py diagnose --checkpoint checkpoints/student_baseline_v2/epoch_1 $G --max_pixels 1440000 --available_formats float16,int8 --out $O/guard_dla_demo.json --per_image $O/guard_dla_demo_per_image.jsonl"
+j "도구 사전학습 3B fix" $O/headroom_guard_fix_base3b.json 32 1 gpu "$PY scripts/headroom_guard.py fix --checkpoint none $G --max_pixels 1440000 --target_headroom 2.0 --verify --out $O/headroom_guard_fix_base3b.json --per_image $O/headroom_guard_fix_base3b_per_image.jsonl"
+j "CAM_BACK 검증 799" $O/altimages_CAM_BACK_val799.json 40 1 big "$PY scripts/profile_alt_images.py --camera CAM_BACK --val_only --limit 799 --min_pixels 3136 --max_pixels 1440000 --only $SIX teacher_7b --out $O/altimages_CAM_BACK_val799.json --per_image $O/altimages_CAM_BACK_val799_per_image.jsonl"
 # 공개 저장소 — 내려받아 재고 지운다. 디스크 때문에 한 번에 하나(dl)
 j "도구 Qwen2-VL-2B-AWQ" $O/guard_qwen2vl_2b_awq.json 20 15 dl "$PY scripts/headroom_guard.py diagnose --repo Qwen/Qwen2-VL-2B-Instruct-AWQ $G --max_pixels 1440000 --out $O/guard_qwen2vl_2b_awq.json --per_image $O/guard_qwen2vl_2b_awq_per_image.jsonl"
 j "도구 Qwen2-VL-7B-AWQ" $O/guard_qwen2vl_7b_awq.json 24 20 dl "$PY scripts/headroom_guard.py diagnose --repo Qwen/Qwen2-VL-7B-Instruct-AWQ $G --max_pixels 1440000 --out $O/guard_qwen2vl_7b_awq.json --per_image $O/guard_qwen2vl_7b_awq_per_image.jsonl"
