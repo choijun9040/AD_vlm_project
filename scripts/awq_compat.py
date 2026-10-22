@@ -55,6 +55,20 @@ def patch() -> bool:
         setattr(tm, pkg_name, pkg)
         applied = True
 
+    # **datasets 스텁 (2026-10-22).** awq는 보정 데이터용으로 `from datasets import load_dataset`를 모듈 import 때 한다.
+    # 추론에는 쓰지 않으므로, datasets가 없는 환경(A100 서버를 옮기며 빠짐)에서는 부르면 오류를 내는 빈 함수로 대신한다.
+    # pyarrow·pandas 등을 새로 설치하면 fsspec 같은 기존 패키지 판이 바뀔 수 있어 설치 대신 스텁을 택했다.
+    try:
+        import datasets  # noqa: F401
+    except ImportError:
+        ds = types.ModuleType("datasets")
+        def _no_load_dataset(*a, **k):
+            raise RuntimeError("datasets 스텁 — awq 양자화(보정)에는 쓸 수 없다. 추론 전용")
+        ds.load_dataset = _no_load_dataset
+        sys.modules["datasets"] = ds
+        applied = True
+        print("[awq_compat] datasets가 없어 스텁을 적용했다 (INT4 추론 전용)")
+
     _patched = True
     if applied:
         print("[awq_compat] transformers에 qwen3 모듈이 없어 스텁을 적용했다 (INT4 추론 전용)")
