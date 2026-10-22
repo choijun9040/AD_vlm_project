@@ -21,7 +21,11 @@ JOBS=$O/.jobs.txt; { bash scripts/full799_jobs.sh | grep "_nuscenesqa_val.json|"
 resv_of(){ local k f p g; k=$(basename "$1")
   while read -r p g; do case "$p" in ""|\#*) continue;; esac; case "$k" in $p) echo $g; return;; esac; done < scripts/full799_resv.txt; echo 24; }
 running_pat(){ case "$1" in
-  *_nuscenesqa_val.json) local b; b=$(basename "$1"); b=${b%_nuscenesqa_val.json}; local m=${b%%_epoch_1_*}; local t=${b#*_epoch_1_}; echo "checkpoints/$m/epoch_1 .*--tag $t\$";;
+  *_nuscenesqa_val.json) local b; b=$(basename "$1"); b=${b%_nuscenesqa_val.json}; local m=${b%%_epoch_1_*}; local t=${b#*_epoch_1_}
+    # 조각 작업의 명령은 `--tag native_fp16 --shard 3 --num_shards 8` 꼴이다 — 결과 파일 이름(native_fp16_shard3of8)을 그대로 --tag로 찾으면
+    # 맞지 않아 이어받지 못하고 같은 조각을 새로 띄운다(2026-10-22 6판 교체 때 조각 3/8이 두 번 돎, 옛 프로세스를 내려 정리)
+    if [[ $t =~ ^(.*)_shard([0-9]+)of([0-9]+)$ ]]; then echo "checkpoints/$m/epoch_1 .*--tag ${BASH_REMATCH[1]} --shard ${BASH_REMATCH[2]} --num_shards ${BASH_REMATCH[3]}\$"
+    else echo "checkpoints/$m/epoch_1 .*--tag $t\$"; fi;;
   *) local k=$(basename "$1"); echo "${k%.*}";; esac; }
 alive(){ [ -n "$1" ] && kill -0 "$1" 2>/dev/null; }
 reserved_gb(){ local t=0 d p; for d in $O/.lock_* $O/.resv_*; do [ -d "$d" ] || continue
