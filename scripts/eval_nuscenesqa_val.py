@@ -176,6 +176,10 @@ def main():
     # 평가하기 위한 경로다 — 손으로 고른 배수가 아니라 도구의 출력을 검증한다.
     parser.add_argument("--vision_state", default=None,
                         help="교정된 비전 타워 state_dict(.pt) 경로")
+    # **--no_resume (2026-10-22).** 예측 덤프가 이미 있으면 기본으로 **이어서** 한다 — 컨테이너가 4~5시간마다 재시작해
+    # 조각(최대 75분)의 진행분을 통째로 잃었기 때문이다. 이 인자를 주면 예전처럼 덤프를 지우고 처음부터 한다.
+    parser.add_argument("--no_resume", action="store_true",
+                        help="예측 덤프가 있어도 이어서 하지 않고 처음부터 다시 잰다")
     parser.add_argument("--print_samples", type=int, default=0,
                         help="처음 N개 예측을 stdout에도 출력")
     args = parser.parse_args()
@@ -272,20 +276,58 @@ def main():
         ckpt_tag += f"_shard{args.shard}of{args.num_shards}"
 
     dump_f = None
+    dump_path = None
     if args.dump_predictions:
         # 장면 토큰 — 장면 군집 부트스트랩용 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)
         from scene_map import token_to_scene
         tok2scene = token_to_scene(DRIVELM_VAL_JSON)
         dump_path = out_dir / f"{ckpt_tag}_predictions.jsonl"
-        dump_f = dump_path.open("w")
-        print(f"[예측 덤프] {dump_path}")
 
     correct_total, total = 0, 0
     correct_by_type = defaultdict(int)
     total_by_type   = defaultdict(int)
     n_no_eos, n_hit_cap, gen_len_sum = 0, 0, 0
 
+    # **이어서 하기 (2026-10-22).** 덤프 한 줄이 문항 하나의 결과 전부(정오·EOS·생성 길이)를 담으므로, 저장된 줄로
+    # 집계를 그대로 다시 만들고 남은 문항부터 잰다. 각 줄의 idx·sample_token·question이 이번 실행의 문항 순서와 하나라도
+    # 다르면 **섞지 않고 멈춘다**(다른 조각·다른 표본의 덤프). 재시작 순간 반쯤 쓰인 마지막 줄은 잘라 낸다.
+    start = 0
+    if dump_path is not None and dump_path.exists() and not args.no_resume:
+        recs = []
+        for line in dump_path.read_bytes().split(b"\n"):
+            if not line.strip():
+                continue
+            try:
+                recs.append(json.loads(line))
+            except json.JSONDecodeError:
+                break                                      # 반쯤 쓰인 줄 — 그 앞까지만 쓴다
+        for j, r in enumerate(recs):
+            s = samples[j] if j < len(samples) else None
+            if s is None or r.get("idx") != j or r.get("sample_token") != s["sample_token"] or r.get("question") != s["question"]:
+                raise RuntimeError(f"이어서 하기 불가 — 덤프 {j}번째 줄이 이번 문항과 다르다({dump_path}). "
+                                   "다른 조각·표본의 덤프다. --no_resume으로 처음부터 할 것")
+            total += 1
+            total_by_type[r["template_type"]] += 1
+            if r["correct"]:
+                correct_total += 1
+                correct_by_type[r["template_type"]] += 1
+            if not r["emitted_eos"]:
+                n_no_eos += 1
+            if r["hit_cap"]:
+                n_hit_cap += 1
+            gen_len_sum += r["n_gen_tokens"]
+        start = len(recs)
+        with dump_path.open("w") as fh:                    # 온전한 줄만 다시 쓴다(잘린 줄 제거)
+            for r in recs:
+                fh.write(json.dumps(r, ensure_ascii=False) + "\n")
+        print(f"[이어서] 덤프에 {start}문항이 있다 — {start}번째 문항부터 잰다 (누적 {correct_total}/{total})")
+    if dump_path is not None:
+        dump_f = dump_path.open("a" if start else "w")
+        print(f"[예측 덤프] {dump_path}")
+
     for i, s in enumerate(samples):
+        if i < start:
+            continue
         img_path = str(token_to_images[s["sample_token"]].get("CAM_FRONT", ""))
         g = generate_answer(model, processor, img_path, s["question"], args.max_new_tokens)
         gt = s["answer"]
