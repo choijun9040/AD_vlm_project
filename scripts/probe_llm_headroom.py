@@ -23,6 +23,7 @@ from PIL import Image
 
 sys.path.append(str(Path(__file__).parent))
 from dataloader import build_token_to_images
+import awq_compat  # 2026-10-22: autoawq가 설치되면 peft가 awq를 import하므로 qwen3·datasets 스텁이 필요하다
 
 BASE_3B = "Qwen/Qwen2.5-VL-3B-Instruct"
 DRIVELM_VAL = "data/QA_dataset_nus/v1_1_val_nus_q_only.json"
@@ -34,6 +35,7 @@ IMAGE_TOKEN_ID = 151655
 
 
 def load(checkpoint, dtype):
+    awq_compat.patch()
     from transformers import Qwen2_5_VLForConditionalGeneration
     from peft import PeftModel
     m = Qwen2_5_VLForConditionalGeneration.from_pretrained(
