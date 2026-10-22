@@ -26,7 +26,7 @@ O=eval_results/full799; G=onnx/full799; L=logs/full799_trt; mkdir -p $O $G $L
 FIX=checkpoints/baseline_v2_fixa_native_tower_full799.pt
 BASE=checkpoints/student_baseline_v2/epoch_1; FULL=checkpoints/student_full/epoch_1
 N=799
-BUSY="full799_queue.sh|run_full799_s[123]r?\.sh|headroom_guard.py fix"
+BUSY="full799_queue6?\.sh|run_full799_s[123]r?\.sh|run_full799_s4a\.sh|headroom_guard.py fix"   # 2026-10-22: s4a·6판 대기열 추가
 log(){ echo "[$(date '+%F %T')] $*"; }
 
 # ── 0. 기다림 — 799장 교정 가중치가 다 써지고, 1~3단계 GPU 작업이 끝날 때까지 ─────────────────────
@@ -34,6 +34,7 @@ log "대기: $FIX 와 GPU 작업($BUSY) 종료"
 until [ -f $FIX ] && ! pgrep -f "headroom_guard.py fix" >/dev/null; do sleep 60; done
 # 이어 하기 판(2026-10-21): 1~3단계의 **완료 표시**를 기다린다 — 프로세스 이름만 보면 단계 사이의 빈틈에 일찍 시작할 수 있다
 until [ -f eval_results/full799/.stage_queue_done ]; do sleep 120; done   # 대기열(1~3단계 작업 100개)이 끝난 뒤
+until [ -f eval_results/full799/.stage_s4a_done ]; do sleep 120; done     # 앞 단계(s4a, 지연을 쓰지 않는 측정)가 끝난 뒤 — 2026-10-22
 while pgrep -f "$BUSY" >/dev/null; do sleep 60; done
 sleep 60   # 마지막 파일 쓰기가 끝나도록
 log "교정 가중치 $(ls -l --time-style=+%F_%T $FIX | awk '{print $5, $6}') sha256 $(sha256sum $FIX | cut -c1-16)"

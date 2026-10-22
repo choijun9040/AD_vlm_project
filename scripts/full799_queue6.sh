@@ -7,6 +7,10 @@
 # 6판 수정(2026-10-22 15:35 KST): STARVE 기본값 1800 → 21600(6시간). 40 GB 합성 연속체는 한 번에 하나만 들어가므로 다음 합성이 앞 합성이
 # 도는 30분 동안 늘 밀려 우선권을 받았고, 우선권 대기가 시작 판단 잠금을 쥐는 동안 15 GB 정확도 조각 4개가 들어갈 자리가 있는데도 서지 못했다
 # (15:24 KST부터 GPU에 합성 하나만 돎). 남은 작업은 메모리 총량이 실제 한계이므로 「들어가는 작업부터」가 더 많이 채운다.
+# 6판 수정 2(2026-10-22 18:10 KST, 사용자 결정 「둘 다 적용」): (a) **디스크가 모자란 작업도 건너뛴다.** 이전에는 잠금과 묶음 자리(.grp_dl)를
+# 잡은 뒤 wait_disk로 기다려, 디스크 40 GB가 필요한 Kimi가 남은 31 GB 앞에서 영원히 기다리며 다운로드 묶음 12개 전부를 막았다.
+# (b) 정확도 동시 실행 4 → 3, 예산 76 → 80 GB(실제 여유 메모리 검사는 그대로 — 다운로드 묶음 하나가 정확도와 함께 들어갈 자리).
+# (c) **묶음 big(Gemma 종단, CAM_BACK)은 바로 우선권** — 종단은 끝난 뒤 Gemma 26B 가중치(디스크 47 GB)를 지워 디스크를 연다.
 # 5판(2026-10-21): vast.ai 점검 뒤 GPU가 「Error 802: system not yet initialized」로 죽은 채 작업이 즉시 실패해 조각 6개가 포기 처리됐다.
 # 작업 시작 전에 GPU를 점검하고(죽어 있으면 5분마다 다시 보며 기다린다), GPU·드라이버 오류로 죽은 작업은 시도 횟수에 넣지 않는다.
 # 4판(2026-10-21): 묶음 acc(정확도 조각)는 동시에 ACC_MAX개(기본 4)까지 — 정확도가 앞에 있어 예산을 다 잡으면 비전 측정이 하루 넘게 시작하지 못한다.
@@ -18,7 +22,7 @@
 # 802,816 작업 하나가 메모리 부족으로 죽었다(2026-10-21). 2판은 작업마다 **최대 사용량을 예약**하고,
 # 돌고 있는 작업의 예약 합 + 새 작업 ≤ 예산일 때만 시작한다. 메모리 부족으로 죽으면 시도 횟수에 넣지 않고 다시 한다.
 set -u; source /workspace/vlm_project_2/scripts/full799_lib.sh
-K=${1:-8}; BUDGET=${BUDGET:-76}; ACC_MAX=${ACC_MAX:-4}; STARVE=${STARVE:-21600}
+K=${1:-8}; BUDGET=${BUDGET:-80}; ACC_MAX=${ACC_MAX:-3}; STARVE=${STARVE:-21600}
 JOBS=$O/.jobs.txt; { bash scripts/full799_jobs.sh | grep "_nuscenesqa_val.json|"; bash scripts/full799_jobs.sh | grep -v "_nuscenesqa_val.json|"; } > $JOBS.new && mv $JOBS.new $JOBS   # 정확도(가장 길다)를 앞에
 # 예약값(GB) — 2026-10-21 실측(프로세스별 9.6~21.7 GB, 교정 풀기 단독 36.8 GB)에 여유를 둔 값
 resv_of(){ local k f p g; k=$(basename "$1")
@@ -65,13 +69,19 @@ worker(){
       ran=1
       local need; need=$(resv_of "$out")
       local n; n=$(( $(cat "$O/.attempts_$key" 2>/dev/null || echo 0) + 1 )); echo $n > "$O/.attempts_$key"
-      wait_disk "$disk"
+      if [ "$(disk_free_gb)" -lt "$disk" ]; then                            # 디스크가 모자라면 기다리지 않고 건너뛴다(6판 수정 2)
+        rm -rf "$O/.lock_$key"; [ -n "$gdir" ] && rm -rf "$gdir"
+        echo $((n - 1)) > "$O/.attempts_$key"; ran=0
+        [ -f "$O/.diskwait_$key" ] || { touch "$O/.diskwait_$key"; log "[w$w] 디스크 부족 — 건너뜀 $name (필요 ${disk} GB, 남음 $(disk_free_gb) GB)"; }
+        continue
+      fi
+      rm -f "$O/.diskwait_$key"
       exec 9>"$O/.start.lock"; flock 9                                        # 시작 판단은 한 번에 하나
       wait_gpu_ok                                                            # GPU가 살아 있을 때만 시작한다
       local ws="$O/.waitsince_$key"
       if ! fits "$need"; then                                                # 예약 합과 실제 여유를 둘 다 본다
         [ -f "$ws" ] || { date +%s > "$ws"; log "[w$w] 자리 없음 — 건너뜀 $name (예약 ${need} GB, 예약 합 $(reserved_gb)/$BUDGET GB)"; }
-        if [ $(( $(date +%s) - $(cat "$ws") )) -lt $STARVE ]; then            # 아직 오래 밀리지 않았다 — 잠금을 풀고 다음 작업으로
+        if [ "$grp" != big ] && [ $(( $(date +%s) - $(cat "$ws") )) -lt $STARVE ]; then   # big은 바로 우선권            # 아직 오래 밀리지 않았다 — 잠금을 풀고 다음 작업으로
           flock -u 9; exec 9>&-
           rm -rf "$O/.lock_$key"; [ -n "$gdir" ] && rm -rf "$gdir"
           echo $((n - 1)) > "$O/.attempts_$key"; ran=0

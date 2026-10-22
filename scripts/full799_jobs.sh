@@ -55,7 +55,7 @@ done
 for m in gemma-4-26B-A4B-it gemma-4-31B-it; do for st in 280 1120; do
   j "A $m st$st" $O/gemma4_vision_${m}_st${st}.json 16 1 gpu "$PG scripts/probe_gemma4_vision.py --model_dir /workspace/gemma4_vision/$m --max_soft_tokens $st --limit 799 --out_dir $O --per_image $O/gemma4_vision_${m}_st${st}_per_image.jsonl"
 done; done
-j "A 종단 799" $O/gemma4_e2e_26B-A4B_full799.json 60 1 big "$PG scripts/probe_gemma4_e2e.py --offset 0 --limit 799 --out $O/gemma4_e2e_26B-A4B_full799.json"
+j "A 종단 799" $O/gemma4_e2e_26B-A4B_full799.json 60 1 big "$PG scripts/probe_gemma4_e2e.py --offset 0 --limit 799 --out $O/gemma4_e2e_26B-A4B_full799.json && bash scripts/cleanup_gemma26b_cache.sh"
 G="--dtype float16 --limit 799"
 j "도구 기준선·DLA" $O/guard_dla_demo.json 32 1 gpu "$PY scripts/headroom_guard.py diagnose --checkpoint checkpoints/student_baseline_v2/epoch_1 $G --max_pixels 1440000 --available_formats float16,int8 --out $O/guard_dla_demo.json --per_image $O/guard_dla_demo_per_image.jsonl"
 j "도구 사전학습 3B fix" $O/headroom_guard_fix_base3b.json 32 1 gpu "$PY scripts/headroom_guard.py fix --checkpoint none $G --max_pixels 1440000 --target_headroom 2.0 --verify --out $O/headroom_guard_fix_base3b.json --per_image $O/headroom_guard_fix_base3b_per_image.jsonl"
