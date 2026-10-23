@@ -3228,6 +3228,15 @@ Qwen2.5-VL 32B·72B(AngelSlim), Qwen2-VL-72B(공식), Qwen3-VL-235B-A22B Instruc
 (iii) Thinking이 같은 크기 Instruct와 p50·최악이 같으면 비전 인코더 공유로 적고, 다르면 차이를 적는다(32B·30B-A3B는 측정값 있음, 235B는 짝 측정).
 어느 경우든 [표 16]에 7행을 더하고(16개), 한계 8의 「30B 이상의 대형 모델」 이유는 지운다.
 
+**위험 구성 나머지 11개 측정 — 사전 등록 (2026-10-23 KST, 결과 보기 전; 사용자 「11개 측정」).** 7개에 이어 위험 구성 27개 전부를 잰다.
+재양자화본 6개(카드에 기반 명시): p-christ/Qwen2-VL-7B(기반 = 공식 Qwen2-VL-7B-AWQ 측정값), remodlai·xxxSHADOWxxx·ticoAg/Qwen3-VL-30B-A3B,
+CYF200127/Qwen3-VL-32B, gsting/Qwen3-VL-235B-A22B(기반 = 같은 이름의 QuantTrio 측정값). Phi 변형 5개(카드에 기반 없음): lurker18 Phi-3.5·
+Phi-3-vision-128k, RichardErkhov/muhtasham Phi-3.5 미세조정 3개. 조건은 7개와 같다(799장, 1440000, bf16 마지막 블록, Qwen2·Phi는 직접 측정, Qwen3는 다리 측정).
+**해석:** (i) 재양자화본이 대조 대상과 p50·최악이 같으면 「상속」. 다르면 차이를 그대로 적고 비전 가중치 대조로 원인을 확인한다.
+(ii) lurker18 Phi-3.5는 Isotr0py Phi-3.5 AWQ(282.34·244.42배)와 같으면 상속, 다르면 차이. (iii) muhtasham 3개가 Phi-3.5와 달라도
+「미세조정의 효과」로 단정하지 않는다 — 학습 데이터 미상, 관찰로만 적는다. (iv) Phi-3-vision-128k는 새 기반 점으로 적는다.
+(v) 판정은 7.2절 도구 기준. 하나라도 위험·경계면 그대로 적는다. 적재되지 않는 저장소는 「적재 불가」로 남기고 원인을 기록한다.
+
 **A100 환경 누락 — autoawq·datasets (2026-10-22 23:45 KST).** 다운로드 묶음의 「도구 Qwen2-VL-2B/7B-AWQ」가 「autoawq … at least 0.1.8」 오류로 실패했고 2B는
 두 번 실패해 포기되었다. 원인: 이 서버의 venv_main에 autoawq가 없었다(옛 서버는 0.2.9 + awq_compat). `pip install --no-deps autoawq==0.2.9`(torch 2.3.0·
 transformers 4.49.0 그대로)로 넣고, awq가 import 때 요구하는 datasets는 설치 대신 awq_compat에 추론 전용 스텁을 두었다(5f10f37). 같은 명령을 2장으로 돌려 적재·판정이
