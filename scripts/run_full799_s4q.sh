@@ -46,7 +46,8 @@ nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv,noheader | 
 # GPU가 비었는지 — 지연 측정 직전마다 부른다 (다른 프로세스가 돌면 지연이 섞인다)
 wait_idle(){
   local said=0
-  while pgrep -f "$BUSY" >/dev/null || [ -n "$(nvidia-smi --query-compute-apps=pid --format=csv,noheader 2>/dev/null)" ]; do
+  # MPS 서버(상주, 약 32 MiB)는 늘 목록에 있으므로 64 MiB 이하 항목은 뺀다 (2026-10-23 — 빼지 않으면 영원히 기다린다)
+  while pgrep -f "$BUSY" >/dev/null || [ -n "$(nvidia-smi --query-compute-apps=used_memory --format=csv,noheader,nounits 2>/dev/null | awk '$1 > 64')" ]; do
     [ $said = 0 ] && { log "  GPU 사용 중 — 빌 때까지 기다린다"; nvidia-smi --query-compute-apps=pid,process_name,used_memory --format=csv,noheader; said=1; }
     sleep 60
   done

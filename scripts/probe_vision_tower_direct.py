@@ -244,7 +244,7 @@ def tower_out_max(out, exclude_ptrs=()):
     return allm, postm
 
 
-def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False, per_image=None):
+def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False, per_image=None, proc_from=None):
     """per_image: 리스트를 주면 이미지별 (마지막 블록 max, 타워 반환 전체 max, 블록 제외 max)를
     덧붙인다 — 집계에는 영향 없음 (평가 데이터 전부로 통일, 사전 등록 4fddeb4)."""
     from transformers import AutoConfig, AutoProcessor
@@ -280,10 +280,12 @@ def profile(repo, paths, max_pixels, dtype=torch.bfloat16, trust=False, per_imag
     # 부르면 그쪽 결함에 걸려 넘어진다 — LLaVA는 `patch_size=None`으로,
     # Phi-3.5는 원격 프로세서 코드로 죽었다. 둘 다 타워 적재는 391/391 통과였다.
     from transformers import AutoImageProcessor
-    proc_src = repo
+    # 처리기 저장소 지정 (2026-10-23) — 재배포본이 처리기 파일을 빠뜨리면 CLIP 대체로 떨어져
+    # 기반과 전처리가 달라진다(상속 비교 불가). 기반의 처리기를 직접 지정한다.
+    proc_src = proc_from or repo
     try:
         proc = retry_429(lambda: AutoImageProcessor.from_pretrained(
-            repo, trust_remote_code=trust))
+            proc_src, trust_remote_code=trust))
     except Exception as e:
         ip = getattr(cfg, "img_processor", None)
         fallback = (ip or {}).get("model_name") if isinstance(ip, dict) else None
@@ -403,6 +405,8 @@ def main():
     ap.add_argument("--trust_remote_code", action="store_true",
                     help="저장소가 들고 다니는 모델링 코드를 실행한다. "
                          "InternVL·Phi-3-V 계열에 필요하며, **잘 알려진 저장소에만** 쓸 것")
+    ap.add_argument("--processor_from", nargs="*", default=[],
+                    help="REPO=처리기저장소 쌍. 지정한 저장소는 그 처리기로 전처리한다(결과에 processor_from으로 남는다)")
     ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
     ap.add_argument("--per_image", default=None,
                     help="저장소·이미지별 마지막 블록 max(bf16)·타워 반환 전체 max·블록 제외 max와 장면 토큰을 "
@@ -425,6 +429,7 @@ def main():
         pi = [] if pi_f else None
         try:
             res[repo] = profile(repo, paths, args.max_pixels, trust=args.trust_remote_code,
+                                proc_from=dict(x.split("=", 1) for x in args.processor_from).get(repo),
                                 per_image=pi)
             r = res[repo]
             print(f"  마지막 블록 p50={r['last_block_p50']:,.0f}  "
