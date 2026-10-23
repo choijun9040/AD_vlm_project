@@ -125,8 +125,13 @@ def _build_from_remote(cfg, fname, clsname, vcfg):
 
 def fetch_vision_state(repo):
     """비전 키가 든 샤드만 내려받아 접두사를 벗긴 state_dict를 만든다."""
-    from huggingface_hub import hf_hub_download
+    from huggingface_hub import hf_hub_download as _hub
     from safetensors.torch import load_file
+    import os
+    # 로컬 폴더도 받는다 (2026-10-23) — 저장소 이름에 점이 있으면(`SenseNova-SI-1.1-…`) transformers가
+    # 원격 코드를 `transformers_modules.<이름>`으로 등록하다 점에서 끊겨 import가 실패한다. 점 없는 이름의
+    # 로컬 폴더로 받아 그 경로를 넘긴다.
+    hf_hub_download = (lambda r, f: os.path.join(r, f)) if os.path.isdir(repo) else _hub
 
     try:
         idx = json.load(open(hf_hub_download(repo, "model.safetensors.index.json")))
