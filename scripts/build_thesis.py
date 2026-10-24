@@ -9,11 +9,13 @@ thesis_references_draft.md, thesis_appendix_draft.md, thesis_figures.md)이고, 
   2. **내부 정정 기록을 뺀다** — 첫 줄에 "정정"이 들어간 인용 블록(`> **정정 …`, `> *정정 기록.*`).
      작업 기록으로는 필요하지만 제출 원고의 본문은 아니다. (개수를 출력한다)
   3. **인용 번호를 매긴다** — 본문에 처음 나오는 순서. arXiv 표기 "(arXiv:XXXX.XXXXX, …)"는 [n]으로 바꾸고,
-     모델·데이터셋·도구는 **장마다 처음 나올 때** 한 번 인용한다. 제목·코드 블록·코드 스팬 안은 건드리지 않는다.
+     모델·데이터셋·도구는 **장마다 처음 나올 때**(`# N장` 제목에서 다시 센다) 한 번 인용한다. 제목·코드 블록·코드 스팬
+     안은 건드리지 않는다. 처리는 줄 단위다.
      참고문헌 목록은 새 번호 순서로 다시 적는다. 인용되지 않은 항목은 경고한다.
   4. **그림을 넣는다** — 기준 줄(표 아래 조건 줄) 뒤에 그림과 캡션(thesis_figures.md)을 넣고, 기준 줄에
-     "그림 X-Y"를 붙여 본문이 그림을 가리키게 한다.
-  5. 목차·그림 목차·표 목차를 만든다(합본 앞과 `thesis_toc.md` 따로)(그림 제목은 캡션 첫 문장, 표는 `**표 [키].** 제목`에 장별 번호, 본문 `[표:키]`는 번호로).
+     「[그림 N]」을 붙여 본문이 그림을 가리키게 한다. 번호는 전체 일련이고 캡션은 그림 아래다(2026-10-12 학교 양식).
+  5. 목차·그림 차례·표 차례를 만든다(합본 앞과 `thesis_toc.md` 따로). 그림 제목은 캡션 첫 문장, 표는
+     `**표 [키].** 제목`을 전체 일련번호 「[표 N]」으로 바꿔 표 아래에 두고, 본문 `[표:키]`도 그 번호로 바꾼다.
 
 실행:
     python scripts/build_thesis.py            # → thesis_full_draft.md
@@ -35,15 +37,16 @@ ARXIV = {"2601.21288": 3, "2303.06884": 6, "2305.04526": 7, "2605.01330": 8, "24
          "2607.08029": 15, "2503.01873": 16, "2604.26857": 18, "2506.24044": 19, "2512.16760": 20,
          "2510.24795": 21, "2608.30144": 22}
 # 장마다 처음 한 번 인용한다. (정규식, 옛 번호). 뒤에 붙는 모델 크기 등(-7B, -Instruct)은 토큰째 넘긴다.
+# 처리는 줄 단위라 줄을 넘는 패턴은 쓸 수 없다 — vLLM 이슈는 「#40290」만 필수로 둔다(2026-10-24: 「vLLM\n이슈」 줄바꿈으로 2장 인용이 빠졌다).
 NAMED = [
     (r"Qwen2\.5-VL", 1), (r"FitNets", 2), (r"EM-VLM4AD", 4), (r"MiniDrive", 5),
-    (r"vLLM (?:이슈 )?#40290", 17), (r"(?<![A-Za-z])nuScenes(?![A-Za-z-])", 23), (r"DriveLM", 24),
+    (r"(?:vLLM\s+)?(?:이슈\s+)?#40290", 17), (r"(?<![A-Za-z])nuScenes(?![A-Za-z-])", 23), (r"DriveLM", 24),
     (r"NuScenes-QA", 25), (r"CODA-LM", 26), (r"(?<![A-Za-z])CODA(?![A-Za-z-])", 27),
     (r"(?<![A-Za-z])LoRA(?![A-Za-z])", 28), (r"지식 증류", 29), (r"Spearman", 30),
     (r"Qwen2-VL", 31), (r"McNemar", 32), (r"(?<![A-Za-z-])AWQ(?![A-Za-z-])", 33), (r"Qwen3-VL", 34),
-    (r"Phi-3\.5", 35), (r"LLaVA", 36), (r"InternVL3", 37), (r"SmolVLM", 38), (r"Pixtral", 39),
+    (r"(?<![A-Za-z_])Phi(?![A-Za-z_])", 35), (r"LLaVA", 36), (r"InternVL3", 37), (r"SmolVLM", 38), (r"Pixtral", 39),
     (r"GLM-4\.1V", 40), (r"Kimi-VL", 41), (r"(?<![A-Za-z])DLA(?![A-Za-z])", 42),
-    (r"Orin Nano", 43), (r"TensorRT 11\.0", 44),
+    (r"Orin Nano", 43), (r"TensorRT 11(?![0-9])", 44),
 ]
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 
@@ -107,6 +110,8 @@ def cite_chapter(text):
     for line in text.split("\n"):
         if line.startswith("```"):
             in_fence = not in_fence
+        if not in_fence and re.match(r"^# \d+장", line):
+            seen = set()                                  # 장이 바뀌면 이름 인용을 다시 센다 (원고 파일에 장이 여럿 든다)
         if in_fence or line.startswith("#"):
             out.append(line)
             continue
@@ -141,7 +146,7 @@ def parse_references():
         m = re.match(r"^(\d+)\. (.*)", ln)
         if m:
             cur = int(m.group(1)); refs[cur] = m.group(2).strip()
-        elif cur and ln.startswith("    "):
+        elif cur and re.match(r"^\s{2,}\S", ln):      # 이어지는 줄 (2026-10-24: 3칸 들여쓰기 항목이 잘렸다)
             refs[cur] += " " + ln.strip()
         elif ln.startswith("## "):
             break
@@ -423,7 +428,8 @@ def main():
                          + ", ".join(f"{c}장 {n}절" for c, n in bad)
                          + f" — 장별 절 수는 {chap_secs}")
 
-    n_body_sec = len(re.findall(r"^## ", main_text, flags=re.M))
+    # 2026-10-24: 부록 A·B도 `##` 절이라 차례에 나온다 — 본문 쪽 집계에도 부록을 넣는다
+    n_body_sec = len(re.findall(r"^## ", main_text + "\n" + appx, flags=re.M))
     if n_body_sec != n_sec:
         raise SystemExit(f"절 수 불일치: 본문 {n_body_sec} ≠ 차례 {n_sec} — "
                          "차례의 들여쓰기 규칙과 집계가 어긋났는지 본다")

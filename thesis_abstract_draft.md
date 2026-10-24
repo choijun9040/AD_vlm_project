@@ -48,10 +48,10 @@ fp16에서 이미지의 96.0%에 대해 출력이 상실되어 정확도가 48.4
 
 반면 제안 지표는 6개 모델의 상실률을 평균 1.1%p의 오차로 예측하였다. 제안 교정 방법은 출력
 상실을 제거하여 배포 조건의 정확도를 1.34%에서 48.76%로 회복하였으며, 이는 오버플로가 없는 bf16
-실행(48.47%)과 통계적으로 유의한 차이가 없었다. 기존 대안인 bf16 형식 전환은 fp16 대비
+실행(48.47%)과 통계적으로 유의한 차이가 없었다. 기존 대안인 bf16 형식 전환은 A100의 TensorRT에서 fp16 대비
 1.30~1.36배의 추론 지연을 유발하나, 제안 방법은 fp16 형식을 유지하여 이러한 지연 증가를
 피하였다. 같은 출력 상실과 교정 효과는 TensorRT fp16 엔진과 Jetson Orin Nano 8GB의 강타입
-엔진에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서 4.61배로
+엔진(메모리가 허락한 해상도)에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서 4.61배로
 증가하여(평가 해상도), 증류 설계 단계에서도 여유를 확보할 수 있음을 보였다.
 
 이상의 결과는 압축된 VLM의 저정밀 배포 적합성을 정확도와 양자화 오차 지표만으로 판단할 수
@@ -104,9 +104,9 @@ The proposed diagnostic predicts the collapse rate of six models with a mean err
 percentage points. The proposed correction eliminates the collapse and restores
 deployment-condition accuracy from 1.34% to 48.76%, with no statistically significant difference
 from overflow-free bf16 execution (48.47%). Whereas the existing alternative of switching to
-bf16 increases latency by 1.30–1.36× relative to fp16, the proposed method keeps fp16 and
+bf16 increases latency by 1.30–1.36× relative to fp16 in TensorRT on an A100, the proposed method keeps fp16 and
 avoids this cost. The same collapse and correction were confirmed on a TensorRT fp16 engine and
-on a strongly typed engine on a Jetson Orin Nano 8GB. Raising the weight of the
+on a strongly typed engine on a Jetson Orin Nano 8GB (at the resolutions its memory allows). Raising the weight of the
 feature-alignment loss also increases headroom from 1.79× to 4.61× (evaluation resolution),
 showing that headroom can also be secured at the distillation design stage.
 
