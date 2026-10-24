@@ -10,9 +10,9 @@
   (1) 전이는 형식 상한 그 자체(최악 여유 1.00~1.05)에서 일어난다 — 합성 연속체
   (2) 학습으로 만들어진 체크포인트(λ 스윕 넷)가 같은 곡선 위에 놓인다 — 자연 발생 점
 
-데이터(모두 100장, 이미지를 줄이지 않는 원본 해상도 1600×900, 크기는 bf16·상실은 fp16):
-  합성  eval_results/detection_curve.json, detection_curve_fine.json  (겹치는 배수는 한 번만)
-  자연  eval_results/guard_sweep_align{0.0,0.5,1.0,2.0}.json           (마지막 블록 최악 여유, nan_rate)
+데이터(--root 기본 eval_results/full799, 799장, 이미지를 줄이지 않는 원본 해상도 1600×900, 크기는 bf16·상실은 fp16):
+  합성  <root>/detection_curve*.json  (799장은 배수마다 한 파일; 겹치는 배수는 한 번만)
+  자연  <root>/guard_sweep_align{0.0,0.5,1.0,2.0}.json           (마지막 블록 최악 여유, nan_rate)
 
 색: dataviz 참조 팔레트 1·2번 슬롯(파랑·주황). validate_palette.js로 전 항목 통과 확인.
 기준선은 시리즈 색이 아니라 중립 잉크로 그린다.
@@ -49,9 +49,9 @@ LAYOUT = {
 }
 
 
-def synthetic_points():
+def synthetic_points(root):
     seen, pts = set(), []
-    for f in ("eval_results/detection_curve.json", "eval_results/detection_curve_fine.json"):
+    for f in sorted(Path(root).glob("detection_curve*.json")):   # 799장은 배수마다 파일이 나뉜다
         d = json.loads(Path(f).read_text())
         for r in d["rows"]:
             key = round(r["factor"], 3)
@@ -62,10 +62,10 @@ def synthetic_points():
     return sorted(pts)
 
 
-def natural_points():
+def natural_points(root):
     pts = []
     for lam in ("0.0", "0.5", "1.0", "2.0"):
-        g = json.loads(Path(f"eval_results/guard_sweep_align{lam}.json").read_text())
+        g = json.loads(Path(f"{root}/guard_sweep_align{lam}.json").read_text())
         last = [b for b in g["before"]["per_block"] if b["block"] != "tower_out"][-1]
         pts.append((lam, last["headroom_worst"], g["before"]["nan_rate"] * 100))
     return pts
@@ -75,11 +75,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--layout", default="double", choices=list(LAYOUT))
     ap.add_argument("--out", default="figures/fig_gate_calibration")
+    # 2026-10-24: 평가 데이터 전부(799장)로 통일 — 옛 100장 결과는 --root eval_results
+    ap.add_argument("--root", default="eval_results/full799")
     args = ap.parse_args()
     L = LAYOUT[args.layout]
     out = args.out if args.layout == "double" else f"{args.out}_{args.layout}"
 
-    syn, nat = synthetic_points(), natural_points()
+    syn, nat = synthetic_points(args.root), natural_points(args.root)
     plt.rcParams.update({"font.size": L["base_fs"], "axes.labelsize": L["base_fs"],
                          "xtick.labelsize": L["tick_fs"], "ytick.labelsize": L["tick_fs"],
                          "axes.edgecolor": INK2, "xtick.color": INK2, "ytick.color": INK2})

@@ -71,8 +71,11 @@ def paper_limits():
     text = CHAPTER.read_text(encoding="utf-8")
     # 2026-10-12 절 통합으로 8.4가 8.3 안의 소제목이 됐다 — 경계가 `### 한계로 보지 않는 사항`이다
     head, tail = "## 8.3 한계", "### 한계로 보지 않는 사항"
+    # 2026-10-23: 소제목 제거와 「한계로 보지 않는다」 문단 삭제로 8.4가 논문에서 빠졌다 — 없으면 8.3을 끝까지 읽고 8.4는 None
     if tail not in text:
-        raise SystemExit(f"8장에서 「{tail}」을 찾지 못했다 — 제목이 바뀌었는지 본다")
+        s83 = text[text.index(head):]
+        nums = [int(m.group(1)) for m in re.finditer(r"^\*\*(\d+)\. ", s83, flags=re.M)]
+        return nums, None
     s83 = text[text.index(head):text.index(tail)]
     s84 = text[text.index(tail):]
     nums = [int(m.group(1)) for m in re.finditer(r"^\*\*(\d+)\. ", s83, flags=re.M)]
@@ -101,7 +104,7 @@ def main():
         m = re.match(r"^(\d+)\. ", cells[0])
         if m:
             map_83.append(int(m.group(1)))
-        elif cells[0] == "—" or re.match(r"^~~L", cells[0]):
+        elif cells[0] == "—" or re.match(r"^~~L", cells[0]) or re.match(r"^~~\d+\.", cells[0]):   # 논문에서 지운 한계 행
             pass
         elif len(cells) >= 2 and ("행 없음" in cells[1] or re.fullmatch(r"L\d+|~~L\d+~~", cells[1])):
             map_84 += 1
@@ -139,7 +142,9 @@ def main():
     nums, items84 = paper_limits()
     if sorted(nums) != sorted(map_83):
         problems.append(f"논문 8.3 항목 {sorted(nums)} ≠ 대응표 {sorted(map_83)}")
-    if len(items84) != map_84:
+    if items84 is None:
+        print("  (논문 8.4 「한계로 보지 않는 사항」은 2026-10-23 삭제 — 대응표 8.4 구획은 기록으로만 둔다, 대조 생략)")
+    elif len(items84) != map_84:
         problems.append(f"논문 8.4 항목 {len(items84)}개 ≠ 대응표 {map_84}행 "
                         f"— 「한계가 아니라고 판정한 것」도 기록해야 다시 논쟁하지 않는다")
 

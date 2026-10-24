@@ -17,8 +17,8 @@ all-pairs에서 3개까지) 개체는 **점마다 직접 붙인 이름**으로 �
 (채움 = 원본 해상도 fp16에서 상실 > 0, 속 빈 점 = 0%). 점과 글자는 중립 잉크.
 
 데이터(원본 해상도 max_pixels 1,440,000):
-  여유·상실률  eval_results/resolution_sweep/res_1440000.json   (250장)
-  INT8 SNR    eval_results/int8_quant_error_native.json          (200장)
+  여유·상실률  eval_results/full799/resolution_sweep/res_1440000.json   (799장, --res)
+  INT8 SNR    eval_results/full799/int8_quant_error_native.json          (799장, --int8)
 
 실행:
     python scripts/plot_metric_inversion.py                 # 2단 폭
@@ -75,9 +75,9 @@ LAYOUT = {
 }
 
 
-def load():
-    res = json.loads(Path("eval_results/resolution_sweep/res_1440000.json").read_text())
-    q = json.loads(Path("eval_results/int8_quant_error_native.json").read_text())
+def load(res_path, int8_path):
+    res = json.loads(Path(res_path).read_text())
+    q = json.loads(Path(int8_path).read_text())
     rows = []
     for key, name in MODELS:
         p50 = res[key]["passes"]["bfloat16"]["by_layer"]["31"]["p50"]
@@ -106,7 +106,9 @@ def panel(ax, rows, field, title, tag, L):
             ax.annotate(lab, (r["headroom"], r[field]), xytext=(dx, dy), textcoords="offset points",
                         ha=ha, va=va, fontsize=L["note_fs"], color=INK2)
     rho = spearman([r["headroom"] for r in rows], [r[field] for r in rows])
-    ax.set_title(f"{title}   (Spearman ρ = {rho:+.3f}, n = {len(rows)})",
+    # 2026-10-24: 제목에서 ρ를 뺀다 — 본문이 순위 상관을 강조하지 않고 「위험을 예고하지 못한다」로 서술한다(ρ는 콘솔에만)
+    print(f"  {title}: Spearman ρ = {rho:+.3f}, n = {len(rows)}")
+    ax.set_title(f"{title}   (n = {len(rows)} models)",
                  fontsize=L["base_fs"], pad=6, color=INK)
     ax.set_xlim(0.7, 3.6)
     ax.set_xlabel("fp16 headroom, final block (median over images)")
@@ -123,11 +125,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--layout", default="double", choices=list(LAYOUT))
     ap.add_argument("--out", default="figures/fig4_metric_inversion")
+    # 2026-10-24: 평가 데이터 전부(799장)로 통일 — 옛 250장·200장 파일은 eval_results/resolution_sweep/·int8_quant_error_native.json
+    ap.add_argument("--res", default="eval_results/full799/resolution_sweep/res_1440000.json")
+    ap.add_argument("--int8", default="eval_results/full799/int8_quant_error_native.json")
     args = ap.parse_args()
     L = LAYOUT[args.layout]
     out = args.out if args.layout == "double" else f"{args.out}_{args.layout}"
 
-    rows, n_res, n_q = load()
+    rows, n_res, n_q = load(args.res, args.int8)
     plt.rcParams.update({"font.size": L["base_fs"], "axes.labelsize": L["base_fs"],
                          "xtick.labelsize": L["tick_fs"], "ytick.labelsize": L["tick_fs"],
                          "axes.edgecolor": INK2, "xtick.color": INK2, "ytick.color": INK2})

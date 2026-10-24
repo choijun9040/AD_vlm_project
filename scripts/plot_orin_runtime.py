@@ -12,11 +12,12 @@
 (같은 엔진 조건, 다른 기기). 초과 비율은 측정이 아니라 추정이므로 중립 잉크 점선이다.
 
 데이터:
-  초과 비율·PyTorch   eval_results/resolution_sweep/res_{1440000,802816,401408}.json   (250장)
-  TRT 강타입          eval_results/trt_{nativeh,802816h,401408h}_typed_baseline_v2.json (250장, TRT 10.13)
-  TRT 관행 (fp32 그래프) eval_results/trt_native250_baseline_v2_dense.json, trt_802816_baseline_v2.json,
-                      trt_401408_baseline_v2_single.json                                  (250장, TRT 10.13)
-  Orin               eval_results/orin/typed_results/orin_*_typed.json                   (250장, TRT 10.3, 15W)
+  (--root 기본 eval_results/full799, 799장)
+  초과 비율·PyTorch   <root>/resolution_sweep/res_{1440000,802816,401408}.json  (scripts/merge_full799_sweep.py가 합친 것)
+  TRT 강타입          <root>/trt_{nativeh,802816h,401408h}_typed_baseline_v2.json  (TRT 10.13)
+  TRT 관행 (fp32 그래프) <root>/trt_native799_baseline_v2_dense.json, trt_802816_baseline_v2.json,
+                      trt_401408_baseline_v2_single.json                          (TRT 10.13)
+  Orin               <root>/orin/results/orin_*_typed.json                       (TRT 10.3, 15W)
 
 실행:
     python scripts/plot_orin_runtime.py                 # 2단 폭
@@ -47,30 +48,30 @@ def j(p):
     return json.loads(Path(p).read_text())
 
 
-def load():
+def load(root, n_img):
     tokens, exceed, pyt, typed, weak = [], [], [], [], []
     weak_files = {"401408": "trt_401408_baseline_v2_single", "802816": "trt_802816_baseline_v2",
-                  "native": "trt_native250_baseline_v2_dense"}
+                  "native": f"trt_native{n_img}_baseline_v2_dense"}
     for mp, tag in RES:
-        r = j(f"eval_results/resolution_sweep/res_{mp}.json")
+        r = j(f"{root}/resolution_sweep/res_{mp}.json")
         b = r["student_baseline_v2"]
         exceed.append(b["passes"]["bfloat16"]["by_layer"]["31"]["over_fp16_rate"] * 100)
         pyt.append(b["passes"]["float16"]["nan_rate"] * 100)
-        t = j(f"eval_results/trt_{tag}h_typed_baseline_v2.json")
-        assert t["n_images"] == 250
+        t = j(f"{root}/trt_{tag}h_typed_baseline_v2.json")
+        assert t["n_images"] == n_img
         typed.append(t["modes"]["typed"]["nan_rate"] * 100)
-        w = j(f"eval_results/{weak_files[tag]}.json")
-        assert w["n_images"] == 250
+        w = j(f"{root}/{weak_files[tag]}.json")
+        assert w["n_images"] == n_img
         weak.append(w["modes"]["fp16"]["nan_rate"] * 100)
     # 실제 비전 토큰 수(merge 후) — 4장 그림 4-2와 같은 값. 1600×900 이미지의 smart_resize 결과다
     tokens = [480, 966, 1824]
     orin = {}
     for tag, tok in (("401408", 480), ("802816", 966)):
-        f = "eval_results/orin/typed_results/orin_{}_typed.json"
+        f = f"{root}/orin/results/orin_{{}}_typed.json"
         d = {m: j(f.format(f"{m}_{tag}h")) for m in ("baseline_v2", "full")}
         d["fixa"] = j(f.format(f"baseline_v2_{tag}h_fixa"))
         b = d["baseline_v2"]
-        assert b["n"] == 250
+        assert b["n"] == n_img
         orin[tok] = dict(collapse=b["nan_rate"] * 100, n=b["nan_count"], lat=b["latency_ms"]["p50"],
                          others=[v["nan_rate"] for k, v in d.items() if k != "baseline_v2"])
     return tokens, exceed, pyt, typed, weak, orin
@@ -86,11 +87,14 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--layout", default="double", choices=list(LAYOUT))
     ap.add_argument("--out", default="figures/fig6_runtime_collapse")
+    # 2026-10-24: 평가 데이터 전부(799장)로 통일 — 옛 250장 결과는 --root eval_results --n_images 250(Orin 경로는 typed_results)
+    ap.add_argument("--root", default="eval_results/full799")
+    ap.add_argument("--n_images", type=int, default=799)
     args = ap.parse_args()
     L = LAYOUT[args.layout]
     out = args.out if args.layout == "double" else f"{args.out}_{args.layout}"
 
-    tokens, exceed, pyt, typed, weak, orin = load()
+    tokens, exceed, pyt, typed, weak, orin = load(args.root, args.n_images)
     plt.rcParams.update({"font.size": L["base_fs"], "axes.labelsize": L["base_fs"],
                          "xtick.labelsize": L["tick_fs"], "ytick.labelsize": L["tick_fs"],
                          "axes.edgecolor": INK2, "xtick.color": INK2, "ytick.color": INK2})
@@ -113,8 +117,9 @@ def main():
     label(a, xe, pyt[-1], "PyTorch fp16", PYT, L, dx=10, dy=0)
     label(a, xe, typed[-1], "TensorRT strongly typed", TYPED, L, dx=10, dy=-sp)
     label(a, tokens[1], weak[1], "TensorRT --fp16 (weak)", WEAK, L, dx=10, dy=0)
-    label(a, ox[-1], orin[ox[-1]]["collapse"], "Orin Nano\n(strongly typed)", TYPED, L, dx=-14, dy=10,
-          ha="right", va="bottom")
+    # 2026-10-24: 799장에서 Orin 점이 30% 근처로 올라가 왼쪽 위 라벨이 세로축 눈금과 겹쳤다 — 오른쪽 아래로 옮긴다
+    label(a, ox[-1], orin[ox[-1]]["collapse"], "Orin Nano\n(strongly typed)", TYPED, L, dx=16, dy=-12,
+          ha="left", va="top")
     a.text(0.98, 0.45 if nc == 2 else 0.30, "Full and corrected engine:\n0% on every path",
            transform=a.transAxes, fontsize=L["note_fs"], color=INK2, va="center", ha="right")
     a.set_xlim(300 if nc == 2 else -100, 2900 if nc == 2 else 3000)   # 1단은 왼쪽 라벨 자리를 더 둔다
