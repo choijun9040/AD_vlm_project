@@ -2,7 +2,7 @@
 학위 논문 합본 생성 — 장별 초안을 하나의 원고(thesis_full_draft.md)로 묶는다.
 
 **생성물은 직접 고치지 않는다.** 고칠 것은 장별 초안(thesis_ch*_draft.md, thesis_abstract_draft.md,
-thesis_references_draft.md, thesis_figures.md)이고, 이 스크립트를 다시 돌리면 합본이 따라온다.
+thesis_references_draft.md, thesis_appendix_draft.md, thesis_figures.md)이고, 이 스크립트를 다시 돌리면 합본이 따라온다.
 
 하는 일
   1. 각 초안의 머리말(첫 `---`까지의 작성 메모)을 떼고 본문만 잇는다.
@@ -48,15 +48,16 @@ NAMED = [
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 
 # ── 그림: (일련번호, 캡션 키, 파일, 기준 줄이 포함하는 글자) ────────────────────────────
+# 기준 글자에는 표본 수를 넣지 않는다(2026-10-22) — 표본 수 옆에 ⟦799⟧ 표시를 달거나 799장 값으로 고칠 때마다 기준이 깨졌다.
 # **번호는 전체 일련이다 (2026-10-12, 학교 양식).** 졸업생 논문(2026-08)이 `[그림 1]`~`[그림 19]`로
 # 장과 무관하게 이어 붙인다. 캡션 키("4-1" 등)는 `thesis_figures.md` 쪽 식별자라 그대로 둔다 —
 # 번호와 키를 분리해야 그림을 끼워 넣어도 캡션 파일을 건드리지 않는다.
 FIGURES = [
     ("1", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
-    ("2", "4-2", "figures/fig2_resolution_collapse.png", "(fp16 상실률, 250장, 이미지 단위로 출력이 NaN이면 상실)"),
-    ("3", "4-3", "figures/fig4_metric_inversion.png", "(원본 해상도, 마지막 블록, 여유는 p50·bf16 측정. 여유·상실률은 250장, INT8 지표는 200장)"),
+    ("2", "4-2", "figures/fig2_resolution_collapse.png", "이미지 단위로 출력이 NaN이면 상실)"),
+    ("3", "4-3", "figures/fig4_metric_inversion.png", "여유는 p50·bf16 측정)"),
     ("4", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
-    ("5", "6-1", "figures/fig6_runtime_collapse.png", "(250장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
+    ("5", "6-1", "figures/fig6_runtime_collapse.png", "같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
     ("6", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
 ]
 
@@ -69,11 +70,15 @@ def body_of(path):
 
 
 def drop_correction_quotes(text):
-    """첫 줄에 '정정'이 있는 인용 블록을 통째로 뺀다."""
+    """첫 줄이 `> **정정` 또는 `> *정정 기록.*`인 인용 블록을 통째로 뺀다.
+
+    처음에는 첫 줄에 '정정'이 **들어 있기만** 하면 뺐는데, 각주 인용 블록에 `⟦799: 정정 때 삭제⟧` 표시를 달자
+    각주가 통째로 사라졌다(2026-10-22). 메모 형식으로만 판정한다.
+    """
     out, lines, i, dropped = [], text.split("\n"), 0, 0
     while i < len(lines):
         ln = lines[i]
-        if ln.startswith(">") and "정정" in ln:
+        if re.match(r"> ?(\*\*정정|\*정정 기록)", ln):
             dropped += 1
             while i < len(lines) and lines[i].startswith(">"):
                 i += 1
@@ -366,8 +371,11 @@ def main():
     # **국문 초록은 남긴다 (사용자 결정)** — 졸업생 논문에는 없으나 빼야 할 이유도 없다.
     # 한국 논문 관행대로 Abstract 앞에 둔다. 표지·속표지·쪽 번호는 조판 단계(한글)에서 붙인다.
     ack = body_of("thesis_acknowledgment_draft.md")
+    # 부록 (2026-10-22) — 본문을 결과 중심으로 고치며 옮긴 측정 환경·빌드 조건. 참고 문헌 뒤·감사의 글 앞
+    appx = drop_correction_quotes(body_of("thesis_appendix_draft.md"))[0]
+    appx = re.sub(r"^<!--.*?-->\s*", "", appx, flags=re.S)
     body = (f"{ko}\n\n---\n\n{en}\n\n---\n\n{main_text}"
-            f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{ack}\n")
+            f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n\n---\n\n{ack}\n")
     toc_items, figure_items = toc(body), figure_list(main_text)
     # 표·그림 차례는 별도 쪽이라 본문 제목 훑기에 잡히지 않는다 — 차례에 손으로 끼운다
     toc_lines = toc_items.split("\n")
@@ -382,7 +390,7 @@ def main():
              f"\n\n---\n\n# 표 차례\n\n{table_items}\n\n---\n\n# 그림 차례\n\n{figure_items}")
     lists = front
     out = (head + front + "\n\n---\n\n" + main_text
-           + f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{ack}\n")
+           + f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n\n---\n\n{ack}\n")
     # 목차만 따로 (2026-10-02). 합본과 같은 실행에서 쓰므로 항상 맞는다
     toc_doc = head.replace("석사학위논문 초안 · 합본 생성", "석사학위논문 목차 · 합본 생성") + lists + "\n"
 

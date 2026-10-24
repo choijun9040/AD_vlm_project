@@ -73,8 +73,6 @@
     Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
 29. G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," in *NIPS 2014 Deep
     Learning Workshop*, 2015. (arXiv:1503.02531)
-30. C. Spearman, "The Proof and Measurement of Association between Two Things," *The American Journal
-    of Psychology*, vol. 15, no. 1, pp. 72–101, 1904.
 31. P. Wang, S. Bai, S. Tan, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the
     World at Any Resolution," arXiv:2409.12191, 2024.
 32. Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or
