@@ -1,10 +1,10 @@
-<!-- 자동 생성: scripts/build_thesis.py (2026-10-24). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
+<!-- 자동 생성: scripts/build_thesis.py (2026-10-25). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
 # 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정
 
 *Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 
-석사학위논문 초안 · 합본 생성 2026-10-24 · 학교 양식 적용 전
+석사학위논문 초안 · 합본 생성 2026-10-25 · 학교 양식 적용 전
 
 ---
 
@@ -26,36 +26,36 @@ Abstract
 Ⅱ. 관련 연구
     1. 주행 VLM 경량화와 효율화 연구
     2. 저정밀 배포와 활성 이상치
-    3. 평가 프로토콜
-    4. 선행 연구에서 비어 있는 축
+    3. 평가 데이터셋
+    4. 선행 연구 공백
 
 
-Ⅲ. 통제된 다중 변형 증류 파이프라인
+Ⅲ. 손실 항별 증류 모델 구성
     1. 증류 파이프라인 구성
-    2. 다섯 변형과 공정성 통제
+    2. 비교 변형과 통제 조건
     3. 평가 프로토콜
     4. 변형별 정확도 비교 결과
 
 
-Ⅳ. fp16 표현 범위 초과와 수치 표현의 상실
+Ⅳ. fp16 표현 범위 초과와 출력 상실
     1. 표현 범위 여유의 정의와 측정 규칙
-    2. 활성 크기와 이산적 실패
-    3. 위험을 예고하지 못하는 표준 압축 지표
+    2. 활성 크기와 출력 상실
+    3. 표준 압축 지표와 출력 상실 위험
     4. 오버플로 지점과 곱셈 이전 교정
-    5. 여유를 움직이는 수단
+    5. 여유의 영향 요인
 
 
-Ⅴ. 이산적 실패와 집계 지표의 무력화
-    1. INT4 정확도 1.39%의 원인 규명
+Ⅴ. 출력 상실의 오인과 공개 배포 모델의 위험
+    1. INT4 정확도 저하의 원인
     2. 공개 양자화 저장소 조사와 위험 구성
-    3. 설정·설계·가중치로는 예측되지 않는 여유
+    3. 여유의 사전 예측 가능성
 
 
-Ⅵ. 저정밀 배포 검증 파이프라인과 실기기 확인
+Ⅵ. TensorRT 배포 검증과 엣지 보드 실측
     1. ONNX 내보내기
     2. 정밀도 조건별 측정 프로토콜
     3. TensorRT 측정 결과와 교정 검증
-    4. 형식 선택과 비용
+    4. bf16 전환과 지연 비용
     5. Jetson Orin Nano 실측 결과
 
 
@@ -67,14 +67,14 @@ Abstract
 
 
 Ⅷ. 종합 논의와 한계
-    1. 논지의 검증
-    2. 사례 연구의 범위
+    1. 기여별 근거와 강도
+    2. 결과의 일반화 범위
     3. 한계
 
 
 Ⅸ. 결론
     1. 요약과 기여
-    2. 범위와 남은 문제
+    2. 적용 범위와 미해결 문제
     3. 실무 권고
     4. 향후 연구
 참고 문헌
@@ -89,44 +89,24 @@ Abstract
 
 **비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정**
 
-비전-언어 모델(VLM)을 차량과 같은 엣지 장치에 배포하려면 지식 증류를 통한 모델 경량화와
-반정밀도(fp16) 연산이 함께 요구된다. fp16은 표현할 수 있는 최댓값이 65,504로 제한되어, 비전
-인코더의 활성값이 이를 초과하는 오버플로가 일어나면 해당 이미지에 대한 모델 출력 전체가
-상실된다. 따라서 압축 모델을 저정밀로 배포하기 전에 이러한 출력 상실 위험을 판별하는 방법이
-필요하다. 본 논문은 자율주행 VLM을 사례로 이 문제를 다룬다.
+비전-언어 모델(VLM)을 엣지 장치에 배포하려면 지식 증류로 모델을 줄이고 반정밀도(fp16)로 연산해야 한다.
+그러나 비전 인코더의 활성값이 fp16 상한(65,504)을 넘으면 그 이미지에 대한 출력 전체가 상실되며, 압축 모델의
+평가에 쓰이는 과제 정확도와 양자화 오차 지표는 이 위험을 판별하지 못한다. 양자화 오차 지표는 절대 크기를
+보지 않는 스케일 불변량이고, 정확도는 오버플로가 일어나지 않는 조건(bf16, 평가 해상도)에서 측정되기 때문이다.
 
-기존 연구는 압축 모델의 배포 적합성을 과제 정확도와 양자화 오차 지표(양자화 신호대잡음비(SNR), 이상치
-비율)로 평가한다. 그러나 이 지표들은 **활성값의 절대 크기가 fp16 상한을 넘어 출력이
-상실되는지**를 판별하지 못한다. 양자화 오차 지표는 텐서 내 값의 상대적 분포만을 반영하는 스케일
-불변량이어서 절대 크기를 보지 않고, 과제 정확도는 평가 해상도와 bf16 형식, 즉 오버플로가
-일어나지 않는 조건에서 측정되기 때문이다. 또한 실무에서는 언어 모델을 INT4로 양자화하면서 비전
-인코더는 양자화 대상에서 제외하여 fp16으로 실행하는 구성이 널리 쓰이므로, 양자화 오차 평가는
-정작 fp16으로 실행되는 비전 인코더에 적용되지 않는다.
+본 논문은 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고, 형식 상한을 넘는 이미지의 비율로
+출력 상실률을 예측하는 진단 지표와, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습 없는 교정 방법을
+제안한다.
 
-본 논문은 이를 해결하기 위해 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고,
-배포 형식의 상한을 초과하는 이미지의 비율로 출력 상실률을 예측하는 진단 지표를 제안한다. 아울러
-오버플로 발생 지점의 분석에 근거하여, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습
-없는 교정 방법을 제안하고, 이를 배포 전 진단·교정 도구로 구현하였다.
+Qwen2.5-VL-7B 교사로부터 손실 함수만 달리하여 증류한 3B 학생 모델로 검증하였다. 정확도(50.30~51.69%)로
+구별되지 않는 모델들의 여유가 원본 해상도에서 0.88~2.94배로 달랐고, 여유가 1 미만인 모델은 fp16에서 이미지의
+96.0%에 대해 출력을 상실하여 정확도가 48.47%(bf16)에서 1.34%로 떨어졌다. 텐서 단위 INT8 양자화 SNR은 이 모델을
+상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 6개 모델의 상실률을 평균 1.1%p의
+오차로 예측하였고, 제안 교정은 정확도를 48.76%로 회복하여 bf16 실행과 유의한 차이가 없으면서 fp16 형식을
+유지하였다. 같은 상실과 교정 효과는 TensorRT 엔진과 Jetson Orin Nano(메모리가 허락한 해상도)에서도 확인되었다.
 
-Qwen2.5-VL-7B 교사 모델로부터 손실 함수만을 달리한 다섯 개의 3B 학생 모델을 증류하여 검증하였다.
-특징 증류 모델과 증류 없는 기준 모델의 정확도는 50.30~51.69%로 구별되지 않았으나, 원본
-해상도에서 비전 인코더 마지막 블록의 여유는 0.88~2.94배로 달랐으며, 여유가 1 미만인 모델은
-fp16에서 이미지의 96.0%에 대해 출력이 상실되어 정확도가 48.47%(bf16)에서 1.34%로 하락하였다.
-기존 지표인 텐서 단위 INT8 양자화 SNR은 상실률 96.0%인 모델을 32.28 dB, 0%인 모델을 22.78 dB로
-평가하여 출력 상실 위험을 예고하지 못하였고, 이상치 비율도
-상실률과 일관된 관계를 보이지 않았다.
-
-반면 제안 지표는 6개 모델의 상실률을 평균 1.1%p의 오차로 예측하였다. 제안 교정 방법은 출력
-상실을 제거하여 배포 조건의 정확도를 1.34%에서 48.76%로 회복하였으며, 이는 오버플로가 없는 bf16
-실행(48.47%)과 통계적으로 유의한 차이가 없었다. 기존 대안인 bf16 형식 전환은 A100의 TensorRT에서 fp16 대비
-1.30~1.36배의 추론 지연을 유발하나, 제안 방법은 fp16 형식을 유지하여 이러한 지연 증가를
-피하였다. 같은 출력 상실과 교정 효과는 TensorRT fp16 엔진과 Jetson Orin Nano 8GB의 강타입
-엔진(메모리가 허락한 해상도)에서도 확인되었다. 또한 특징 정렬 손실의 가중치를 높이면 여유가 1.79배에서 4.61배로
-증가하여(평가 해상도), 증류 설계 단계에서도 여유를 확보할 수 있음을 보였다.
-
-이상의 결과는 압축된 VLM의 저정밀 배포 적합성을 정확도와 양자화 오차 지표만으로 판단할 수
-없으며, 배포 해상도에서 표현 범위 여유를 측정하여(크기는 bf16, 출력 상실은 배포 형식에서) 출력 상실 위험을 사전에 진단하고
-교정해야 함을 보여 준다.
+이상의 결과는 압축된 VLM을 저정밀로 배포하기 전에 배포 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을
+진단하고 교정해야 함을 보여 준다.
 
 **주요어**: 표현 범위 여유, 수치 오버플로, 저정밀 추론, 가중치 교정, 비전-언어 모델, 자율주행
 
@@ -138,56 +118,34 @@ fp16에서 이미지의 96.0%에 대해 출력이 상실되어 정확도가 48.4
 **Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
 Vision-Language Models**
 
-Deploying vision-language models (VLMs) on edge devices such as vehicles requires both model
-compression through knowledge distillation and half-precision (fp16) inference. Because fp16 can
-represent magnitudes only up to 65,504, an activation in the vision encoder that exceeds this
-limit (an overflow) destroys the model's entire output for that image. A method to identify this
-risk before low-precision deployment is therefore needed. This thesis addresses the problem
-using autonomous-driving VLMs as a case study.
+Deploying vision-language models (VLMs) on edge devices requires both knowledge distillation and
+half-precision (fp16) inference. When an activation in the vision encoder exceeds the fp16 limit
+(65,504), the model's entire output for that image is lost, yet the task accuracy and
+quantization-error metrics used to evaluate compressed models cannot detect this risk:
+quantization-error metrics are scale-invariant and ignore absolute magnitude, and accuracy is
+measured under conditions where overflow does not occur (bf16, evaluation resolution).
 
-Existing work judges deployment readiness by task accuracy and quantization-error metrics such
-as quantization signal-to-noise ratio (SNR) and outlier ratio. These metrics, however, cannot
-tell **whether activation magnitudes exceed the fp16 limit and destroy the output**.
-Quantization-error metrics are scale-invariant, reflecting only the relative distribution of
-values within a tensor, so they ignore absolute magnitude; task accuracy is measured at
-evaluation resolution in bf16, where overflow does not occur. Moreover, common practice
-quantizes the language model to 4 bits while excluding the vision encoder from quantization and
-running it in fp16, so quantization-error evaluation is never applied to the component that
-actually runs in fp16.
+This thesis defines a per-layer **representable-range headroom** (format maximum ÷ maximum
+activation magnitude) and proposes a diagnostic that predicts the collapse rate as the fraction of
+images exceeding the format limit, together with a training-free correction that scales the
+weights before the multiplication in the gated MLP.
 
-To address this, we define a per-layer **representable-range headroom** (format maximum ÷
-maximum activation magnitude) and propose a diagnostic that predicts the collapse rate as the
-fraction of images exceeding the target format's limit. Based on an analysis of where the
-overflow occurs, we further propose a training-free correction that scales the weights before
-the multiplication in the gated MLP, and implement both as a pre-deployment diagnosis and
-correction tool.
+We validated both on 3B students distilled from a Qwen2.5-VL-7B teacher with different loss
+functions. Students indistinguishable in accuracy (50.30–51.69%) differ in headroom from 0.88× to
+2.94× at native resolution; the student below 1× loses its output on 96.0% of images in fp16, and
+its accuracy falls from 48.47% (bf16) to 1.34%. Per-tensor INT8 quantization SNR rates this student
+higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic predicts the
+collapse rate of six models with a mean error of 1.1 percentage points, and the proposed correction
+restores accuracy to 48.76%, not significantly different from bf16 execution, while keeping fp16.
+The same collapse and correction were confirmed on TensorRT engines and a Jetson Orin Nano (at the
+resolutions its memory allows).
 
-We validated the approach on five 3B students distilled from a Qwen2.5-VL-7B teacher that differ
-only in their loss functions. The feature-distilled students and the non-distilled baseline are
-indistinguishable in accuracy (50.30–51.69%), yet the headroom of the vision encoder's last
-block at native resolution ranges from 0.88× to 2.94×; the student below 1× collapses on 96.0%
-of images in fp16, and its accuracy falls from 48.47% (bf16) to 1.34%. The existing per-tensor
-INT8 quantization SNR rates the student with a 96.0% collapse rate at 32.28 dB and the one with
-0% at 22.78 dB, failing to anticipate the risk, and the
-outlier ratio shows no consistent relation to collapse either.
-
-The proposed diagnostic predicts the collapse rate of six models with a mean error of 1.1
-percentage points. The proposed correction eliminates the collapse and restores
-deployment-condition accuracy from 1.34% to 48.76%, with no statistically significant difference
-from overflow-free bf16 execution (48.47%). Whereas the existing alternative of switching to
-bf16 increases latency by 1.30–1.36× relative to fp16 in TensorRT on an A100, the proposed method keeps fp16 and
-avoids this cost. The same collapse and correction were confirmed on a TensorRT fp16 engine and
-on a strongly typed engine on a Jetson Orin Nano 8GB (at the resolutions its memory allows). Raising the weight of the
-feature-alignment loss also increases headroom from 1.79× to 4.61× (evaluation resolution),
-showing that headroom can also be secured at the distillation design stage.
-
-These results show that low-precision deployment readiness of compressed VLMs cannot be judged
-by accuracy and quantization-error metrics alone, and that representable-range headroom must be
-measured at the deployment resolution (magnitude in bf16, collapse in the deployment format) to diagnose and correct the collapse risk
-beforehand.
+These results show that representable-range headroom must be measured at the deployment
+resolution to diagnose and correct the collapse risk before deploying compressed VLMs in low
+precision.
 
 **Keywords**: representable-range headroom, numerical overflow, low-precision inference, weight
-correction, vision-language model, autonomous driving 
+correction, vision-language model, autonomous driving
 
 ---
 
@@ -231,12 +189,14 @@ correction, vision-language model, autonomous driving
 
 # 그림 차례
 
-그림 1. 비전 인코더 블록별 최대 활성의 크기
-그림 2. 입력 해상도에 따른 (a) 마지막 블록 활성 크기와 (b) fp16 상실률
-그림 3. 마지막 블록 fp16 여유와 INT8 양자화 SNR
-그림 4. 정렬 손실 가중치 λ_align에 따른 (a) 블록별 활성 크기와 (b) 마지막 블록 fp16 여유
-그림 5. 실행 경로별 fp16 상실률과 엣지 보드 지연
-그림 6. 최악 이미지 여유에 따른 판정 기준 보정
+그림 1. 문제의 개요
+그림 2. 선행 연구의 위치
+그림 3. 비전 인코더 블록별 최대 활성의 크기
+그림 4. 입력 해상도에 따른 (a) 마지막 블록 활성 크기와 (b) fp16 상실률
+그림 5. 마지막 블록 fp16 여유와 INT8 양자화 SNR
+그림 6. 정렬 손실 가중치 λ_align에 따른 (a) 블록별 활성 크기와 (b) 마지막 블록 fp16 여유
+그림 7. 실행 경로별 fp16 상실률과 엣지 보드 지연
+그림 8. 최악 이미지 여유에 따른 판정 기준 보정
 
 ---
 
@@ -275,6 +235,11 @@ fp16의 표현 상한은 65,504다. 같은 16비트인 bf16(bfloat16)은 지수 
 22.78 dB(원본 해상도)로, 표준 지표로는 출력을 상실하는 모델이 오히려 더 안전한 것으로 평가된다(Ⅳ장).
 과제 성능으로 보면 출력을 상실하는 학생은 원본 해상도에서 bf16으로 실행할 때 48.47%이던
 정확도가 fp16에서 1.34%로 떨어진다(NuScenes-QA[3] 11,309문항, Ⅶ장).
+이 배포 구성과, 같은 이미지·같은 질문에 대한 네 조건의 실제 출력을 [그림 1]에 보인다.
+
+![그림 1](figures/fig0_intro_overview.png)
+
+**[그림 1]** 문제의 개요. (a) 흔한 배포 구성에서 언어 모델은 INT4로 양자화되어 양자화 SNR·이상치 비율로 검사받지만, 비전 인코더는 양자화에서 제외되어 fp16으로 실행되고 그 검사를 받지 않는다. 비전 인코더 마지막 블록 MLP의 활성이 fp16 상한(65,504)을 넘으면 무한대와 NaN이 되어 그 이미지에 대한 출력 전체가 상실된다. (b) 같은 이미지(DriveLM 검증 키프레임 전방 카메라, 원본 해상도)와 같은 질문에 대한 네 조건의 실제 출력. 기준 모델(Task only)은 bf16에서 정답을 내지만, 마지막 블록 최대 활성이 76,800으로 상한을 넘어 fp16에서는 토큰 0(`!`)만 반복한다. 곱셈 이전 교정을 적용한 기준 모델과, 정렬 손실로 학습해 최대 활성이 22,784인 Full은 fp16에서도 정답을 낸다. 크기는 bf16에서 측정하였다.
 
 ## 2. 논지와 기여
 
@@ -330,7 +295,7 @@ fp16의 표현 상한은 65,504다. 같은 16비트인 bf16(bfloat16)은 지수 
 
 ## 4. 논문의 구성
 
-Ⅱ장은 선행 연구를 주행 VLM 경량화와 저정밀 배포의 두 계열로 정리하고, 평가 데이터셋과 선행 연구에서 비어 있는 축을
+Ⅱ장은 선행 연구를 주행 VLM 경량화와 저정밀 배포의 두 계열로 정리하고, 평가 데이터셋과 선행 연구 공백을
 밝힌다. Ⅲ장은 논지를 검증하기 위한 실험 기반(손실 항만 다른 다섯 학생)을 만들고, 출력 증류를 뺀 네 학생이
 **정확도로는 구별되지 않음**을 먼저 인정한다. Ⅳ장은 정확도가 보지 못하는 차이, 즉 fp16 표현 범위 초과와 그 앞에서
 표준 지표가 뒤집히는 현상을 측정하고, 오버플로 지점을 특정해 곱셈 이전 교정을 제안하며, 여유를
@@ -417,7 +382,7 @@ fp16 추론에서의 수치 오버플로 자체는 알려진 문제다. PASA[27]
 손실로 학습한 결과**에서 생긴다는 점(두 체크포인트 중 하나만 출력을 상실한다는 점)에서
 구별된다. 오버플로 현상 자체의 선례는 인정한다.
 
-## 3. 평가 프로토콜
+## 3. 평가 데이터셋
 
 **DriveLM**(nuScenes[4] 기반)은 장면별 키프레임에 인지·예측·계획·행동 네 과제의 질의응답을
 붙인 데이터셋으로, 본 연구의 학습 데이터이자 활성 측정 이미지의 출처다. 공개된 검증 분할
@@ -434,7 +399,7 @@ fp16 추론에서의 수치 오버플로 자체는 알려진 문제다. PASA[27]
 도메인은 아니다. 본 연구가 확인한 것은 사용한 143장이 **본 연구의 학습 이미지와 겹치지 않는다**는
 것(이미지 해시 대조)이며, 두 데이터셋의 독립성이 아니다.
 
-## 4. 선행 연구에서 비어 있는 축
+## 4. 선행 연구 공백
 
 본 연구가 조사한 범위(위 문헌들, arXiv 전문 검색, 공개 양자화 저장소 197개의 config)에서
 다음 두 가지를 함께 다룬 연구를 찾지 못하였다.
@@ -442,12 +407,17 @@ fp16 추론에서의 수치 오버플로 자체는 알려진 문제다. PASA[27]
 하나는 절대 크기(표현 범위 여유)와 동적 범위(이상치 비율·양자화 SNR)를 **같은 모델에서 분리해
 측정하고** 두 축의 순위가 뒤집힘을 보인 연구이다. 다른 하나는 그 절대 크기가 학습 설계에 따라 달라지고,
 생성형 주행 VLM에서 출력 전면 상실로 이어짐을 이미지 단위로 정량화한 연구이다.
+Ⅱ장 1절과 Ⅱ장 2절의 선행 연구를 평가 대상과 비교 축으로 정리하고 이 공백의 위치를 [그림 2]에 보인다.
+
+![그림 2](figures/fig0b_related_map.png)
+
+**[그림 2]** 선행 연구의 위치. 행은 압축 모델을 무엇으로 평가하는지(과제 정확도, 상대 분포, 절대 크기), 열은 한 사전학습 모델·아키텍처의 성질을 보는지 학습·미세조정 설계에 따른 차이를 보는지를 나타낸다. 각 칸에는 Ⅱ장 1절과 Ⅱ장 2절에서 다룬 연구를 두었다. 절대 크기를 학습 설계 사이에서 비교한 연구는 찾지 못하였으며(강조한 칸), 본 연구는 손실 항만 다른 학생들에서 표현 범위 여유를 상대 분포 지표와 분리해 측정한다.
 
 이 부재는 조사 범위 안의 진술이다. 검색어 몇 개의 부재가 문헌 전체의 부재를 뜻하지는 않는다.
 
 ---
 
-# Ⅲ. 통제된 다중 변형 증류 파이프라인
+# Ⅲ. 손실 항별 증류 모델 구성
 
 **이 장은 기여 장이 아니다.** Ⅰ장의 논지를 검증하려면 **손실 항만 다르고 나머지는 모두 같은
 학생들**이 필요하다. 이 장은 그것을 만들고, 통제가 실제로 지켜졌음을 학습 기록으로 확인하며,
@@ -514,7 +484,7 @@ L_total = L_task                                            (기준 모델)
 두 사상(`L_align`·`L_atc`의 선형 층)은 학습에만 쓰이고 추론 시에는 제거된다. 따라서 추론
 시점의 학생은 다섯 변형 모두 **같은 구조**다.
 
-## 2. 다섯 변형과 공정성 통제
+## 2. 비교 변형과 통제 조건
 
 다섯 학생의 손실 구성과 교사 입력은 [표 1]에 정리하였다.
 
@@ -627,12 +597,12 @@ v1과 다섯 변형의 설정(v2)은 **비전 어텐션 LoRA와 위험도 기반
 
 ---
 
-# Ⅳ. fp16 표현 범위 초과와 수치 표현의 상실
+# Ⅳ. fp16 표현 범위 초과와 출력 상실
 
 Ⅲ장에서 출력 증류를 뺀 네 학생은 정확도로 구별되지 않았다. 이 장은 같은 학생들이 **비전 인코더의 활성
 크기**에서는 수십 배 차이가 나며, 그 차이가 fp16 배포에서 이미지 단위의 출력 상실로 이어지고,
 표준 압축 지표는 그것을 예고하지 못한다는 것을 보인다. 이어 오버플로 지점을 특정하고,
-여유를 움직이는 수단이 여럿임을 보인다.
+여유에 영향을 주는 요인이 여럿임을 보인다.
 
 ## 1. 표현 범위 여유의 정의와 측정 규칙
 
@@ -682,7 +652,7 @@ bf16은 상한이 약 3.4×10³⁸이라 이 크기에서도 오버플로가 일
 한다(McNemar[32], 짝지은 차이의 부트스트랩). 같은 모델·조건이라도 측정 스크립트가 다르면 출력 상실 이미지 수와
 상한 초과 이미지 수가 조금씩 다르다(원본 해상도 기준 모델의 상실 766~769장, 사전학습 모델의 상실 565~571장과 초과 569~583장). 같은 스크립트를 다시 실행하면 결과는 완전히 같으므로, 비교는 같은 스크립트의 값끼리 한다.
 
-## 2. 활성 크기와 이산적 실패
+## 2. 활성 크기와 출력 상실
 
 DriveLM 검증 키프레임 799장(평가 해상도)에서 비전 인코더 블록별 최대 활성의 중앙값을 측정하였다([표 5]).
 
@@ -699,11 +669,11 @@ DriveLM 검증 키프레임 799장(평가 해상도)에서 비전 인코더 블�
 
 **[표 5]** 비전 인코더 블록별 최대 활성 크기
 
-(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값; [그림 1])
+(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값; [그림 3])
 
-![그림 1](figures/fig1_activation_profile.png)
+![그림 3](figures/fig1_activation_profile.png)
 
-**[그림 1]** 비전 인코더 블록별 최대 활성의 크기. 이미지마다 블록 출력의 max|activation|을 구해 799장(DriveLM 검증 키프레임 전방 카메라, 평가 해상도 `max_pixels` 200,704)에 대한 **중앙값**을 그렸다. 크기는 bf16에서 측정하였다. 강조한 두 모델(Task only, Full)에는 p50~p95 구간을 띠로 표시하였다. 세로선은 정렬 손실이 적용되는 24번째 블록, 가로 점선은 fp16 상한(65,504)이다. 24번째 블록에서 정렬 손실을 쓴 두 변형의 활성은 나머지보다 약 62배 작다(8,096 대 130).
+**[그림 3]** 비전 인코더 블록별 최대 활성의 크기. 이미지마다 블록 출력의 max|activation|을 구해 799장(DriveLM 검증 키프레임 전방 카메라, 평가 해상도 `max_pixels` 200,704)에 대한 **중앙값**을 그렸다. 크기는 bf16에서 측정하였다. 강조한 두 모델(Task only, Full)에는 p50~p95 구간을 띠로 표시하였다. 세로선은 정렬 손실이 적용되는 24번째 블록, 가로 점선은 fp16 상한(65,504)이다. 24번째 블록에서 정렬 손실을 쓴 두 변형의 활성은 나머지보다 약 62배 작다(8,096 대 130).
 
 세 가지가 보인다.
 
@@ -737,11 +707,11 @@ fp16에서 마지막 블록의 활성이 65,504를 넘으면 그 값은 무한�
 
 **[표 6]** 입력 해상도별 fp16 상실률
 
-(fp16 상실률, 799장, 이미지 단위로 출력이 NaN이면 상실; [그림 2])
+(fp16 상실률, 799장, 이미지 단위로 출력이 NaN이면 상실; [그림 4])
 
-![그림 2](figures/fig2_resolution_collapse.png)
+![그림 4](figures/fig2_resolution_collapse.png)
 
-**[그림 2]** 입력 해상도에 따른 (a) 마지막 블록 활성 크기와 (b) fp16 상실률. 799장, (a)는 이미지별 최대의 **중앙값·bf16**, (b)는 fp16에서 출력이 NaN이 된 이미지의 비율이다. 가로축은 1600×900 이미지가 실제로 만드는 비전 토큰 수(120 · 231 · 480 · 966 · 1,824, 각각 `max_pixels` 100,352 · 200,704 · 401,408 · 802,816 · 1,440,000)이며, 세로선은 학습·평가 해상도다. 정렬 손실을 쓴 두 변형만 모든 해상도에서 출력을 상실하지 않는다.
+**[그림 4]** 입력 해상도에 따른 (a) 마지막 블록 활성 크기와 (b) fp16 상실률. 799장, (a)는 이미지별 최대의 **중앙값·bf16**, (b)는 fp16에서 출력이 NaN이 된 이미지의 비율이다. 가로축은 1600×900 이미지가 실제로 만드는 비전 토큰 수(120 · 231 · 480 · 966 · 1,824, 각각 `max_pixels` 100,352 · 200,704 · 401,408 · 802,816 · 1,440,000)이며, 세로선은 학습·평가 해상도다. 정렬 손실을 쓴 두 변형만 모든 해상도에서 출력을 상실하지 않는다.
 
 상실은 802,816 → 1,440,000 구간에서 급격히 증가한다. 상실이 시작되는 해상도는 모델마다 달라, 기준 모델은 100,352에서도
 2.4%가 출력을 상실한다.
@@ -766,7 +736,7 @@ fp16에서 마지막 블록의 활성이 65,504를 넘으면 그 값은 무한�
 기준 모델은 여유 0.86배로 96.9%가 출력을 상실하고, 정렬 손실을 쓴 두 변형은 0%다. nuScenes 밖의 CODA-LM
 143장에서도 기준 모델은 0.94배로 72.0%가 출력을 상실하고 정렬 손실을 쓴 두 변형은 0%다(`max_pixels` 1,440,000).
 
-## 3. 위험을 예고하지 못하는 표준 압축 지표
+## 3. 표준 압축 지표와 출력 상실 위험
 
 원본 해상도에서 마지막 블록의 여유와 fp16 상실률, 그리고 **같은 텐서**의 INT8 양자화
 지표를 같은 799장에서 함께 측정한다.
@@ -783,11 +753,11 @@ fp16에서 마지막 블록의 활성이 65,504를 넘으면 그 값은 무한�
 
 **[표 8]** 여유·상실률과 표준 압축 지표
 
-(원본 해상도, 마지막 블록, 799장, 여유는 p50·bf16 측정; [그림 3])
+(원본 해상도, 마지막 블록, 799장, 여유는 p50·bf16 측정; [그림 5])
 
-![그림 3](figures/fig4_metric_inversion.png)
+![그림 5](figures/fig4_metric_inversion.png)
 
-**[그림 3]** 마지막 블록 fp16 여유와 INT8 양자화 SNR. 원본 해상도 (`max_pixels` 1,440,000). 가로축은 이미지별 최대의 중앙값으로 계산한 여유(크기는 bf16, 799장), 세로축은 INT8 양자화 SNR의 중앙값(같은 799장)이다. 채운 점은 fp16에서 상실이 있는 모델, 속 빈 점은 상실 0%이며 라벨의 %가 원본 해상도 상실률이다. (a) **텐서 단위** SNR은 여유가 작은 모델일수록 높고, (b) 채널 단위에서는 Task + L_atc → Task + out.KD와 Task + L_align에서 단조성이 성립하지 않지만 두 끝점의 순서는 같다. 통계량·입도에 따른 단서는 Ⅳ장 3절에 적었다. 여섯 모델은 색이 아니라 직접 붙인 이름으로 구별한다.
+**[그림 5]** 마지막 블록 fp16 여유와 INT8 양자화 SNR. 원본 해상도 (`max_pixels` 1,440,000). 가로축은 이미지별 최대의 중앙값으로 계산한 여유(크기는 bf16, 799장), 세로축은 INT8 양자화 SNR의 중앙값(같은 799장)이다. 채운 점은 fp16에서 상실이 있는 모델, 속 빈 점은 상실 0%이며 라벨의 %가 원본 해상도 상실률이다. (a) **텐서 단위** SNR은 여유가 작은 모델일수록 높고, (b) 채널 단위에서는 Task + L_atc → Task + out.KD와 Task + L_align에서 단조성이 성립하지 않지만 두 끝점의 순서는 같다. 통계량·입도에 따른 단서는 Ⅳ장 3절에 적었다. 여섯 모델은 색이 아니라 직접 붙인 이름으로 구별한다.
 
 **텐서 단위 INT8 SNR은 출력 상실 위험을 예고하지 못한다.** 여유(p50)가 작을수록 SNR이 오히려 높다
 (0.88배 → 32.28 dB, 2.94배 → 22.78 dB). 사이 세 점과 사전학습 모델도 같은 경향이다. 상실률 96.0%인 기준 모델이 상실 0%인 Full보다 9.50 dB 높게 평가된다.
@@ -910,7 +880,7 @@ Qwen2-VL-2B[33]는 759번(14.80배)에서 같은 형태의 단일 행 이상치�
 무교정본과 같은 11,309문항으로 짝지으면 +0.29%p(95% 신뢰구간 −0.24~+0.83%p), McNemar p = 0.24다(Ⅶ장). 비유의는 동등성의 증거가
 아니므로 정확도 비용이 없다고 주장하지 않는다. 두 조건의 답이 다른 문항이 실제로 있다.
 
-## 5. 여유를 움직이는 수단
+## 5. 여유의 영향 요인
 
 정렬 손실 가중치 λ를 0 / 0.5 / 1.0 / 2.0으로 두고, 시드와 학습률
 궤적을 고정한 채 각 5,000스텝 학습하였다.
@@ -925,11 +895,11 @@ Qwen2-VL-2B[33]는 759번(14.80배)에서 같은 형태의 단일 행 이상치�
 
 **[표 12]** 정렬 손실 가중치 λ에 따른 활성과 여유
 
-(799장, 평가 해상도, bf16, p50; [그림 4])
+(799장, 평가 해상도, bf16, p50; [그림 6])
 
-![그림 4](figures/fig3_lambda_dose_response.png)
+![그림 6](figures/fig3_lambda_dose_response.png)
 
-**[그림 4]** 정렬 손실 가중치 λ_align에 따른 (a) 블록별 활성 크기와 (b) 마지막 블록 fp16 여유. 각 λ에서 시드와 학습률 궤적을 고정하고 5,000스텝 학습하였다. 799장, 평가 해상도, 이미지별 최대의 **중앙값·bf16**. 마지막 블록은 λ에 따라 단조 감소하고(여유 1.79 → 4.61배), 중간층은 λ = 1.0에서 포화한다. 이 스텝 수와 해상도에서는 네 점 모두 상실이 없다(Ⅳ장 5절: 인과를 두 단계로 나눈 이유).
+**[그림 6]** 정렬 손실 가중치 λ_align에 따른 (a) 블록별 활성 크기와 (b) 마지막 블록 fp16 여유. 각 λ에서 시드와 학습률 궤적을 고정하고 5,000스텝 학습하였다. 799장, 평가 해상도, 이미지별 최대의 **중앙값·bf16**. 마지막 블록은 λ에 따라 단조 감소하고(여유 1.79 → 4.61배), 중간층은 λ = 1.0에서 포화한다. 이 스텝 수와 해상도에서는 네 점 모두 상실이 없다(Ⅳ장 5절: 인과를 두 단계로 나눈 이유).
 
 마지막 블록은 단조 감소하며 구간별 감소율이 거의 일정하고, λ = 2.0까지 포화 조짐이 없다. 중간층은
 λ = 1.0에서 급락한 뒤 포화한다. 상실률은 네 점 모두 0%이다. 5,000스텝 모델은 활성이 아직 작고
@@ -977,17 +947,17 @@ Qwen2-VL-2B[33]는 759번(14.80배)에서 같은 형태의 단일 행 이상치�
 나고(원본 해상도), 그 차이는 출력 상실률 96.0%와 0%로 나타난다. 표준 INT8 지표는 이 위험을
 예고하지 못하며, 이는 지표가 틀려서가 아니라 지표가 스케일 불변량이고 검사받는 부분과 출력을 상실하는 부분이 다르기 때문이다. 오버플로는 마지막
 블록 MLP의 `down_proj` 안, 사전학습 가중치에 내재된 849번 행에서 일어나며, 줄이는 위치가 맞으면 학습 없이도
-사라진다. 여유를 움직이는 수단은 여럿이다.
+사라진다. 여유에 영향을 주는 요인은 여럿이다.
 
 ---
 
-# Ⅴ. 이산적 실패와 집계 지표의 무력화
+# Ⅴ. 출력 상실의 오인과 공개 배포 모델의 위험
 
 이 장은 별개의 기여가 아니라 Ⅳ장의 직접적 귀결이다. 실패가 이미지 단위로 전부 아니면 전무이기
 때문에, **교란 조건 하나가 정확도 표 전체를 뒤집을 수 있고**, 저장소에 적힌 설정만으로는 위험을
 알 수 없다. 두 사례를 차례로 본다.
 
-## 1. INT4 정확도 1.39%의 원인 규명
+## 1. INT4 정확도 저하의 원인
 
 다섯 학생의 AWQ[34] INT4 체크포인트를 두 조건에서 평가하였다. 첫째는 흔한 배포 구성으로, (i) AWQ 저장본을
 fp16으로 로드해 비전 인코더가 fp16으로 실행되고, (ii) 처리기를 체크포인트에서 만들어 입력 해상도가
@@ -1126,7 +1096,7 @@ Phi와 InternVL3는 가중치가 비트 단위로 같지 않은데도 여유가 
 
 (모든 저장소는 가중치가 실제로 적재되었는지 검사한 뒤 측정하였다. Ⅶ장 1절 ⑨ 참조.)
 
-## 3. 설정·설계·가중치로는 예측되지 않는 여유
+## 3. 여유의 사전 예측 가능성
 
 Qwen3-VL은 `transformers` 5.20.2에서 측정하였다(부록 A: 같은 모델의 p50은 버전 간 차이가 없다). 세대별 여유는 [표 18]에 정리하였다(원본 해상도, 799장, p50).
 
@@ -1212,7 +1182,7 @@ fp32 원본에 대한 비열등으로 판정한다.
 
 ---
 
-# Ⅵ. 저정밀 배포 검증 파이프라인과 실기기 확인
+# Ⅵ. TensorRT 배포 검증과 엣지 보드 실측
 
 Ⅴ장까지의 상실은 모두 A100의 PyTorch fp16 경로에서 관측하였다. 이 장은 두 가지 질문을 검토한다. 첫째,
 실제 배포 런타임이 이 오버플로를 자동으로 방지하는지를 검토한다. TensorRT 같은 추론 엔진은 fp16 빌드에서도
@@ -1293,7 +1263,7 @@ A100에서는 TensorRT 10.13.3.9를 사용하고 형식 비용은 10.16.1.11에�
 수작업으로 고정한 상수가 아니라 도구의 산출물 자체가 PyTorch → ONNX → TensorRT를 통과한다. 이로써
 **진단 → 교정 → 내보내기 → 엔진 → 배포 조건 검증**이 하나의 경로로 완결된다.
 
-## 4. 형식 선택과 비용
+## 4. bf16 전환과 지연 비용
 
 bf16으로 빌드하는 것으로 충분하다는 반론은 정당하다. 같은 그래프를 bf16으로 빌드하면 가중치 메모리는
 fp16과 같은 1,385 MiB이면서 상실이 0.0%로 사라진다. 활성 크기는 그대로 두고 형식의 상한만 약 3.4×10³⁸으로
@@ -1386,11 +1356,11 @@ fp32 가중치 사본을 다시 만들어 공유 메모리를 넘긴다. `--fp16
 
 **[표 24]** Orin Nano 실측 결과
 
-(799장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합; [그림 5])
+(799장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합; [그림 7])
 
-![그림 5](figures/fig6_runtime_collapse.png)
+![그림 7](figures/fig6_runtime_collapse.png)
 
-**[그림 5]** 실행 경로별 fp16 상실률과 엣지 보드 지연. (a) Task only 학생의 상실률을 실제 비전 토큰 수(480 · 966 · 1,824, 각각 `max_pixels` 401,408 · 802,816 · 1,440,000)에 대해 겹쳤다. 799장, 같은 순서. 점선은 bf16에서 측정한 형식 상한 초과 비율(추정), 파랑은 PyTorch fp16, 주황 선은 A100 TensorRT **강타입** 엔진(fp16 그래프), 청록은 A100 TensorRT 관행 `--fp16` 엔진(fp32 그래프), 속 빈 주황 마름모는 Orin Nano의 강타입 엔진이다. 강타입 엔진은 세 해상도 모두 PyTorch와 1.5%p 이내로 일치하고, Orin은 A100 강타입과 0.5%p 이내로 일치한다(802,816에서 245장 대 241장). 관행 엔진만 802,816에서 7.9%로 크게 낮다(Ⅶ장 2절). Full과 교정 엔진은 모든 경로·해상도에서 0%다. (b) Orin Nano의 지연 p50(15W 모드, 두 분할 엔진의 합). 원본 해상도는 강타입으로도 엔진을 빌드하지 못하였다(Ⅵ장 5절).
+**[그림 7]** 실행 경로별 fp16 상실률과 엣지 보드 지연. (a) Task only 학생의 상실률을 실제 비전 토큰 수(480 · 966 · 1,824, 각각 `max_pixels` 401,408 · 802,816 · 1,440,000)에 대해 겹쳤다. 799장, 같은 순서. 점선은 bf16에서 측정한 형식 상한 초과 비율(추정), 파랑은 PyTorch fp16, 주황 선은 A100 TensorRT **강타입** 엔진(fp16 그래프), 청록은 A100 TensorRT 관행 `--fp16` 엔진(fp32 그래프), 속 빈 주황 마름모는 Orin Nano의 강타입 엔진이다. 강타입 엔진은 세 해상도 모두 PyTorch와 1.5%p 이내로 일치하고, Orin은 A100 강타입과 0.5%p 이내로 일치한다(802,816에서 245장 대 241장). 관행 엔진만 802,816에서 7.9%로 크게 낮다(Ⅶ장 2절). Full과 교정 엔진은 모든 경로·해상도에서 0%다. (b) Orin Nano의 지연 p50(15W 모드, 두 분할 엔진의 합). 원본 해상도는 강타입으로도 엔진을 빌드하지 못하였다(Ⅵ장 5절).
 
 같은 강타입 그래프를 GPU와 TensorRT 버전이 다른 두 기기에서 실행한 결과, 상실률 차이는 802,816에서 0.5%p,
 401,408에서 0.3%p였고, 이미지별로는 787/799장과 795/799장이 일치하였다. 상실이 실행 환경을 넘어
@@ -1517,11 +1487,11 @@ p = 0.24)로 통계적으로 유의하지 않지만, 두 조건의 답이 다른
 **① 전이는 형식 상한 그 자체에서 일어난다.**
 
 최악 여유 0.70~0.98에서 상실률이 96.2%에서 0.3%로 단조 감소하다가 1.019에서 0%가 된다.
-전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**. ([그림 6])
+전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**. ([그림 8])
 
-![그림 6](figures/fig_gate_calibration.png)
+![그림 8](figures/fig_gate_calibration.png)
 
-**[그림 6]** 최악 이미지 여유에 따른 판정 기준 보정. 파란 선은 Task only 학생의 마지막 블록 MLP를 여러 배수로 줄여 만든 합성 연속체(18점), 주황 마름모는 학습으로 여유가 달라진 λ 스윕 체크포인트(4점, 가중치 편집 없음)다. 모두 799장, 이미지를 줄이지 않는 원본 해상도(1600×900), 크기는 bf16·상실은 fp16. 상실은 최악 여유 0.98~1.02 사이에서 사라지며(합성 최초 무상실 1.019), 학습된 체크포인트도 1.0 아래의 하나(λ = 0)만 출력을 상실한다. **모델 간에 그대로 적용되는 것은 경계이지 상실률이 아니다**. λ = 0 점(0.82, 12.9%)이 같은 최악 여유의 합성 점(0.825, 31.8%)보다 낮은 것은 이미지별 크기 분포가 달라서이며, 상실률은 초과 비율로 추정한다(Ⅶ장 2절). 음영 구간(1.00~1.25)은 도구의 「경계」 판정 구간으로 측정이 아니라 설계 판단이고, 점선 2.0은 판정 기준이 아니라 `fix`의 교정 목표다.
+**[그림 8]** 최악 이미지 여유에 따른 판정 기준 보정. 파란 선은 Task only 학생의 마지막 블록 MLP를 여러 배수로 줄여 만든 합성 연속체(18점), 주황 마름모는 학습으로 여유가 달라진 λ 스윕 체크포인트(4점, 가중치 편집 없음)다. 모두 799장, 이미지를 줄이지 않는 원본 해상도(1600×900), 크기는 bf16·상실은 fp16. 상실은 최악 여유 0.98~1.02 사이에서 사라지며(합성 최초 무상실 1.019), 학습된 체크포인트도 1.0 아래의 하나(λ = 0)만 출력을 상실한다. **모델 간에 그대로 적용되는 것은 경계이지 상실률이 아니다**. λ = 0 점(0.82, 12.9%)이 같은 최악 여유의 합성 점(0.825, 31.8%)보다 낮은 것은 이미지별 크기 분포가 달라서이며, 상실률은 초과 비율로 추정한다(Ⅶ장 2절). 음영 구간(1.00~1.25)은 도구의 「경계」 판정 구간으로 측정이 아니라 설계 판단이고, 점선 2.0은 판정 기준이 아니라 `fix`의 교정 목표다.
 
 **② 통계량(p50·p95·최악)은 이 데이터로 선택할 수 없다.** 분리 여백(상실 지점과 무상실 지점 사이의 간격)을 무차원 비율로 측정하면 세 통계량이
 1.040~1.045로 사실상 같다. 도구가 최악을 쓰는 이유는 분리 여백이 아니라 **임계값이 물리적
@@ -1707,7 +1677,7 @@ bf16이 그 역할을 한다. 무교정 bf16 48.47% 대 교정 fp16 48.76%로 +0
 
 # Ⅷ. 종합 논의와 한계
 
-## 1. 논지의 검증
+## 1. 기여별 근거와 강도
 
 Ⅰ장 2절의 네 가지 기여를 근거 장과 대응시키고, 각각의 강도와 범위를 적는다([표 32]).
 
@@ -1725,7 +1695,7 @@ bf16이 그 역할을 한다. 무교정 bf16 48.47% 대 교정 fp16 48.76%로 +0
 단계에서 쓸 수 있는 보완 수단을 보인다. 근거의 강도는 이 순서와 대체로 같다. 1은 지표의 정의에서
 나오고, 2와 3은 여러 실행 경로에서 재현되었으며, 4는 단일 계열의 결과다.
 
-## 2. 사례 연구의 범위
+## 2. 결과의 일반화 범위
 
 본 논문은 **fp16 표현 범위 초과**라는 하나의 실패 양식을 깊이 분석한 사례 연구다. 일반 법칙을
 주장하지 않는다.
@@ -1887,7 +1857,7 @@ fp16을 유지하였다. 같은 상실과 교정 효과를 TensorRT 엔진과 �
 배포 해상도에서 표현 범위 여유를 측정하여(크기는 bf16, 출력 상실은 배포 형식에서) 출력 상실 위험을 사전에 진단하고 교정해야 함을
 보여 준다.
 
-## 2. 범위와 남은 문제
+## 2. 적용 범위와 미해결 문제
 
 본 논문은 fp16 표현 범위 초과라는 **하나의 실패 양식**을 다룬 사례 연구다. 일반 법칙을
 주장하지 않는다. 비전 블록 안에서 상한 근처의 여유는 측정한 모델 가운데 Qwen2.5-VL 세대에서만, 그 안에서도 3B와 72B에서만 관찰되었고(크기와 순서가 맞지 않는다), 블록 뒤까지 보면

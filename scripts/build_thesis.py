@@ -56,12 +56,14 @@ TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 # 장과 무관하게 이어 붙인다. 캡션 키("4-1" 등)는 `thesis_figures.md` 쪽 식별자라 그대로 둔다 —
 # 번호와 키를 분리해야 그림을 끼워 넣어도 캡션 파일을 건드리지 않는다.
 FIGURES = [
-    ("1", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
-    ("2", "4-2", "figures/fig2_resolution_collapse.png", "이미지 단위로 출력이 NaN이면 상실)"),
-    ("3", "4-3", "figures/fig4_metric_inversion.png", "여유는 p50·bf16 측정)"),
-    ("4", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
-    ("5", "6-1", "figures/fig6_runtime_collapse.png", "같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
-    ("6", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
+    ("1", "1-1", "figures/fig0_intro_overview.png", "이 배포 구성과, 같은 이미지·같은 질문에 대한"),
+    ("2", "2-1", "figures/fig0b_related_map.png", "선행 연구를 평가 대상과 비교 축으로 정리"),
+    ("3", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
+    ("4", "4-2", "figures/fig2_resolution_collapse.png", "이미지 단위로 출력이 NaN이면 상실)"),
+    ("5", "4-3", "figures/fig4_metric_inversion.png", "여유는 p50·bf16 측정)"),
+    ("6", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
+    ("7", "6-1", "figures/fig6_runtime_collapse.png", "같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
+    ("8", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
 ]
 
 
@@ -174,9 +176,17 @@ def insert_figures(text, caps):
         line = text[text.rfind("\n", 0, i) + 1:j]
         tag = f" ([그림 {num}])" if not line.rstrip().endswith(")") else ""
         new_line = (line[:-1] + f"; [그림 {num}])") if line.rstrip().endswith(")") else line + tag
+        if f"[그림:{key}]" in line:   # 기준 줄이 이미 이 그림을 가리키면 꼬리표를 붙이지 않는다 (2026-10-25)
+            new_line = line
         block = (f"\n\n![그림 {num}]({path})\n\n**[그림 {num}]** {caps[key]}")
         text = text[:text.rfind("\n", 0, i) + 1] + new_line + block + text[j:]
-    return text
+    # 본문의 그림 참조 `[그림:4-2]`(캡션 키) → `[그림 N]` (2026-10-25 — 서론·관련 연구에서 그림을 가리키려고)
+    key2num = {key: num for num, key, _, _ in FIGURES}
+    def fig_ref(m):
+        if m.group(1) not in key2num:
+            raise SystemExit(f"없는 그림을 가리킨다: [그림:{m.group(1)}]")
+        return f"[그림 {key2num[m.group(1)]}]"
+    return re.sub(r"\[그림:([\w-]+)\]", fig_ref, text)
 
 
 ROMAN = ["", "Ⅰ", "Ⅱ", "Ⅲ", "Ⅳ", "Ⅴ", "Ⅵ", "Ⅶ", "Ⅷ", "Ⅸ", "Ⅹ"]
