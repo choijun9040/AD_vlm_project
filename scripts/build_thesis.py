@@ -57,13 +57,12 @@ TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 # 번호와 키를 분리해야 그림을 끼워 넣어도 캡션 파일을 건드리지 않는다.
 FIGURES = [
     ("1", "1-1", "figures/fig0_intro_overview.png", "이 배포 구성과, 같은 이미지·같은 질문에 대한"),
-    ("2", "2-1", "figures/fig0b_related_map.png", "선행 연구를 평가 대상과 비교 축으로 정리"),
-    ("3", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
-    ("4", "4-2", "figures/fig2_resolution_collapse.png", "이미지 단위로 출력이 NaN이면 상실)"),
-    ("5", "4-3", "figures/fig4_metric_inversion.png", "여유는 p50·bf16 측정)"),
-    ("6", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
-    ("7", "6-1", "figures/fig6_runtime_collapse.png", "같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
-    ("8", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
+    ("2", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
+    ("3", "4-2", "figures/fig2_resolution_collapse.png", "이미지 단위로 출력이 NaN이면 상실)"),
+    ("4", "4-3", "figures/fig4_metric_inversion.png", "여유는 p50·bf16 측정)"),
+    ("5", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
+    ("6", "6-1", "figures/fig6_runtime_collapse.png", "같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
+    ("7", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
 ]
 
 
