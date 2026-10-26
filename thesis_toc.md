@@ -1,10 +1,10 @@
-<!-- 자동 생성: scripts/build_thesis.py (2026-10-25). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
+<!-- 자동 생성: scripts/build_thesis.py (2026-10-26). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
 # 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정
 
 *Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 
-석사학위논문 목차 · 합본 생성 2026-10-25 · 학교 양식 적용 전
+석사학위논문 목차 · 합본 생성 2026-10-26 · 학교 양식 적용 전
 
 ---
 
@@ -66,7 +66,7 @@ Abstract
 
 
 Ⅷ. 종합 논의와 한계
-    1. 기여별 근거와 강도
+    1. 기여별 근거와 범위
     2. 결과의 일반화 범위
     3. 한계
 
@@ -180,7 +180,7 @@ correction, vision-language model, autonomous driving
 표 29. λ 스윕 체크포인트의 여유와 실제 상실
 표 30. 배포 조건 정확도의 종단 검증
 표 31. fp16과 bf16의 짝 정확도 비교
-표 32. 기여별 근거와 강도
+표 32. 기여별 근거와 범위
 표 33. 형식과 스케일 방식에 따른 위험의 성격
 
 ---
