@@ -28,8 +28,8 @@
 출력 상실률을 예측하는 진단 지표와, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습 없는 교정 방법을
 제안한다.
 
-Qwen2.5-VL-7B 교사로부터 손실 함수만 달리하여 증류한 3B 학생 모델로 검증하였다. 정확도(50.30~51.69%)로
-구별되지 않는 모델들의 여유가 원본 해상도에서 0.88~2.94배로 달랐고, 여유가 1 미만인 모델은 fp16에서 이미지의
+Qwen2.5-VL-7B 교사로부터 손실 함수만 달리하여 증류한 3B 학생 모델로 검증하였다. 학생 모델의 여유는 원본 해상도에서
+0.88~2.94배로 달랐고, 여유가 1 미만인 모델은 fp16에서 이미지의
 96.0%에 대해 출력을 상실하여 정확도가 48.47%(bf16)에서 1.34%로 떨어졌다. 텐서 단위 INT8 양자화 SNR은 이 모델을
 상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 6개 모델의 상실률을 평균 1.1%p의
 오차로 예측하였고, 제안 교정은 정확도를 48.76%로 회복하여 bf16 실행과 유의한 차이가 없으면서 fp16 형식을
@@ -60,8 +60,7 @@ images exceeding the format limit, together with a training-free correction that
 weights before the multiplication in the gated MLP.
 
 We validated both on 3B students distilled from a Qwen2.5-VL-7B teacher with different loss
-functions. Students indistinguishable in accuracy (50.30–51.69%) differ in headroom from 0.88× to
-2.94× at native resolution; the student below 1× loses its output on 96.0% of images in fp16, and
+functions. The students differ in headroom from 0.88× to 2.94× at native resolution; the student below 1× loses its output on 96.0% of images in fp16, and
 its accuracy falls from 48.47% (bf16) to 1.34%. Per-tensor INT8 quantization SNR rates this student
 higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic predicts the
 collapse rate of six models with a mean error of 1.1 percentage points, and the proposed correction
