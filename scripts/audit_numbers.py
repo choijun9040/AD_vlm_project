@@ -23,6 +23,7 @@
 대장은 `number_registry.json`이다. **값을 정정할 때 대장에 먼저 적고 감사를 돌린다.**
 """
 import argparse
+import fnmatch
 import json
 import re
 import sys
@@ -158,7 +159,12 @@ def main():
         canon = e.get("canonical", [])
         hits = scan(files, retired + watch + (canon if args.all else []))
 
-        bad = [(n, h) for n in retired for h in hits[n] if h[2] == "본문"]
+        # retired_scope (2026-10-26): 폐기 값을 이 파일 패턴 안의 본문에서만 오류로 센다. 개요·발표 자료처럼
+        # 당시 값을 적은 기록 파일은 고치지 않으므로, 범위 밖 본문 출현은 세지 않고 건수만 알린다.
+        scope = e.get("retired_scope")
+        in_scope = (lambda p: any(fnmatch.fnmatch(Path(p).name, g) for g in scope)) if scope else (lambda p: True)
+        bad = [(n, h) for n in retired for h in hits[n] if h[2] == "본문" and in_scope(h[0])]
+        out_of_scope = sum(1 for n in retired for h in hits[n] if h[2] == "본문" and not in_scope(h[0]))
         rec = [(n, h) for n in retired for h in hits[n] if h[2] == "기록"]
         wat = [(n, h) for n in watch for h in hits[n] if h[2] == "본문"]
 
@@ -172,7 +178,8 @@ def main():
         print(f"    현행 {', '.join(canon) if canon else '—'}"
               + (f"   조건: {e['condition']}" if e.get("condition") else ""))
         if retired:
-            print(f"    폐기 {', '.join(retired)}  →  본문 {len(bad)}건 / 기록 {len(rec)}건")
+            print(f"    폐기 {', '.join(retired)}  →  본문 {len(bad)}건 / 기록 {len(rec)}건"
+                  + (f" / 범위 밖 {out_of_scope}건(세지 않음)" if scope else ""))
         for n, (p, i, _k, ln) in bad:
             print(f"      ✗ {rel(p)}:{i}  «{n}»  {ln[:78]}")
         for n, (p, i, _k, ln) in wat:
