@@ -6,7 +6,7 @@
 **같은 부류의 오류**다 — 패턴이 다른 맥락을 센다. 그래서 **구획 경계로 한정해** 센다.
 
 **집계는 부산물이다.** 본래 목적은 이번에 수동으로 두 번 한 대조를 자동화하는 것이다 —
-*"살아 있는 한계가 모두 대응표에 있는가"*와 *"논문 8.3 항목이 모두 대응표에 있는가"*.
+*"살아 있는 한계가 모두 대응표에 있는가"*와 *"논문 7.3(옛 8.3) 항목이 모두 대응표에 있는가"*.
 그 대조가 없어서 한계 넷(L17~L20)이 원장에서 빠져 있었고, 8.4절이 대응표에서 빠져 있었다.
 
 실행:
@@ -21,12 +21,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LEDGER = ROOT / "docs/weakness_ledger.md"
-CHAPTER = ROOT / "thesis_ch7_ch8_draft.md"
+CHAPTER = ROOT / "thesis_ch7_draft.md"   # 2026-10-26 7장 해체로 한계가 결론 장 7.2절로 옮겨졌다
 
 SECTIONS = {
     "closed": ("## 닫힘 — 자동 검사가", "## 한계 —"),
-    "limits": ("## 한계 — 9장에", "### 논문 8.3절 ↔ 원장 대응"),
-    "map": ("### 논문 8.3절 ↔ 원장 대응", "## 열림 — 진행"),
+    "limits": ("## 한계 — 7장에", "### 논문 7.2절 ↔ 원장 대응"),
+    "map": ("### 논문 7.2절 ↔ 원장 대응", "## 열림 — 진행"),
     "open": ("## 열림 — 진행", "## 분류 규칙"),
 }
 
@@ -67,13 +67,16 @@ def ids(section, prefix):
 
 
 def paper_limits():
-    """논문 8.3절의 `**N. 제목**`과 8.4절의 `- **제목**`."""
+    """논문 7.2절(옛 8.3·7.3절)의 `**N. 제목**`과 8.4절의 `- **제목**`."""
     text = CHAPTER.read_text(encoding="utf-8")
     # 2026-10-12 절 통합으로 8.4가 8.3 안의 소제목이 됐다 — 경계가 `### 한계로 보지 않는 사항`이다
-    head, tail = "## 8.3 한계", "### 한계로 보지 않는 사항"
+    head, tail = "## 7.2 한계", "### 한계로 보지 않는 사항"   # 2026-10-26 5장 해체로 8.3 → 7.3, 7장 해체로 7.3 → 7.2
     # 2026-10-23: 소제목 제거와 「한계로 보지 않는다」 문단 삭제로 8.4가 논문에서 빠졌다 — 없으면 8.3을 끝까지 읽고 8.4는 None
     if tail not in text:
         s83 = text[text.index(head):]
+        nxt = re.search(r"^## ", s83[len(head):], flags=re.M)   # 한계 뒤에 7.3 실무 권고가 온다 — 그 번호 항목을 세지 않는다
+        if nxt:
+            s83 = s83[:len(head) + nxt.start()]
         nums = [int(m.group(1)) for m in re.finditer(r"^\*\*(\d+)\. ", s83, flags=re.M)]
         return nums, None
     s83 = text[text.index(head):text.index(tail)]
@@ -138,10 +141,10 @@ def main():
     if ghost:
         problems.append(f"대응표가 없는 한계를 가리킨다: {ghost}")
 
-    # 4) 논문 8.3·8.4와 대응표가 맞는가
+    # 4) 논문 7.3(옛 8.3)·옛 8.4와 대응표가 맞는가
     nums, items84 = paper_limits()
     if sorted(nums) != sorted(map_83):
-        problems.append(f"논문 8.3 항목 {sorted(nums)} ≠ 대응표 {sorted(map_83)}")
+        problems.append(f"논문 7.2 항목 {sorted(nums)} ≠ 대응표 {sorted(map_83)}")
     if items84 is None:
         print("  (논문 8.4 「한계로 보지 않는 사항」은 2026-10-23 삭제 — 대응표 8.4 구획은 기록으로만 둔다, 대조 생략)")
     elif len(items84) != map_84:
@@ -161,7 +164,7 @@ def main():
             print(f"    ✗ {p}")
         return 1
     print("문제 없음 — 번호 중복 없음, 살아 있는 한계 전부 대응표에 있음,")
-    print("           대응표가 논문 8.3·8.4와 일치, 열림 항목에 담당·비용 있음.")
+    print("           대응표가 논문 7.2(옛 8.3·7.3)과 일치, 열림 항목에 담당·비용 있음.")
     return 0
 
 

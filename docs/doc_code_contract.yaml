@@ -19,7 +19,7 @@
 pairs:
   - id: gate-statistic
     claim: "게이트 판정은 최악 여유로 한다 — p50으로 걸면 λ=0.0(p50 1.14·최악 0.87, 11% 상실)을 놓친다"
-    docs: [thesis_ch7_ch8_draft.md]
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["최악 여유"]
     code:
       file: scripts/headroom_guard.py
@@ -29,7 +29,7 @@ pairs:
 
   - id: dla-available-formats
     claim: "bf16 권고는 대상이 그 형식을 지원할 때만 유효하다 — Jetson DLA는 FP16·INT8만 지원한다"
-    docs: [thesis_ch7_ch8_draft.md]
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["DLA"]
     code:
       file: scripts/headroom_guard.py
@@ -39,7 +39,7 @@ pairs:
 
   - id: marginal-headroom
     claim: "보조 경고 임계값은 1.25다 — 측정이 아니라 설계 판단이며 그 사실을 함께 출력한다"
-    docs: [thesis_ch7_ch8_draft.md]
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["1.25"]
     code:
       file: scripts/headroom_guard.py
@@ -47,13 +47,13 @@ pairs:
       value: 1.25
     broke_once: "깨진 적은 없다. 원장 O4가 '측정 아님'을 세 곳으로 확대한 뒤 상수가 흩어지지 않게 건다"
 
-  # ── 7.2절 설계 판단 ①④⑥⑦⑨와 7.3절 표본 상한 (2026-10-02 추가) ──────────────
+  # ── 6.2절 설계 판단 ①④⑥⑦⑨와 6.3절 표본 상한 (2026-10-02 추가) ──────────────
   # 고른 기준: 되돌아가면 **조용히 틀린 값이 나오거나 논문이 반례가 되는** 자리.
   # ④는 L16이, ⑨는 C5가 실제로 그 부류였다.
 
   - id: two-dtype-split
-    claim: "크기는 넘치지 않는 형식(bf16)에서 재고 상실은 목표 형식에서 잰다 (7.2① · 설계 원칙 2)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "크기는 넘치지 않는 형식(bf16)에서 재고 상실은 목표 형식에서 잰다 (6.2① · 설계 원칙 2)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["크기는 bf16에서"]
     code:
       file: scripts/headroom_guard.py
@@ -62,8 +62,8 @@ pairs:
     broke_once: "깨진 적은 없다. 목표 형식에서 크기를 재면 이미 발산한 이미지의 최댓값이 inf가 되어 **조용히 틀린다**"
 
   - id: tower-out-included
-    claim: "비전 인코더의 블록 뒤 출력도 재고 나쁜 쪽으로 판정한다 (7.2④)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "비전 인코더의 블록 뒤 출력도 재고 나쁜 쪽으로 판정한다 (6.2④)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["블록 뒤 출력"]
     code:
       file: scripts/headroom_guard.py
@@ -72,8 +72,8 @@ pairs:
     broke_once: "원장 L16 — 계열 조사가 `blocks[-1]`만 재서 블록 뒤 연산을 놓쳤다. 안전을 과대평가할 수 있었다"
 
   - id: scaled-formats-out-of-scope
-    claim: "스케일 형식(INT8·INT4·fp8)은 선언만 받고 '내 소관이 아니다'라고 답한다 (7.2⑥)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "스케일 형식(INT8·INT4·fp8)은 선언만 받고 '내 소관이 아니다'라고 답한다 (6.2⑥)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["스케일 형식"]
     code:
       file: scripts/headroom_guard.py
@@ -82,8 +82,8 @@ pairs:
     broke_once: "깨진 적은 없다. 스케일 형식에 절대 크기 기준을 적용하면 틀린 판정을 내므로 범위를 코드에 박아 둔다"
 
   - id: residual-split-solve
-    claim: "블록 출력은 `잔차 + MLP(...)`이므로 잔차를 분리해 축소량을 푼다 (7.2⑦)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "블록 출력은 `잔차 + MLP(...)`이므로 잔차를 분리해 축소량을 푼다 (6.2⑦)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["잔차를 분리"]
     code:
       file: scripts/headroom_guard.py
@@ -92,8 +92,8 @@ pairs:
     broke_once: "깨진 적은 없다. 근사값으로 되돌리면 교정량이 과소·과대가 되고 교정본의 0% 상실이 흔들린다"
 
   - id: silent-load-guard
-    claim: "경고 없이 잘못된 값을 내는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (7.1⑨)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "경고 없이 잘못된 값을 내는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (6.1⑨)"
+    docs: [thesis_ch6_draft.md]
     # 2026-10-26: 문체 교정(구어 「조용히 틀리는」 정리)으로 원고 문구가 바뀌어 계약 문구를 맞춤 — 코드 쪽 조건은 그대로
     docs_must_contain: ["경고 없이 잘못된 값을 내는 적재"]
     code:
@@ -103,8 +103,8 @@ pairs:
     broke_once: "원장 C5 — `from_pretrained`가 조용히 랜덤 초기화해도 측정은 돌아가고 숫자가 나온다"
 
   - id: zero-observation-bound
-    claim: "초과 0건이면 표본 수에 따른 참 초과율의 95% 상한을 함께 적는다 (7.3절)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "초과 0건이면 표본 수에 따른 참 초과율의 95% 상한을 함께 적는다 (6.3절)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["95% 상한"]
     code:
       file: scripts/headroom_guard.py
@@ -112,13 +112,13 @@ pairs:
       must_use: ["zero_obs_upper_bound"]
     broke_once: "깨진 적은 없다. 상한 없이 '안전'만 찍으면 표본 30장과 250장이 같은 말로 읽힌다"
 
-  # ── 7.2절 ②③⑧ (2026-10-02 추가). 앞서 "식별자로 고정하기 어렵다"며 뺐던 셋이다.
+  # ── 6.2절 ②③⑧ (2026-10-02 추가). 앞서 "식별자로 고정하기 어렵다"며 뺐던 셋이다.
   # 검사 유형을 늘려 걸었다 — ②는 기본값 자체가 논거이고, ③은 하드코딩 회귀가 실제로
   # 있었고, ⑧은 도구가 **내는 말**을 보면 된다.
 
   - id: model-default-max-pixels
-    claim: "모델 기본 설정을 기본값으로 쓴다 — `--max_pixels`를 주지 않으면 모델 자신의 설정을 따른다 (7.2②)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "모델 기본 설정을 기본값으로 쓴다 — `--max_pixels`를 주지 않으면 모델 자신의 설정을 따른다 (6.2②)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["모델 기본 설정을 기본값으로"]
     code:
       file: scripts/headroom_guard.py
@@ -128,8 +128,8 @@ pairs:
     broke_once: "깨진 적은 없다. 여기에 값이 박히면 **문서가 거짓이 되는데 식별자 검사로는 보이지 않는다** — 그래서 기본값을 직접 본다"
 
   - id: family-name-pattern
-    claim: "계열 차이는 이름 패턴으로 흡수한다 — 블록 리스트 이름이 계열마다 다르다 (7.2③)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "계열 차이는 이름 패턴으로 흡수한다 — 블록 리스트 이름이 계열마다 다르다 (6.2③)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["이름 패턴으로 흡수"]
     code:
       file: scripts/headroom_guard.py
@@ -138,8 +138,8 @@ pairs:
     broke_once: "2026-09-15 — `tower.blocks`를 하드코딩해 SmolVLM(Idefics3, `encoder.layers`)에서 죽었다. 하드코딩으로 되돌아가면 이 검사가 잡는다"
 
   - id: fix-cost-reported
-    claim: "교정은 권하지 않고 비용과 함께 보고한다 — 완전 등가가 아니며 정확도 비용은 따로 재야 한다 (7.2⑧)"
-    docs: [thesis_ch7_ch8_draft.md]
+    claim: "교정은 권하지 않고 비용과 함께 보고한다 — 완전 등가가 아니며 정확도 비용은 따로 재야 한다 (6.2⑧)"
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["교정은 권하지 않고"]
     code:
       file: scripts/headroom_guard.py
@@ -253,7 +253,7 @@ pairs:
     broke_once: "2026-10-02 — 표 41·절 59로 보고했으나 40·57이었다. 문단 제목이 표 패턴에 걸리고 목차 제목이 본문 절로 세어졌다"
 
   - id: c10-ledger-selfcheck
-    claim: "C10 — 원장 자신의 정합성(대응표 누락·번호 중복·열림 규칙)을 검사하고, 논문 8.3·8.4와 직접 대조한다"
+    claim: "C10 — 원장 자신의 정합성(대응표 누락·번호 중복·열림 규칙)을 검사하고, 논문 7.3(옛 8.3)·옛 8.4와 직접 대조한다"
     docs: [docs/weakness_ledger.md]
     docs_must_contain: ["이 원장 자신이 논문과 어긋남"]
     code:

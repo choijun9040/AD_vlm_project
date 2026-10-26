@@ -31,7 +31,7 @@ pairs:
 
   - id: regress-docs-lost-claim
     claim: "(합성) 코드는 있는데 문서가 주장을 잃은 경우를 잡는가"
-    docs: [thesis_ch7_ch8_draft.md]
+    docs: [thesis_ch6_draft.md]
     docs_must_contain: ["이 문구는 문서에 없다"]
     code:
       file: scripts/headroom_guard.py

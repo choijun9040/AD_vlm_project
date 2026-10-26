@@ -28,8 +28,9 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CHAPTERS = ["thesis_ch1_ch3_draft.md", "thesis_ch4_ch5_draft.md", "thesis_ch6_draft.md",
-            "thesis_ch7_ch8_draft.md", "thesis_ch9_draft.md"]
+# 파일명의 장 번호는 실제 장 번호와 같다(2026-10-26 5장 해체 뒤 새 이름) — 합본의 장 번호는 각 파일의 `# N장` 제목에서 온다
+CHAPTERS = ["thesis_ch1_ch3_draft.md", "thesis_ch4_draft.md", "thesis_ch5_draft.md",
+            "thesis_ch6_draft.md", "thesis_ch7_draft.md"]
 
 # ── 인용: 참고문헌 초안의 (옛) 번호 → 본문에서 그 문헌을 가리키는 표기 ────────────────────
 ARXIV = {"2601.21288": 3, "2303.06884": 6, "2305.04526": 7, "2605.01330": 8, "2407.08044": 9,
@@ -388,6 +389,15 @@ def main():
     # 부록 (2026-10-22) — 본문을 결과 중심으로 고치며 옮긴 측정 환경·빌드 조건. 참고 문헌 뒤·감사의 글 앞
     appx = drop_correction_quotes(body_of("thesis_appendix_draft.md"))[0]
     appx = re.sub(r"^<!--.*?-->\s*", "", appx, flags=re.S)
+    # 2026-10-26: 5장 해체로 부록 C가 본문 절(「6.2절」 등)을 가리킨다 — 부록에도 장절 양식을 입힌다.
+    # 부록 표는 본문 일련에 넣지 않고 `**[부록 표 N]**`으로 직접 적는다(number_tables는 본문만 센다)
+    appx = style_chapters(appx)
+    # 부록 표도 표 차례에 싣는다(2026-10-26) — 본문 일련 뒤에 「부록 표 N.」으로 잇는다
+    appx_tables = [f"부록 표 {m.group(1)}. {m.group(2).replace('`', '')}"
+                   for m in re.finditer(r"^\*\*\[부록 표 (\d+)\]\*\* (.*)$", appx, flags=re.M)]
+    if [int(t.split()[2].rstrip('.')) for t in appx_tables] != list(range(1, len(appx_tables) + 1)):
+        raise SystemExit(f"부록 표 번호가 1부터 이어지지 않는다: {appx_tables}")
+    table_items = "\n".join([table_items] + appx_tables)
     body = (f"{ko}\n\n---\n\n{en}\n\n---\n\n{main_text}"
             f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n\n---\n\n{ack}\n")
     toc_items, figure_items = toc(body), figure_list(main_text)
@@ -430,7 +440,7 @@ def main():
             chap_secs[cur] = 0
         elif cur and re.match(r"^## \d+\.", ln):
             chap_secs[cur] += 1
-    bad = sorted({(c, n) for c, n in re.findall(r"([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])장 (\d+)절", main_text)
+    bad = sorted({(c, n) for c, n in re.findall(r"([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])장 (\d+)절", main_text + "\n" + appx)
                   if int(n) > chap_secs.get(c, 0)})
     if bad:
         raise SystemExit("없는 절을 가리키는 참조: "
@@ -443,7 +453,8 @@ def main():
         raise SystemExit(f"절 수 불일치: 본문 {n_body_sec} ≠ 차례 {n_sec} — "
                          "차례의 들여쓰기 규칙과 집계가 어긋났는지 본다")
 
-    n_body_tab = len(re.findall(r"^\*\*\[표 \d+\]\*\*", main_text, flags=re.M))
+    # 2026-10-26: 표 차례에 부록 표도 싣는다 — 본문 쪽 집계에 `**[부록 표 N]**`을 더한다
+    n_body_tab = len(re.findall(r"^\*\*\[(?:부록 )?표 \d+\]\*\*", main_text + "\n" + appx, flags=re.M))
     if n_body_tab != n_tab:
         raise SystemExit(f"표 수 불일치: 본문 {n_body_tab} ≠ 목차 {n_tab} — "
                          "`**[표 N]**`를 직접 쓴 표가 있는지 본다 (키 형식 `**표 [키].**`를 쓸 것)")
@@ -452,7 +463,7 @@ def main():
                          "thesis_figures.md의 캡션과 FIGURES 목록 둘 다 본다")
 
     n_cite = len(re.findall(r"\[\d+\]", main_text))
-    print(f"장 {len(CHAPTERS)}개 · 정정 블록 {dropped}개 제거 · 인용 표지 {n_cite}개 · 인용 문헌 {len(order)}개")
+    print(f"장 {len(chap_secs)}개(초안 파일 {len(CHAPTERS)}개) · 정정 블록 {dropped}개 제거 · 인용 표지 {n_cite}개 · 인용 문헌 {len(order)}개")
     print(f"절 {n_sec}개 · 표 {n_tab}개 · 그림 {n_fig}개 — 본문·목차 대조 통과")
     print(f"그림 {len(FIGURES)}개 · 번호 대응(옛→새): " + ", ".join(f"{o}→{new_no[o]}" for o in order))
     if uncited:
