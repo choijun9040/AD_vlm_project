@@ -92,9 +92,10 @@ pairs:
     broke_once: "깨진 적은 없다. 근사값으로 되돌리면 교정량이 과소·과대가 되고 교정본의 0% 상실이 흔들린다"
 
   - id: silent-load-guard
-    claim: "조용히 틀리는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (7.2⑨)"
+    claim: "경고 없이 잘못된 값을 내는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (7.1⑨)"
     docs: [thesis_ch7_ch8_draft.md]
-    docs_must_contain: ["조용히 틀리는 적재"]
+    # 2026-10-26: 문체 교정(구어 「조용히 틀리는」 정리)으로 원고 문구가 바뀌어 계약 문구를 맞춤 — 코드 쪽 조건은 그대로
+    docs_must_contain: ["경고 없이 잘못된 값을 내는 적재"]
     code:
       file: scripts/headroom_guard.py
       function: load_tower_repo
