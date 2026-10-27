@@ -30,7 +30,7 @@ Abstract
     4. 선행 연구 공백
 
 
-Ⅲ. 손실 항별 증류 모델 구성  
+Ⅲ. 실험 모델과 평가 방법  
     1. 증류 데이터와 손실 함수  
     2. 비교 변형과 통제 조건  
     3. 평가 프로토콜  
@@ -105,7 +105,14 @@ Qwen2.5-VL-7B 교사로부터 손실 함수만 달리하여 증류한 3B 학생 
 # Abstract
 
 **Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
-Vision-Language Models**
+Vision-Language Models**\*
+
+*○○○ (영문 성명, 예: Kim, Ji-Hye)*
+
+*Department of ○○  
+Graduate School, Chungbuk National University  
+Cheongju, Korea  
+Supervised by Professor ○○○*
 
 Deploying vision-language models (VLMs) on edge devices requires both knowledge distillation and
 half-precision (fp16) inference. When an activation in the vision encoder exceeds the fp16 limit
@@ -134,6 +141,8 @@ precision.
 
 **Keywords**: representable-range headroom, numerical overflow, low-precision inference, weight
 correction, vision-language model, autonomous driving
+
+\* A thesis for the degree of Master in ○○ 20○○.
 
 ---
 
@@ -168,10 +177,11 @@ correction, vision-language model, autonomous driving
 표 27. 배포 조건 정확도의 종단 검증  
 표 28. fp16과 bf16의 짝 정확도 비교  
 표 29. 실행 조건에 따른 INT4 정확도  
-부록 표 1. transformers 버전에 따른 같은 모델의 측정값 (원본 해상도, 799장, bf16)  
-부록 표 2. 위험 구성 공개 저장소의 실측 여유  
-부록 표 3. 기반 모델과 양자화 파생본의 여유 상속  
-부록 표 4. Qwen 세대·크기별 여유
+부록 표 1. 측정 환경  
+부록 표 2. transformers 버전에 따른 같은 모델의 측정값 (원본 해상도, 799장, bf16)  
+부록 표 3. 위험 구성 공개 저장소의 실측 여유  
+부록 표 4. 기반 모델과 양자화 파생본의 여유 상속  
+부록 표 5. Qwen 세대·크기별 여유
 
 ---
 

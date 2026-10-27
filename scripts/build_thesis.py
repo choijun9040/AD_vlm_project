@@ -174,18 +174,18 @@ def insert_figures(text, caps):
             raise SystemExit(f"그림 {num}의 기준 줄을 찾지 못했다: {anchor[:40]}")
         j = text.index("\n", i)
         line = text[text.rfind("\n", 0, i) + 1:j]
-        tag = f" ([그림 {num}])" if not line.rstrip().endswith(")") else ""
-        new_line = (line[:-1] + f"; [그림 {num}])") if line.rstrip().endswith(")") else line + tag
+        tag = f" (<그림 {num}>)" if not line.rstrip().endswith(")") else ""
+        new_line = (line[:-1] + f"; <그림 {num}>)") if line.rstrip().endswith(")") else line + tag
         if f"[그림:{key}]" in line:   # 기준 줄이 이미 이 그림을 가리키면 꼬리표를 붙이지 않는다 (2026-10-25)
             new_line = line
-        block = (f"\n\n![그림 {num}]({path})\n\n**[그림 {num}]** {caps[key]}")
+        block = (f"\n\n**<그림 {num}>** {caps[key]}\n\n![그림 {num}]({path})")   # 2026-10-27 학교 작성 방법: 제목은 그림 상단
         text = text[:text.rfind("\n", 0, i) + 1] + new_line + block + text[j:]
     # 본문의 그림 참조 `[그림:4-2]`(캡션 키) → `[그림 N]` (2026-10-25 — 서론·관련 연구에서 그림을 가리키려고)
     key2num = {key: num for num, key, _, _ in FIGURES}
     def fig_ref(m):
         if m.group(1) not in key2num:
             raise SystemExit(f"없는 그림을 가리킨다: [그림:{m.group(1)}]")
-        return f"[그림 {key2num[m.group(1)]}]"
+        return f"<그림 {key2num[m.group(1)]}>"
     return re.sub(r"\[그림:([\w-]+)\]", fig_ref, text)
 
 
@@ -317,16 +317,16 @@ def number_tables(text):
             i += 1
         if not tbl:
             raise SystemExit(f"표 {key}의 캡션 뒤에 표가 없다 — 캡션은 표 바로 앞에 둔다")
-        out.extend(blanks)
-        out.extend(tbl)
+        # 2026-10-27 학교 작성 방법(「표와 그림의 제목은 상단에」, 표기 `<표 1>`): 캡션을 표 위에 둔다
+        out.append(f"**<표 {k}>** {title}")
         out.append("")
-        out.append(f"**[표 {k}]** {title}")
+        out.extend(tbl)
     text = "\n".join(out)
 
     def ref(m):
         if m.group(1) not in numbers:
             raise SystemExit(f"없는 표를 가리킨다: [표:{m.group(1)}]")
-        return f"[표 {numbers[m.group(1)]}]"
+        return f"<표 {numbers[m.group(1)]}>"
     text = re.sub(r"\[표:([\w-]+)\]", ref, text)
     return text, "\n".join(items)
 
@@ -335,7 +335,7 @@ def figure_list(text):
     """그림 목차 — 캡션 첫 문장을 제목으로 쓴다 (2026-10-02)."""
     items = []
     # 캡션은 `**[그림 N]** …` (학교 양식). `\d+`이므로 번호가 10을 넘어도 빠지지 않는다
-    for m in re.finditer(r"^\*\*\[그림 (\d+)\]\*\* (.*)$", text, flags=re.M):
+    for m in re.finditer(r"^\*\*<그림 (\d+)>\*\* (.*)$", text, flags=re.M):
         first = re.split(r"(?<=\.)\s", m.group(2), maxsplit=1)[0].rstrip(".")
         items.append(f"그림 {m.group(1)}. {first.replace('**', '').replace('`', '')}")
     return "\n".join(items)
@@ -394,7 +394,7 @@ def main():
     appx = style_chapters(appx)
     # 부록 표도 표 차례에 싣는다(2026-10-26) — 본문 일련 뒤에 「부록 표 N.」으로 잇는다
     appx_tables = [f"부록 표 {m.group(1)}. {m.group(2).replace('`', '')}"
-                   for m in re.finditer(r"^\*\*\[부록 표 (\d+)\]\*\* (.*)$", appx, flags=re.M)]
+                   for m in re.finditer(r"^\*\*<부록 표 (\d+)>\*\* (.*)$", appx, flags=re.M)]
     if [int(t.split()[2].rstrip('.')) for t in appx_tables] != list(range(1, len(appx_tables) + 1)):
         raise SystemExit(f"부록 표 번호가 1부터 이어지지 않는다: {appx_tables}")
     table_items = "\n".join([table_items] + appx_tables)
@@ -462,10 +462,10 @@ def main():
                          "차례의 들여쓰기 규칙과 집계가 어긋났는지 본다")
 
     # 2026-10-26: 표 차례에 부록 표도 싣는다 — 본문 쪽 집계에 `**[부록 표 N]**`을 더한다
-    n_body_tab = len(re.findall(r"^\*\*\[(?:부록 )?표 \d+\]\*\*", main_text + "\n" + appx, flags=re.M))
+    n_body_tab = len(re.findall(r"^\*\*<(?:부록 )?표 \d+>\*\*", main_text + "\n" + appx, flags=re.M))
     if n_body_tab != n_tab:
         raise SystemExit(f"표 수 불일치: 본문 {n_body_tab} ≠ 목차 {n_tab} — "
-                         "`**[표 N]**`를 직접 쓴 표가 있는지 본다 (키 형식 `**표 [키].**`를 쓸 것)")
+                         "`**<표 N>**`를 직접 쓴 표가 있는지 본다 (키 형식 `**표 [키].**`를 쓸 것)")
     if n_fig != len(FIGURES):
         raise SystemExit(f"그림 수 불일치: 캡션 {n_fig} ≠ 삽입 설정 {len(FIGURES)} — "
                          "thesis_figures.md의 캡션과 FIGURES 목록 둘 다 본다")

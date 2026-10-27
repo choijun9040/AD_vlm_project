@@ -11,88 +11,88 @@
 
 ---
 
-1. S. Bai, K. Chen, X. Liu, et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
-2. A. Romero, N. Ballas, S. E. Kahou, et al., "FitNets: Hints for Thin Deep
+1. S. Bai, K. Chen, X. Liu, J. Wang, W. Ge, S. Song, et al., "Qwen2.5-VL Technical Report," arXiv:2502.13923, 2025.
+2. A. Romero, N. Ballas, S. E. Kahou, A. Chassang, C. Gatta, Y. Bengio, "FitNets: Hints for Thin Deep
     Nets," in *Proc. ICLR*, 2015. (arXiv:1412.6550)
-3. W. Lian, Z. Tang, H. Li, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
+3. W. Lian, Z. Tang, H. Li, T. Gao, Y. Wang, Z. Wang, et al., "Drive-KD: Multi-Teacher Distillation for VLMs in Autonomous
     Driving," arXiv:2601.21288, 2026.
 4. A. Gopalkrishnan, R. Greer, M. Trivedi, "Multi-Frame, Lightweight & Efficient Vision-Language Models
     for Question Answering in Autonomous Driving," in *CVPR 2024 Workshop on Vision and Language for
     Autonomous Driving and Robotics*, 2024. (arXiv:2403.19838)
-5. E. Zhang, X. Dai, M. Huang, et al., "MiniDrive: More Efficient Vision-Language Models with
+5. E. Zhang, X. Dai, M. Huang, Y. Lv, Q. Miao, "MiniDrive: More Efficient Vision-Language Models with
     Multi-Level 2D Features as Text Tokens for Autonomous Driving," arXiv:2409.07267, 2024.
-6. Z. Xia, Y. Liu, X. Li, et al., "SCPNet: Semantic Scene Completion on
+6. Z. Xia, Y. Liu, X. Li, X. Zhu, Y. Ma, Y. Li, et al., "SCPNet: Semantic Scene Completion on
     Point Cloud," in *Proc. CVPR*, 2023. (arXiv:2303.06884)
-7. J. H. Heo, S. Azizi, A. Fayyazi, et al., "CrAFT: Compression-Aware Fine-Tuning for Efficient
+7. J. H. Heo, S. Azizi, A. Fayyazi, M. Pedram, "CrAFT: Compression-Aware Fine-Tuning for Efficient
     Visual Task Adaptation," arXiv:2305.04526, 2023.
-8. J. Tong, G. Liang, P. Sun, et al., "Colinearity Decay: Training Quantization-Friendly ViTs with
+8. J. Tong, G. Liang, P. Sun, J. Wu, "Colinearity Decay: Training Quantization-Friendly ViTs with
     Outlier Decay," arXiv:2605.01330, 2026.
-9. X. Huang, Z. Liu, S.-Y. Liu, et al., "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
+9. X. Huang, Z. Liu, S.-Y. Liu, K.-T. Cheng, "RoLoRA: Fine-tuning Rotated Outlier-free LLMs for
     Effective Weight-Activation Quantization," in *Findings of EMNLP*, 2024. (arXiv:2407.08044)
-10. Q. Wei, C.-Y. Yau, H.-T. Wai, et al., "RoSTE: An Efficient
+10. Q. Wei, C.-Y. Yau, H.-T. Wai, Y. K. Zhao, D. Kang, Y. Park, et al., "RoSTE: An Efficient
     Quantization-Aware Supervised Fine-Tuning Approach for Large Language Models," in *Proc. ICML*,
     2025. (arXiv:2502.09003)
-11. J.-M. Chen, Y.-H. Chao, Y.-J. Wang, et al., "QuantTune: Optimizing Model
+11. J.-M. Chen, Y.-H. Chao, Y.-J. Wang, M.-D. Shieh, C.-C. Hsu, W.-F. Lin, "QuantTune: Optimizing Model
     Quantization with Adaptive Outlier-Driven Fine Tuning," arXiv:2403.06497, 2024.
-12. M. Sun, X. Chen, J. Z. Kolter, et al., "Massive Activations in Large Language Models," in *Proc.
+12. M. Sun, X. Chen, J. Z. Kolter, Z. Liu, "Massive Activations in Large Language Models," in *Proc.
     COLM*, 2024. (arXiv:2402.17762)
-13. L. Chen, H. Tian, X. Chen, et al., "Measuring Maximum Activations in Open Large Language Models,"
+13. L. Chen, H. Tian, X. Chen, R. Kong, F. Wang, J. Chen, et al., "Measuring Maximum Activations in Open Large Language Models,"
     arXiv:2605.15572, 2026.
-14. S. Kim, T. Yeom, J. Kim, et al., "Activation Quantization of Vision Encoders Needs
+14. S. Kim, T. Yeom, J. Kim, W. Park, K. Kim, J. Lee, "Activation Quantization of Vision Encoders Needs
     Prefixing Registers," in *Proc. ECCV*, 2026. (arXiv:2510.04547)
-15. H. Shin, C. Kim, R. Kim, et al., "Rethinking Small VLM Quantization: From Component-Wise
+15. H. Shin, C. Kim, R. Kim, H. Yoo, J. Kim, "Rethinking Small VLM Quantization: From Component-Wise
     Analysis to Hardware-Aware Edge Deployment," in *ICML 2026 Workshop on Hypothesis Testing*, 2026.
     (arXiv:2607.08029)
-16. L. Cheng, Q. Liao, F. Wu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM
+16. L. Cheng, Q. Liao, F. Wu, J. Mu, T. Han, Z. Qiu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM
     Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
 17. vLLM Project, "[Bug]: Gemma 4 (31B/26B-A4B) vision outputs only \<pad\> under fp16 — vision_tower
     standardize overflows," *GitHub Issue* #40290, 2026.
     https://github.com/vllm-project/vllm/issues/40290 (accessed 2026-09-16)
 18. A. Karjol, D. M. Hanna, "Edge AI for Automotive Vulnerable Road User Safety: Deployable Detection
     via Knowledge Distillation," arXiv:2604.26857, 2026.
-19. S. Jiang, Z. Huang, K. Qian, et al., "A Survey on Vision-Language-Action Models for Autonomous
+19. S. Jiang, Z. Huang, K. Qian, Z. Luo, T. Zhu, Y. Zhong, et al., "A Survey on Vision-Language-Action Models for Autonomous
     Driving," arXiv:2506.24044, 2025.
-20. T. Hu, X. Liu, S. Wang, et al., "Vision-Language-Action Models for Autonomous Driving: Past,
+20. T. Hu, X. Liu, S. Wang, Y. Zhu, A. Liang, L. Kong, et al., "Vision-Language-Action Models for Autonomous Driving: Past,
     Present, and Future," arXiv:2512.16760, 2025.
-21. Z. Yu, B. Wang, P. Zeng, et al., "A Survey on Efficient Vision-Language-Action Models," *IEEE
+21. Z. Yu, B. Wang, P. Zeng, H. Zhang, J. Zhang, Z. Wang, et al., "A Survey on Efficient Vision-Language-Action Models," *IEEE
     Trans. Pattern Anal. Mach. Intell.* (accepted), 2025. (arXiv:2510.24795)
 22. T. Guo, L. Su, "Rethinking Language's Role in Efficient VLA for Autonomous Vehicles: Toward
     Smarter, Trustworthy Driving," in *Proc. EMNLP*, 2026. (arXiv:2608.30144)
-23. H. Caesar, V. Bankiti, A. H. Lang, et al., "nuScenes: A Multimodal Dataset for Autonomous
+23. H. Caesar, V. Bankiti, A. H. Lang, S. Vora, V. E. Liong, Q. Xu, et al., "nuScenes: A Multimodal Dataset for Autonomous
     Driving," in *Proc. CVPR*, 2020. (arXiv:1903.11027)
-24. C. Sima, K. Renz, K. Chitta, et al.,
+24. C. Sima, K. Renz, K. Chitta, L. Chen, H. Zhang, C. Xie, et al.,
     "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024.
-25. T. Qian, J. Chen, L. Zhuo, et al., "NuScenes-QA: A Multi-Modal Visual Question
+25. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-Modal Visual Question
     Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI*,
     vol. 38, no. 5, pp. 4542–4550, 2024.
-26. K. Chen, Y. Li, W. Zhang, et al., "Automated Evaluation of Large Vision-Language Models on
+26. K. Chen, Y. Li, W. Zhang, Y. Liu, P. Li, R. Gao, et al., "Automated Evaluation of Large Vision-Language Models on
     Self-driving Corner Cases," in *Proc. WACV*, 2025. (arXiv:2404.10595)
-27. K. Li, K. Chen, H. Wang, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection
+27. K. Li, K. Chen, H. Wang, L. Hong, C. Ye, J. Han, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection
     in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
-28. E. J. Hu, Y. Shen, P. Wallis, et al., "LoRA: Low-Rank
+28. E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, et al., "LoRA: Low-Rank
     Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
 29. G. Hinton, O. Vinyals, J. Dean, "Distilling the Knowledge in a Neural Network," in *NIPS Deep
     Learning Workshop*, 2014. (arXiv:1503.02531)
-31. P. Wang, S. Bai, S. Tan, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the
+31. P. Wang, S. Bai, S. Tan, S. Wang, Z. Fan, J. Bai, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the
     World at Any Resolution," arXiv:2409.12191, 2024.
 32. Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or
     Percentages," *Psychometrika*, vol. 12, no. 2, pp. 153–157, 1947.
-33. J. Lin, J. Tang, H. Tang, et al., "AWQ:
+33. J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, et al., "AWQ:
     Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc.
     MLSys*, 2024.
-34. S. Bai, Y. Cai, R. Chen, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
-35. M. Abdin, J. Aneja, H. Awadalla, et al., "Phi-3 Technical Report: A Highly Capable Language Model
+34. S. Bai, Y. Cai, R. Chen, K. Chen, X. Chen, Z. Cheng, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
+35. M. Abdin, J. Aneja, H. Awadalla, A. Awadallah, A. A. Awan, N. Bach, et al., "Phi-3 Technical Report: A Highly Capable Language Model
     Locally on Your Phone," arXiv:2404.14219v4, 2024.
-36. H. Liu, C. Li, Y. Li, et al., "Improved Baselines with Visual Instruction Tuning," in *Proc.
+36. H. Liu, C. Li, Y. Li, Y. J. Lee, "Improved Baselines with Visual Instruction Tuning," in *Proc.
     CVPR*, 2024. (arXiv:2310.03744)
-37. J. Zhu, W. Wang, Z. Chen, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes
+37. J. Zhu, W. Wang, Z. Chen, Z. Liu, S. Ye, L. Gu, et al., "InternVL3: Exploring Advanced Training and Test-Time Recipes
     for Open-Source Multimodal Models," arXiv:2504.10479, 2025.
-38. A. Marafioti, O. Zohar, M. Farré, et al., "SmolVLM: Redefining Small and Efficient Multimodal
+38. A. Marafioti, O. Zohar, M. Farré, M. Noyan, E. Bakouch, P. Cuenca, et al., "SmolVLM: Redefining Small and Efficient Multimodal
     Models," arXiv:2504.05299, 2025.
-39. P. Agrawal, S. Antoniak, E. B. Hanna, et al., "Pixtral 12B," arXiv:2410.07073, 2024.
-40. GLM-V Team, W. Hong, W. Yu, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile
+39. P. Agrawal, S. Antoniak, E. B. Hanna, B. Bout, D. Chaplot, J. Chudnovsky, et al., "Pixtral 12B," arXiv:2410.07073, 2024.
+40. GLM-V Team, W. Hong, W. Yu, X. Gu, G. Wang, G. Gan, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile
     Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
-41. Kimi Team, A. Du, B. Yin, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
+41. Kimi Team, A. Du, B. Yin, B. Xing, B. Qu, B. Wang, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
 42. NVIDIA, "DLA Layer Restrictions," *TensorRT Documentation*.
     https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html
     (accessed 2026-09-29)
@@ -136,7 +136,13 @@
 | 44 | 위 URL (+ 10.x→11.x 마이그레이션 안내) | 11.0에서 정밀도별 BuilderFlag(FP16·BF16·INT8·… ·OBEY_PRECISION_CONSTRAINTS)와 약타입 API(`setPrecision` 등) 제거, 강타입이 기본 — 5.4절. 개요가 적던 "10.12부터 폐기 예정"의 버전 번호는 확인하지 못해 본문에서 뺐다 (2026-09-29) |
 | 43 | 위 URL | 8GB 모듈 "1024-core NVIDIA Ampere Architecture GPU with 32 Tensor Cores", DLA 언급 없음 확인 |
 
-**저자 표기 규칙 — 3인 + et al.로 통일 (2026-10-07, 사용자 결정).**
+**저자 표기 규칙 — 6인 이내 기재로 변경 (2026-10-27, 사용자 승인 「권고대로 적용」).** 충북대 대학원 「석·박사학위논문 작성 방법」
+다.(1)-3) 「저자는 6명 이내로 기재하며 그 이상의 저자는 …et al.로 표시」에 따라 **6인 이하는 전부, 7인 이상은 처음 6인 + et al.**로
+바꾸었다(아래 2026-10-07 규칙을 대체). et al.을 쓰던 34개 문헌의 저자 목록을 arXiv API(export.arxiv.org)로 다시 받았고, 34개 모두
+제목이 원고와 일치하였다(24·25·33은 원고에 arXiv 번호가 없어 2312.14150·2305.14836·2306.00978로 조회). 6인 이하로 전부 적은 것이
+13개(2·5·7·8·9·11·12·14·15·25·36 등), 6인 + et al.이 21개다. 팀명은 기존 규칙대로 한 자리로 센다(40의 「:」 항목은 저자가 아니다).
+
+**(대체됨) 저자 표기 규칙 — 3인 + et al.로 통일 (2026-10-07, 사용자 결정).**
 
 목록 **전체**를 「저자 3인 이하면 전부, 4인 이상이면 처음 3인 + et al.」로 맞췄다. 손댄 것은 셋이다.
 

@@ -2,11 +2,11 @@
 """합본의 표를 한글 붙여넣기용 HTML로 뽑는다. 2026-10-12 신설.
 
 **왜 합본에서 뽑는가.** 표와 캡션을 따로 모으면 **짝이 어긋난다.** 실제로 그 일이 일어났다 —
-학교 양식은 캡션이 **표 아래**인데 `캡션 → 표`로 읽은 파일이 만들어져 **40개 제목이 한 칸씩
+당시 양식(졸업생 논문)은 캡션이 **표 아래**였는데 `캡션 → 표`로 읽은 파일이 만들어져 **40개 제목이 한 칸씩
 밀려** 있었다(표 14 캡션에 표 15 내용). 여기서는 합본을 순서대로 훑으며 **표를 먼저 모으고
 바로 뒤의 캡션을 붙이므로** 구조적으로 어긋날 수 없다.
 
-**조건 줄도 함께 가져간다.** 합본은 캡션 다음에 `(250장, TensorRT 10.13, A100 …)`처럼 측정
+**조건 줄도 함께 가져간다.** 합본은 표 다음에 `(250장, TensorRT 10.13, A100 …)`처럼 측정
 조건을 적는다. 이것이 빠지면 **값은 맞는데 무엇을 잰 것인지 알 수 없다**(원장 C8).
 
 실행:
@@ -43,26 +43,25 @@ def extract(text):
         if not lines[i].lstrip().startswith("|"):
             i += 1
             continue
+        start = i
         tbl = []
         while i < len(lines) and lines[i].lstrip().startswith("|"):
             tbl.append(lines[i])
             i += 1
-        # 표 뒤의 빈 줄을 건너뛰고 캡션을 찾는다
-        j = i
-        while j < len(lines) and not lines[j].strip():
-            j += 1
-        if j >= len(lines):
-            continue
-        m = re.match(r"^\*\*\[표 (\d+)\]\*\* (.*)$", lines[j])
+        # 2026-10-27 학교 작성 방법: 캡션은 표 **위**다 — 표 앞의 빈 줄을 건너뛰고 캡션을 찾는다
+        j = start - 1
+        while j >= 0 and not lines[j].strip():
+            j -= 1
+        m = re.match(r"^\*\*<표 (\d+)>\*\* (.*)$", lines[j]) if j >= 0 else None
         if not m:
-            continue                      # 캡션 없는 표(본문 중 보조 표)는 건너뛴다
+            continue                      # 캡션 없는 표(본문 중 보조 표·부록 표)는 건너뛴다
         num, title = m.group(1), m.group(2)
-        k = j + 1
+        # 조건 줄 `(250장, …)`은 표 바로 뒤에 온다
+        k = i
         while k < len(lines) and not lines[k].strip():
             k += 1
         cond = lines[k].strip() if k < len(lines) and lines[k].strip().startswith("(") else ""
         out.append((num, title, cond, tbl))
-        i = j + 1
     return out
 
 
@@ -76,9 +75,9 @@ def render(items):
             tag = "th" if n == 0 else "td"
             tds = "".join(f"<{tag}>{md_inline(c)}</{tag}>" for c in cells(ln))
             body.append(f"<tr>{tds}</tr>")
-        cap = f'<div class="cap">[표 {num}] {md_inline(title)}</div>'
+        cap = f'<div class="cap">&lt;표 {num}&gt; {md_inline(title)}</div>'
         con = f'<div class="cond">{md_inline(cond)}</div>' if cond else ""
-        rows.append(f"<table>\n" + "\n".join(body) + "\n</table>\n" + cap + con)
+        rows.append(cap + f"\n<table>\n" + "\n".join(body) + "\n</table>\n" + con)   # 제목은 표 위
     return "\n\n".join(rows)
 
 
@@ -92,10 +91,10 @@ def main():
 
     text = (ROOT / args.src).read_text(encoding="utf-8")
     items = extract(text)
-    n_cap = len(re.findall(r"^\*\*\[표 \d+\]\*\*", text, flags=re.M))
+    n_cap = len(re.findall(r"^\*\*<표 \d+>\*\*", text, flags=re.M))
     if len(items) != n_cap:
         raise SystemExit(f"표 수 불일치: 뽑은 {len(items)} ≠ 합본의 캡션 {n_cap} — "
-                         "캡션이 표 바로 뒤에 오지 않는 자리가 있는지 본다")
+                         "캡션이 표 바로 앞에 오지 않는 자리가 있는지 본다")
     nums = [int(n) for n, *_ in items]
     if nums != sorted(nums) or nums != list(range(1, len(nums) + 1)):
         raise SystemExit(f"표 번호가 1..N 연속이 아니다: {nums}")

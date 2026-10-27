@@ -45,7 +45,14 @@ Qwen2.5-VL-7B 교사로부터 손실 함수만 달리하여 증류한 3B 학생 
 ## Abstract
 
 **Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
-Vision-Language Models**
+Vision-Language Models**\*
+
+*○○○ (영문 성명, 예: Kim, Ji-Hye)*
+
+*Department of ○○  
+Graduate School, Chungbuk National University  
+Cheongju, Korea  
+Supervised by Professor ○○○*
 
 Deploying vision-language models (VLMs) on edge devices requires both knowledge distillation and
 half-precision (fp16) inference. When an activation in the vision encoder exceeds the fp16 limit
@@ -74,3 +81,5 @@ precision.
 
 **Keywords**: representable-range headroom, numerical overflow, low-precision inference, weight
 correction, vision-language model, autonomous driving
+
+\* A thesis for the degree of Master in ○○ 20○○.
