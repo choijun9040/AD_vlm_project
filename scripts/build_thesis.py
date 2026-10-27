@@ -410,8 +410,16 @@ def main():
     else:
         raise SystemExit("차례에 Abstract 항목이 없다 — 초록 제목을 확인한다")
     toc_items = "\n".join(toc_lines)
-    front = (f"# 차 례\n\n{toc_items}\n\n---\n\n{ko}\n\n---\n\n{en}"
-             f"\n\n---\n\n# 표 차례\n\n{table_items}\n\n---\n\n# 그림 차례\n\n{figure_items}")
+    # 2026-10-27: 차례 항목은 빈 줄 없이 이어져 마크다운 미리보기에서 한 문단으로 합쳐진다 —
+    # 다음 줄도 항목이면 줄 끝에 강제 줄바꿈(공백 두 칸)을 붙인다. 빈 줄을 넣으면 네 칸 들여쓰기가 코드 블록이 된다
+    def hard_breaks(items):
+        ls = items.split("\n")
+        return "\n".join(ln + "  " if ln.strip() and i + 1 < len(ls) and ls[i + 1].strip() else ln
+                         for i, ln in enumerate(ls))
+    # 절 제목의 네 칸 들여쓰기는 문단 안에서 지워진다 — 줄바꿈 없는 공백(U+00A0)으로 바꿔 미리보기에서도 들여 보이게 한다
+    toc_shown = re.sub(r"^    ", "\u00a0" * 4, toc_items, flags=re.M)
+    front = (f"# 차 례\n\n{hard_breaks(toc_shown)}\n\n---\n\n{ko}\n\n---\n\n{en}"
+             f"\n\n---\n\n# 표 차례\n\n{hard_breaks(table_items)}\n\n---\n\n# 그림 차례\n\n{hard_breaks(figure_items)}")
     lists = front
     out = (head + front + "\n\n---\n\n" + main_text
            + f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n\n---\n\n{ack}\n")
