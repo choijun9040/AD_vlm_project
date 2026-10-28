@@ -302,13 +302,13 @@ L_total = L_task                                            (기준 모델)
 
 **표 [variants].** 다섯 학생 변형의 손실·가중치·교사 입력
 
-| 변형 | 체크포인트 | 손실 | λ | 교사 입력 |
-|---|---|---|---|---|
-| Full | `student_full` | `L_task + L_align + L_atc` | 1.0 · 1.0 | 2프레임 |
-| Task + L_align | `student_spatial` | `L_task + L_align` | 1.0 · 0 | 1프레임 |
-| Task + L_atc | `student_temporal` | `L_task + L_atc` | 0 · 1.0 | 2프레임 |
-| Task only | `student_baseline` | `L_task` | — | 교사 없음 |
-| Task + out.KD | `student_kd_only` | `L_task + L_kd` | λ_kd 1.0, T 1.5 | 1프레임 |
+| 변형 | 손실 | λ | 교사 입력 |
+|---|---|---|---|
+| Full | `L_task + L_align + L_atc` | 1.0 · 1.0 | 2프레임 |
+| Task + L_align | `L_task + L_align` | 1.0 · 0 | 1프레임 |
+| Task + L_atc | `L_task + L_atc` | 0 · 1.0 | 2프레임 |
+| Task only | `L_task` | — | 교사 없음 |
+| Task + out.KD | `L_task + L_kd` | λ_kd 1.0, T 1.5 | 1프레임 |
 
 표와 그림의 변형 이름은 손실 구성을 그대로 쓴다. 본문 서술에서는 각각 **Full · 정렬만 ·
 시간만 · 기준 모델 · 출력 증류**로 줄여 부르고, 미세조정하지 않은 사전학습 모델은 Pre-trained
