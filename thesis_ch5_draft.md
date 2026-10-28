@@ -10,8 +10,8 @@
 >
 > **수치의 출처.** `eval_results/trt_precision_probe.json`, `trt_precision_bf16.json`, `trt_fixa_native.json`,
 > `trt_fixa_native_1016.json`, `trt_fixa_native_bf16_1013.json`, `trt_native250_baseline_v2_dense.json`,
-> `gemm_fp16_bf16.json`과 파일에서 다시 계산한 비율로 대조했다. TensorRT 측정은 **50장⟦799: TRT⟧**이되, 관행 fp16 기준선의
-> 상실률만 PyTorch와 같은 **250장⟦799: TRT⟧**으로 다시 쟀다(2026-10-01) — 표본이 다른 값을 나란히 둘 때는 그렇게 적는다.
+> `gemm_fp16_bf16.json`과 파일에서 다시 계산한 비율로 대조했다. TensorRT 측정은 50장⟦799: TRT⟧이되, 관행 fp16 기준선의
+> 상실률만 PyTorch와 같은 250장⟦799: TRT⟧으로 다시 쟀다(2026-10-01) — 표본이 다른 값을 나란히 둘 때는 그렇게 적는다.
 >
 > **장 번호 (2026-10-26).** 5장 해체로 장 번호가 하나씩 당겨졌다 — 이 파일의 장은 5장이다. 파일명은 옛 번호 그대로다(개요 §6 「5장 해체·재배치」).
 
@@ -55,9 +55,9 @@ Qwen2.5-VL 비전 인코더는 입력 해상도에 따라 형상이 변하는 �
 **표 [onnx-files].** ONNX 그래프와 대조 결과
 | 파일 | `max_pixels` | 패치 | 상수화 대조 | ONNX 코사인 |
 |---|---|---|---|---|
-| `tower_baseline_v2_native` | 1,440,000 | 7,296 | 0 | 0.999920 |
+| `tower_baseline_native` | 1,440,000 | 7,296 | 0 | 0.999920 |
 | `tower_full_native` | 1,440,000 | 7,296 | 0 | 0.999999 |
-| `tower_baseline_v2` | 200,704 | 924 | 0 | 0.999978 |
+| `tower_baseline` | 200,704 | 924 | 0 | 0.999978 |
 | `tower_full` | 200,704 | 924 | 0 | 1.000000 |
 
 ## 5.2 정밀도 조건별 측정 프로토콜

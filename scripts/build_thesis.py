@@ -366,6 +366,9 @@ def main():
             order.append(n)
     new_no = {old: i + 1 for i, old in enumerate(order)}
     main_text = re.sub(r"«R(\d+)»", lambda m: f"[{new_no[int(m.group(1))]}]", main_text)
+    # 2026-10-28: 굵게 끝에 붙은 인용 번호는 굵게 밖으로 — `**NuScenes-QA[3]**는`은 닫는 `**` 앞이 `]`라
+    # 마크다운에서 굵게가 닫히지 않고 별표가 글자로 남는다. `**NuScenes-QA**[3]는`이면 정상이다
+    main_text = re.sub(r"\*\*([^*\n]+?)((?:\[\d+(?:[,–-]\s*\d+)*\])+)\*\*", r"**\1**\2", main_text)
 
     refs = parse_references()
     uncited = sorted(set(refs) - set(order))

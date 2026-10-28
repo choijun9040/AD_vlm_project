@@ -1,6 +1,6 @@
 # 학위 논문 6장 초안 (2026-09-29)
 
-> **이 문서의 위치.** 「비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정」의 **6장 도구 `headroom_guard`**다. 1~3장은
+> **이 문서의 위치.** 「비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정」의 6장 도구 `headroom_guard`다. 1~3장은
 > `thesis_ch1_ch3_draft.md`, 4장은 `thesis_ch4_draft.md`. 5장은
 > `thesis_ch5_draft.md`(배포 검증 파이프라인과 실기기 확인 — Orin은 강타입 엔진으로 확인, 5.5절).
 >
@@ -34,7 +34,7 @@
 | `selftest` | 모델 없이 판정 세 분기와 배수 풀이를 시험한다 |
 
 ```
-python scripts/headroom_guard.py diagnose --checkpoint checkpoints/student_baseline_v2/epoch_1
+python scripts/headroom_guard.py diagnose --checkpoint checkpoints/<학생 모델>/epoch_1
 python scripts/headroom_guard.py diagnose --repo Qwen/Qwen2.5-VL-3B-Instruct-AWQ \
     --dtype float16 --max_pixels 1440000
 python scripts/headroom_guard.py fix --checkpoint ... --target_headroom 2.0 --verify
@@ -297,7 +297,7 @@ fp16으로 로드해 비전 인코더가 fp16으로 실행되고, (ii) 처리기
 fp16 비전 인코더에서 일어났다. **집계 정확도는 이산적 실패를 다른 원인으로 오인하게 한다.** 1.39%라는 숫자는
 「양자화에 약한 모델」처럼 보였으나 실제로는 양자화와 무관한 fp16 표현 범위 초과였다. 정정 뒤의 차이는 순위로
 해석하지 않는다. 「정정−원본」 열에는 일관된 방향이 없고(−2.00~+1.22%p), 정렬 손실이 없는 출력 증류가 가장 많이
-상승하였다. 쓸 수 있는 진술은 **「교란을 제거하면 다섯 변형이 모두 48~52%대로 모이며 파국적 값은 사라진다」**까지다.
+상승하였다. 쓸 수 있는 진술은 「교란을 제거하면 다섯 변형이 모두 48~52%대로 모이며 파국적 값은 사라진다」까지다.
 
 정리하면, `headroom_guard`는 4~5장의 진단을 명령 하나로 만든다. 크기는 오버플로가 일어나지 않는 형식에서 측정하고, 1차 판정은
 임계값 없는 초과 비율(PyTorch fp16·강타입 TensorRT에서 검증)로 하며, 교정은 권하지 않고 비용과 함께 보고한다. 판정 기준은 합성 연속체로 정하고 학습된
