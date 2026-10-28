@@ -108,7 +108,7 @@
 
 <div class="cap">&lt;표 9&gt; 여유·상실률과 표준 압축 지표</div>
 <table>
-<tr><th>변형</th><th>여유</th><th>상실률</th><th>max/rms</th><th>INT8 SNR (텐서 단위)</th></tr>
+<tr><th>변형</th><th>여유</th><th>상실률</th><th>max/rms</th><th>INT8 SNR</th></tr>
 <tr><td>Pre-trained</td><td>0.95배</td><td>70.7%</td><td>173.5</td><td>31.52 dB</td></tr>
 <tr><td>Task only</td><td><b>0.88배</b></td><td><b>96.0%</b></td><td>143.9</td><td><b>32.28 dB</b></td></tr>
 <tr><td>Task + out.KD</td><td>1.07배</td><td>26.8%</td><td>204.4</td><td>30.42 dB</td></tr>
@@ -141,8 +141,8 @@
 <table>
 <tr><th>개입</th><th>곱 <code>act(gate)⊙up</code></th><th><code>down_proj</code> 출력</th><th>상실률 (원본 해상도)</th></tr>
 <tr><td>없음</td><td>4,612</td><td>63,520</td><td>95.9%</td></tr>
-<tr><td>출력 측 축소(fixB): MLP <b>출력</b>을 1/3</td><td>4,608</td><td>63,776</td><td>96.4%</td></tr>
-<tr><td>곱셈 이전 교정(fixA): <b>gate·up을 각각 1/√3</b> (곱이 1/3)</td><td><b>1,535</b></td><td><b>24,928</b></td><td><b>0.0%</b></td></tr>
+<tr><td>출력 측 축소: MLP <b>출력</b>을 1/3</td><td>4,608</td><td>63,776</td><td>96.4%</td></tr>
+<tr><td>곱셈 이전 교정: <b>gate·up을 각각 1/√3</b> (곱이 1/3)</td><td><b>1,535</b></td><td><b>24,928</b></td><td><b>0.0%</b></td></tr>
 </table>
 <div class="cond">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다)</div>
 
