@@ -1,10 +1,10 @@
-<!-- 자동 생성: scripts/build_thesis.py (2026-10-28). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
+<!-- 자동 생성: scripts/build_thesis.py (2026-10-29). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
 # 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정
 
 *Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 
-석사학위논문 목차 · 합본 생성 2026-10-28 · 학교 양식 적용 전
+석사학위논문 목차 · 합본 생성 2026-10-29 · 학교 양식 적용 전
 
 ---
 
@@ -77,7 +77,7 @@ Abstract
 
 **비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정**
 
-비전-언어 모델(VLM)을 엣지 장치에 배포하려면 지식 증류로 모델을 줄이고 반정밀도(fp16)로 연산해야 한다.
+비전-언어 모델(VLM)을 엣지 장치에 배포하려면 지식 증류로 모델을 줄이고 반정밀도(fp16)로 연산하는 것이 일반적이다.
 그러나 비전 인코더의 활성값이 fp16 상한(65,504)을 넘으면 그 이미지에 대한 출력 전체가 상실되며, 압축 모델의
 평가에 쓰이는 과제 정확도와 양자화 오차 지표는 이 위험을 판별하지 못한다. 양자화 오차 지표는 절대 크기를
 보지 않는 스케일 불변량이고, 정확도는 오버플로가 일어나지 않는 조건(bf16, 평가 해상도)에서 측정되기 때문이다.
@@ -87,10 +87,10 @@ Abstract
 제안한다.
 
 Qwen2.5-VL-7B 교사로부터 손실 함수만 달리하여 증류한 3B 학생 모델로 검증하였다. 학생 모델의 여유는 원본 해상도에서
-0.88~2.94배로 달랐고, 여유가 1 미만인 모델은 fp16에서 이미지의
+0.88~2.94배(이미지별 최대의 중앙값)로 달랐고, 여유가 1 미만인 모델은 fp16에서 이미지의
 96.0%에 대해 출력을 상실하여 정확도가 48.47%(bf16)에서 1.34%로 떨어졌다. 텐서 단위 INT8 양자화 SNR은 이 모델을
-상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 6개 모델의 상실률을 평균 1.1%p의
-오차로 예측하였고, 제안 교정은 정확도를 48.76%로 회복하여 bf16 실행과 유의한 차이가 없으면서 fp16 형식을
+상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 6개 모델의 상실률을 평균 절대 오차 1.1%p(원본 해상도,
+799장)로 예측하였고, 제안 교정은 정확도를 48.76%로 회복하여 bf16 실행과 유의한 차이가 없으면서(11,309문항, McNemar p = 0.24) fp16 형식을
 유지하였다. 같은 상실과 교정 효과는 TensorRT 엔진과 Jetson Orin Nano(메모리가 허락한 해상도)에서도 확인되었다.
 
 이상의 결과는 압축된 VLM을 저정밀로 배포하기 전에 배포 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을
@@ -113,8 +113,8 @@ Graduate School, Chungbuk National University
 Cheongju, Korea  
 Supervised by Professor ○○○*
 
-Deploying vision-language models (VLMs) on edge devices requires both knowledge distillation and
-half-precision (fp16) inference. When an activation in the vision encoder exceeds the fp16 limit
+Deploying vision-language models (VLMs) on edge devices typically involves both knowledge distillation
+and half-precision (fp16) inference. When an activation in the vision encoder exceeds the fp16 limit
 (65,504), the model's entire output for that image is lost, yet the task accuracy and
 quantization-error metrics used to evaluate compressed models cannot detect this risk:
 quantization-error metrics are scale-invariant and ignore absolute magnitude, and accuracy is
@@ -125,12 +125,12 @@ activation magnitude) and proposes a diagnostic that predicts the collapse rate 
 images exceeding the format limit, together with a training-free correction that scales the
 weights before the multiplication in the gated MLP.
 
-We validated both on 3B students distilled from a Qwen2.5-VL-7B teacher with different loss
-functions. The students differ in headroom from 0.88× to 2.94× at native resolution; the student below 1× loses its output on 96.0% of images in fp16, and
+We validated both on 3B students distilled from a Qwen2.5-VL-7B teacher that differ only in their loss
+functions. The students differ in headroom from 0.88× to 2.94× (median over images, native resolution); the student below 1× loses its output on 96.0% of images in fp16, and
 its accuracy falls from 48.47% (bf16) to 1.34%. Per-tensor INT8 quantization SNR rates this student
 higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic predicts the
-collapse rate of six models with a mean error of 1.1 percentage points, and the proposed correction
-restores accuracy to 48.76%, not significantly different from bf16 execution, while keeping fp16.
+collapse rate of six models with a mean absolute error of 1.1 percentage points (native resolution, 799 images), and the proposed correction
+restores accuracy to 48.76%, not significantly different from bf16 execution (11,309 questions, McNemar p = 0.24), while keeping fp16.
 The same collapse and correction were confirmed on TensorRT engines and a Jetson Orin Nano (at the
 resolutions its memory allows).
 

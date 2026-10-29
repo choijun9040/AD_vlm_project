@@ -93,15 +93,16 @@
 40. GLM-V Team, W. Hong, W. Yu, X. Gu, G. Wang, G. Gan, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile
     Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
 41. Kimi Team, A. Du, B. Yin, B. Xing, B. Qu, B. Wang, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
-42. NVIDIA, "DLA Layer Restrictions," *TensorRT Documentation*.
+42. NVIDIA, "DLA Supported Layers and Restrictions," *TensorRT Documentation*, 2026.
     https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html
-    (accessed 2026-09-29)
+    (accessed 2026-10-29)
 43. L. S. Karumbunathan, "Solving Entry-Level Edge AI Challenges with NVIDIA Jetson Orin Nano,"
     *NVIDIA Technical Blog*, 2022.
     https://developer.nvidia.com/blog/solving-entry-level-edge-ai-challenges-with-nvidia-jetson-orin-nano/
-44. NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*.
+    (accessed 2026-10-29)
+44. NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*, 2026.
     https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html
-    (accessed 2026-09-29)
+    (accessed 2026-10-29)
 
 ---
 

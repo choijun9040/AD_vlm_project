@@ -22,14 +22,14 @@
 
 <div class="cap">&lt;표 1&gt; 다섯 학생 변형의 손실·가중치·교사 입력</div>
 <table>
-<tr><th>변형</th><th>손실</th><th>λ</th><th>교사 입력</th></tr>
+<tr><th>변형</th><th>손실</th><th>λ_align · λ_atc</th><th>교사 입력</th></tr>
 <tr><td>Full</td><td><code>L_task + L_align + L_atc</code></td><td>1.0 · 1.0</td><td>2프레임</td></tr>
 <tr><td>Task + L_align</td><td><code>L_task + L_align</code></td><td>1.0 · 0</td><td>1프레임</td></tr>
 <tr><td>Task + L_atc</td><td><code>L_task + L_atc</code></td><td>0 · 1.0</td><td>2프레임</td></tr>
 <tr><td>Task only</td><td><code>L_task</code></td><td>—</td><td>교사 없음</td></tr>
-<tr><td>Task + out.KD</td><td><code>L_task + L_kd</code></td><td>λ_kd 1.0, T 1.5</td><td>1프레임</td></tr>
+<tr><td>Task + out.KD</td><td><code>L_task + L_kd</code></td><td>—</td><td>1프레임</td></tr>
 </table>
-
+<div class="cond">(출력 증류의 λ_kd = 1.0, T = 1.5)</div>
 
 <div class="cap">&lt;표 2&gt; 변형 간 통제 조건</div>
 <table>
@@ -121,7 +121,7 @@
 <div class="cap">&lt;표 10&gt; 양자화 검사 대상과 fp16 실행 대상</div>
 <table>
 <tr><th></th><th>양자화 검사를 받는가</th><th>fp16으로 실행되는가</th></tr>
-<tr><td>언어 디코더</td><td><b>예</b></td><td>아니오 (INT4)</td></tr>
+<tr><td>언어 디코더</td><td><b>예</b></td><td>가중치 INT4(활성은 fp16)</td></tr>
 <tr><td><b>비전 인코더</b></td><td><b>아니오</b></td><td><b>예</b></td></tr>
 </table>
 
@@ -135,7 +135,7 @@
 <tr><td>Task + L_align</td><td>−146</td><td>−17.4</td><td><b>−18,304</b></td><td>−18,432</td></tr>
 <tr><td>Full</td><td>−134</td><td>−25.1</td><td><b>−17,920</b></td><td>−18,048</td></tr>
 </table>
-
+<div class="cond">(799장, 평가 해상도, bf16. 각 열은 성분별 중앙값이라 합 열과 일치하지 않는다. 합 열은 &lt;표 6&gt;의 마지막 블록 값과 bf16 1 ulp 이내에서 다르다)</div>
 
 <div class="cap">&lt;표 12&gt; 사후 개입 위치에 따른 활성과 상실률</div>
 <table>
@@ -144,11 +144,11 @@
 <tr><td>출력 측 축소: MLP <b>출력</b>을 1/3</td><td>4,608</td><td>63,776</td><td>96.4%</td></tr>
 <tr><td>곱셈 이전 교정: <b>gate·up을 각각 1/√3</b> (곱이 1/3)</td><td><b>1,535</b></td><td><b>24,928</b></td><td><b>0.0%</b></td></tr>
 </table>
-<div class="cond">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다)</div>
+<div class="cond">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다. 없음 행은 상한을 넘은 이미지가 빠진 값이라 참값보다 작다. 참값은 bf16 p50 74,752다)</div>
 
 <div class="cap">&lt;표 13&gt; 정렬 손실 가중치 λ_align에 따른 활성과 여유</div>
 <table>
-<tr><th>λ</th><th>blk24</th><th><b>blk31</b></th><th>λ=0 대비</th><th>fp16 여유</th></tr>
+<tr><th>λ</th><th>blk24</th><th><b>blk31</b></th><th>λ=0 대비</th><th>여유(fp16 상한 기준)</th></tr>
 <tr><td>0</td><td>8,512</td><td>36,608</td><td>—</td><td>1.79배</td></tr>
 <tr><td>0.5</td><td>5,856</td><td>26,112</td><td>−28.7%</td><td>2.51배</td></tr>
 <tr><td>1.0</td><td>124</td><td>19,072</td><td>−47.9%</td><td>3.43배</td></tr>
