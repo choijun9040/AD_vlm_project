@@ -256,7 +256,7 @@ def toc(text):
     """차례 (2026-10-12 학교 양식). 졸업생 논문(2026-08)의 배치를 따른다.
 
       앞부분(국문 초록·Abstract·표 차례·그림 차례)이 먼저 붙어서 오고,
-      **장마다 앞에 빈 줄 두 개**, 절은 **네 칸 들여쓰기**, 마지막에 참고 문헌·감사의 글.
+      **장마다 앞에 빈 줄 두 개**, 절은 **네 칸 들여쓰기**, 마지막에 참고 문헌·부록(감사의 글은 2026-10-28부터 싣지 않는다).
 
     **점선 리더와 쪽 번호는 넣지 않는다.** 졸업생 논문은 `Ⅰ. 서 론 ·········· 1`처럼 점선으로
     쪽수를 잇는데, 쪽수는 조판(한글) 전에는 정해지지 않는다. 점선만 넣으면 **허공으로 가는
@@ -385,10 +385,10 @@ def main():
             "*Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*\n\n"
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
     # 구성 순서 (2026-10-12 학교 양식) — 졸업생 논문(2026-08):
-    #   표지 → 속표지 → 차례 → Abstract → 표 차례 → 그림 차례 → 본문 → 참고 문헌 → 감사의 글
+    #   표지 → 속표지 → 차례 → Abstract → 표 차례 → 그림 차례 → 본문 → 참고 문헌 → 부록 (감사의 글은 2026-10-28부터 제외)
     # **국문 초록은 남긴다 (사용자 결정)** — 졸업생 논문에는 없으나 빼야 할 이유도 없다.
     # 한국 논문 관행대로 Abstract 앞에 둔다. 표지·속표지·쪽 번호는 조판 단계(한글)에서 붙인다.
-    ack = body_of("thesis_acknowledgment_draft.md")
+    # 2026-10-28: 감사의 글은 싣지 않는다 (사용자 결정). 원고 thesis_acknowledgment_draft.md는 남겨 둔다
     # 부록 (2026-10-22) — 본문을 결과 중심으로 고치며 옮긴 측정 환경·빌드 조건. 참고 문헌 뒤·감사의 글 앞
     appx = drop_correction_quotes(body_of("thesis_appendix_draft.md"))[0]
     appx = re.sub(r"^<!--.*?-->\s*", "", appx, flags=re.S)
@@ -402,7 +402,7 @@ def main():
         raise SystemExit(f"부록 표 번호가 1부터 이어지지 않는다: {appx_tables}")
     table_items = "\n".join([table_items] + appx_tables)
     body = (f"{ko}\n\n---\n\n{en}\n\n---\n\n{main_text}"
-            f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n\n---\n\n{ack}\n")
+            f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n")
     toc_items, figure_items = toc(body), figure_list(main_text)
     # 표·그림 차례는 별도 쪽이라 본문 제목 훑기에 잡히지 않는다 — 차례에 손으로 끼운다
     toc_lines = toc_items.split("\n")
@@ -425,7 +425,7 @@ def main():
              f"\n\n---\n\n# 표 차례\n\n{hard_breaks(table_items)}\n\n---\n\n# 그림 차례\n\n{hard_breaks(figure_items)}")
     lists = front
     out = (head + front + "\n\n---\n\n" + main_text
-           + f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n\n---\n\n{ack}\n")
+           + f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n")
     # 목차만 따로 (2026-10-02). 합본과 같은 실행에서 쓰므로 항상 맞는다
     toc_doc = head.replace("석사학위논문 초안 · 합본 생성", "석사학위논문 목차 · 합본 생성") + lists + "\n"
 
