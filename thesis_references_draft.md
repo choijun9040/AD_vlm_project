@@ -75,8 +75,6 @@
     Learning Workshop*, 2014. (arXiv:1503.02531)
 31. P. Wang, S. Bai, S. Tan, S. Wang, Z. Fan, J. Bai, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the
     World at Any Resolution," arXiv:2409.12191, 2024.
-32. Q. McNemar, "Note on the Sampling Error of the Difference Between Correlated Proportions or
-    Percentages," *Psychometrika*, vol. 12, no. 2, pp. 153–157, 1947.
 33. J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, et al., "AWQ:
     Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc.
     MLSys*, 2024.

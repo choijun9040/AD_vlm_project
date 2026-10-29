@@ -270,7 +270,7 @@
 <tr><td>Task only 학생</td><td>Qwen2.5-VL</td><td><code>blocks</code>, gate·up→down</td><td><b>0.88배</b></td><td><b>위험 → 교정</b></td></tr>
 <tr><td>Qwen2-VL-2B-Instruct-AWQ</td><td>Qwen2-VL</td><td><code>blocks</code>, fc1→fc2</td><td>3.91배</td><td>안전</td></tr>
 <tr><td>Qwen2-VL-7B-Instruct-AWQ</td><td>Qwen2-VL</td><td><code>blocks</code>, fc1→fc2</td><td>4.51배</td><td>안전</td></tr>
-<tr><td>SmolVLM-Instruct[41]</td><td>Idefics3</td><td><code>encoder.layers</code>, fc1→fc2</td><td>50.86배</td><td>안전</td></tr>
+<tr><td>SmolVLM-Instruct[40]</td><td>Idefics3</td><td><code>encoder.layers</code>, fc1→fc2</td><td>50.86배</td><td>안전</td></tr>
 </table>
 <div class="cond">(799장, 원본 해상도, 여유는 p50)</div>
 
@@ -301,11 +301,11 @@
 
 <div class="cap">&lt;표 28&gt; fp16과 bf16의 짝 정확도 비교</div>
 <table>
-<tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>McNemar</th><th>fp16 상실형</th></tr>
-<tr><td>Task only</td><td>평가</td><td>1.31배</td><td>48.02%</td><td>50.30%</td><td>128 대 385</td><td>p = 6.6×10⁻³¹</td><td>533</td></tr>
-<tr><td>Task only (상실 문항 제외)</td><td>평가</td><td>—</td><td>50.40%</td><td>50.30%</td><td>—</td><td>—</td><td>—</td></tr>
-<tr><td>Full</td><td>평가</td><td>3.66배</td><td>51.74%</td><td>51.69%</td><td>76 대 71</td><td>p = 0.74</td><td>0</td></tr>
-<tr><td>Full</td><td>원본</td><td>2.94배</td><td>51.86%</td><td>52.00%</td><td>78 대 94</td><td>p = 0.25</td><td>0</td></tr>
+<tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>fp16 상실형</th></tr>
+<tr><td>Task only</td><td>평가</td><td>1.31배</td><td>48.02%</td><td>50.30%</td><td>128 대 385</td><td>533</td></tr>
+<tr><td>Task only (상실 문항 제외)</td><td>평가</td><td>—</td><td>50.40%</td><td>50.30%</td><td>—</td><td>—</td></tr>
+<tr><td>Full</td><td>평가</td><td>3.66배</td><td>51.74%</td><td>51.69%</td><td>76 대 71</td><td>0</td></tr>
+<tr><td>Full</td><td>원본</td><td>2.94배</td><td>51.86%</td><td>52.00%</td><td>78 대 94</td><td>0</td></tr>
 </table>
 
 

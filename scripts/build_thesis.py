@@ -44,7 +44,7 @@ NAMED = [
     (r"(?:vLLM\s+)?(?:이슈\s+)?#40290", 17), (r"(?<![A-Za-z])nuScenes(?![A-Za-z-])", 23), (r"DriveLM", 24),
     (r"NuScenes-QA", 25), (r"CODA-LM", 26), (r"(?<![A-Za-z])CODA(?![A-Za-z-])", 27),
     (r"(?<![A-Za-z])LoRA(?![A-Za-z])", 28), (r"지식 증류", 29), (r"Spearman", 30),
-    (r"Qwen2-VL", 31), (r"McNemar", 32), (r"(?<![A-Za-z-])AWQ(?![A-Za-z-])", 33), (r"Qwen3-VL", 34),
+    (r"Qwen2-VL", 31), (r"(?<![A-Za-z-])AWQ(?![A-Za-z-])", 33), (r"Qwen3-VL", 34),
     (r"(?<![A-Za-z_])Phi(?![A-Za-z_])", 35), (r"LLaVA", 36), (r"InternVL3", 37), (r"SmolVLM", 38), (r"Pixtral", 39),
     (r"GLM-4\.1V", 40), (r"Kimi-VL", 41), (r"(?<![A-Za-z])DLA(?![A-Za-z])", 42),
     (r"Orin Nano", 43), (r"TensorRT 11(?![0-9])", 44),
