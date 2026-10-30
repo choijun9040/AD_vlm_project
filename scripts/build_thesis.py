@@ -29,8 +29,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # 파일명의 장 번호는 실제 장 번호와 같다(2026-10-26 5장 해체 뒤 새 이름) — 합본의 장 번호는 각 파일의 `# N장` 제목에서 온다
-CHAPTERS = ["thesis_ch1_ch3_draft.md", "thesis_ch4_draft.md", "thesis_ch5_draft.md",
-            "thesis_ch6_draft.md", "thesis_ch7_draft.md"]
+CHAPTERS = ["thesis_ch1_ch2_draft.md", "thesis_ch3_draft.md", "thesis_ch4_draft.md",
+            "thesis_ch5_draft.md", "thesis_ch6_draft.md"]   # 2026-10-30 재편: 서론·관련 연구 / 방법 / 실험 구성 / 결과 / 결론
 
 # ── 인용: 참고문헌 초안의 (옛) 번호 → 본문에서 그 문헌을 가리키는 표기 ────────────────────
 ARXIV = {"2601.21288": 3, "2303.06884": 6, "2305.04526": 7, "2605.01330": 8, "2407.08044": 9,
@@ -114,8 +114,8 @@ def cite_chapter(text):
             in_fence = not in_fence
         if not in_fence and re.match(r"^# \d+장", line):
             seen = set()                                  # 장이 바뀌면 이름 인용을 다시 센다 (원고 파일에 장이 여럿 든다)
-        if in_fence or line.startswith("#"):
-            out.append(line)
+        if in_fence or line.startswith("#") or re.match(r"^\*\*(?:표 \[|<표 |<그림 )", line):
+            out.append(line)                              # 2026-10-30: 표·그림 제목에는 인용 번호를 넣지 않는다(표 차례에 찍힌다)
             continue
         s, restore = protect(line)
         for aid, n in ARXIV.items():                     # arXiv 표기는 매번 번호로 바꾼다
@@ -168,10 +168,14 @@ def insert_figures(text, caps):
 
     캡션 표기는 `**[그림 N]** …`이다 — 졸업생 논문(2026-08)이 `[그림 1]` 형태를 쓴다.
     """
-    for num, key, path, anchor in FIGURES:
+    # 2026-10-30: 번호는 설정 순서가 아니라 본문에 나오는 순서로 매긴다(장 재편으로 그림 위치가 바뀐다)
+    miss = [key for _, key, _, a in FIGURES if text.find(a) < 0]
+    if miss:
+        raise SystemExit(f"그림 기준 줄을 찾지 못했다: {miss}")
+    pos = sorted((text.find(a), key, path, a) for _, key, path, a in FIGURES)
+    figs = [(str(k + 1), key, path, a) for k, (_, key, path, a) in enumerate(pos)]
+    for num, key, path, anchor in reversed(figs):   # 뒤에서부터 넣어야 앞 그림의 위치가 밀리지 않는다
         i = text.find(anchor)
-        if i < 0:
-            raise SystemExit(f"그림 {num}의 기준 줄을 찾지 못했다: {anchor[:40]}")
         j = text.index("\n", i)
         line = text[text.rfind("\n", 0, i) + 1:j]
         tag = f" (<그림 {num}>)" if not line.rstrip().endswith(")") else ""
@@ -181,7 +185,7 @@ def insert_figures(text, caps):
         block = (f"\n\n**<그림 {num}>** {caps[key]}\n\n![그림 {num}]({path})")   # 2026-10-27 학교 작성 방법: 제목은 그림 상단
         text = text[:text.rfind("\n", 0, i) + 1] + new_line + block + text[j:]
     # 본문의 그림 참조 `[그림:4-2]`(캡션 키) → `[그림 N]` (2026-10-25 — 서론·관련 연구에서 그림을 가리키려고)
-    key2num = {key: num for num, key, _, _ in FIGURES}
+    key2num = {key: num for num, key, _, _ in figs}
     def fig_ref(m):
         if m.group(1) not in key2num:
             raise SystemExit(f"없는 그림을 가리킨다: [그림:{m.group(1)}]")

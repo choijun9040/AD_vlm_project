@@ -1,7 +1,7 @@
 # 학위 논문 참고문헌 초안 (2026-09-29)
 
-> **번호 규칙.** 1~7장 초안(`thesis_ch1_ch3_draft.md` · `thesis_ch4_draft.md` · `thesis_ch5_draft.md` ·
-> `thesis_ch6_draft.md` · `thesis_ch7_draft.md`)에 **처음 나오는 순서**로 매겼다(IEEE 형식).
+> **번호 규칙.** 1~6장 초안(`thesis_ch1_ch2_draft.md` · `thesis_ch3_draft.md` · `thesis_ch4_draft.md` · `thesis_ch5_draft.md` ·
+> `thesis_ch6_draft.md`)에 **처음 나오는 순서**로 매겼다(IEEE 형식).
 > 본문에는 아직 `[n]` 표지를 넣지 않았다 — 6장이 들어오면 순서가 바뀔 수 있으므로 원고를 합칠 때
 > 한 번에 넣는다.
 >

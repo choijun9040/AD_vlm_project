@@ -354,28 +354,28 @@
       expr: "100*x"
       expect: 51.69
       tol: 0.01
-      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+      docs: {files: [thesis_ch5_draft.md], render: ["{v:.2f}%"]}
     - claim: "spatial 전체 정확도 (평가 해상도)"
       from: "eval_results/student_spatial_epoch_1_nuscenesqa_val.json::accuracy"
       expr: "100*x"
       expect: 51.40
       tol: 0.01
-      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+      docs: {files: [thesis_ch5_draft.md], render: ["{v:.2f}%"]}
     - claim: "temporal 전체 정확도 (평가 해상도)"
       from: "eval_results/student_temporal_epoch_1_nuscenesqa_val.json::accuracy"
       expr: "100*x"
       expect: 51.34
       tol: 0.01
-      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+      docs: {files: [thesis_ch5_draft.md], render: ["{v:.2f}%"]}
     - claim: "baseline_v2 전체 정확도 (평가 해상도)"
       from: "eval_results/student_baseline_v2_epoch_1_nuscenesqa_val.json::accuracy"
       expr: "100*x"
       expect: 50.30
       tol: 0.01
-      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+      docs: {files: [thesis_ch5_draft.md], render: ["{v:.2f}%"]}
     - claim: "kd_only_v4 전체 정확도 (평가 해상도)"
       from: "eval_results/student_kd_only_v4_epoch_1_nuscenesqa_val.json::accuracy"
       expr: "100*x"
       expect: 46.74
       tol: 0.01
-      docs: {files: [thesis_ch1_ch3_draft.md], render: ["{v:.2f}%"]}
+      docs: {files: [thesis_ch5_draft.md], render: ["{v:.2f}%"]}

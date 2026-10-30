@@ -19,7 +19,7 @@
 pairs:
   - id: gate-statistic
     claim: "게이트 판정은 최악 여유로 한다 — p50으로 걸면 λ=0.0(p50 1.14·최악 0.87, 11% 상실)을 놓친다"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["최악 여유"]
     code:
       file: scripts/headroom_guard.py
@@ -29,7 +29,7 @@ pairs:
 
   - id: dla-available-formats
     claim: "bf16 권고는 대상이 그 형식을 지원할 때만 유효하다 — Jetson DLA는 FP16·INT8만 지원한다"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["DLA"]
     code:
       file: scripts/headroom_guard.py
@@ -39,7 +39,7 @@ pairs:
 
   - id: marginal-headroom
     claim: "보조 경고 임계값은 1.25다 — 측정이 아니라 설계 판단이며 그 사실을 함께 출력한다"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["1.25"]
     code:
       file: scripts/headroom_guard.py
@@ -53,7 +53,7 @@ pairs:
 
   - id: two-dtype-split
     claim: "크기는 넘치지 않는 형식(bf16)에서 재고 상실은 목표 형식에서 잰다 (6.2① · 설계 원칙 2)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["크기는 bf16에서"]
     code:
       file: scripts/headroom_guard.py
@@ -63,7 +63,7 @@ pairs:
 
   - id: tower-out-included
     claim: "비전 인코더의 블록 뒤 출력도 재고 나쁜 쪽으로 판정한다 (6.2④)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["블록 뒤 출력"]
     code:
       file: scripts/headroom_guard.py
@@ -73,7 +73,7 @@ pairs:
 
   - id: scaled-formats-out-of-scope
     claim: "스케일 형식(INT8·INT4·fp8)은 선언만 받고 '내 소관이 아니다'라고 답한다 (6.2⑥)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["스케일 형식"]
     code:
       file: scripts/headroom_guard.py
@@ -83,7 +83,7 @@ pairs:
 
   - id: residual-split-solve
     claim: "블록 출력은 `잔차 + MLP(...)`이므로 잔차를 분리해 축소량을 푼다 (6.2⑦)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["잔차를 분리"]
     code:
       file: scripts/headroom_guard.py
@@ -93,7 +93,7 @@ pairs:
 
   - id: silent-load-guard
     claim: "경고 없이 잘못된 값을 내는 적재를 막는다 — 가중치가 실제로 올라왔는지 확인한다 (6.1⑨)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     # 2026-10-26: 문체 교정(구어 「조용히 틀리는」 정리)으로 원고 문구가 바뀌어 계약 문구를 맞춤 — 코드 쪽 조건은 그대로
     docs_must_contain: ["경고 없이 잘못된 값을 내는 적재"]
     code:
@@ -104,7 +104,7 @@ pairs:
 
   - id: zero-observation-bound
     claim: "초과 0건이면 표본 수에 따른 참 초과율의 95% 상한을 함께 적는다 (6.3절)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["95% 상한"]
     code:
       file: scripts/headroom_guard.py
@@ -118,7 +118,7 @@ pairs:
 
   - id: model-default-max-pixels
     claim: "모델 기본 설정을 기본값으로 쓴다 — `--max_pixels`를 주지 않으면 모델 자신의 설정을 따른다 (6.2②)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["모델 기본 설정을 기본값으로"]
     code:
       file: scripts/headroom_guard.py
@@ -129,7 +129,7 @@ pairs:
 
   - id: family-name-pattern
     claim: "계열 차이는 이름 패턴으로 흡수한다 — 블록 리스트 이름이 계열마다 다르다 (6.2③)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["이름 패턴으로 흡수"]
     code:
       file: scripts/headroom_guard.py
@@ -139,7 +139,7 @@ pairs:
 
   - id: fix-cost-reported
     claim: "교정은 권하지 않고 비용과 함께 보고한다 — 완전 등가가 아니며 정확도 비용은 따로 재야 한다 (6.2⑧)"
-    docs: [thesis_ch6_draft.md]
+    docs: [thesis_ch3_draft.md]
     docs_must_contain: ["교정은 권하지 않고"]
     code:
       file: scripts/headroom_guard.py
