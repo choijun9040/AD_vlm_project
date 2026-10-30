@@ -32,9 +32,6 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
-plt.rcParams["font.family"] = "Noto Sans CJK JP"
-plt.rcParams["axes.unicode_minus"] = False
 
 
 def spearman(x, y):
@@ -51,11 +48,11 @@ INK, INK2, GRID = "#0b0b0b", "#52514e", "#e4e4e1"
 
 # (키, 이름, 라벨 오프셋(점) — 가까운 점끼리 겹치지 않게 개별로 정한다)
 MODELS = [
-    ("student_baseline_v2", "기준 모델"),
-    ("base_3b",             "사전학습 모델"),
-    ("student_temporal",    "시간만"),
-    ("student_kd_only_v4",  "출력 증류"),
-    ("student_spatial",     "정렬만"),
+    ("student_baseline_v2", "Task only"),
+    ("base_3b",             "Pre-trained"),
+    ("student_temporal",    "Task + $L_{atc}$"),
+    ("student_kd_only_v4",  "Task + out.KD"),
+    ("student_spatial",     "Task + $L_{align}$"),
     ("student_full",        "Full"),
 ]
 # 라벨 자리 (2026-09-29 렌더 후 조정). 1.0 근처 네 점은 서로 붙어 있어 점 옆에 달면 글자가 겹친다 —
@@ -111,15 +108,15 @@ def panel(ax, rows, field, title, tag, L):
     rho = spearman([r["headroom"] for r in rows], [r[field] for r in rows])
     # 2026-10-24: 제목에서 ρ를 뺀다 — 본문이 순위 상관을 강조하지 않고 「위험을 예고하지 못한다」로 서술한다(ρ는 콘솔에만)
     print(f"  {title}: Spearman ρ = {rho:+.3f}, n = {len(rows)}")
-    ax.set_title(f"{title}   (모델 {len(rows)}개)",
+    ax.set_title(f"{title}   (n = {len(rows)} models)",
                  fontsize=L["base_fs"], pad=6, color=INK)
     ax.set_xlim(0.7, 3.6)
-    ax.set_xlabel("마지막 블록 fp16 여유 (이미지별 최대의 중앙값)")
-    ax.set_ylabel("INT8 양자화 SNR (dB)")
+    ax.set_xlabel("fp16 headroom, final block (median over images)")
+    ax.set_ylabel("INT8 quantization SNR (dB)")
     ax.grid(True, axis="y", color=GRID, lw=0.7)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
-    ax.text(0.985, ax.get_ylim()[0], "fp16 상한 ", fontsize=L["note_fs"], color=INK,
+    ax.text(0.985, ax.get_ylim()[0], "fp16 limit ", fontsize=L["note_fs"], color=INK,
             va="bottom", ha="right", rotation=90)
     return rho
 
@@ -141,8 +138,8 @@ def main():
                          "axes.edgecolor": INK2, "xtick.color": INK2, "ytick.color": INK2})
     nr, nc = (2, 1) if L["rows"] == 2 else (1, 2)
     fig, (ax_a, ax_b) = plt.subplots(nr, nc, figsize=L["figsize"])
-    ra = panel(ax_a, rows, "snr_t", "(a) 텐서 단위", "a", L)
-    rb = panel(ax_b, rows, "snr_c", "(b) 채널 단위", "b", L)
+    ra = panel(ax_a, rows, "snr_t", "(a) per-tensor", "a", L)
+    rb = panel(ax_b, rows, "snr_c", "(b) per-channel", "b", L)
     fig.tight_layout()
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     for ext in ("png", "pdf"):

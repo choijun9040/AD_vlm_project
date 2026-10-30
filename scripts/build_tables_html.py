@@ -31,7 +31,7 @@ def md_inline(s):
     """표 칸의 마크다운 강조만 HTML로. 나머지는 글자 그대로 둔다."""
     s = html.escape(s)
     s = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", s)
-    s = re.sub(r"`(.+?)`", r"<code>\1</code>", s)
+    s = re.sub(r"`(.+?)`", r"\1", s)   # 2026-10-30: 한글에 붙일 때 고정폭 글꼴이 섞이지 않게 코드 표기는 글자로
     return s
 
 
@@ -52,10 +52,10 @@ def extract(text):
         j = start - 1
         while j >= 0 and not lines[j].strip():
             j -= 1
-        m = re.match(r"^\*\*<표 (\d+)>\*\* (.*)$", lines[j]) if j >= 0 else None
+        m = re.match(r"^\*\*<((?:부록 )?표) (\d+)>\*\* (.*)$", lines[j]) if j >= 0 else None
         if not m:
             continue                      # 캡션 없는 표(본문 중 보조 표·부록 표)는 건너뛴다
-        num, title = m.group(1), m.group(2)
+        num, title = f"{m.group(1)} {m.group(2)}", m.group(3)   # 「표 3」 또는 「부록 표 1」 (2026-10-30 부록 표 포함)
         # 조건 줄 `(250장, …)`은 표 바로 뒤에 온다
         k = i
         while k < len(lines) and not lines[k].strip():
@@ -65,19 +65,29 @@ def extract(text):
     return out
 
 
+# 2026-10-30: 한글(HWP)에 붙일 때 `<style>`의 서식은 따라가지 않는 경우가 있어 칸마다 인라인으로 박는다.
+# 글꼴은 지정하지 않는다 — 한글 문서의 본문 글꼴을 그대로 따르게 한다
+TD = "border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;"
+TH = TD + "font-weight:bold;background:#e6e6e6;"
+CAP = "text-align:center;font-size:10pt;margin:0 0 4pt 0;"
+CON = "text-align:center;font-size:8.5pt;margin:4pt 0 0 0;"
+
+
 def render(items):
     rows = []
-    for num, title, cond, tbl in items:
+    for k, (num, title, cond, tbl) in enumerate(items):
         body = []
         for n, ln in enumerate(tbl):
             if re.fullmatch(r"\|[-: |]+\|", ln.strip()):
                 continue                  # 구분선
-            tag = "th" if n == 0 else "td"
-            tds = "".join(f"<{tag}>{md_inline(c)}</{tag}>" for c in cells(ln))
+            tag, st = ("th", TH) if n == 0 else ("td", TD)
+            tds = "".join(f'<{tag} style="{st}">{md_inline(c)}</{tag}>' for c in cells(ln))
             body.append(f"<tr>{tds}</tr>")
-        cap = f'<div class="cap">&lt;표 {num}&gt; {md_inline(title)}</div>'
-        con = f'<div class="cond">{md_inline(cond)}</div>' if cond else ""
-        rows.append(cap + f"\n<table>\n" + "\n".join(body) + "\n</table>\n" + con)   # 제목은 표 위
+        cap = f'<p style="{CAP}">&lt;{num}&gt; {md_inline(title)}</p>'
+        con = f'<p style="{CON}">{md_inline(cond)}</p>' if cond else ""
+        tab = '<table style="border-collapse:collapse;margin:0 auto;">\n' + "\n".join(body) + "\n</table>"
+        rows.append(f'<div class="bar"><button onclick="cp(\'b{k}\', this)">복사</button> &lt;{num}&gt;</div>\n'
+                    f'<div class="blk" id="b{k}">{cap}\n{tab}\n{con}</div>')   # 제목은 표 위
     return "\n\n".join(rows)
 
 
@@ -91,41 +101,51 @@ def main():
 
     text = (ROOT / args.src).read_text(encoding="utf-8")
     items = extract(text)
-    n_cap = len(re.findall(r"^\*\*<표 \d+>\*\*", text, flags=re.M))
+    n_cap = len(re.findall(r"^\*\*<(?:부록 )?표 \d+>\*\*", text, flags=re.M))
     if len(items) != n_cap:
         raise SystemExit(f"표 수 불일치: 뽑은 {len(items)} ≠ 합본의 캡션 {n_cap} — "
                          "캡션이 표 바로 앞에 오지 않는 자리가 있는지 본다")
-    nums = [int(n) for n, *_ in items]
-    if nums != sorted(nums) or nums != list(range(1, len(nums) + 1)):
-        raise SystemExit(f"표 번호가 1..N 연속이 아니다: {nums}")
+    for kind in ("표", "부록 표"):
+        nums = [int(n.split()[-1]) for n, *_ in items if n.rsplit(" ", 1)[0] == kind]
+        if nums != list(range(1, len(nums) + 1)):
+            raise SystemExit(f"{kind} 번호가 1..N 연속이 아니다: {nums}")
+    n_body = sum(1 for n, *_ in items if n.startswith("표 "))
 
     doc = f"""<!doctype html>
 <meta charset="utf-8">
 <title>표 모음 — 한글 붙여넣기용</title>
 <style>
  body {{ font-family: "맑은 고딕", sans-serif; margin: 28px; max-width: 1000px; }}
- table {{ border-collapse: collapse; margin: 6px 0; }}
- th, td {{ border: 1px solid #333; padding: 5px 9px; font-size: 13px; }}
- th {{ background: #e8e8e8; font-weight: bold; }}
- .cap {{ text-align: center; margin: 6px 0 2px; font-size: 13px; }}
- .cond {{ text-align: center; margin: 0 0 26px; font-size: 12px; color: #444; }}
+ .bar {{ margin: 30px 0 6px; font-size: 13px; color: #555; }}
+ .bar button {{ font-size: 13px; padding: 3px 12px; cursor: pointer; }}
+ .blk {{ padding: 4px 0; }}
  .hint {{ background: #fffbe6; border: 1px solid #e8d98a; padding: 10px 14px;
           font-size: 13px; margin-bottom: 22px; line-height: 1.6; }}
 </style>
+<script>
+function cp(id, btn) {{
+  const el = document.getElementById(id), r = document.createRange(), sel = window.getSelection();
+  r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r);
+  let ok = false; try {{ ok = document.execCommand("copy"); }} catch (e) {{}}
+  sel.removeAllRanges();
+  const t = btn.textContent; btn.textContent = ok ? "복사됨 ✓" : "Ctrl+C로 복사"; setTimeout(() => btn.textContent = t, 1500);
+  if (!ok) {{ sel.addRange(r); }}
+}}
+</script>
 <div class="hint">
- <b>자동 생성</b> — <code>scripts/build_tables_html.py</code>가 <code>{args.src}</code>에서 뽑았다.
- 직접 고치지 말고 합본을 고친 뒤 다시 생성한다.<br>
- 캡션은 <b>표 위 중앙</b>(학교 작성 방법)이고, 표 아래 작은 글씨가 <b>측정 조건</b>이다 —
- <b>조건을 빼고 옮기면 값이 무엇을 잰 것인지 알 수 없게 된다.</b><br>
- 표를 끌어 선택해 한글에 붙이면 표 서식이 함께 넘어간다. 캡션과 조건은 따로 복사한다.
+ <b>자동 생성</b> — scripts/build_tables_html.py가 {args.src}에서 뽑았다. 직접 고치지 말고 합본을 고친 뒤 다시 생성한다.<br>
+ <b>사용법</b>: 표 위의 <b>복사</b> 버튼을 누르면 <b>캡션·표·조건 줄</b>이 한 번에 복사된다. 한글(HWP)에서
+ <b>Ctrl+V</b>로 붙이면 표 서식(테두리·머리 칸 음영·가운데 정렬)이 함께 넘어온다. 글꼴은 지정하지 않았으므로
+ 한글 문서의 본문 글꼴을 따른다. 붙인 뒤 표 전체를 선택해 글꼴만 맞추면 된다.<br>
+ 캡션은 표 위 중앙(학교 작성 방법), 표 아래 작은 글씨가 측정 조건이다 — <b>조건을 빼고 옮기면 값이 무엇을 잰 것인지 알 수 없다.</b>
 </div>
-<p>표 {len(items)}개</p>
+<p>본문 표 {n_body}개 · 부록 표 {len(items) - n_body}개</p>
 
 {render(items)}
 """
     (ROOT / args.out).write_text(doc, encoding="utf-8")
     n_cond = sum(1 for *_, c, _ in [(a, b, c, d) for a, b, c, d in items] if c)
-    print(f"표 {len(items)}개 (번호 1..{len(items)} 연속) · 조건 줄 {n_cond}개 → {args.out}")
+    print(f"본문 표 {n_body}개 · 부록 표 {len(items) - n_body}개 · 조건 줄 {n_cond}개 → {args.out}")
     return 0
 
 

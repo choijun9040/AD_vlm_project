@@ -30,18 +30,15 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
-plt.rcParams["font.family"] = "Noto Sans CJK JP"
-plt.rcParams["axes.unicode_minus"] = False
 
 FP16_MAX = 65504.0
 
 # (블록 index, 범례, 색, 선 스타일, 굵기, 마커)
 SERIES = [
-    (31, "블록 31 (마지막)", "#0d366b", "-",  2.6, "o"),
-    (28, "블록 28",         "#184f95", "-",  1.4, "^"),
-    (24, "블록 24",         "#256abf", "--", 1.4, "v"),
-    (16, "블록 16",         "#3987e5", ":",  1.4, "s"),
+    (31, "block 31 (final)", "#0d366b", "-",  2.6, "o"),
+    (28, "block 28",         "#184f95", "-",  1.4, "^"),
+    (24, "block 24",         "#256abf", "--", 1.4, "v"),
+    (16, "block 16",         "#3987e5", ":",  1.4, "s"),
 ]
 
 LAYOUT = {
@@ -84,35 +81,32 @@ def main():
         ax_a.plot(lams, ys, color=color, ls=ls, lw=lw * L["lw"], marker=mk,
                   ms=L["ms"], label=label, zorder=3)
     ax_a.set_yscale("log")
-    ax_a.set_ylabel("이미지별 최대 활성의 중앙값")
-    ax_a.set_title("(a) 블록 깊이별 활성 크기", fontsize=L["base_fs"], pad=6)
+    ax_a.set_ylabel(r"max$|$activation$|$  (median)")
+    ax_a.set_title("(a) activation by depth", fontsize=L["base_fs"], pad=6)
     # 최종 블록만 단조라는 점을 그림 안에서 짚는다
     y31 = [val(e, 31) for _, e in pts]
-    ax_a.annotate("단조 감소", xy=(lams[-1], y31[-1]), xytext=(-4, 10),
+    ax_a.annotate("monotonic", xy=(lams[-1], y31[-1]), xytext=(-4, 10),
                   textcoords="offset points", ha="right", fontsize=L["legend_fs"],
                   color="#0b0b0b", fontweight="bold")
     y24 = [val(e, 24) for _, e in pts]
     # 곡선 위 빈 자리에 둔다 — 이전 위치(λ=2 아래)는 block 16 점선·표지와 겹쳤다
-    ax_a.text((lams[-2] + lams[-1]) / 2, max(y24[-1], val(pts[-1][1], 28)) * 2.6, "포화",
+    ax_a.text((lams[-2] + lams[-1]) / 2, max(y24[-1], val(pts[-1][1], 28)) * 2.6, "saturates",
               ha="center", va="bottom", fontsize=L["legend_fs"], color="#52514e")
 
     # --- (b) fp16 여유 ---
     head = [FP16_MAX / val(e, 31) for _, e in pts]
     ax_b.axhspan(0, 1.0, color="#ecebe6", zorder=0, lw=0)
     ax_b.axhline(1.0, color="#0b0b0b", lw=1.2 * L["lw"], ls=(0, (5, 3)), zorder=1)
-    ax_b.text(lams[-1], 1.06, "1.0배 아래: 출력 상실", fontsize=L["legend_fs"],
+    ax_b.text(lams[-1], 1.06, "collapse below 1.0", fontsize=L["legend_fs"],
               color="#0b0b0b", ha="right", va="bottom")
     ax_b.plot(lams, head, color="#0d366b", lw=2.6 * L["lw"], marker="o",
               ms=L["ms"], zorder=3)
     for x, y in zip(lams, head):
-        # 첫 점(λ=0)은 세로축에 붙어 있어 가운데 맞춤이면 글자가 축선에 닿고, 위쪽은 곡선이 지나간다 —
-        # 오른쪽 아래(곡선과 1.0배 선 사이 빈 자리)에 둔다
-        first = x == lams[0]
-        ax_b.annotate(f"{y:.2f}배", xy=(x, y), xytext=(7, -5) if first else (0, 7), textcoords="offset points",
-                      va="top" if first else "baseline", ha="left" if first else "center", fontsize=L["legend_fs"], color="#52514e")
-    ax_b.set_ylabel("마지막 블록 fp16 여유 (배)")
+        ax_b.annotate(f"{y:.2f}x", xy=(x, y), xytext=(0, 7), textcoords="offset points",
+                      ha="center", fontsize=L["legend_fs"], color="#52514e")
+    ax_b.set_ylabel("fp16 representable-range headroom")
     ax_b.set_ylim(0, max(head) * 1.28)
-    ax_b.set_title("(b) 배포 시 여유", fontsize=L["base_fs"], pad=6)
+    ax_b.set_title("(b) deployment headroom", fontsize=L["base_fs"], pad=6)
 
     for ax in (ax_a, ax_b):
         ax.set_xlabel(r"$\lambda_{align}$")
