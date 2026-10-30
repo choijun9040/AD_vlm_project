@@ -102,6 +102,11 @@
     https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html
     (accessed 2026-10-29)
 45. Gemma Team, S. El Abd, V. Aggarwal, R. Algayres, et al., "Gemma 4 Technical Report," arXiv:2607.02770, 2026.
+46. X. Zhai, B. Mustafa, A. Kolesnikov, L. Beyer, "Sigmoid Loss for Language Image Pre-Training," in *Proc. ICCV*, 2023. (arXiv:2303.15343)
+47. A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, et al., "Learning Transferable Visual Models From Natural Language Supervision," in *Proc. ICML*, 2021. (arXiv:2103.00020)
+48. NVIDIA, "NVIDIA TensorRT Documentation," 2026.
+    https://docs.nvidia.com/deeplearning/tensorrt/latest/index.html
+    (accessed 2026-10-30)
 
 ---
 

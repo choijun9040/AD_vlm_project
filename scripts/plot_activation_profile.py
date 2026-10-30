@@ -99,12 +99,13 @@ def main():
             ax.fill_between(idx, p50, p95, color=color, alpha=0.13, lw=0, zorder=2)
 
     # 헤드라인 수치: 정렬 손실 유무에 따른 중간 계층 격차
-    a = prof["student_baseline_v2"]["passes"]["bfloat16"]["by_layer"]["24"]["p50"]
-    b = prof["student_full"]["passes"]["bfloat16"]["by_layer"]["24"]["p50"]
-    ax.annotate("", xy=(24, a), xytext=(24, b),
+    # 2026-10-30: 정렬 블록(인덱스 23, 세로선)에서 잰다 — 전에는 인덱스 24 값(130)을 써 캡션과 어긋났다
+    a = prof["student_baseline_v2"]["passes"]["bfloat16"]["by_layer"][str(ALIGN_LAYER)]["p50"]
+    b = prof["student_full"]["passes"]["bfloat16"]["by_layer"][str(ALIGN_LAYER)]["p50"]
+    ax.annotate("", xy=(ALIGN_LAYER, a), xytext=(ALIGN_LAYER, b),
                 arrowprops=dict(arrowstyle="<->", color="#3c4340",
                                 lw=1.2 * L["lw_scale"]), zorder=4)
-    ax.text(24.8, (a * b) ** 0.5, f"{a / b:.0f}$\\times$",
+    ax.text(ALIGN_LAYER + 0.8, (a * b) ** 0.5, f"{a / b:.0f}$\\times$",
             fontsize=L["base_fs"], color="#3c4340", va="center", fontweight="bold")
 
     ax.set_yscale("log")
@@ -136,7 +137,7 @@ def main():
         fig.savefig(out, dpi=300, bbox_inches="tight")
         print(f"저장: {out}")
 
-    print(f"이미지 {n_images}장 기준, blk24 격차 {a:,.0f} vs {b:,.0f} = {a / b:.1f}배")
+    print(f"이미지 {n_images}장 기준, 정렬 블록(인덱스 {ALIGN_LAYER}) 격차 {a:,.0f} vs {b:,.0f} = {a / b:.1f}배")
 
 
 if __name__ == "__main__":

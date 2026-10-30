@@ -50,6 +50,8 @@ NAMED = [
     # 2026-10-30: Orin Nano 8GB를 한 이름으로 — 「Orin Nano[7] 8GB」처럼 모델명 중간에 번호가 들어가지 않게
     (r"Orin Nano(?: 8GB)?", 43), (r"TensorRT 11(?![0-9])", 44),
     (r"Gemma 4(?![0-9])", 45),
+    # 2026-10-30: SigLIP·CLIP·TensorRT. TensorRT 11은 위의 출시 노트([44])가 맡으므로 일반 규칙에서 뺀다
+    (r"SigLIP", 46), (r"(?<![A-Za-z])CLIP(?![A-Za-z])", 47), (r"TensorRT(?! 11(?![0-9]))(?: 10(?:\.[0-9]+)*)?", 48),   # 「TensorRT[5] 10.13」이 되지 않게 버전까지 한 이름으로
 ]
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 

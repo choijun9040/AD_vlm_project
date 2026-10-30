@@ -77,11 +77,11 @@ Abstract
 
 Qwen2.5-VL-7B를 교사로 하는 증류 설정에서 손실 항만 달리한 3B 학생 모델로 검증하였다. 학생 모델의 여유는 원본 해상도에서
 0.88~2.94배(이미지별 최대의 중앙값)로 달랐고, 여유가 1 미만인 학생 모델은 fp16에서 이미지의
-96.0%(799장)에 대해 출력을 상실하여, 원본 해상도의 NuScenes-QA 11,309문항에서 정확도가 48.47%(bf16)에서 1.34%(fp16)로 떨어졌다. 텐서 단위 INT8 양자화 SNR은 이 모델을
-상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 사전학습 모델을 포함한 6개 모델의 상실률을 평균 절대 오차 1.1%p(원본 해상도,
+96.0%(799장)에 대해 출력을 상실하였다. 그 결과 원본 해상도의 NuScenes-QA 11,309문항에서 이 모델의 정확도는 48.47%(bf16)에서 1.34%(fp16)로 떨어졌다. 텐서 단위 INT8 양자화 SNR은 이 모델을
+상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 사전학습 모델을 포함한 6개 모델의 상실률을 평균 절대 오차 1.1%p(PyTorch fp16, 원본 해상도,
 799장)로 예측하였고, 제안 교정은 정확도를 오버플로 없는 bf16 실행(48.47%)과
-같은 수준인 48.76%로 회복하면서(11,309문항) fp16 형식을
-유지하였다. 같은 상실과 교정 효과는 TensorRT 엔진과 Jetson Orin Nano(강타입 엔진, 메모리가 허락한 802,816 이하 해상도)에서도 확인되었다.
+0.29%p 차이인 48.76%로 회복하면서(11,309문항) fp16 형식을
+유지하였다. 같은 상실과 교정 효과는 TensorRT 엔진과 Jetson Orin Nano(강타입 엔진, `max_pixels` 802,816 이하)에서도 확인되었다.
 
 이상의 결과는 압축된 VLM을 저정밀로 배포하기 전에 배포 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을
 진단하고 교정해야 함을 보여 준다.
@@ -116,13 +116,13 @@ images exceeding the format limit, together with a training-free correction that
 element-wise multiplication in the gated MLP.
 
 We validated both on 3B students that differ only in their loss terms within a distillation setup
-with a Qwen2.5-VL-7B teacher. The students differ in headroom from 0.88× to 2.94× (median over images, native resolution); the student below 1× loses its output on 96.0% of 799 images in fp16, and
-its accuracy on 11,309 NuScenes-QA questions at native resolution falls from 48.47% (bf16) to 1.34% (fp16). Per-tensor INT8 quantization SNR rates this student
+with a Qwen2.5-VL-7B teacher. The students differ in headroom from 0.88× to 2.94× (median over images, native resolution); the student below 1× loses its output on 96.0% of 799 images in fp16.
+Its accuracy on 11,309 NuScenes-QA questions at native resolution falls from 48.47% (bf16) to 1.34% (fp16). Per-tensor INT8 quantization SNR rates this student
 higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic predicts the
-collapse rate of six models, including the pretrained model, with a mean absolute error of 1.1 percentage points (native resolution, 799 images), and the proposed correction
-restores accuracy to 48.76%, on par with bf16 execution without overflow (48.47%; 11,309 questions), while keeping fp16.
+collapse rate of six models, including the pretrained model, with a mean absolute error of 1.1 percentage points (PyTorch fp16, native resolution, 799 images), and the proposed correction
+restores accuracy to 48.76%, 0.29 percentage points from bf16 execution without overflow (48.47%; 11,309 questions), while keeping fp16.
 The same collapse and correction were confirmed on TensorRT engines and a Jetson Orin Nano (strongly typed engines,
-at resolutions up to 802,816 pixels that its memory allows).
+at resolutions up to 802,816 pixels).
 
 These results show that representable-range headroom must be measured at the deployment
 resolution to diagnose and correct the collapse risk before deploying compressed VLMs in low
@@ -145,10 +145,10 @@ correction, vision-language model, autonomous driving
 표 6. 입력 해상도별 fp16 상실률  
 표 7. 여유·상실률과 표준 압축 지표  
 표 8. 초과 비율과 실제 상실률  
-표 9. 마지막 블록 최댓값의 성분 분해  
-표 10. 사후 개입 위치에 따른 활성과 상실률  
-표 11. 모델 계열별 도구 적용 결과  
-표 12. λ 스윕 체크포인트의 여유와 실제 상실  
+표 9. λ 스윕 체크포인트의 여유와 실제 상실  
+표 10. 마지막 블록 최댓값의 성분 분해  
+표 11. 사후 개입 위치에 따른 활성과 상실률  
+표 12. 모델 계열별 도구 적용 결과  
 표 13. 배포 조건 정확도의 종단 검증  
 표 14. fp16과 bf16의 짝 정확도 비교  
 표 15. 실행 조건에 따른 INT4 정확도  
@@ -159,8 +159,7 @@ correction, vision-language model, autonomous driving
 표 20. 정렬 대상에 따른 마지막 블록 활성  
 표 21. 공개 양자화 저장소의 설정 패턴  
 부록 표 1. 측정 환경  
-부록 표 2. 위험 구성 공개 저장소의 실측 여유  
-부록 표 3. 기반 모델과 양자화 파생본의 여유 상속
+부록 표 2. 위험 구성 공개 저장소의 실측 여유
 
 ---
 
