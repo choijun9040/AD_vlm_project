@@ -81,13 +81,6 @@ RMSNorm(`x·w`)이라 스케일에 불변이다. 따라서 이 세 곳의 가중
 | `fix` | 위험 블록에 필요한 MLP 축소 배수를 산출해 가중치를 교정하고(`--verify`면 재측정) 교정 가중치를 저장한다 |
 | `selftest` | 모델 없이 판정 세 분기와 배수 풀이를 시험한다 |
 
-```
-python scripts/headroom_guard.py diagnose --checkpoint checkpoints/<학생 모델>/epoch_1
-python scripts/headroom_guard.py diagnose --repo Qwen/Qwen2.5-VL-3B-Instruct-AWQ \
-    --dtype float16 --max_pixels 1440000
-python scripts/headroom_guard.py fix --checkpoint ... --target_headroom 2.0 --verify
-```
-
 도구의 설계 판단은 다음과 같다.
 
 **① 크기는 bf16에서, 상실은 목표 형식에서 측정한다.** 여유 `format_max ÷ max|activation|`의 분모는
@@ -116,10 +109,6 @@ bf16이 문제를 즉시 없앤다. 따라서 GPU 배포라면 가중치를 고�
 권고한다. 다만 형식을 자동으로 선택하지는 않는다. TensorRT에서 bf16 엔진은 fp16 대비 1.30~1.36배 느렸고(교정 그래프, 원본 해상도, A100, TensorRT 10.13·10.16, 5.5절),
 fp16은 범위 안에서 bf16보다 8배 정밀하다(6.2절 한계 3). 또한 **배포 대상이 bf16을 지원하지
 않으면 이 권고는 실행할 수 없는 조언**이다. Jetson의 DLA는 fp16과 INT8만 지원한다. 따라서 도구는 대상의 지원 형식을 입력으로 받는다.
-
-```
-python scripts/headroom_guard.py diagnose --dtype float16 --available_formats float16,int8
-```
 
 지원하지 않는 형식은 표에 대상 미지원으로 표시하고, 1순위 권고는 형식 전환을 빼고
 가중치 교정, 배포 해상도 하향, 대상 변경의 세 가지로 바뀐다. 형식 전환이라는 대안이
