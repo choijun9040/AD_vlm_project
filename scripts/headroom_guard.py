@@ -233,8 +233,8 @@ def profile(tower, cache, dtype, fmax_dtype=None):
         p50 = st.median(vals) if vals else float("nan")
         worst = max(vals) if vals else float("nan")
         # **초과 비율** — 이미지별 max가 형식 상한을 넘는 비율.
-        # 게이트 보정(2026-09-15)에서 이 값이 실제 상실률을 250장·6개 모델 기준
-        # 평균 2.1%p(최대 6.4%p) 오차로 맞혔다. 임계값도 통계량 선택도 필요 없는
+        # 원본 해상도 799장·6개 모델에서 이 값이 PyTorch fp16 실제 상실률을
+        # 평균 절대 1.1%p(최대 2.8%p, 항상 높은 쪽) 오차로 맞혔다(논문 Ⅴ장 3절). 임계값도 통계량 선택도 필요 없는
         # **직접 추정치**이므로 도구의 1차 출력으로 쓴다.
         exceed = (sum(1 for v in vals if v > fmax) + (len(rec[i]) - len(vals))) / \
                  max(len(rec[i]), 1)
@@ -423,7 +423,7 @@ def print_verdict(lastb, nimg):
     ub = zero_obs_upper_bound(nimg)
     print(f"\n[판정] 마지막 블록 (기준: 초과 비율, {nimg}장)")
     print(f"  초과 비율 {exc*100:.1f}%  ← 상실률 추정치 "
-          f"(실측 대조 평균 오차 2.1%p, 6개 모델)")
+          f"(실측 대조 평균 절대 오차 1.1%p·최대 2.8%p, 6개 모델·799장)")
     if hw:
         print(f"  여유  p50 {lastb['headroom']:.2f}배 · 최악 {hw:.2f}배")
     if exc > 0:

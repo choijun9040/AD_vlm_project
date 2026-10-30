@@ -47,7 +47,9 @@ NAMED = [
     (r"Qwen2-VL", 31), (r"(?<![A-Za-z-])AWQ(?![A-Za-z-])", 33), (r"Qwen3-VL", 34),
     (r"(?<![A-Za-z_])Phi(?![A-Za-z_])", 35), (r"LLaVA", 36), (r"InternVL3", 37), (r"SmolVLM", 38), (r"Pixtral", 39),
     (r"GLM-4\.1V", 40), (r"Kimi-VL", 41), (r"(?<![A-Za-z])DLA(?![A-Za-z])", 42),
-    (r"Orin Nano", 43), (r"TensorRT 11(?![0-9])", 44),
+    # 2026-10-30: Orin Nano 8GB를 한 이름으로 — 「Orin Nano[7] 8GB」처럼 모델명 중간에 번호가 들어가지 않게
+    (r"Orin Nano(?: 8GB)?", 43), (r"TensorRT 11(?![0-9])", 44),
+    (r"Gemma 4(?![0-9])", 45),
 ]
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 

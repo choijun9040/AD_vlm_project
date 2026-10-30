@@ -347,7 +347,8 @@
       ],
       "retired_scope": [
         "thesis_*_draft.md",
-        "thesis_figures.md"
+        "thesis_figures.md",
+        "scripts/headroom_guard.py"
       ],
       "watch": [],
       "condition": "6개 모델 평균 절대 오차 · PyTorch fp16 · 원본 해상도 · 799장 (2026-10-26 추가)"

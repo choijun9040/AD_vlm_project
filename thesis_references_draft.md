@@ -101,6 +101,7 @@
 44. NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*, 2026.
     https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html
     (accessed 2026-10-29)
+45. Gemma Team, S. El Abd, V. Aggarwal, R. Algayres, et al., "Gemma 4 Technical Report," arXiv:2607.02770, 2026.
 
 ---
 
