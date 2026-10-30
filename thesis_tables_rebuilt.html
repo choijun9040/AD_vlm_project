@@ -10,25 +10,45 @@
           font-size: 13px; margin-bottom: 22px; line-height: 1.6; }
 </style>
 <script>
-function cp(id, btn) {
-  const el = document.getElementById(id), r = document.createRange(), sel = window.getSelection();
-  r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r);
+// 2026-10-30: 한글에 붙이면 칸이 하나로 합쳐지는 경우가 있어, 표만 깨끗한 HTML 문서로 감싸 복사하고
+// 탭 구분 텍스트도 함께 넣는다. 캡션·조건은 글자로 따로 복사한다.
+function flash(btn, msg) { const t = btn.textContent; btn.textContent = msg; setTimeout(() => btn.textContent = t, 1500); }
+function fallback(node, btn) {
+  const r = document.createRange(), sel = window.getSelection();
+  r.selectNode(node); sel.removeAllRanges(); sel.addRange(r);
   let ok = false; try { ok = document.execCommand("copy"); } catch (e) {}
-  sel.removeAllRanges();
-  const t = btn.textContent; btn.textContent = ok ? "복사됨 ✓" : "Ctrl+C로 복사"; setTimeout(() => btn.textContent = t, 1500);
-  if (!ok) { sel.addRange(r); }
+  if (ok) sel.removeAllRanges();
+  flash(btn, ok ? "복사됨 ✓" : "Ctrl+C로 복사");
+}
+async function cpTable(id, btn) {
+  const tbl = document.querySelector("#" + id + " table");
+  const html = '<html><head><meta charset="utf-8"></head><body><!--StartFragment-->' + tbl.outerHTML + '<!--EndFragment--></body></html>';
+  const tsv = [...tbl.rows].map(r => [...r.cells].map(c => c.innerText.trim()).join("	")).join("
+");
+  try {
+    await navigator.clipboard.write([new ClipboardItem({
+      "text/html": new Blob([html], { type: "text/html" }),
+      "text/plain": new Blob([tsv], { type: "text/plain" }) })]);
+    flash(btn, "복사됨 ✓");
+  } catch (e) { fallback(tbl, btn); }
+}
+async function cpText(id, which, btn) {
+  const ps = document.querySelectorAll("#" + id + " p"), node = which === 0 ? ps[0] : ps[ps.length - 1];
+  try { await navigator.clipboard.writeText(node.innerText); flash(btn, "복사됨 ✓"); }
+  catch (e) { fallback(node, btn); }
 }
 </script>
 <div class="hint">
  <b>자동 생성</b> — scripts/build_tables_html.py가 thesis_full_draft.md에서 뽑았다. 직접 고치지 말고 합본을 고친 뒤 다시 생성한다.<br>
- <b>사용법</b>: 표 위의 <b>복사</b> 버튼을 누르면 <b>캡션·표·조건 줄</b>이 한 번에 복사된다. 한글(HWP)에서
- <b>Ctrl+V</b>로 붙이면 표 서식(테두리·머리 칸 음영·가운데 정렬)이 함께 넘어온다. 글꼴은 지정하지 않았으므로
- 한글 문서의 본문 글꼴을 따른다. 붙인 뒤 표 전체를 선택해 글꼴만 맞추면 된다.<br>
+ <b>사용법</b>: <b>표 복사</b>는 표만, <b>캡션 복사</b>·<b>조건 복사</b>는 그 글자만 복사한다. 한글(HWP)에서
+ <b>Ctrl+V</b>로 붙인다. 붙인 표가 한 칸으로 합쳐지면 <b>Ctrl+Alt+V(골라 붙이기)</b>에서 HTML 형식을 고르거나,
+ 같은 폴더의 <b>thesis_tables.docx</b>를 한글에서 열어 표를 복사해 붙인다(한글끼리 복사라 칸이 깨지지 않는다).
+ 글꼴은 지정하지 않았으므로 한글 문서의 본문 글꼴을 따른다.<br>
  캡션은 표 위 중앙(학교 작성 방법), 표 아래 작은 글씨가 측정 조건이다 — <b>조건을 빼고 옮기면 값이 무엇을 잰 것인지 알 수 없다.</b>
 </div>
 <p>본문 표 21개 · 부록 표 2개</p>
 
-<div class="bar"><button onclick="cp('b0', this)">복사</button> &lt;표 1&gt;</div>
+<div class="bar"><button onclick="cpTable('b0', this)">표 복사</button> <button onclick="cpText('b0', 0, this)">캡션 복사</button> &lt;표 1&gt;</div>
 <div class="blk" id="b0"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 1&gt; 도구의 판정 기준</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">판정</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">조건</th></tr>
@@ -38,7 +58,7 @@ function cp(id, btn) {
 </table>
 </div>
 
-<div class="bar"><button onclick="cp('b1', this)">복사</button> &lt;표 2&gt;</div>
+<div class="bar"><button onclick="cpTable('b1', this)">표 복사</button> <button onclick="cpText('b1', 0, this)">캡션 복사</button> <button onclick="cpText('b1', 1, this)">조건 복사</button> &lt;표 2&gt;</div>
 <div class="blk" id="b1"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 2&gt; 다섯 학생 변형의 손실·가중치·교사 입력</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">변형</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">손실</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">λ_align · λ_atc</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">교사 입력</th></tr>
@@ -50,7 +70,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(출력 증류의 λ_kd = 1.0, T = 1.5)</p></div>
 
-<div class="bar"><button onclick="cp('b2', this)">복사</button> &lt;표 3&gt;</div>
+<div class="bar"><button onclick="cpTable('b2', this)">표 복사</button> <button onclick="cpText('b2', 0, this)">캡션 복사</button> <button onclick="cpText('b2', 1, this)">조건 복사</button> &lt;표 3&gt;</div>
 <div class="blk" id="b2"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 3&gt; 측정 형식에 따른 여유와 판정</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">측정 형식</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">유한 표본</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">활성 중앙값</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">여유</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">판정</th></tr>
@@ -59,7 +79,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(기준 모델, 원본 해상도, 마지막 블록, 799장. fp16 활성 중앙값은 유한한 32장의 중앙값으로, 가운데 두 값의 평균이다)</p></div>
 
-<div class="bar"><button onclick="cp('b3', this)">복사</button> &lt;표 4&gt;</div>
+<div class="bar"><button onclick="cpTable('b3', this)">표 복사</button> <button onclick="cpText('b3', 0, this)">캡션 복사</button> <button onclick="cpText('b3', 1, this)">조건 복사</button> &lt;표 4&gt;</div>
 <div class="blk" id="b3"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 4&gt; 변형별·질문 유형별 NuScenes-QA 검증 정확도</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">변형</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">전체</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">비교</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">개수</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">존재</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">대상</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">상태</th></tr>
@@ -71,7 +91,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(NuScenes-QA 검증 11,309문항, 평가 해상도, bf16. 괄호는 정답 수)</p></div>
 
-<div class="bar"><button onclick="cp('b4', this)">복사</button> &lt;표 5&gt;</div>
+<div class="bar"><button onclick="cpTable('b4', this)">표 복사</button> <button onclick="cpText('b4', 0, this)">캡션 복사</button> <button onclick="cpText('b4', 1, this)">조건 복사</button> &lt;표 5&gt;</div>
 <div class="blk" id="b4"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 5&gt; 비전 인코더 블록별 최대 활성 크기</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">모델</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">blk16</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">blk23 (정렬)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">blk28</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>blk31 (마지막)</b></th></tr>
@@ -85,7 +105,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값). blk23은 정렬 손실을 거는 블록이다</p></div>
 
-<div class="bar"><button onclick="cp('b5', this)">복사</button> &lt;표 6&gt;</div>
+<div class="bar"><button onclick="cpTable('b5', this)">표 복사</button> <button onclick="cpText('b5', 0, this)">캡션 복사</button> <button onclick="cpText('b5', 1, this)">조건 복사</button> &lt;표 6&gt;</div>
 <div class="blk" id="b5"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 6&gt; 입력 해상도별 fp16 상실률</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">입력 픽셀 상한</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">패치 수(병합 전)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Task only</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Task + out.KD</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Task + L_atc</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Pre-trained</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Task + L_align</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Full</th></tr>
@@ -97,7 +117,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(fp16 상실률, 799장, 이미지 단위로 출력이 NaN이면 상실)</p></div>
 
-<div class="bar"><button onclick="cp('b6', this)">복사</button> &lt;표 7&gt;</div>
+<div class="bar"><button onclick="cpTable('b6', this)">표 복사</button> <button onclick="cpText('b6', 0, this)">캡션 복사</button> <button onclick="cpText('b6', 1, this)">조건 복사</button> &lt;표 7&gt;</div>
 <div class="blk" id="b6"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 7&gt; 여유·상실률과 표준 압축 지표</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">변형</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">여유</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">상실률</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">max/rms</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">INT8 SNR</th></tr>
@@ -110,7 +130,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(원본 해상도, 마지막 블록, 799장, SNR·max/rms는 이미지별 값의 중앙값·텐서 단위, 여유는 p50·bf16 측정)</p></div>
 
-<div class="bar"><button onclick="cp('b7', this)">복사</button> &lt;표 8&gt;</div>
+<div class="bar"><button onclick="cpTable('b7', this)">표 복사</button> <button onclick="cpText('b7', 0, this)">캡션 복사</button> <button onclick="cpText('b7', 1, this)">조건 복사</button> &lt;표 8&gt;</div>
 <div class="blk" id="b7"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 8&gt; 실행 조건에 따른 INT4 정확도</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">변형</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">INT4 교란</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>INT4 통제</b></th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">양자화 전 bf16(Ⅴ장 1절)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">통제−양자화 전</th></tr>
@@ -122,7 +142,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(NuScenes-QA 검증 11,309문항. 교란 = fp16 로드·원본 해상도, 통제 = bf16 로드·평가 해상도, 양자화 전 = 평가 해상도 bf16)</p></div>
 
-<div class="bar"><button onclick="cp('b8', this)">복사</button> &lt;표 9&gt;</div>
+<div class="bar"><button onclick="cpTable('b8', this)">표 복사</button> <button onclick="cpText('b8', 0, this)">캡션 복사</button> <button onclick="cpText('b8', 1, this)">조건 복사</button> &lt;표 9&gt;</div>
 <div class="blk" id="b8"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 9&gt; 초과 비율과 실제 상실률</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">모델</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">초과 비율</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">실제 상실률</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">오차</th></tr>
@@ -135,7 +155,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(원본 해상도, 마지막 블록, 799장, 초과 비율은 bf16, 상실률은 PyTorch fp16, 오차 = 초과 비율 − 실제 상실률)</p></div>
 
-<div class="bar"><button onclick="cp('b9', this)">복사</button> &lt;표 10&gt;</div>
+<div class="bar"><button onclick="cpTable('b9', this)">표 복사</button> <button onclick="cpText('b9', 0, this)">캡션 복사</button> <button onclick="cpText('b9', 1, this)">조건 복사</button> &lt;표 10&gt;</div>
 <div class="blk" id="b9"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 10&gt; λ 스윕 체크포인트의 여유와 실제 상실</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">λ</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">여유 p50(배)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>최악(배)</b></th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">초과 비율</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>실제 상실</b></th></tr>
@@ -146,7 +166,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(원본 해상도, 799장, 크기는 bf16·상실은 fp16. λ = 0.5는 초과 0건이나 최악 여유가 1.25배 아래라 도구 판정이 「경계」다)</p></div>
 
-<div class="bar"><button onclick="cp('b10', this)">복사</button> &lt;표 11&gt;</div>
+<div class="bar"><button onclick="cpTable('b10', this)">표 복사</button> <button onclick="cpText('b10', 0, this)">캡션 복사</button> <button onclick="cpText('b10', 1, this)">조건 복사</button> &lt;표 11&gt;</div>
 <div class="blk" id="b10"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 11&gt; 마지막 블록 최댓값의 성분 분해</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">변형</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">잔차</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">attn</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>mlp</b></th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">합</th></tr>
@@ -158,7 +178,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장, 평가 해상도, bf16. 각 열은 성분별 중앙값이라 합 열과 일치하지 않는다. 합 열은 &lt;표 5&gt;의 마지막 블록 값과 bf16 최소 간격(1 ulp) 이내에서 다르다)</p></div>
 
-<div class="bar"><button onclick="cp('b11', this)">복사</button> &lt;표 12&gt;</div>
+<div class="bar"><button onclick="cpTable('b11', this)">표 복사</button> <button onclick="cpText('b11', 0, this)">캡션 복사</button> <button onclick="cpText('b11', 1, this)">조건 복사</button> &lt;표 12&gt;</div>
 <div class="blk" id="b11"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 12&gt; 사후 개입 위치에 따른 활성과 상실률</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">개입</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">곱 act(gate)⊙up</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">down_proj 출력</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">상실률 (원본 해상도)</th></tr>
@@ -168,7 +188,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다. 없음 행은 상한을 넘은 이미지가 빠진 값이라 참값보다 작다. 참값은 bf16 p50 74,752다. 상실률은 이 실행에서 측정하였고, 측정 구현에 따른 차이는 Ⅳ장 2절과 같다)</p></div>
 
-<div class="bar"><button onclick="cp('b12', this)">복사</button> &lt;표 13&gt;</div>
+<div class="bar"><button onclick="cpTable('b12', this)">표 복사</button> <button onclick="cpText('b12', 0, this)">캡션 복사</button> <button onclick="cpText('b12', 1, this)">조건 복사</button> &lt;표 13&gt;</div>
 <div class="blk" id="b12"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 13&gt; 모델 계열별 도구 적용 결과</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">모델</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">계열</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">블록 구조</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">마지막 블록 여유</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">판정</th></tr>
@@ -179,7 +199,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장, Qwen 계열은 원본 해상도, SmolVLM은 기본 처리기, 여유는 p50)</p></div>
 
-<div class="bar"><button onclick="cp('b13', this)">복사</button> &lt;표 14&gt;</div>
+<div class="bar"><button onclick="cpTable('b13', this)">표 복사</button> <button onclick="cpText('b13', 0, this)">캡션 복사</button> <button onclick="cpText('b13', 1, this)">조건 복사</button> &lt;표 14&gt;</div>
 <div class="blk" id="b13"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 14&gt; 배포 조건 정확도의 종단 검증</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">모델</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">해상도</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">형식</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">교정</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">정확도</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">상실형 출력</th></tr>
@@ -195,7 +215,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(NuScenes-QA 검증 11,309문항, PyTorch. 원본 = max_pixels 1,440,000, 평가 = 200,704. 상실형 출력은 문항 수)</p></div>
 
-<div class="bar"><button onclick="cp('b14', this)">복사</button> &lt;표 15&gt;</div>
+<div class="bar"><button onclick="cpTable('b14', this)">표 복사</button> <button onclick="cpText('b14', 0, this)">캡션 복사</button> <button onclick="cpText('b14', 1, this)">조건 복사</button> &lt;표 15&gt;</div>
 <div class="blk" id="b14"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 15&gt; fp16과 bf16의 짝 정확도 비교</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">모델</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">해상도</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">여유</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">fp16</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">bf16</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">불일치</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">fp16 상실형</th></tr>
@@ -206,7 +226,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(NuScenes-QA 검증 11,309문항, PyTorch. 불일치는 fp16만 정답 대 bf16만 정답인 문항 수. 상실 문항 제외 행의 bf16 열은 같은 10,776문항에서 다시 계산한 값이며(정답 5,420개), 50.30%는 전체 문항의 값과 일치한다)</p></div>
 
-<div class="bar"><button onclick="cp('b15', this)">복사</button> &lt;표 16&gt;</div>
+<div class="bar"><button onclick="cpTable('b15', this)">표 복사</button> <button onclick="cpText('b15', 0, this)">캡션 복사</button> <button onclick="cpText('b15', 1, this)">조건 복사</button> &lt;표 16&gt;</div>
 <div class="blk" id="b15"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 16&gt; 네 가지 배포 선택지의 비교</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">선택</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">상실률</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">지연 p50</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">가중치 메모리</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">정확도 (원본 해상도, 11,309문항)</th></tr>
@@ -217,7 +237,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(상실률·지연·메모리는 TensorRT 10.13·799장. 가중치 메모리는 블록 밖 병합 층과 상수를 포함한 값이다. 지연은 실행마다 따로 측정한 값이다(fp32와 fp16 무교정은 같은 실행, 교정 fp16은</p></div>
 
-<div class="bar"><button onclick="cp('b16', this)">복사</button> &lt;표 17&gt;</div>
+<div class="bar"><button onclick="cpTable('b16', this)">표 복사</button> <button onclick="cpText('b16', 0, this)">캡션 복사</button> <button onclick="cpText('b16', 1, this)">조건 복사</button> &lt;표 17&gt;</div>
 <div class="blk" id="b16"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 17&gt; 실행 경로별 상실률과 초과 비율</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">해상도</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">초과 비율 (bf16)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">PyTorch fp16</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>TensorRT 강타입</b></th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">TensorRT 관행 (fp32 그래프)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">TensorRT 관행 (fp16 그래프)</th></tr>
@@ -227,7 +247,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(기준 모델, 799장, TensorRT 10.13, A100. Full과 교정본은 모든 칸에서 0%. 관행 열이 두 개인 것은</p></div>
 
-<div class="bar"><button onclick="cp('b17', this)">복사</button> &lt;표 18&gt;</div>
+<div class="bar"><button onclick="cpTable('b17', this)">표 복사</button> <button onclick="cpText('b17', 0, this)">캡션 복사</button> <button onclick="cpText('b17', 1, this)">조건 복사</button> &lt;표 18&gt;</div>
 <div class="blk" id="b17"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 18&gt; Orin Nano 실측 결과</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">해상도</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">모델</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">Orin Nano</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">A100 강타입</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">지연 p50 (Orin)</th></tr>
@@ -240,7 +260,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)</p></div>
 
-<div class="bar"><button onclick="cp('b18', this)">복사</button> &lt;표 19&gt;</div>
+<div class="bar"><button onclick="cpTable('b18', this)">표 복사</button> <button onclick="cpText('b18', 0, this)">캡션 복사</button> <button onclick="cpText('b18', 1, this)">조건 복사</button> &lt;표 19&gt;</div>
 <div class="blk" id="b18"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 19&gt; 정렬 손실 가중치 λ_align에 따른 활성과 여유</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">λ</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">blk23 (정렬)</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;"><b>blk31</b></th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">λ = 0 대비</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">여유(fp16 상한 기준)</th></tr>
@@ -251,7 +271,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장, 평가 해상도, bf16, p50)</p></div>
 
-<div class="bar"><button onclick="cp('b19', this)">복사</button> &lt;표 20&gt;</div>
+<div class="bar"><button onclick="cpTable('b19', this)">표 복사</button> <button onclick="cpText('b19', 0, this)">캡션 복사</button> <button onclick="cpText('b19', 1, this)">조건 복사</button> &lt;표 20&gt;</div>
 <div class="blk" id="b19"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 20&gt; 정렬 대상에 따른 마지막 블록 활성</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">변형</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">정렬 대상</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">blk31 p50</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">λ = 0 대비</th></tr>
@@ -263,7 +283,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(799장 짝, 평가 해상도, bf16. 교사 정렬 행은 &lt;표 19&gt;의 값과 같다)</p></div>
 
-<div class="bar"><button onclick="cp('b20', this)">복사</button> &lt;표 21&gt;</div>
+<div class="bar"><button onclick="cpTable('b20', this)">표 복사</button> <button onclick="cpText('b20', 0, this)">캡션 복사</button> <button onclick="cpText('b20', 1, this)">조건 복사</button> &lt;표 21&gt;</div>
 <div class="blk" id="b20"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;표 21&gt; 공개 양자화 저장소의 설정 패턴</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">패턴</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">비율</th></tr>
@@ -274,7 +294,7 @@ function cp(id, btn) {
 </table>
 <p style="text-align:center;font-size:8.5pt;margin:4pt 0 0 0;">(공개 양자화 VLM 저장소 197개, config 기준)</p></div>
 
-<div class="bar"><button onclick="cp('b21', this)">복사</button> &lt;부록 표 1&gt;</div>
+<div class="bar"><button onclick="cpTable('b21', this)">표 복사</button> <button onclick="cpText('b21', 0, this)">캡션 복사</button> &lt;부록 표 1&gt;</div>
 <div class="blk" id="b21"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;부록 표 1&gt; 측정 환경</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">용도</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">환경</th></tr>
@@ -285,7 +305,7 @@ function cp(id, btn) {
 </table>
 </div>
 
-<div class="bar"><button onclick="cp('b22', this)">복사</button> &lt;부록 표 2&gt;</div>
+<div class="bar"><button onclick="cpTable('b22', this)">표 복사</button> <button onclick="cpText('b22', 0, this)">캡션 복사</button> <button onclick="cpText('b22', 1, this)">조건 복사</button> &lt;부록 표 2&gt;</div>
 <div class="blk" id="b22"><p style="text-align:center;font-size:10pt;margin:0 0 4pt 0;">&lt;부록 표 2&gt; 위험 구성 공개 저장소의 실측 여유</p>
 <table style="border-collapse:collapse;margin:0 auto;">
 <tr><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">저장소</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">여유 p50</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">최악</th><th style="border:1px solid #000;padding:3pt 6pt;font-size:9pt;text-align:center;vertical-align:middle;font-weight:bold;background:#e6e6e6;">판정</th></tr>

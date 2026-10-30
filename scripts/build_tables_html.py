@@ -86,7 +86,10 @@ def render(items):
         cap = f'<p style="{CAP}">&lt;{num}&gt; {md_inline(title)}</p>'
         con = f'<p style="{CON}">{md_inline(cond)}</p>' if cond else ""
         tab = '<table style="border-collapse:collapse;margin:0 auto;">\n' + "\n".join(body) + "\n</table>"
-        rows.append(f'<div class="bar"><button onclick="cp(\'b{k}\', this)">복사</button> &lt;{num}&gt;</div>\n'
+        rows.append(f'<div class="bar"><button onclick="cpTable(\'b{k}\', this)">표 복사</button> '
+                    f'<button onclick="cpText(\'b{k}\', 0, this)">캡션 복사</button> '
+                    + (f'<button onclick="cpText(\'b{k}\', 1, this)">조건 복사</button> ' if cond else "")
+                    + f'&lt;{num}&gt;</div>\n'
                     f'<div class="blk" id="b{k}">{cap}\n{tab}\n{con}</div>')   # 제목은 표 위
     return "\n\n".join(rows)
 
@@ -123,20 +126,39 @@ def main():
           font-size: 13px; margin-bottom: 22px; line-height: 1.6; }}
 </style>
 <script>
-function cp(id, btn) {{
-  const el = document.getElementById(id), r = document.createRange(), sel = window.getSelection();
-  r.selectNodeContents(el); sel.removeAllRanges(); sel.addRange(r);
+// 2026-10-30: 한글에 붙이면 칸이 하나로 합쳐지는 경우가 있어, 표만 깨끗한 HTML 문서로 감싸 복사하고
+// 탭 구분 텍스트도 함께 넣는다. 캡션·조건은 글자로 따로 복사한다.
+function flash(btn, msg) {{ const t = btn.textContent; btn.textContent = msg; setTimeout(() => btn.textContent = t, 1500); }}
+function fallback(node, btn) {{
+  const r = document.createRange(), sel = window.getSelection();
+  r.selectNode(node); sel.removeAllRanges(); sel.addRange(r);
   let ok = false; try {{ ok = document.execCommand("copy"); }} catch (e) {{}}
-  sel.removeAllRanges();
-  const t = btn.textContent; btn.textContent = ok ? "복사됨 ✓" : "Ctrl+C로 복사"; setTimeout(() => btn.textContent = t, 1500);
-  if (!ok) {{ sel.addRange(r); }}
+  if (ok) sel.removeAllRanges();
+  flash(btn, ok ? "복사됨 ✓" : "Ctrl+C로 복사");
+}}
+async function cpTable(id, btn) {{
+  const tbl = document.querySelector("#" + id + " table");
+  const html = '<html><head><meta charset="utf-8"></head><body><!--StartFragment-->' + tbl.outerHTML + '<!--EndFragment--></body></html>';
+  const tsv = [...tbl.rows].map(r => [...r.cells].map(c => c.innerText.trim()).join("\t")).join("\n");
+  try {{
+    await navigator.clipboard.write([new ClipboardItem({{
+      "text/html": new Blob([html], {{ type: "text/html" }}),
+      "text/plain": new Blob([tsv], {{ type: "text/plain" }}) }})]);
+    flash(btn, "복사됨 ✓");
+  }} catch (e) {{ fallback(tbl, btn); }}
+}}
+async function cpText(id, which, btn) {{
+  const ps = document.querySelectorAll("#" + id + " p"), node = which === 0 ? ps[0] : ps[ps.length - 1];
+  try {{ await navigator.clipboard.writeText(node.innerText); flash(btn, "복사됨 ✓"); }}
+  catch (e) {{ fallback(node, btn); }}
 }}
 </script>
 <div class="hint">
  <b>자동 생성</b> — scripts/build_tables_html.py가 {args.src}에서 뽑았다. 직접 고치지 말고 합본을 고친 뒤 다시 생성한다.<br>
- <b>사용법</b>: 표 위의 <b>복사</b> 버튼을 누르면 <b>캡션·표·조건 줄</b>이 한 번에 복사된다. 한글(HWP)에서
- <b>Ctrl+V</b>로 붙이면 표 서식(테두리·머리 칸 음영·가운데 정렬)이 함께 넘어온다. 글꼴은 지정하지 않았으므로
- 한글 문서의 본문 글꼴을 따른다. 붙인 뒤 표 전체를 선택해 글꼴만 맞추면 된다.<br>
+ <b>사용법</b>: <b>표 복사</b>는 표만, <b>캡션 복사</b>·<b>조건 복사</b>는 그 글자만 복사한다. 한글(HWP)에서
+ <b>Ctrl+V</b>로 붙인다. 붙인 표가 한 칸으로 합쳐지면 <b>Ctrl+Alt+V(골라 붙이기)</b>에서 HTML 형식을 고르거나,
+ 같은 폴더의 <b>thesis_tables.docx</b>를 한글에서 열어 표를 복사해 붙인다(한글끼리 복사라 칸이 깨지지 않는다).
+ 글꼴은 지정하지 않았으므로 한글 문서의 본문 글꼴을 따른다.<br>
  캡션은 표 위 중앙(학교 작성 방법), 표 아래 작은 글씨가 측정 조건이다 — <b>조건을 빼고 옮기면 값이 무엇을 잰 것인지 알 수 없다.</b>
 </div>
 <p>본문 표 {n_body}개 · 부록 표 {len(items) - n_body}개</p>
