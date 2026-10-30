@@ -20,13 +20,13 @@ headroom_guard — 저정밀 배포 전 표현 범위 여유를 진단하고 교
 (실측: 10장 중 8장이 발산한 상태로 풀어 목표 2.0배 대신 1.74배에 그쳤다).
 여유의 정의 `format_max ÷ max|activation|`에서 분모는 **참값**이어야 한다.
 
-**정직하게 짚을 한계.** 교정은 **완전 등가가 아니다.** 게이트형 MLP에서 곱이 만들어지기
-전에 줄이면 오버플로는 사라지지만, 잔차 분기와 MLP 분기의 비율이 바뀐다. 뒤따르는
-정규화가 대부분 흡수하나 전부는 아니다. 다만 **배포 조건에서 잰 비용은 측정 한계
-이하**였다 — 원본 해상도·fp16·1,029문항에서 무교정 bf16 기준선 대비 +0.78%p,
-McNemar p=0.34(2026-09-15). 이전 판이 인용하던 −0.59%p는 **평가 해상도·bf16**,
-즉 오버플로가 없어 교정이 필요 없는 조건에서 잰 값이었다. 따라서 이 도구는
-**교정을 권하지 않고, 비용과 함께 보고**한다. 채택 여부는 사용자가 정한다.
+**정직하게 짚을 한계.** 곱셈 이전 축소는 **완전 등가가 아니다.** 게이트형 MLP에서 곱이 만들어지기
+전에 줄이면 오버플로는 사라지지만, 잔차 분기와 MLP 분기의 비율이 바뀐다. 배포 조건에서 잰 비용은
+원본 해상도·fp16·11,309문항에서 교정 fp16 48.76% 대 무교정 bf16 48.47%(+0.29%p), 출력 문자열 일치 74.8%였다
+(논문 Ⅴ장 4절). 이전 판이 인용하던 −0.59%p는 **평가 해상도·bf16**, 즉 오버플로가 없어 교정이 필요 없는
+조건에서 잰 값이었다. 따라서 이 도구는 **교정을 권하지 않고, 비용과 함께 보고**한다. 채택 여부는 사용자가 정한다.
+(2026-10-30 추가) 잔차 재조정은 fp32 등가성 검사를 통과할 때만 적용하는 등가 교정이며, `--fix_mode auto`에서
+먼저 시도한다 — headroom_ext.py, 사전 등록 thesis_outline §6 「교정의 전 계열 확장」.
 
 실행:
     python scripts/headroom_guard.py diagnose --checkpoint checkpoints/student_baseline_v2/epoch_1
@@ -35,6 +35,7 @@ McNemar p=0.34(2026-09-15). 이전 판이 인용하던 −0.59%p는 **평가 해
 """
 
 import argparse
+import copy
 import json
 import math
 import sys
@@ -50,6 +51,7 @@ from dataloader import build_token_to_images
 BASE_3B = "Qwen/Qwen2.5-VL-3B-Instruct"
 DRIVELM_VAL = "data/QA_dataset_nus/v1_1_val_nus_q_only.json"
 LAST_PER_IMAGE = None
+PARENT_MODEL = None          # 잔차 재조정의 출구가 프로젝터일 때 보정하려고 부모 모델을 기억한다 (2026-10-30)
 FORMAT_MAX = {"float16": 65504.0, "bfloat16": 3.3895e38, "float32": 3.4028e38}
 
 # **스케일을 쓰는 형식은 여유 개념이 그대로 적용되지 않는다.** INT8/INT4/fp8 추론은
@@ -86,6 +88,8 @@ def load_tower(checkpoint, base, dtype):
         base, torch_dtype=getattr(torch, dtype), attn_implementation="eager")
     if checkpoint and checkpoint.lower() != "none":
         m = PeftModel.from_pretrained(m, checkpoint).merge_and_unload()
+    global PARENT_MODEL
+    PARENT_MODEL = m
     return m.visual.eval().to("cuda")
 
 
@@ -128,6 +132,8 @@ def load_tower_repo(repo, dtype, trust_remote_code=False):
             find_vision_tower(m)
             check_weights_loaded(m, repo, cn)
             print(f"  로더: {cn} → {type(m).__name__}")
+            global PARENT_MODEL
+            PARENT_MODEL = m
             return find_vision_tower(m).eval().to("cuda")
         except Exception as e:
             last = e
@@ -268,8 +274,9 @@ def zero_obs_upper_bound(n, conf=0.95):
     return 1.0 - (1.0 - conf) ** (1.0 / max(n, 1))
 
 
-def build_cache(processor, paths, dtype):
-    """계열마다 grid_thw 유무가 다르므로 없으면 None을 넣는다."""
+def build_cache(processor, paths, dtype, device="cuda"):
+    """계열마다 grid_thw 유무가 다르므로 없으면 None을 넣는다.
+    device="cpu"는 fp32 등가성 검사용 — 원본 해상도 799장을 fp32로 GPU에 올리면 약 27GB다 (2026-10-30)."""
     cache = []
     for p in paths:
         enc = processor.image_processor(images=[Image.open(p).convert("RGB")],
@@ -278,8 +285,8 @@ def build_cache(processor, paths, dtype):
         if pv.dim() > 2 and pv.shape[0] == 1:
             pv = pv[0] if pv.dim() == 3 else pv        # (1,N,D) → (N,D)
         grid = enc.get("image_grid_thw")
-        cache.append((pv.to("cuda", getattr(torch, dtype)),
-                      grid.to("cuda") if grid is not None else None))
+        cache.append((pv.to(device, getattr(torch, dtype)),
+                      grid.to(device) if grid is not None else None))
     return cache
 
 
@@ -339,7 +346,7 @@ def solve_factor(pairs, target_max):
     return max(1e-3, min(min(fs), 1.0)), infeasible, len(fs)
 
 
-def plan_fix(per_block, target, tower=None, cache=None, dtype="float16"):
+def plan_fix(per_block, target, tower=None, cache=None, dtype="float16", fmax=None):
     """여유가 target 미만인 블록과 필요한 MLP 축소 배수를 산출한다.
 
     tower/cache가 주어지면 잔차를 분리해 정확히 풀고, 없으면 근사값을 쓴다.
@@ -354,7 +361,7 @@ def plan_fix(per_block, target, tower=None, cache=None, dtype="float16"):
     축소 배수 자체는 이 변경의 영향을 받지 않는다. `solve_factor()`가 이미
     모든 이미지에 대해 부등식을 풀기 때문이다(최악 기준 해).
     """
-    fmax = FORMAT_MAX[dtype]
+    fmax = fmax or FORMAT_MAX[dtype]          # 가상 상한을 쓰면 그 값 (2026-10-30)
     target_max = fmax / target
     plan = []
     for b in per_block:
@@ -398,14 +405,18 @@ def apply_fix(tower, plan):
         if pres is None:
             applied.append({**item, "skipped": "MLP 구조를 인식하지 못함"})
             continue
-        f = (1.0 / item["scale"]) ** (1.0 / len(pres))   # 곱이 1/scale이 되도록
+        # 단순형(fc1 → 활성 → fc2)은 fc1을 줄이면 활성(GELU)이 비선형이라 출력이 비례해 줄지 않는다 —
+        # 상한을 넘는 fc2 행렬곱의 가중치·편향을 줄인다(값이 더해지기 전에 줄인다). 2026-10-30 변경, 실측 검증 전
+        layers = pres if len(pres) > 1 else [out_lin]
+        f = (1.0 / item["scale"]) ** (1.0 / len(layers))   # 곱(또는 fc2 출력)이 1/scale이 되도록
         with torch.no_grad():
-            for lin in pres:
+            for lin in layers:
                 lin.weight.mul_(f)
                 if getattr(lin, "bias", None) is not None:
                     lin.bias.mul_(f)
-        applied.append({**item, "factor_per_layer": f, "n_layers": len(pres),
-                        "has_bias": getattr(pres[0], "bias", None) is not None})
+        applied.append({**item, "factor_per_layer": f, "n_layers": len(layers),
+                        "target_layers": "gate·up" if len(pres) > 1 else "fc2",
+                        "has_bias": getattr(layers[0], "bias", None) is not None})
     return applied
 
 
@@ -464,7 +475,79 @@ def selftest():
     assert abs(zero_obs_upper_bound(100) - 0.0295) < 1e-3
     assert abs(zero_obs_upper_bound(10) - 0.2589) < 1e-3
     print("zero_obs_upper_bound: 100장 2.95% · 10장 25.89%  ✓")
+    _selftest_residual()
     print("\n스모크 시험 통과.")
+
+
+def _selftest_residual():
+    """잔차 재조정 시험 — 블록 뒤 fp32 승격 연산(× √d)과 표준화 출구를 가진 작은 모형(Gemma 4 모양).
+
+    확인: (1) 연산 단위 진단이 승격 연산의 초과를 「승격 없는 경로」로 분류한다 (2) 입구·출구를 찾아 등가 교정한다
+    (3) 교정 후 최대가 목표 여유 안으로 들어온다. 실제 Gemma 4 검증은 별도(run_fix_families.py).
+    """
+    import headroom_ext as HX
+    import torch.nn as nn
+    torch.manual_seed(0)
+
+    class RMSNorm(nn.Module):
+        def __init__(s, d):
+            super().__init__(); s.weight = nn.Parameter(torch.ones(d))
+        def forward(s, x):
+            v = x.float().pow(2).mean(-1, keepdim=True)
+            return (x.float() * torch.rsqrt(v + 1e-6)).to(x.dtype) * s.weight
+
+    class Layer(nn.Module):
+        def __init__(s, d):
+            super().__init__()
+            s.input_layernorm, s.post_attention_layernorm = RMSNorm(d), RMSNorm(d)
+            s.pre_feedforward_layernorm, s.post_feedforward_layernorm = RMSNorm(d), RMSNorm(d)
+            s.self_attn = nn.Module(); s.self_attn.o_proj = nn.Linear(d, d)
+            s.mlp = nn.Module(); s.mlp.down_proj = nn.Linear(d, d)
+        def forward(s, x):
+            x = x + s.post_attention_layernorm(s.self_attn.o_proj(s.input_layernorm(x)))
+            return x + s.post_feedforward_layernorm(torch.tanh(s.mlp.down_proj(s.pre_feedforward_layernorm(x))))
+
+    class PatchEmb(nn.Module):              # 실제 Gemma 4처럼 패치 사상과 위치 임베딩의 합을 반환하는 모듈
+        def __init__(s, d):
+            super().__init__(); s.input_proj = nn.Linear(12, d)
+            s.position_embedding_table = nn.Parameter(torch.randn(8, d))
+        def forward(s, p):
+            return s.input_proj(p) + s.position_embedding_table
+
+    class Mock(nn.Module):
+        def __init__(s, d=32, n=4):
+            super().__init__(); s.d = d
+            s.patch_embedder = PatchEmb(d)
+            s.blocks = nn.ModuleList([Layer(d) for _ in range(n)])
+            s.std_bias = nn.Parameter(torch.randn(d) * 50); s.std_scale = nn.Parameter(torch.rand(d) * 0.01 + 1e-3)
+        def forward(s, p, _g=None):
+            h = s.patch_embedder(p)
+            for b in s.blocks:
+                h = b(h)
+            h = h.mean(0, keepdim=True).float() * math.sqrt(s.d)
+            return ((h - s.std_bias.float()) * s.std_scale.float()).to(p.dtype)
+
+    t = Mock().eval()
+    with torch.no_grad():
+        for b in t.blocks:
+            b.post_attention_layernorm.weight.mul_(6000); b.post_feedforward_layernorm.weight.mul_(6000)
+    cache = [(torch.randn(8, 12), None) for _ in range(3)]
+    fwd = lambda tw, x: tw(x[0])
+    tb = copy.deepcopy(t).to(torch.bfloat16)
+    cb = [(x.to(torch.bfloat16), None) for x, _ in cache]
+    ops = HX.profile_ops(tb, cb, fwd, FORMAT_MAX["float16"])
+    assert ops["first_exceed"] is None and ops["first_exceed_no_upcast"] is not None, ops["first_exceed_no_upcast"]
+    c = HX.choose_c(ops["global_max"]["max_worst"], FORMAT_MAX["float16"])
+    plan = HX.plan_residual(t, lambda m: m.blocks, cache, fwd, c)
+    assert plan["ok"] and plan["exit"] == "standardize" and plan["writers"] == "sandwich_norm", plan
+    t1 = HX.apply_residual(t, lambda m: m.blocks, plan["entry"], c)
+    eq = HX.compare(t, t1, cache, fwd)
+    assert eq["cos_min"] > 0.99999, eq
+    after = HX.profile_ops(HX.apply_residual(tb, lambda m: m.blocks, plan["entry"], c), cb, fwd, FORMAT_MAX["float16"])
+    h = FORMAT_MAX["float16"] / after["global_max"]["max_worst"]
+    assert h >= 2.0, h
+    print(f"잔차 재조정: 승격 연산 초과 분류 · 입구 {plan['entry']} · 출구 {plan['exit']} · c={c:g} · "
+          f"코사인 {eq['cos_min']:.8f} · 교정 후 여유 {h:.2f}배  ✓")
 
 
 def main():
@@ -505,6 +588,14 @@ def main():
                          "보수적이다(합성 20점에서 오탐 8·미탐 0). 1차 판정은 임계값 "
                          "없는 초과 비율로 하므로 이 값은 교정 목표치로만 쓰인다")
     ap.add_argument("--verify", action="store_true", help="fix 후 재측정")
+    ap.add_argument("--fix_mode", default="auto", choices=["auto", "residual", "premul"],
+                    help="auto: 잔차 재조정(등가)을 먼저 시도하고, 등가성 검사를 통과하지 못하거나 목표에 못 미치면 "
+                         "곱셈 이전 축소(비등가)를 쓴다 (2026-10-30)")
+    ap.add_argument("--no_ops", action="store_true", help="연산 단위 진단을 건너뛴다(블록·타워 출력만)")
+    ap.add_argument("--virtual_ratio", type=float, default=None,
+                    help="가상 상한 = 그 모델의 최악 최대 ÷ 이 값. 실제로 넘지 않는 계열에서 교정의 효과를 볼 때")
+    ap.add_argument("--equiv_tol", type=float, default=0.99999,
+                    help="잔차 재조정의 등가성 기준 — fp32 교정 전후 최종 출력 코사인의 이미지별 최소")
     ap.add_argument("--save_weights", default=None, help="교정된 비전 타워 state_dict 저장 경로")
     ap.add_argument("--out", default="eval_results/headroom_guard.json")
     ap.add_argument("--per_image", default=None,
@@ -565,9 +656,37 @@ def main():
           f"grid={g0.tolist() if g0 is not None else '없음'}")
     print(f"[측정] 크기={MAG} (참값)  상실={args.dtype}\n")
 
-    before, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
+    import headroom_ext as HX
+    fwd = lambda tw, x: tower_forward(tw, x[0], x[1])
+    ops_before, fmax_eff = None, FORMAT_MAX[args.dtype]
+    if not args.no_ops:
+        # **연산 단위 진단 (2026-10-30).** 블록 출력·타워 출력만 보면 블록 뒤 함수형 연산(Gemma 4 pooler의 × √d)을
+        # 놓친다. 모든 연산의 출력 크기를 재고, 모델 형식 연산과 fp32 승격 연산을 나눠 처음 넘는 곳을 찾는다.
+        ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
+        if args.virtual_ratio:
+            fmax_eff = HX.virtual_fmax(ops_before, args.virtual_ratio)
+            print(f"[가상 상한] {fmax_eff:,.1f} (= 최악 최대 {ops_before['global_max']['max_worst']:,.1f} ÷ "
+                  f"{args.virtual_ratio}) — 실제 형식 상한이 아니라 교정 효과를 보기 위한 판정 기준이다")
+            ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
+        fe, fa, g = ops_before["first_exceed"], ops_before["first_exceed_no_upcast"], ops_before["global_max"]
+        print(f"[연산 단위] 지점 {ops_before['n_points']}개 · 최대 {g['max_worst']:,.0f} ({g['point']})")
+        print(f"  모델 형식 연산에서 처음 상한을 넘는 곳: "
+              + (f"{fe['point']} (초과 {fe['exceed_rate']*100:.1f}%)" if fe else "없음"))
+        if fa and fa is not fe:
+            print(f"  fp32 승격이 없는 경로에서 처음 넘는 곳: {fa['point']} (초과 {fa['exceed_rate']*100:.1f}%) "
+                  f"— 참조 구현은 이 연산을 fp32로 계산하지만, 승격 없이 {args.dtype}로 계산하는 배포 경로에서는 넘친다")
+    if args.virtual_ratio and not args.no_ops:
+        before, _ = profile(tower, cache_mag, MAG)
+        for b in before:
+            w = b.get("max_worst")
+            b["headroom_worst"] = fmax_eff / w if w and math.isfinite(w) else None
+            b["headroom"] = fmax_eff / b["max_p50"] if b.get("max_p50") and math.isfinite(b["max_p50"]) else None
+            b["exceed_rate"] = sum(1 for v in LAST_PER_IMAGE["blocks"].get(b["block"], LAST_PER_IMAGE["tower_out"])
+                                   if v > fmax_eff) / max(b["n_images"], 1)
+    else:
+        before, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
     risky = plan_fix(before, args.target_headroom,
-                     tower=tower, cache=cache_mag, dtype=args.dtype)
+                     tower=tower, cache=cache_mag, dtype=args.dtype, fmax=fmax_eff)
 
     # **가중치를 건드리기 전에 형식부터 검토하게 한다.**
     # 여유는 형식마다 다른 값이다 — 같은 활성이 fp16에서는 넘치고 bf16에서는 한참 남는다.
@@ -703,44 +822,117 @@ def main():
            "blocked_formats": blocked,   # 표현 범위로는 안전하나 대상이 지원하지 않는 형식
            "risky_blocks": risky}
 
+    if ops_before:
+        res["ops_before"] = HX.summarize_ops(ops_before)
+        res["fmax_effective"] = fmax_eff
+        res["virtual_ratio"] = args.virtual_ratio
+
     if args.cmd == "fix":
-        if not risky:
-            print("\n교정할 블록이 없다 — 이 설정에서는 안전하다.")
+        res["fix_mode"] = args.fix_mode
+        g_need = (ops_before is not None and
+                  ops_before["global_max"]["max_worst"] * args.target_headroom > fmax_eff)
+        if not risky and not g_need:
+            print("\n교정할 곳이 없다 — 이 설정에서는 안전하다.")
         else:
-            print(f"\n[교정] 곱이 만들어지기 전에 축소한다")
-            applied = apply_fix(tower, risky)
-            for a in applied:
-                if "skipped" in a:
-                    print(f"  blk{a['block']}: 건너뜀 — {a['skipped']}")
+            residual_done = False
+            # ---- 교정 1: 잔차 재조정 (등가) ----
+            # 잔차에 값을 쓰는 곳 전부를 c배 하고 출구에서 되돌린다. 잔차를 읽는 정규화가 스케일 불변이면 중간 계산이
+            # 그대로라 **출력이 바뀌지 않는다.** 적용 여부는 구조 추측이 아니라 fp32 등가성 검사로 정한다.
+            if args.fix_mode in ("auto", "residual") and ops_before is not None:
+                c = HX.choose_c(ops_before["global_max"]["max_worst"], fmax_eff, args.target_headroom)
+                print(f"\n[교정 1] 잔차 재조정 시도 — c = {c:g} "
+                      f"(목표 여유 {args.target_headroom}배를 넘기는 가장 큰 2의 거듭제곱 — 곱해도 반올림이 없다)")
+                t32 = copy.deepcopy(tower).float()
+                cache32 = build_cache(proc, paths, "float32", device="cpu")
+                fwd32 = lambda tw, x: tower_forward(tw, x[0].to("cuda"), x[1].to("cuda") if x[1] is not None else None)
+                plan = HX.plan_residual(t32, get_blocks, cache32[:min(8, len(cache32))], fwd32, c, args.equiv_tol)
+                if plan["ok"]:
+                    t32c = HX.apply_residual(t32, get_blocks, plan["entry"], c)
+                    eq = HX.compare(t32, t32c, cache32, fwd32, comp=plan["comp"])
+                    del t32c
+                    accepted = eq["cos_min"] >= args.equiv_tol
+                    print(f"  입구 {plan['entry']} · 잔차 쓰기 방식 {plan['writers']} · 출구 {plan['exit']}")
+                    print(f"  등가성(fp32, {len(cache32)}장): 코사인 최소 {eq['cos_min']:.8f} · 크기 비율 "
+                          f"{eq['ratio_min']:.6f}~{eq['ratio_max']:.6f} → "
+                          + ("**통과**" if accepted else f"미달(기준 {args.equiv_tol})"))
+                    res["residual"] = {"c": c, "entry": plan["entry"], "exit": plan["exit"],
+                                       "writers": plan["writers"], "equivalence": eq, "accepted": accepted,
+                                       "tried": plan["tried"]}
+                    if accepted:
+                        HX.apply_residual(tower, get_blocks, plan["entry"], c, inplace=True)
+                        residual_done = True
+                        if plan["exit"] == "projector":
+                            comp = HX.compensate_projector(PARENT_MODEL, c)
+                            res["residual"]["projector"] = comp
+                            print(f"  출구가 프로젝터다 — {comp.get('layer') or ''} {comp.get('how') or comp.get('reason')}")
                 else:
-                    print(f"  blk{a['block']}: 여유 {a['headroom']:.2f}배 → 목표 "
-                          f"{args.target_headroom:.1f}배 | MLP 분기 ×"
-                          f"{1/a['scale']:.4f}, 선형층 {a['n_layers']}개를 각 "
-                          f"×{a['factor_per_layer']:.6f}"
-                          + ("  (bias 포함)" if a["has_bias"] else ""))
-                    if a.get("warn"):
-                        print(f"    ⚠ {a['warn']}")
-            res["applied"] = applied
+                    print(f"  잔차 재조정 불가 — {plan['reason']}")
+                    res["residual"] = {"c": c, "accepted": False, "reason": plan["reason"],
+                                       "tried": plan.get("tried", [])}
+                del t32, cache32
+                torch.cuda.empty_cache()
+                if residual_done:
+                    before, _ = profile(tower, cache_mag, MAG, fmax_dtype=None if args.virtual_ratio else args.dtype)
+                    if args.virtual_ratio:
+                        for b in before:
+                            w = b.get("max_worst")
+                            b["headroom_worst"] = fmax_eff / w if w and math.isfinite(w) else None
+                    risky = plan_fix(before, args.target_headroom, tower=tower, cache=cache_mag,
+                                     dtype=args.dtype, fmax=fmax_eff)
+                    ops_mid = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
+                    res["residual"]["ops_after"] = HX.summarize_ops(ops_mid)
+                    gm = ops_mid["global_max"]["max_worst"]
+                    print(f"  재조정 후 연산 단위 최대 {gm:,.0f} · 최악 여유 {fmax_eff/gm:.2f}배"
+                          + ("" if fmax_eff / gm >= args.target_headroom else
+                             f" — 목표 {args.target_headroom}배 미달(잔차로 가지 않는 연산이 남았다)"))
+                    if fmax_eff / gm < args.target_headroom and not risky:
+                        print("  ⚠ 남은 위험 지점이 블록 MLP 출력이 아니어서 곱셈 이전 축소로도 다룰 수 없다 — 보고만 한다")
+
+            # ---- 교정 2: 곱셈 이전 축소 (비등가) ----
+            if risky and args.fix_mode in ("auto", "premul"):
+                print(f"\n[교정 {'2' if residual_done else '1'}] 곱이 만들어지기 전에 축소한다 (비등가)")
+                applied = apply_fix(tower, risky)
+                for a in applied:
+                    if "skipped" in a:
+                        print(f"  blk{a['block']}: 건너뜀 — {a['skipped']}")
+                    else:
+                        print(f"  blk{a['block']}: 여유 {a['headroom']:.2f}배 → 목표 "
+                              f"{args.target_headroom:.1f}배 | MLP 분기 ×"
+                              f"{1/a['scale']:.4f}, 선형층 {a['n_layers']}개를 각 "
+                              f"×{a['factor_per_layer']:.6f}"
+                              + ("  (bias 포함)" if a["has_bias"] else ""))
+                        if a.get("warn"):
+                            print(f"    ⚠ {a['warn']}")
+                res["applied"] = applied
+            elif risky:
+                print(f"\n  ⚠ 잔차 재조정만으로는 블록 {[r['block'] for r in risky]}이 목표에 못 미친다 (--fix_mode residual)")
 
             if args.verify:
-                after, _ = profile(tower, cache_mag, MAG, fmax_dtype=args.dtype)
+                after, _ = profile(tower, cache_mag, MAG, fmax_dtype=None if args.virtual_ratio else args.dtype)
                 per_image_mag["after"] = LAST_PER_IMAGE
                 nan_after = collapse_in_target("after")
-                last = after[-1]
-                print(f"\n[검증] 상실률 {nan_before*100:.1f}% → **{nan_after*100:.1f}%**")
-                print(f"       마지막 블록 여유 {before[-1]['headroom']:.2f}배 → "
-                      f"{last['headroom']:.2f}배")
                 res["after"] = {"per_block": after, "nan_rate": nan_after}
-                print("\n  ⚠ 이 교정은 **완전 등가가 아니다.** 잔차 분기와 MLP 분기의")
-                print("    비율이 바뀌며, 뒤따르는 정규화가 대부분 흡수하나 전부는 아니다.")
-                print("    정확도 비용은 별도로 측정할 것 "
-                      "(배포 조건 실측: 원본 해상도·fp16·1,029문항 짝지음에서 "
-                      "무교정 bf16 대비 +0.78%p, McNemar p=0.34 — 측정 한계 이하. "
-                      "다만 비유의는 동등성의 증거가 아니다).")
+                if not args.no_ops:
+                    ops_after = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
+                    res["after"]["ops"] = HX.summarize_ops(ops_after)
+                    ga = ops_after["global_max"]["max_worst"]
+                    print(f"\n[검증] 연산 단위 최대 {ga:,.0f} · 최악 여유 {fmax_eff/ga:.2f}배"
+                          + ("  (가상 상한 기준)" if args.virtual_ratio else ""))
+                print(f"[검증] 상실률 {nan_before*100:.1f}% → **{nan_after*100:.1f}%** ({args.dtype}, 이 실행 경로)")
+                if res.get("applied"):
+                    print("\n  ⚠ 곱셈 이전 축소는 **완전 등가가 아니다.** 잔차 분기와 MLP 분기의 비율이 바뀐다.")
+                    print("    정확도 비용은 별도로 측정할 것(배포 조건 실측: 원본 해상도·fp16·11,309문항에서 "
+                          "교정 fp16 48.76% 대 무교정 bf16 48.47%, 출력 문자열 일치 74.8%).")
+                elif residual_done:
+                    print("\n  잔차 재조정만 적용했다 — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
 
             if args.save_weights:
                 torch.save(tower.state_dict(), args.save_weights)
                 print(f"\n  교정된 비전 타워 저장: {args.save_weights}")
+                if res.get("residual", {}).get("projector", {}).get("done") and "가중치" in res["residual"]["projector"].get("how", ""):
+                    name, sub = HX.projector_first(PARENT_MODEL)
+                    torch.save({name: sub.state_dict()}, args.save_weights + ".projector.pt")
+                    print(f"  프로젝터 첫 층 보정 저장: {args.save_weights}.projector.pt ({name})")
                 print("  **적재 절차** — 이 state_dict는 LoRA를 **병합한** 타워 기준이다.")
                 print("    (1) 적용하는 쪽에서 먼저 merge_and_unload()")
                 print("    (2) 텍스트 모델이 아니라 비전 타워(.visual)에 얹을 것")

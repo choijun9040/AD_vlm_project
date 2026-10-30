@@ -332,7 +332,8 @@
       ],
       "retired_scope": [
         "thesis_*_draft.md",
-        "thesis_figures.md"
+        "thesis_figures.md",
+        "scripts/headroom_guard.py"
       ],
       "watch": [],
       "condition": "Task only · 원본 해상도 · fp16 / 교정 fp16 / bf16 · NuScenes-QA 11,309문항 (2026-10-26 추가)"
