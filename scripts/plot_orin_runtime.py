@@ -31,6 +31,9 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
+plt.rcParams["font.family"] = "Noto Sans CJK JP"
+plt.rcParams["axes.unicode_minus"] = False
 
 PYT = "#2a78d6"      # 참조 팔레트 slot 1
 TYPED = "#eb6834"    # slot 2 — A100 강타입과 Orin 강타입이 공유한다
@@ -113,22 +116,23 @@ def main():
     # 직접 라벨 — 원본 해상도 끝점 오른쪽에. 위 둘(초과·PyTorch·강타입)이 92~96%에 몰려 세로로 벌린다
     xe = tokens[-1]
     sp = L["note_fs"] * 1.9                       # 원본 해상도 끝점 라벨 셋의 세로 간격(점)
-    label(a, xe, exceed[-1], "bf16 exceedance (estimate)", INK2, L, dx=10, dy=sp)
+    label(a, xe, exceed[-1], "bf16 초과 비율 (추정)", INK2, L, dx=10, dy=sp)
     label(a, xe, pyt[-1], "PyTorch fp16", PYT, L, dx=10, dy=0)
-    label(a, xe, typed[-1], "TensorRT strongly typed", TYPED, L, dx=10, dy=-sp)
-    label(a, tokens[1], weak[1], "TensorRT --fp16 (weak)", WEAK, L, dx=10, dy=0)
+    label(a, xe, typed[-1], "TensorRT 강타입", TYPED, L, dx=10, dy=-sp)
+    label(a, tokens[1], weak[1], "TensorRT --fp16 (관행)", WEAK, L, dx=10, dy=0)
     # 2026-10-24: 799장에서 Orin 점이 30% 근처로 올라가 왼쪽 위 라벨이 세로축 눈금과 겹쳤다 — 오른쪽 아래로 옮긴다
-    label(a, ox[-1], orin[ox[-1]]["collapse"], "Orin Nano\n(strongly typed)", TYPED, L, dx=16, dy=-12,
-          ha="left", va="top")
-    a.text(0.98, 0.45 if nc == 2 else 0.30, "Full and corrected engine:\n0% on every path",
+    # 2026-10-30: 오른쪽 아래는 초록(관행) 선 옆이라 어느 선의 이름인지 헷갈렸다 — 점의 왼쪽 위 빈 자리로 옮긴다
+    label(a, ox[-1], orin[ox[-1]]["collapse"], "Orin Nano\n(강타입)", TYPED, L, dx=-14, dy=14,
+          ha="right", va="bottom")
+    a.text(0.98, 0.45 if nc == 2 else 0.30, "Full·교정 엔진:\n모든 경로에서 0%",
            transform=a.transAxes, fontsize=L["note_fs"], color=INK2, va="center", ha="right")
     a.set_xlim(300 if nc == 2 else -100, 2900 if nc == 2 else 3000)   # 1단은 왼쪽 라벨 자리를 더 둔다
     a.set_ylim(-3, 112)
     a.set_yticks([0, 20, 40, 60, 80, 100])
     a.set_xticks(tokens)
-    a.set_xlabel("Vision tokens per image")
-    a.set_ylabel("fp16 collapse rate (%), baseline student")
-    a.set_title("(a) collapse rate by execution path", fontsize=L["base_fs"], color=INK, pad=6)
+    a.set_xlabel("이미지당 비전 토큰 수")
+    a.set_ylabel("기준 모델 fp16 상실률 (%)")
+    a.set_title("(a) 실행 경로별 상실률", fontsize=L["base_fs"], color=INK, pad=6)
 
     # (b) Orin 지연
     lat = [orin[x]["lat"] for x in ox]
@@ -138,14 +142,14 @@ def main():
         b.annotate(f"{y:,.0f} ms", (x, y), xytext=(9, -2), textcoords="offset points",
                    ha="left", va="center", fontsize=L["note_fs"], color=INK2)
     b.axvline(tokens[-1], color=INK2, lw=0.8, ls=(0, (2, 2)))
-    b.text(tokens[-1], 0.5, "engine build failed\n(out of memory)", transform=b.get_xaxis_transform(),
+    b.text(tokens[-1] - 22, 0.5, "엔진 빌드 실패\n(메모리 부족)", transform=b.get_xaxis_transform(),
            rotation=90, ha="right", va="center", fontsize=L["note_fs"], color=INK2)
     b.set_xlim(300, 2000)
     b.set_ylim(0, 1400)
     b.set_xticks(tokens)
-    b.set_xlabel("Vision tokens per image")
-    b.set_ylabel("Orin Nano latency p50 (ms)")
-    b.set_title("(b) edge-board latency", fontsize=L["base_fs"], color=INK, pad=6)
+    b.set_xlabel("이미지당 비전 토큰 수")
+    b.set_ylabel("Orin Nano 지연(ms), p50")
+    b.set_title("(b) 엣지 보드 지연", fontsize=L["base_fs"], color=INK, pad=6)
 
     for ax in (a, b):
         ax.grid(True, axis="y", color=GRID, lw=0.7)

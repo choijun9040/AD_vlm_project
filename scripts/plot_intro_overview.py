@@ -19,6 +19,9 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
+plt.rcParams["font.family"] = "Noto Sans CJK JP"
+plt.rcParams["axes.unicode_minus"] = False
 from matplotlib.patches import FancyBboxPatch
 from PIL import Image
 
@@ -66,26 +69,32 @@ def arrow(ax, x0, y0, x1, y1):
 
 def panel_a(ax, L):
     ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
-    ax.set_title("(a) common deployment setup", fontsize=L["base_fs"], color=INK, pad=6)
+    ax.set_title("(a) 흔한 배포 구성", fontsize=L["base_fs"], color=INK, pad=6)
     # 위에서 아래로: 이미지 → 비전 인코더(fp16) → 언어 모델(INT4). 설명은 오른쪽에
-    box(ax, 0.04, 0.80, 0.42, 0.12, "camera image", "white", NEUTRAL, L)
-    box(ax, 0.04, 0.47, 0.42, 0.20, "vision encoder\nfp16", "#fde8de", BAD, L)
-    box(ax, 0.04, 0.14, 0.42, 0.20, "language model\nINT4", "#e3eefb", GOOD, L)
+    box(ax, 0.04, 0.80, 0.42, 0.12, "카메라 이미지", "white", NEUTRAL, L)
+    box(ax, 0.04, 0.47, 0.42, 0.20, "비전 인코더\nfp16", "#fde8de", BAD, L)
+    box(ax, 0.04, 0.14, 0.42, 0.20, "언어 모델\nINT4", "#e3eefb", GOOD, L)
     arrow(ax, 0.25, 0.80, 0.25, 0.67); arrow(ax, 0.25, 0.47, 0.25, 0.34)
-    ax.text(0.52, 0.66, "excluded from quantization,\nnot checked by its metrics", ha="left", va="top",
-            fontsize=L["small_fs"], color=BAD, linespacing=1.2)
-    ax.text(0.52, 0.52, "last-block activation\n> 65,504 (fp16 limit)\n→ inf → NaN\n→ whole output lost",
-            ha="left", va="top", fontsize=L["small_fs"], color=INK, linespacing=1.2)
-    ax.text(0.52, 0.30, "checked by\nquantization SNR,\noutlier ratio", ha="left", va="top",
-            fontsize=L["small_fs"], color=GOOD, linespacing=1.2)
+    # 설명 세 덩어리 (글자, y). 1단은 패널 높이가 낮아 2단의 줄바꿈 그대로면 검은 글과 파란 글이 겹친다 —
+    # 줄 수를 줄이고 y를 다시 잡는다(2026-10-30, 국문 전환 때 렌더 확인)
+    if L["rows"] == 1:
+        notes = [("양자화에서 제외되어\n오차 지표의 검사 없음", 0.66, BAD),
+                 ("마지막 블록 활성\n> 65,504 (fp16 상한)\n→ inf → NaN\n→ 출력 전체 상실", 0.52, INK),
+                 ("양자화 SNR·\n이상치 비율로\n검사", 0.30, GOOD)]
+    else:
+        notes = [("양자화에서 제외되어\n오차 지표의 검사 없음", 0.74, BAD),
+                 ("마지막 블록 활성 > 65,504\n(fp16 상한) → inf → NaN\n→ 출력 전체 상실", 0.54, INK),
+                 ("양자화 SNR·이상치\n비율로 검사", 0.25, GOOD)]
+    for text, y, color in notes:
+        ax.text(0.52, y, text, ha="left", va="top", fontsize=L["small_fs"], color=color, linespacing=1.2)
 
 
 def panel_b(ax_img, ax_txt, rows, acts, L):
     im = Image.open(f"data/nuscenes/samples/CAM_FRONT/{IMAGE}")
     ax_img.imshow(im); ax_img.axis("off")
-    ax_img.set_title("(b) same image, same question", fontsize=L["base_fs"], color=INK, pad=6)
+    ax_img.set_title("(b) 같은 이미지, 같은 질문", fontsize=L["base_fs"], color=INK, pad=6)
     ax_txt.set_xlim(0, 1); ax_txt.set_ylim(0, 1); ax_txt.axis("off")
-    ax_txt.text(0.0, 0.97, f"Q: {QUESTION}   (answer: {rows[0][1]['gt']})", fontsize=L["small_fs"],
+    ax_txt.text(0.0, 0.97, f"질문: {QUESTION}   정답: {rows[0][1]['gt']}", fontsize=L["small_fs"],
                 color=INK, va="top")
     y = 0.80
     for label, r, note in rows:
@@ -112,10 +121,10 @@ def main():
     b16, f16, fix = pred(args.root, f"{t}_bf16"), pred(args.root, f"{t}_fp16"), pred(args.root, f"{t}_fp16_fixa")
     full = pred(args.root, "student_full_epoch_1_native_fp16")
     a_base, a_full = act(args.root, "student_baseline_v2"), act(args.root, "student_full")
-    rows = [("Task only, bf16", b16, f"max activation {a_base:,.0f}"),
-            ("Task only, fp16", f16, f"{a_base:,.0f} > {FP16_MAX:,}: output lost"),
-            ("Task only, fp16 + correction", fix, "weights rescaled, no training"),
-            ("Full (L_align + L_atc), fp16", full, f"max activation {a_full:,.0f}")]
+    rows = [("기준 모델, bf16", b16, f"최대 활성 {a_base:,.0f}"),
+            ("기준 모델, fp16", f16, f"{a_base:,.0f} > {FP16_MAX:,}: 출력 상실"),
+            ("기준 모델, fp16 + 교정", fix, "가중치 배율 조정, 학습 없음"),
+            ("Full, fp16", full, f"최대 활성 {a_full:,.0f}")]
     assert b16["correct"] and not f16["correct"] and fix["correct"] and full["correct"], "사례 조건이 맞지 않는다"
 
     plt.rcParams.update({"font.size": L["base_fs"]})

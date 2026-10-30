@@ -61,16 +61,16 @@
 
 <div class="cap">&lt;표 5&gt; 비전 인코더 블록별 최대 활성 크기</div>
 <table>
-<tr><th>모델</th><th>blk16</th><th>blk24</th><th>blk28</th><th><b>blk31 (마지막)</b></th></tr>
+<tr><th>모델</th><th>blk16</th><th>blk23 (정렬)</th><th>blk28</th><th><b>blk31 (마지막)</b></th></tr>
 <tr><td>Pre-trained</td><td>840</td><td>8,256</td><td>8,256</td><td>33,792</td></tr>
 <tr><td>Task only</td><td>876</td><td>8,096</td><td>8,096</td><td><b>50,176</b></td></tr>
 <tr><td>Task + out.KD</td><td>604</td><td>7,712</td><td>7,712</td><td>30,336</td></tr>
 <tr><td>Task + L_atc</td><td>932</td><td>7,872</td><td>7,872</td><td>34,304</td></tr>
-<tr><td>Task + L_align</td><td>56</td><td>124</td><td>187</td><td>18,432</td></tr>
-<tr><td>Full</td><td>59</td><td>130</td><td>177</td><td>17,920</td></tr>
+<tr><td>Task + L_align</td><td>56</td><td>106.5</td><td>187</td><td>18,432</td></tr>
+<tr><td>Full</td><td>59</td><td>111.5</td><td>177</td><td>17,920</td></tr>
 <tr><td>교사 7B</td><td>458</td><td>9,024</td><td>9,024</td><td>27,904</td></tr>
 </table>
-<div class="cond">(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값; &lt;그림 2&gt;)</div>
+<div class="cond">(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값). blk23은 정렬 손실을 거는 블록이다</div>
 
 <div class="cap">&lt;표 6&gt; 입력 해상도별 fp16 상실률</div>
 <table>
@@ -81,7 +81,7 @@
 <tr><td>200,704 (평가)</td><td>924</td><td>4.8%</td><td>0.0%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
 <tr><td>100,352</td><td>480</td><td>2.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
 </table>
-<div class="cond">(fp16 상실률, 799장, 이미지 단위로 출력이 NaN이면 상실; &lt;그림 3&gt;)</div>
+<div class="cond">(fp16 상실률, 799장, 이미지 단위로 출력이 NaN이면 상실)</div>
 
 <div class="cap">&lt;표 7&gt; 여유·상실률과 표준 압축 지표</div>
 <table>
@@ -93,9 +93,20 @@
 <tr><td>Task + L_align</td><td>2.89배</td><td><b>0.0%</b></td><td>172.0</td><td>25.75 dB</td></tr>
 <tr><td>Full</td><td><b>2.94배</b></td><td><b>0.0%</b></td><td>236.2</td><td><b>22.78 dB</b></td></tr>
 </table>
-<div class="cond">(원본 해상도, 마지막 블록, 799장, SNR·max/rms는 이미지별 값의 중앙값·텐서 단위, 여유는 p50·bf16 측정; &lt;그림 4&gt;)</div>
+<div class="cond">(원본 해상도, 마지막 블록, 799장, SNR·max/rms는 이미지별 값의 중앙값·텐서 단위, 여유는 p50·bf16 측정)</div>
 
-<div class="cap">&lt;표 8&gt; 초과 비율과 실제 상실률</div>
+<div class="cap">&lt;표 8&gt; 실행 조건에 따른 INT4 정확도</div>
+<table>
+<tr><th>변형</th><th>INT4 교란</th><th><b>INT4 통제</b></th><th>양자화 전 bf16(Ⅴ장 1절)</th><th>통제−양자화 전</th></tr>
+<tr><td>Task only</td><td><b>1.39%</b></td><td><b>48.30%</b></td><td>50.30%</td><td>−2.00%p</td></tr>
+<tr><td>Full</td><td>51.60%</td><td>51.86%</td><td>51.69%</td><td>+0.17%p</td></tr>
+<tr><td>Task + L_align</td><td>50.82%</td><td>50.64%</td><td>51.40%</td><td>−0.76%p</td></tr>
+<tr><td>Task + L_atc</td><td><b>30.49%</b></td><td><b>50.31%</b></td><td>51.34%</td><td>−1.03%p</td></tr>
+<tr><td>Task + out.KD</td><td><b>32.99%</b></td><td><b>47.96%</b></td><td>46.74%</td><td>+1.22%p</td></tr>
+</table>
+<div class="cond">(NuScenes-QA 검증 11,309문항. 교란 = fp16 로드·원본 해상도, 통제 = bf16 로드·평가 해상도, 양자화 전 = 평가 해상도 bf16)</div>
+
+<div class="cap">&lt;표 9&gt; 초과 비율과 실제 상실률</div>
 <table>
 <tr><th>모델</th><th>초과 비율</th><th>실제 상실률</th><th>오차</th></tr>
 <tr><td>Pre-trained</td><td>73.0%</td><td>70.7%</td><td>+2.3%p</td></tr>
@@ -107,7 +118,7 @@
 </table>
 <div class="cond">(원본 해상도, 마지막 블록, 799장, 초과 비율은 bf16, 상실률은 PyTorch fp16, 오차 = 초과 비율 − 실제 상실률)</div>
 
-<div class="cap">&lt;표 9&gt; λ 스윕 체크포인트의 여유와 실제 상실</div>
+<div class="cap">&lt;표 10&gt; λ 스윕 체크포인트의 여유와 실제 상실</div>
 <table>
 <tr><th>λ</th><th>여유 p50(배)</th><th><b>최악(배)</b></th><th>초과 비율</th><th><b>실제 상실</b></th></tr>
 <tr><td><b>0</b></td><td>1.15</td><td><b>0.82</b></td><td>14.5%</td><td><b>12.9%</b></td></tr>
@@ -117,7 +128,7 @@
 </table>
 <div class="cond">(원본 해상도, 799장, 크기는 bf16·상실은 fp16. λ = 0.5는 초과 0건이나 최악 여유가 1.25배 아래라 도구 판정이 「경계」다)</div>
 
-<div class="cap">&lt;표 10&gt; 마지막 블록 최댓값의 성분 분해</div>
+<div class="cap">&lt;표 11&gt; 마지막 블록 최댓값의 성분 분해</div>
 <table>
 <tr><th>변형</th><th>잔차</th><th>attn</th><th><b>mlp</b></th><th>합</th></tr>
 <tr><td>Task only</td><td>−90</td><td>2.8</td><td><b>−50,176</b></td><td>−50,176</td></tr>
@@ -126,9 +137,9 @@
 <tr><td>Task + L_align</td><td>−146</td><td>−17.4</td><td><b>−18,304</b></td><td>−18,432</td></tr>
 <tr><td>Full</td><td>−134</td><td>−25.1</td><td><b>−17,920</b></td><td>−18,048</td></tr>
 </table>
-<div class="cond">(799장, 평가 해상도, bf16. 각 열은 성분별 중앙값이라 합 열과 일치하지 않는다. 합 열은 &lt;표 5&gt;의 마지막 블록 값과 bf16 1 ulp 이내에서 다르다)</div>
+<div class="cond">(799장, 평가 해상도, bf16. 각 열은 성분별 중앙값이라 합 열과 일치하지 않는다. 합 열은 &lt;표 5&gt;의 마지막 블록 값과 bf16 최소 간격(1 ulp) 이내에서 다르다)</div>
 
-<div class="cap">&lt;표 11&gt; 사후 개입 위치에 따른 활성과 상실률</div>
+<div class="cap">&lt;표 12&gt; 사후 개입 위치에 따른 활성과 상실률</div>
 <table>
 <tr><th>개입</th><th>곱 <code>act(gate)⊙up</code></th><th><code>down_proj</code> 출력</th><th>상실률 (원본 해상도)</th></tr>
 <tr><td>없음</td><td>4,612</td><td>63,520</td><td>95.9%</td></tr>
@@ -137,7 +148,7 @@
 </table>
 <div class="cond">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다. 없음 행은 상한을 넘은 이미지가 빠진 값이라 참값보다 작다. 참값은 bf16 p50 74,752다. 상실률은 이 실행에서 측정하였고, 측정 구현에 따른 차이는 Ⅳ장 2절과 같다)</div>
 
-<div class="cap">&lt;표 12&gt; 모델 계열별 도구 적용 결과</div>
+<div class="cap">&lt;표 13&gt; 모델 계열별 도구 적용 결과</div>
 <table>
 <tr><th>모델</th><th>계열</th><th>블록 구조</th><th>마지막 블록 여유</th><th>판정</th></tr>
 <tr><td>Task only 학생</td><td>Qwen2.5-VL</td><td><code>blocks</code>, gate·up→down</td><td><b>0.88배</b></td><td><b>위험 → 교정</b></td></tr>
@@ -147,7 +158,7 @@
 </table>
 <div class="cond">(799장, Qwen 계열은 원본 해상도, SmolVLM은 기본 처리기, 여유는 p50)</div>
 
-<div class="cap">&lt;표 13&gt; 배포 조건 정확도의 종단 검증</div>
+<div class="cap">&lt;표 14&gt; 배포 조건 정확도의 종단 검증</div>
 <table>
 <tr><th>모델</th><th>해상도</th><th>형식</th><th>교정</th><th>정확도</th><th>상실형 출력</th></tr>
 <tr><td>Task only</td><td>원본</td><td>fp16</td><td>—</td><td><b>1.34%</b></td><td>10,993 / 11,309</td></tr>
@@ -162,7 +173,7 @@
 </table>
 <div class="cond">(NuScenes-QA 검증 11,309문항, PyTorch. 원본 = <code>max_pixels</code> 1,440,000, 평가 = 200,704. 상실형 출력은 문항 수)</div>
 
-<div class="cap">&lt;표 14&gt; fp16과 bf16의 짝 정확도 비교</div>
+<div class="cap">&lt;표 15&gt; fp16과 bf16의 짝 정확도 비교</div>
 <table>
 <tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>fp16 상실형</th></tr>
 <tr><td>Task only</td><td>평가</td><td>1.31배</td><td>48.02%</td><td>50.30%</td><td>128 대 385</td><td>533</td></tr>
@@ -172,17 +183,6 @@
 </table>
 <div class="cond">(NuScenes-QA 검증 11,309문항, PyTorch. 불일치는 fp16만 정답 대 bf16만 정답인 문항 수. 상실 문항 제외 행의 bf16 열은 같은 10,776문항에서 다시 계산한 값이며(정답 5,420개), 50.30%는 전체 문항의 값과 일치한다)</div>
 
-<div class="cap">&lt;표 15&gt; 실행 조건에 따른 INT4 정확도</div>
-<table>
-<tr><th>변형</th><th>INT4 교란</th><th><b>INT4 통제</b></th><th>양자화 전 bf16(Ⅴ장 1절)</th><th>통제−양자화 전</th></tr>
-<tr><td>Task only</td><td><b>1.39%</b></td><td><b>48.30%</b></td><td>50.30%</td><td>−2.00%p</td></tr>
-<tr><td>Full</td><td>51.60%</td><td>51.86%</td><td>51.69%</td><td>+0.17%p</td></tr>
-<tr><td>Task + L_align</td><td>50.82%</td><td>50.64%</td><td>51.40%</td><td>−0.76%p</td></tr>
-<tr><td>Task + L_atc</td><td><b>30.49%</b></td><td><b>50.31%</b></td><td>51.34%</td><td>−1.03%p</td></tr>
-<tr><td>Task + out.KD</td><td><b>32.99%</b></td><td><b>47.96%</b></td><td>46.74%</td><td>+1.22%p</td></tr>
-</table>
-<div class="cond">(NuScenes-QA 검증 11,309문항. 교란 = fp16 로드·원본 해상도, 통제 = bf16 로드·평가 해상도, 양자화 전 = 평가 해상도 bf16)</div>
-
 <div class="cap">&lt;표 16&gt; 네 가지 배포 선택지의 비교</div>
 <table>
 <tr><th>선택</th><th>상실률</th><th>지연 p50</th><th>가중치 메모리</th><th>정확도 (원본 해상도, 11,309문항)</th></tr>
@@ -191,7 +191,7 @@
 <tr><td><b>fp16 + 도구 교정</b></td><td><b>0.0%</b></td><td><b>149.3 ms</b></td><td>1,385 MiB</td><td><b>48.76%</b> (PyTorch)</td></tr>
 <tr><td>bf16 무교정</td><td>0.0%</td><td>188.4 ms</td><td>1,385 MiB</td><td>48.47% (PyTorch)</td></tr>
 </table>
-<div class="cond">(상실률·지연·메모리는 TensorRT 10.13·799장. 가중치 메모리는 TensorRT 엔진 가중치 메모리(블록 밖 병합 층·상수 포함)다. 지연은 측정 실행이 다르다. fp32와 fp16 무교정은 같은 실행, 교정 fp16은</div>
+<div class="cond">(상실률·지연·메모리는 TensorRT 10.13·799장. 가중치 메모리는 블록 밖 병합 층과 상수를 포함한 값이다. 지연은 실행마다 따로 측정한 값이다(fp32와 fp16 무교정은 같은 실행, 교정 fp16은</div>
 
 <div class="cap">&lt;표 17&gt; 실행 경로별 상실률과 초과 비율</div>
 <table>
@@ -212,23 +212,23 @@
 <tr><td>401,408</td><td>Full · Task only 교정본</td><td><b>0.0% · 0.0%</b></td><td>0.0% · 0.0%</td><td>510 · 512 ms</td></tr>
 <tr><td>1,440,000 (원본)</td><td>세 모델</td><td><b>빌드 불가</b>(메모리 한도)</td><td>94.9% · 0.0% · 0.0%</td><td>—</td></tr>
 </table>
-<div class="cond">(799장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합; &lt;그림 6&gt;)</div>
+<div class="cond">(799장, 같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)</div>
 
 <div class="cap">&lt;표 19&gt; 정렬 손실 가중치 λ_align에 따른 활성과 여유</div>
 <table>
-<tr><th>λ</th><th>blk24</th><th><b>blk31</b></th><th>λ = 0 대비</th><th>여유(fp16 상한 기준)</th></tr>
+<tr><th>λ</th><th>blk23 (정렬)</th><th><b>blk31</b></th><th>λ = 0 대비</th><th>여유(fp16 상한 기준)</th></tr>
 <tr><td>0</td><td>8,512</td><td>36,608</td><td>—</td><td>1.79배</td></tr>
 <tr><td>0.5</td><td>5,856</td><td>26,112</td><td>−28.7%</td><td>2.51배</td></tr>
-<tr><td>1.0</td><td>124</td><td>19,072</td><td>−47.9%</td><td>3.43배</td></tr>
-<tr><td>2.0</td><td>128</td><td><b>14,208</b></td><td>−61.2%</td><td><b>4.61배</b></td></tr>
+<tr><td>1.0</td><td>101</td><td>19,072</td><td>−47.9%</td><td>3.43배</td></tr>
+<tr><td>2.0</td><td>109</td><td><b>14,208</b></td><td>−61.2%</td><td><b>4.61배</b></td></tr>
 </table>
-<div class="cond">(799장, 평가 해상도, bf16, p50; &lt;그림 7&gt;)</div>
+<div class="cond">(799장, 평가 해상도, bf16, p50)</div>
 
 <div class="cap">&lt;표 20&gt; 정렬 대상에 따른 마지막 블록 활성</div>
 <table>
 <tr><th>변형</th><th>정렬 대상</th><th>blk31 p50</th><th>λ = 0 대비</th></tr>
 <tr><td>λ = 0</td><td>—</td><td>36,608</td><td>—</td></tr>
-<tr><td><b>자기 정렬</b></td><td><b>3B 자기 자신</b></td><td><b>27,904</b></td><td><b>−23.8%</b></td></tr>
+<tr><td><b>자기 정렬</b></td><td><b>3B 사전학습 모델</b></td><td><b>27,904</b></td><td><b>−23.8%</b></td></tr>
 <tr><td>교사 정렬 λ = 0.5</td><td>7B 교사</td><td>26,112</td><td>−28.7%</td></tr>
 <tr><td>교사 정렬 λ = 1.0</td><td>7B 교사</td><td>19,072</td><td>−47.9%</td></tr>
 <tr><td>교사 정렬 λ = 2.0</td><td>7B 교사</td><td>14,208</td><td>−61.2%</td></tr>

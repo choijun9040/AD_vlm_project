@@ -176,16 +176,18 @@ def insert_figures(text, caps):
     miss = [key for _, key, _, a in FIGURES if text.find(a) < 0]
     if miss:
         raise SystemExit(f"그림 기준 줄을 찾지 못했다: {miss}")
+    unref = [key for _, key, _, _ in FIGURES if f"[그림:{key}]" not in text]
+    if unref:
+        raise SystemExit(f"본문이 인용하지 않는 그림: {unref} — 본문 문장에 `[그림:키]`를 넣는다(학교 지침)")
     pos = sorted((text.find(a), key, path, a) for _, key, path, a in FIGURES)
     figs = [(str(k + 1), key, path, a) for k, (_, key, path, a) in enumerate(pos)]
     for num, key, path, anchor in reversed(figs):   # 뒤에서부터 넣어야 앞 그림의 위치가 밀리지 않는다
         i = text.find(anchor)
         j = text.index("\n", i)
         line = text[text.rfind("\n", 0, i) + 1:j]
-        tag = f" (<그림 {num}>)" if not line.rstrip().endswith(")") else ""
-        new_line = (line[:-1] + f"; <그림 {num}>)") if line.rstrip().endswith(")") else line + tag
-        if f"[그림:{key}]" in line:   # 기준 줄이 이미 이 그림을 가리키면 꼬리표를 붙이지 않는다 (2026-10-25)
-            new_line = line
+        # 2026-10-30 학교 지침 「표와 그림의 번호는 본문에 반드시 인용」: 기준 줄 꼬리표(「; <그림 N>」)를 없애고
+        # 본문 문장이 `[그림:키]`로 직접 가리키게 한다 — 가리키지 않는 그림은 아래에서 멈춘다
+        new_line = line
         block = (f"\n\n**<그림 {num}>** {caps[key]}\n\n![그림 {num}]({path})")   # 2026-10-27 학교 작성 방법: 제목은 그림 상단
         text = text[:text.rfind("\n", 0, i) + 1] + new_line + block + text[j:]
     # 본문의 그림 참조 `[그림:4-2]`(캡션 키) → `[그림 N]` (2026-10-25 — 서론·관련 연구에서 그림을 가리키려고)
@@ -356,12 +358,13 @@ def main():
     args = ap.parse_args()
 
     abstract = body_of("thesis_abstract_draft.md")
-    ko = abstract[abstract.index("## 국문 초록"):abstract.index("\n---\n")].replace("## 국문 초록", "# 국문 초록")
+    # 2026-10-30: 국문 초록은 싣지 않는다 (사용자 결정 — 학교 지침의 기재 순서에는 외국문 요약만 있다). 원고는 남겨 둔다
     en = abstract[abstract.index("## Abstract"):].replace("## Abstract", "# Abstract")
 
     parts, dropped = [], 0
     for f in CHAPTERS:
         b, d = drop_correction_quotes(body_of(f))
+        b = re.sub(r"\n+-{3,}\s*$", "", b.rstrip())   # 2026-10-30: 장 끝 「---」가 장 사이 구분선과 겹쳐 두 번 나오지 않게
         dropped += d
         parts.append(cite_chapter(b))
     main_text = "\n\n---\n\n".join(parts)
@@ -409,7 +412,7 @@ def main():
     if [int(t.split()[2].rstrip('.')) for t in appx_tables] != list(range(1, len(appx_tables) + 1)):
         raise SystemExit(f"부록 표 번호가 1부터 이어지지 않는다: {appx_tables}")
     table_items = "\n".join([table_items] + appx_tables)
-    body = (f"{ko}\n\n---\n\n{en}\n\n---\n\n{main_text}"
+    body = (f"{en}\n\n---\n\n{main_text}"
             f"\n\n---\n\n# 참고 문헌\n\n{bib}\n\n---\n\n{appx}\n")
     toc_items, figure_items = toc(body), figure_list(main_text)
     # 표·그림 차례는 별도 쪽이라 본문 제목 훑기에 잡히지 않는다 — 차례에 손으로 끼운다
@@ -429,7 +432,7 @@ def main():
                          for i, ln in enumerate(ls))
     # 절 제목의 네 칸 들여쓰기는 문단 안에서 지워진다 — 줄바꿈 없는 공백(U+00A0)으로 바꿔 미리보기에서도 들여 보이게 한다
     toc_shown = re.sub(r"^    ", "\u00a0" * 4, toc_items, flags=re.M)
-    front = (f"# 차 례\n\n{hard_breaks(toc_shown)}\n\n---\n\n{ko}\n\n---\n\n{en}"
+    front = (f"# 차 례\n\n{hard_breaks(toc_shown)}\n\n---\n\n{en}"
              f"\n\n---\n\n# 표 차례\n\n{hard_breaks(table_items)}\n\n---\n\n# 그림 차례\n\n{hard_breaks(figure_items)}")
     lists = front
     out = (head + front + "\n\n---\n\n" + main_text

@@ -7,7 +7,7 @@
 읽는 값은 bf16 통과(표현 범위가 넉넉해 NaN 없이 참값을 얻는 쪽)의 층별
 max|activation| 중앙값이며, 이미지 799장(DriveLM val CAM_FRONT) 기준이다.
 
-라벨은 KSAE 논문집 관례에 따라 영문으로 둔다(한글 폰트 의존도 제거 목적도 있다).
+라벨은 학위 논문 본문 언어에 맞춰 국문으로 둔다(학교 규정, 2026-10-30).
 
 실행:
     python scripts/plot_activation_profile.py
@@ -25,20 +25,23 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
+plt.rcParams["font.family"] = "Noto Sans CJK JP"
+plt.rcParams["axes.unicode_minus"] = False
 
 FP16_MAX = 65504.0
 ALIGN_LAYER = 23          # L_align이 실제로 정렬하는 블록 (CONFIG의 spatial_layer_idx)
 
 # (JSON 키, 2단용 범례 표기, 1단용 축약 표기, 색, 선 스타일, 선 굵기, 밴드 표시 여부)
 SERIES = [
-    ("student_baseline_v2", "Task CE only",       "Task only",         "#2a78d6", "-",  2.4, True),
-    ("student_temporal",    "Task + $L_{atc}$",   "Task + $L_{atc}$",  "#eda100", "-",  1.3, False),
-    ("base_3b",             "Pre-trained (no FT)", "Pre-trained",      "#008300", "--", 1.3, False),
-    ("student_kd_only_v4",  "Task + output KD",   "Task + out.KD",     "#e87ba4", "-",  1.3, False),
-    ("teacher_7b",          "Teacher 7B",         "Teacher 7B",        "#4a3aa7", "-.", 1.3, False),
-    ("student_spatial",     "Task + $L_{align}$", "Task + $L_{align}$", "#1baf7a", "--", 1.8, False),
-    ("student_full",        "Task + $L_{align}$ + $L_{atc}$",
-                            "Task + $L_{align}$ + $L_{atc}$",          "#eb6834", "-",  2.4, True),
+    ("student_baseline_v2", "기준 모델",          "기준 모델",         "#2a78d6", "-",  2.4, True),
+    ("student_temporal",    "시간만",             "시간만",            "#eda100", "-",  1.3, False),
+    ("base_3b",             "사전학습 모델",      "사전학습 모델",     "#008300", "--", 1.3, False),
+    ("student_kd_only_v4",  "출력 증류",          "출력 증류",         "#e87ba4", "-",  1.3, False),
+    ("teacher_7b",          "교사 7B",            "교사 7B",           "#4a3aa7", "-.", 1.3, False),
+    ("student_spatial",     "정렬만",             "정렬만",             "#1baf7a", "--", 1.8, False),
+    ("student_full",        "Full",
+                            "Full",                                     "#eb6834", "-",  2.4, True),
 ]
 
 # 레이아웃별 치수 — KSAE 논문집은 2단 조판이라 단칼럼 폭이 약 8.5cm(3.35in)다.
@@ -77,13 +80,13 @@ def main():
     # L_align이 정렬하는 계층 표시 — 효과가 그 층에만 국한되지 않음을 함께 보이기 위함
     ax.axvline(ALIGN_LAYER, color="#c9ccc8", lw=1.0, zorder=0)
     if L["show_align_text"]:
-        ax.text(ALIGN_LAYER - 0.55, 11.5, f"aligned block ({ALIGN_LAYER})",
+        ax.text(ALIGN_LAYER - 0.55, 11.5, f"정렬 블록 ({ALIGN_LAYER})",
                 rotation=90, va="bottom", ha="right", fontsize=7.5, color="#8a918c")
 
     ax.axhline(FP16_MAX, color="#0b0b0b", lw=1.3 * L["lw_scale"], ls=(0, (5, 3)), zorder=1)
     ax.text(0.3, FP16_MAX * 1.2,
-            "fp16 limit (65,504)" if args.layout == "single"
-            else "fp16 representable limit (65,504)",
+            "fp16 상한 (65,504)" if args.layout == "single"
+            else "fp16 표현 상한 (65,504)",
             fontsize=L["legend_fs"] + 0.5, color="#0b0b0b", va="bottom")
 
     for key, label_d, label_s, color, ls, lw, do_band in SERIES:
@@ -105,14 +108,14 @@ def main():
     ax.annotate("", xy=(ALIGN_LAYER, a), xytext=(ALIGN_LAYER, b),
                 arrowprops=dict(arrowstyle="<->", color="#3c4340",
                                 lw=1.2 * L["lw_scale"]), zorder=4)
-    ax.text(ALIGN_LAYER + 0.8, (a * b) ** 0.5, f"{a / b:.0f}$\\times$",
+    ax.text(ALIGN_LAYER + 0.8, (a * b) ** 0.5, f"{a / b:.0f}배",
             fontsize=L["base_fs"], color="#3c4340", va="center", fontweight="bold")
 
     ax.set_yscale("log")
     ax.set_xlim(-0.6, 31.6)
     ax.set_ylim(10, 1.3e5)
-    ax.set_xlabel("Vision encoder block index")
-    ax.set_ylabel(r"max$|$activation$|$  (median over images)")
+    ax.set_xlabel("비전 인코더 블록 번호")
+    ax.set_ylabel("이미지별 최대 활성의 중앙값")
     ax.set_xticks(range(0, 32, 4) if args.layout == "double" else range(0, 32, 8))
     ax.grid(True, which="major", axis="y", color="#e4e8e4", lw=0.8)
     ax.set_axisbelow(True)

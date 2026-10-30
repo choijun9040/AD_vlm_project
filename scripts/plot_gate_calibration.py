@@ -29,6 +29,9 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
+plt.rcParams["font.family"] = "Noto Sans CJK JP"
+plt.rcParams["axes.unicode_minus"] = False
 from matplotlib.ticker import FixedLocator, NullLocator, FuncFormatter
 
 SYNTH = "#2a78d6"      # 참조 팔레트 slot 1
@@ -41,10 +44,10 @@ FIX_TARGET = 2.0       # headroom_guard --target_headroom 기본값 (교정 목�
 
 LAYOUT = {
     "double": dict(figsize=(6.4, 3.3), base_fs=9.5, tick_fs=8.5, note_fs=8, lw=2.0, ms=7,
-                   xlabel="Worst-image fp16 headroom  (65,504 / max|activation|, final block)",
+                   xlabel="최악 이미지 fp16 여유  (65,504 / 최대 활성, 마지막 블록)",
                    legend=dict(loc="center right")),
     "single": dict(figsize=(3.4, 3.1), base_fs=7.5, tick_fs=6.5, note_fs=6.0, lw=1.6, ms=5.5,
-                   xlabel="Worst-image fp16 headroom (final block)",
+                   xlabel="마지막 블록 최악 여유",
                    legend=dict(loc="center right", bbox_to_anchor=(1.0, 0.42))),
 }
 
@@ -95,13 +98,16 @@ def main():
     xs, ys = zip(*syn)
     ax.plot(xs, ys, color=SYNTH, lw=L["lw"], marker="o", ms=L["ms"] - 1.5,
             markeredgecolor="white", markeredgewidth=0.8, zorder=3,
-            label=f"Synthetic continuum (MLP scaled, {len(syn)} points)")
+            label=f"합성 연속체 (MLP 배율 조정, {len(syn)}점)")
     ax.scatter([p[1] for p in nat], [p[2] for p in nat], s=(L["ms"] + 2.5) ** 2, marker="D",
                color=NATURAL, edgecolor="white", linewidth=1.0, zorder=4,
-               label="Trained checkpoints ($\\lambda_{align}$ sweep)")
+               label="학습된 체크포인트 (λ 스윕)")
     # 라벨 위치를 점마다 정한다 — 0.5와 1.0은 가까워 같은 높이면 겹친다
     offsets = {"0.0": (-7, 0, "right", "center"), "0.5": (0, 9, "center", "bottom"),
                "1.0": (0, 21, "center", "bottom"), "2.0": (0, 9, "center", "bottom")}
+    if args.layout == "single":
+        # 1단에서는 λ=0.0 라벨이 왼쪽으로 가면 세로축 선에 걸린다 — 점 위, 곡선 왼쪽으로 올린다
+        offsets["0.0"] = (-5, 7, "center", "bottom")
     for lam, h, c in nat:
         dx, dy, ha, va = offsets[lam]
         ax.annotate(f"$\\lambda$={lam}", (h, c), xytext=(dx, dy), textcoords="offset points",
@@ -115,15 +121,15 @@ def main():
     ax.set_xlim(0.72, 4.6)
     ax.set_ylim(-4, 100)
     ax.set_xlabel(L["xlabel"])
-    ax.set_ylabel("fp16 collapse rate (% of images)")
+    ax.set_ylabel("fp16 상실률 (이미지 %)")
     ax.grid(True, axis="y", color=GRID, lw=0.7)
     for s in ("top", "right"):
         ax.spines[s].set_visible(False)
 
-    ax.text(1.0, 97, " fp16 limit", fontsize=L["note_fs"], color=INK, va="top", ha="left")
-    ax.text((1.0 * MARGINAL) ** 0.5, 84, "marginal\n(design\nchoice)", fontsize=L["note_fs"] - 0.5,
+    ax.text(1.0, 97, " fp16 상한", fontsize=L["note_fs"], color=INK, va="top", ha="left")
+    ax.text((1.0 * MARGINAL) ** 0.5, 84, "경계\n(설계\n판단)", fontsize=L["note_fs"] - 0.5,
             color=INK2, ha="center", va="top")
-    ax.text(FIX_TARGET, 97, " fix target 2.0", fontsize=L["note_fs"], color=INK2, va="top", ha="left")
+    ax.text(FIX_TARGET, 97, " 교정 목표 2.0배", fontsize=L["note_fs"], color=INK2, va="top", ha="left")
 
     ax.legend(fontsize=L["note_fs"], frameon=False, handletextpad=0.5, **L["legend"])
     fig.tight_layout()

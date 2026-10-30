@@ -27,6 +27,9 @@ from pathlib import Path
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+# 그림 속 글자는 본문 언어(국문)로 둔다(학교 규정) — 한글이 들어 있는 Noto Sans CJK, 음수 부호는 ASCII 하이픈
+plt.rcParams["font.family"] = "Noto Sans CJK JP"
+plt.rcParams["axes.unicode_minus"] = False
 
 FP16_MAX = 65504.0
 PATCH_PX = 28 * 28        # merge 후 토큰 하나가 덮는 픽셀 수
@@ -47,13 +50,13 @@ def actual_tokens(max_pixels, h=900, w=1600):
 EVAL_TOKENS = actual_tokens(200704)   # 학습·평가에 쓴 해상도(실제 231 토큰)
 
 SERIES = [
-    ("student_baseline_v2", "Task CE only",       "Task only",          "#2a78d6", "-",  2.4, "o"),
-    ("student_temporal",    "Task + $L_{atc}$",   "Task + $L_{atc}$",   "#eda100", "-",  1.3, "^"),
-    ("base_3b",             "Pre-trained (no FT)", "Pre-trained",       "#008300", "--", 1.3, "s"),
-    ("student_kd_only_v4",  "Task + output KD",   "Task + out.KD",      "#e87ba4", "-",  1.3, "v"),
-    ("student_spatial",     "Task + $L_{align}$", "Task + $L_{align}$", "#1baf7a", "--", 1.8, "D"),
-    ("student_full",        "Task + $L_{align}$ + $L_{atc}$",
-                            "Task + $L_{align}$ + $L_{atc}$",           "#eb6834", "-",  2.4, "o"),
+    ("student_baseline_v2", "기준 모델",          "기준 모델",          "#2a78d6", "-",  2.4, "o"),
+    ("student_temporal",    "시간만",             "시간만",             "#eda100", "-",  1.3, "^"),
+    ("base_3b",             "사전학습 모델",      "사전학습 모델",      "#008300", "--", 1.3, "s"),
+    ("student_kd_only_v4",  "출력 증류",          "출력 증류",          "#e87ba4", "-",  1.3, "v"),
+    ("student_spatial",     "정렬만",             "정렬만",             "#1baf7a", "--", 1.8, "D"),
+    ("student_full",        "Full",
+                            "Full",                                      "#eb6834", "-",  2.4, "o"),
 ]
 
 LAYOUT = {
@@ -113,7 +116,7 @@ def main():
     # 라벨을 **왼쪽 위**에 둔다 (2026-09-16). 오른쪽 아래(기존)는 Task CE only 곡선이
     # 한계선을 가로지르는 바로 그 지점이라 글자가 곡선에 관통당했다 — 그림에서 가장
     # 중요한 주석이 읽히지 않았다. 왼쪽 상단은 모든 곡선이 한계선 아래라 비어 있다.
-    ax_a.text(tokens[0], FP16_MAX * 1.04, "fp16 limit (65,504)",
+    ax_a.text(tokens[0], FP16_MAX * 1.04, "fp16 상한 (65,504)",
               fontsize=L["legend_fs"] + 0.5, color="#0b0b0b", va="bottom", ha="left")
 
     for key, label_d, label_s, color, ls, lw, mk in SERIES:
@@ -124,8 +127,8 @@ def main():
                   ms=L["ms"], label=(label_s if args.layout == "single" else label_d), zorder=3)
 
     ax_a.set_yscale("log")
-    ax_a.set_ylabel(r"max$|$activation$|$, final block")
-    ax_a.set_title("(a) activation magnitude", fontsize=L["base_fs"], pad=6)
+    ax_a.set_ylabel("마지막 블록 최대 활성 (중앙값)")
+    ax_a.set_title("(a) 활성 크기", fontsize=L["base_fs"], pad=6)
 
     # --- (b) 상실률 ---
     for key, label_d, label_s, color, ls, lw, mk in SERIES:
@@ -135,15 +138,15 @@ def main():
         ax_b.plot(xs, ys, color=color, ls=ls, lw=lw * L["lw_scale"], marker=mk,
                   ms=L["ms"], zorder=3)
 
-    ax_b.set_ylabel("fp16 collapse rate (% of images)")
+    ax_b.set_ylabel("fp16 상실률 (이미지 %)")
     ax_b.set_ylim(-4, 104)
-    ax_b.set_title("(b) generation collapse", fontsize=L["base_fs"], pad=6)
+    ax_b.set_title("(b) 출력 상실", fontsize=L["base_fs"], pad=6)
 
     for ax in (ax_a, ax_b):
         ax.set_xscale("log", base=2)
         ax.set_xticks(tokens)
         ax.set_xticklabels([str(t) for t in tokens])
-        ax.set_xlabel("Vision tokens per image")
+        ax.set_xlabel("이미지당 비전 토큰 수")
         ax.axvline(EVAL_TOKENS, color="#c9ccc8", lw=1.0, zorder=0)
         ax.grid(True, which="major", axis="y", color="#e4e8e4", lw=0.8)
         ax.set_axisbelow(True)
@@ -153,7 +156,7 @@ def main():
     # 세로로 서서 범례까지 올라가 위쪽이 잘렸다.
     # 시작 높이를 y=1 → 8로 올린다 (2026-09-16 2차). y=1이면 첫 글자 't'가 x축 선과
     # y=0에 깔린 데이터 선(정렬 손실 변형들)에 겹쳐 잘려 보였다.
-    ax_b.text(EVAL_TOKENS * 0.94, 8, "training / eval",
+    ax_b.text(EVAL_TOKENS * 0.94, 8, "학습·평가",
               rotation=90, va="bottom", ha="right",
               fontsize=L["legend_fs"] - 0.5, color="#8a918c")
 

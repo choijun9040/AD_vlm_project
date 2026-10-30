@@ -63,18 +63,18 @@ quantization-error metrics are scale-invariant and ignore absolute magnitude, an
 measured under conditions where overflow does not occur (bf16, evaluation resolution).
 
 This thesis defines a per-layer **representable-range headroom** (format maximum ÷ maximum
-activation magnitude) and proposes a diagnostic that predicts the collapse rate as the fraction of
+activation magnitude) and proposes a diagnostic that estimates the collapse rate as the fraction of
 images exceeding the format limit, together with a training-free correction that scales down the two input projections before the
 element-wise multiplication in the gated MLP.
 
 We validated both on 3B students that differ only in their loss terms within a distillation setup
 with a Qwen2.5-VL-7B teacher. The students differ in headroom from 0.88× to 2.94× (median over images, native resolution); the student below 1× loses its output on 96.0% of 799 images in fp16.
 Its accuracy on 11,309 NuScenes-QA questions at native resolution falls from 48.47% (bf16) to 1.34% (fp16). Per-tensor INT8 quantization SNR rates this student
-higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic predicts the
+higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic estimates the
 collapse rate of six models, including the pretrained model, with a mean absolute error of 1.1 percentage points (PyTorch fp16, native resolution, 799 images), and the proposed correction
 restores accuracy to 48.76%, 0.29 percentage points from bf16 execution without overflow (48.47%; 11,309 questions), while keeping fp16.
-The same collapse and correction were confirmed on TensorRT engines and a Jetson Orin Nano (strongly typed engines,
-at resolutions up to 802,816 pixels).
+The same collapse and correction were confirmed on TensorRT engines and, with strongly typed engines
+at resolutions up to 802,816 pixels, on a Jetson Orin Nano.
 
 These results show that representable-range headroom must be measured at the deployment
 resolution to diagnose and correct the collapse risk before deploying compressed VLMs in low
