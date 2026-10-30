@@ -64,7 +64,7 @@
 <tr><td><code>tower_baseline</code></td><td>200,704</td><td>924</td><td>0</td><td>0.999978</td></tr>
 <tr><td><code>tower_full</code></td><td>200,704</td><td>924</td><td>0</td><td>1.000000</td></tr>
 </table>
-
+<div class="cond">(파일명의 baseline은 기준 모델, full은 Full이다(Ⅳ장 1절). ONNX 코사인은 PyTorch 출력 대비 토큰별 코사인의 중앙값)</div>
 
 <div class="cap">&lt;표 6&gt; 다섯 학생 변형의 손실·가중치·교사 입력</div>
 <table>
@@ -81,13 +81,13 @@
 <table>
 <tr><th>항목</th><th>Full</th><th>Task + L_align</th><th>Task + L_atc</th><th>Task only</th><th>Task + out.KD</th></tr>
 <tr><td>학습 가능 파라미터</td><td>41,124,224</td><td>41,124,224</td><td>41,124,224</td><td>41,124,224</td><td>41,124,224</td></tr>
-<tr><td>DriveLM 표본</td><td>377,983</td><td>377,983</td><td>377,983</td><td>377,983</td><td>377,983</td></tr>
-<tr><td>NuScenes-QA 표본</td><td>54,607</td><td>54,607</td><td>54,607</td><td>54,607</td><td>54,607</td></tr>
+<tr><td>DriveLM 데이터 크기</td><td>377,983</td><td>377,983</td><td>377,983</td><td>377,983</td><td>377,983</td></tr>
+<tr><td>NuScenes-QA 데이터 크기</td><td>54,607</td><td>54,607</td><td>54,607</td><td>54,607</td><td>54,607</td></tr>
 <tr><td>최적화 스텝</td><td>27,037</td><td>27,037</td><td>27,037</td><td>27,037</td><td>27,037</td></tr>
 <tr><td>워밍업 스텝</td><td>1,351</td><td>1,351</td><td>1,351</td><td>1,351</td><td>1,351</td></tr>
 <tr><td>마이크로 배치 × 누적</td><td>2 × 8</td><td>2 × 8</td><td>2 × 8</td><td><b>4 × 4</b></td><td>2 × 8</td></tr>
 </table>
-<div class="cond">(표본 합 432,590 ÷ 유효 배치 16 = 27,036.9 → 27,037스텝, 즉 한 에폭)</div>
+<div class="cond">(표본 합 432,590만큼 복원 추출하는 것을 한 에폭으로 둔다. 432,590 ÷ 16 = 27,036.9 → 27,037스텝)</div>
 
 <div class="cap">&lt;표 8&gt; 측정 형식에 따른 여유와 판정</div>
 <table>
@@ -106,7 +106,7 @@
 <tr><td>Task only</td><td>50.30% (5,688)</td><td>64.49%</td><td>7.96%</td><td>80.26%</td><td>36.67%</td><td>51.15%</td></tr>
 <tr><td>Task + out.KD</td><td>46.74% (5,286)</td><td>63.88%</td><td>10.40%</td><td>67.68%</td><td>35.48%</td><td>51.09%</td></tr>
 </table>
-<div class="cond">(NuScenes-QA[3] 검증 11,309문항, 평가 해상도, bf16. 괄호는 정답 수)</div>
+<div class="cond">(NuScenes-QA 검증 11,309문항, 평가 해상도, bf16. 괄호는 정답 수)</div>
 
 <div class="cap">&lt;표 10&gt; 비전 인코더 블록별 최대 활성 크기</div>
 <table>
@@ -123,12 +123,12 @@
 
 <div class="cap">&lt;표 11&gt; 입력 해상도별 fp16 상실률</div>
 <table>
-<tr><th>입력 픽셀 상한</th><th>패치 수</th><th>Task only</th><th>Task + out.KD</th><th>Task + L_atc</th><th>Pre-trained</th><th>Task + L_align</th><th>Full</th></tr>
+<tr><th>입력 픽셀 상한</th><th>패치 수(병합 전)</th><th>Task only</th><th>Task + out.KD</th><th>Task + L_atc</th><th>Pre-trained</th><th>Task + L_align</th><th>Full</th></tr>
 <tr><td><b>1,440,000 (원본)</b></td><td>7,296</td><td><b>96.0%</b></td><td>26.8%</td><td>38.9%</td><td>70.7%</td><td><b>0.0%</b></td><td><b>0.0%</b></td></tr>
-<tr><td>802,816</td><td>3,864</td><td>31.7%</td><td>0.1%</td><td>0.4%</td><td>0.4%</td><td>0</td><td>0</td></tr>
-<tr><td>401,408</td><td>1,920</td><td>15.1%</td><td>0.1%</td><td>0.1%</td><td>0.1%</td><td>0</td><td>0</td></tr>
-<tr><td>200,704 (평가)</td><td>924</td><td>4.8%</td><td>0</td><td>0.1%</td><td>0</td><td>0</td><td>0</td></tr>
-<tr><td>100,352</td><td>480</td><td>2.4%</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+<tr><td>802,816</td><td>3,864</td><td>31.7%</td><td>0.1%</td><td>0.4%</td><td>0.4%</td><td>0.0%</td><td>0.0%</td></tr>
+<tr><td>401,408</td><td>1,920</td><td>15.1%</td><td>0.1%</td><td>0.1%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td></tr>
+<tr><td>200,704 (평가)</td><td>924</td><td>4.8%</td><td>0.0%</td><td>0.1%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
+<tr><td>100,352</td><td>480</td><td>2.4%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td><td>0.0%</td></tr>
 </table>
 <div class="cond">(fp16 상실률, 799장, 이미지 단위로 출력이 NaN이면 상실; &lt;그림 3&gt;)</div>
 
@@ -152,7 +152,7 @@
 <tr><td>Task + L_align</td><td>2.89배</td><td><b>0.0%</b></td><td>172.0</td><td>25.75 dB</td></tr>
 <tr><td>Full</td><td><b>2.94배</b></td><td><b>0.0%</b></td><td>236.2</td><td><b>22.78 dB</b></td></tr>
 </table>
-<div class="cond">(원본 해상도, 마지막 블록, 799장, 여유는 p50·bf16 측정; &lt;그림 4&gt;)</div>
+<div class="cond">(원본 해상도, 마지막 블록, 799장, SNR·max/rms는 이미지별 값의 중앙값·텐서 단위, 여유는 p50·bf16 측정; &lt;그림 4&gt;)</div>
 
 <div class="cap">&lt;표 14&gt; 양자화 검사 대상과 fp16 실행 대상</div>
 <table>
@@ -172,7 +172,7 @@
 <tr><td>Task + L_align</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
 <tr><td>Full</td><td>0.0%</td><td>0.0%</td><td>0.0%p</td></tr>
 </table>
-
+<div class="cond">(원본 해상도, 마지막 블록, 799장, 초과 비율은 bf16, 상실률은 PyTorch fp16, 오차 = 초과 비율 − 실제 상실률)</div>
 
 <div class="cap">&lt;표 16&gt; 마지막 블록 최댓값의 성분 분해</div>
 <table>
@@ -192,7 +192,7 @@
 <tr><td>출력 측 축소: MLP <b>출력</b>을 1/3</td><td>4,608</td><td>63,776</td><td>96.4%</td></tr>
 <tr><td>곱셈 이전 교정: <b>gate·up을 각각 1/√3</b> (곱이 1/3)</td><td><b>1,535</b></td><td><b>24,928</b></td><td><b>0.0%</b></td></tr>
 </table>
-<div class="cond">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다. 없음 행은 상한을 넘은 이미지가 빠진 값이라 참값보다 작다. 참값은 bf16 p50 74,752다)</div>
+<div class="cond">(799장, fp16. 세 행은 같은 실행이다. 곱과 출력 크기는 그 단계까지 유한하였던 이미지의 중앙값이다. 없음 행은 상한을 넘은 이미지가 빠진 값이라 참값보다 작다. 참값은 bf16 p50 74,752다. 없음 행의 95.9%와 뒤의 도구 측정 96.1%는 측정 스크립트에 따라 상실 이미지 수가 몇 장 달라 다른 표의 96.0%와 다르다. Ⅳ장 2절)</div>
 
 <div class="cap">&lt;표 18&gt; 모델 계열별 도구 적용 결과</div>
 <table>
@@ -233,7 +233,7 @@
 <table>
 <tr><th>모델</th><th>해상도</th><th>여유</th><th>fp16</th><th>bf16</th><th>불일치</th><th>fp16 상실형</th></tr>
 <tr><td>Task only</td><td>평가</td><td>1.31배</td><td>48.02%</td><td>50.30%</td><td>128 대 385</td><td>533</td></tr>
-<tr><td>Task only (상실 문항 제외)</td><td>평가</td><td>—</td><td>50.40%</td><td>50.30%</td><td>—</td><td>—</td></tr>
+<tr><td>Task only (상실 문항 제외, 10,776문항)</td><td>평가</td><td>—</td><td>50.40%</td><td>50.30%</td><td>—</td><td>—</td></tr>
 <tr><td>Full</td><td>평가</td><td>3.66배</td><td>51.74%</td><td>51.69%</td><td>76 대 71</td><td>0</td></tr>
 <tr><td>Full</td><td>원본</td><td>2.94배</td><td>51.86%</td><td>52.00%</td><td>78 대 94</td><td>0</td></tr>
 </table>
@@ -241,7 +241,7 @@
 
 <div class="cap">&lt;표 22&gt; 실행 조건에 따른 INT4 정확도</div>
 <table>
-<tr><th>변형</th><th>INT4 교란</th><th><b>INT4 정정</b></th><th>bf16 원본</th><th>정정−원본</th></tr>
+<tr><th>변형</th><th>INT4 교란</th><th><b>INT4 정정</b></th><th>양자화 전 bf16(Ⅴ장 1절)</th><th>정정−양자화 전</th></tr>
 <tr><td>Task only</td><td><b>1.39%</b></td><td><b>48.30%</b></td><td>50.30%</td><td>−2.00%p</td></tr>
 <tr><td>Full</td><td>51.60%</td><td>51.86%</td><td>51.69%</td><td>+0.17%p</td></tr>
 <tr><td>Task + L_align</td><td>50.82%</td><td>50.64%</td><td>51.40%</td><td>−0.76%p</td></tr>

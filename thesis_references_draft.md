@@ -6,7 +6,7 @@
 > 한 번에 넣는다.
 >
 > **확인 규칙.** 모든 항목을 **원문 페이지에서** 확인했다(기억으로 채운 필드 없음). 확인 출처는 맨 아래
-> 표에 있다. 9명 이상이면 첫 3인 + "et al."로 적고 총 저자 수를 확인 표에 남긴다.
+> 표에 있다. 6인 이하는 전부, 7인 이상은 처음 6인 + et al.로 적는다(2026-10-27 규칙, 아래 「저자 표기 규칙」).
 > [1][2][7][12][16][17][24][25][33]은 2026-09-16 옛 초안에서 확인을 마친 항목을 옮겼다.
 
 ---
@@ -61,10 +61,10 @@
 23. H. Caesar, V. Bankiti, A. H. Lang, S. Vora, V. E. Liong, Q. Xu, et al., "nuScenes: A Multimodal Dataset for Autonomous
     Driving," in *Proc. CVPR*, 2020. (arXiv:1903.11027)
 24. C. Sima, K. Renz, K. Chitta, L. Chen, H. Zhang, C. Xie, et al.,
-    "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024.
+    "DriveLM: Driving with Graph Visual Question Answering," in *Proc. ECCV*, 2024. (arXiv:2312.14150)
 25. T. Qian, J. Chen, L. Zhuo, Y. Jiao, Y.-G. Jiang, "NuScenes-QA: A Multi-Modal Visual Question
     Answering Benchmark for Autonomous Driving Scenario," in *Proc. AAAI*,
-    vol. 38, no. 5, pp. 4542–4550, 2024.
+    vol. 38, no. 5, pp. 4542–4550, 2024. (arXiv:2305.14836)
 26. K. Chen, Y. Li, W. Zhang, Y. Liu, P. Li, R. Gao, et al., "Automated Evaluation of Large Vision-Language Models on
     Self-driving Corner Cases," in *Proc. WACV*, 2025. (arXiv:2404.10595)
 27. K. Li, K. Chen, H. Wang, L. Hong, C. Ye, J. Han, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection
@@ -77,7 +77,7 @@
     World at Any Resolution," arXiv:2409.12191, 2024.
 33. J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, et al., "AWQ:
     Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc.
-    MLSys*, 2024.
+    MLSys*, 2024. (arXiv:2306.00978)
 34. S. Bai, Y. Cai, R. Chen, K. Chen, X. Chen, Z. Cheng, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
 35. M. Abdin, J. Aneja, H. Awadalla, A. Awadallah, A. A. Awan, N. Bach, et al., "Phi-3 Technical Report: A Highly Capable Language Model
     Locally on Your Phone," arXiv:2404.14219v4, 2024.
