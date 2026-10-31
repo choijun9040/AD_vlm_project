@@ -73,14 +73,17 @@ def main():
         print(f"[교정] 잔차 재조정 불가 — {plan['reason']}")
     else:
         vm32c = HX.apply_residual(vm32, blocks_of, plan["entry"], c)
+        HX.apply_eps(vm32c, plan["eps_norms"], c)           # 잔차를 읽는 정규화의 eps도 c²배 (2026-10-31 개정)
         eq = HX.compare(vm32, vm32c, cache, fwd, comp=plan["comp"])
         res["equivalence_fp32"] = eq
         del vm32c
         print(f"[교정] c={c:g} 입구 {plan['entry']} 출구 {plan['exit']} 쓰기 {plan['writers']} · "
               f"등가성 코사인 최소 {eq['cos_min']:.8f}")
         HX.apply_residual(vm16, blocks_of, plan["entry"], c, inplace=True)
+        HX.apply_eps(vm16, plan["eps_norms"], c)
         res["loss_no_upcast_after"] = loss_no_upcast(vm16, cache)
         HX.apply_residual(vm, blocks_of, plan["entry"], c, inplace=True)
+        HX.apply_eps(vm, plan["eps_norms"], c)
         ops_a = HX.profile_ops(vm, cache, fwd, FP16_MAX, TARGET)
         res["ops_after"] = HX.summarize_ops(ops_a)
         print(f"[검증] 경로 (ii) 상실 {res['loss_no_upcast_before']:.1%} → {res['loss_no_upcast_after']:.1%} · "

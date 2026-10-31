@@ -51,7 +51,9 @@ NAMED = [
     (r"Orin Nano(?: 8GB)?", 43), (r"TensorRT 11(?![0-9])", 44),
     (r"Gemma 4(?![0-9])", 45),
     # 2026-10-30: SigLIP·CLIP·TensorRT. TensorRT 11은 위의 출시 노트([44])가 맡으므로 일반 규칙에서 뺀다
-    (r"SigLIP", 46), (r"(?<![A-Za-z])CLIP(?![A-Za-z])", 47), (r"TensorRT(?! 11(?![0-9]))(?: 10(?:\.[0-9]+)*)?", 48),   # 「TensorRT[5] 10.13」이 되지 않게 버전까지 한 이름으로
+    (r"SigLIP", 46), (r"(?<![A-Za-z])CLIP(?![A-Za-z])", 47), (r"TensorRT(?! 11(?![0-9]))(?: 10(?:\.[0-9]+)*)?", 48),
+    # 2026-10-31: 오버플로 실무 도구·사례 (2.2절)
+    (r"Hugging Face transformers", 49), (r"Polygraphy", 50), (r"SDXL VAE", 51), (r"Draw Things", 52),   # 「TensorRT[5] 10.13」이 되지 않게 버전까지 한 이름으로
 ]
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 

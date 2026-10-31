@@ -233,6 +233,18 @@ def main():
         vt.to(next(model.parameters()).dtype)
         print(f"[교정] 비전 타워 가중치 교체: {args.vision_state} "
               f"(파라미터 {len(pnames)}개 전부 적재)")
+        # 잔차 재조정이면 정규화 eps 변경이 옆 파일에 있다 (2026-10-31) — eps는 state_dict에 실리지 않으므로 함께 적용한다.
+        # 없는 모듈 이름이 하나라도 있으면 멈춘다(조용히 일부만 적용하면 정확한 등가가 아니다)
+        eps_path = Path(args.vision_state + ".eps.json")
+        if eps_path.exists():
+            mods = dict(vt.named_modules())
+            ch = json.loads(eps_path.read_text())
+            miss = [k for k in ch if k not in mods]
+            if miss:
+                raise RuntimeError(f"eps 변경 대상 모듈이 없다: {miss[:3]}")
+            for k, v in ch.items():
+                setattr(mods[k], v["attr"], v["new"])
+            print(f"[교정] 정규화 eps 변경 {len(ch)}개 적용: {eps_path}")
 
     print("[데이터 준비] DriveLM val 이미지 매핑 구성 중...")
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)

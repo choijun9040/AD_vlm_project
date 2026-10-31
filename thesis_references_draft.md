@@ -107,6 +107,18 @@
 48. NVIDIA, "NVIDIA TensorRT Documentation," 2026.
     https://docs.nvidia.com/deeplearning/tensorrt/latest/index.html
     (accessed 2026-10-30)
+49. Hugging Face, "Debugging: Underflow and Overflow Detection," *Transformers Documentation*, 2026.
+    https://huggingface.co/docs/transformers/main/en/debugging
+    (accessed 2026-10-31)
+50. NVIDIA, "Work with Reduced Precision," *Polygraphy How-To Guides*, TensorRT 10.9, 2025.
+    https://github.com/NVIDIA/TensorRT/blob/release/10.9/tools/Polygraphy/how-to/work_with_reduced_precision.md
+    (accessed 2026-10-31)
+51. madebyollin, "SDXL-VAE-FP16-Fix," *Hugging Face Model Card*, 2023.
+    https://huggingface.co/madebyollin/sdxl-vae-fp16-fix
+    (accessed 2026-10-31)
+52. Draw Things, "BF16 and Image Generation Models," *Draw Things Engineering Blog*, 2025.
+    https://engineering.drawthings.ai/p/bf16-and-image-generation-models-803cf0515bee
+    (accessed 2026-10-31)
 
 ---
 

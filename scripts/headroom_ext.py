@@ -277,6 +277,65 @@ def exit_kind(tower):
     return None
 
 
+EPS_ATTRS = ("variance_epsilon", "eps", "epsilon")
+
+
+def _eps_attr(mod):
+    for a in EPS_ATTRS:
+        v = getattr(mod, a, None)
+        if isinstance(v, float):
+            return a
+    return None
+
+
+@torch.no_grad()
+def find_residual_norms(tower, tower_c, x, fwd, c, tol=0.02):
+    """잔차를 읽는 정규화 — 가중치만 c배 한 모델에서 **입력 크기가 c배가 된** 정규화 모듈 이름.
+
+    **왜 필요한가 (2026-10-31, 사전 등록 개정).** 정규화는 `x / √(mean(x²) + eps)`라 입력이 c배가 되면 mean(x²)는 c²배인데
+    eps는 그대로여서, 활성이 작은 앞쪽 블록에서 불변이 미세하게 깨진다(Qwen2.5-VL 실측: 코사인 0.99979). 이 정규화들의 eps를
+    c²배 하면 정확한 재매개화가 된다(같은 4장에서 코사인 1.0). 가지 안의 정규화(Gemma 사후 정규화, q·k 정규화)는 입력이
+    바뀌지 않으므로 eps를 건드리면 안 된다 — 그래서 구조로 추측하지 않고 입력 크기 비율을 실측해 고른다.
+    """
+    def collect(t):
+        rec = {}
+        hs = []
+        for n, m in t.named_modules():
+            if _eps_attr(m) is None:
+                continue
+
+            def h(_m, args, n=n):
+                a = args[0] if args else None
+                if torch.is_tensor(a):
+                    rec[n] = rec.get(n, 0.0) + float(a.detach().double().pow(2).sum())
+            hs.append(m.register_forward_pre_hook(h))
+        fwd(t, x)
+        for h in hs:
+            h.remove()
+        return rec
+    r0, r1 = collect(tower), collect(tower_c)
+    out = []
+    for n, v0 in r0.items():
+        if v0 > 0 and n in r1:
+            ratio = math.sqrt(r1[n] / v0)
+            if abs(ratio / c - 1) < tol:
+                out.append(n)
+    return out
+
+
+@torch.no_grad()
+def apply_eps(tower, norm_names, c):
+    """잔차를 읽는 정규화의 eps를 c²배 (모듈 설정이라 state_dict에 실리지 않는다 — 배포 쪽에서 함께 적용할 것)."""
+    mods = dict(tower.named_modules())
+    changed = {}
+    for n in norm_names:
+        a = _eps_attr(mods[n])
+        old = getattr(mods[n], a)
+        setattr(mods[n], a, old * c * c)
+        changed[n] = {"attr": a, "old": old, "new": old * c * c}
+    return changed
+
+
 def choose_c(max_value, fmax, target=2.0):
     """목표 여유를 넘기는 가장 큰 2의 거듭제곱 — 곱해도 가수가 그대로라 반올림이 생기지 않는다."""
     if not (max_value and math.isfinite(max_value)):
@@ -344,6 +403,8 @@ def plan_residual(tower32, blocks_of, probe_cache32, fwd, c, cos_tol=0.99999):
             t1 = apply_residual(tower32, blocks_of, names, c)
         except RuntimeError as e:
             tried.append({"entry": names, "error": str(e)}); continue
+        norms = find_residual_norms(tower32, t1, probe_cache32[0], fwd, c)
+        apply_eps(t1, norms, c)
         r = compare(tower32, t1, probe_cache32, fwd)
         exit_ = None
         if abs(r["ratio_min"] - 1) < 1e-3 and abs(r["ratio_max"] - 1) < 1e-3:
@@ -351,9 +412,9 @@ def plan_residual(tower32, blocks_of, probe_cache32, fwd, c, cos_tol=0.99999):
             comp = 1.0
         elif abs(r["ratio_min"] / c - 1) < 1e-3 and abs(r["ratio_max"] / c - 1) < 1e-3:
             exit_, comp = "projector", 1.0 / c
-        tried.append({"entry": names, **r, "exit": exit_})
+        tried.append({"entry": names, **r, "exit": exit_, "n_eps_norms": len(norms)})
         if exit_ and r["cos_min"] >= cos_tol:
-            return {"ok": True, "entry": names, "exit": exit_, "comp": comp,
+            return {"ok": True, "entry": names, "exit": exit_, "comp": comp, "eps_norms": norms,
                     "writers": kinds[0][0], "tried": tried}
         del t1
     return {"ok": False, "reason": "등가가 되는 입구 후보가 없음", "tried": tried}

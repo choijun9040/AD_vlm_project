@@ -848,18 +848,21 @@ def main():
                 plan = HX.plan_residual(t32, get_blocks, cache32[:min(8, len(cache32))], fwd32, c, args.equiv_tol)
                 if plan["ok"]:
                     t32c = HX.apply_residual(t32, get_blocks, plan["entry"], c)
+                    HX.apply_eps(t32c, plan["eps_norms"], c)       # 잔차를 읽는 정규화의 eps도 c²배 (2026-10-31 개정)
                     eq = HX.compare(t32, t32c, cache32, fwd32, comp=plan["comp"])
                     del t32c
                     accepted = eq["cos_min"] >= args.equiv_tol
-                    print(f"  입구 {plan['entry']} · 잔차 쓰기 방식 {plan['writers']} · 출구 {plan['exit']}")
+                    print(f"  입구 {plan['entry']} · 잔차 쓰기 방식 {plan['writers']} · 출구 {plan['exit']} · "
+                          f"eps를 c²배 한 정규화 {len(plan['eps_norms'])}개")
                     print(f"  등가성(fp32, {len(cache32)}장): 코사인 최소 {eq['cos_min']:.8f} · 크기 비율 "
                           f"{eq['ratio_min']:.6f}~{eq['ratio_max']:.6f} → "
                           + ("**통과**" if accepted else f"미달(기준 {args.equiv_tol})"))
                     res["residual"] = {"c": c, "entry": plan["entry"], "exit": plan["exit"],
                                        "writers": plan["writers"], "equivalence": eq, "accepted": accepted,
-                                       "tried": plan["tried"]}
+                                       "eps_norms": plan["eps_norms"], "tried": plan["tried"]}
                     if accepted:
                         HX.apply_residual(tower, get_blocks, plan["entry"], c, inplace=True)
+                        res["residual"]["eps_changed"] = HX.apply_eps(tower, plan["eps_norms"], c)
                         residual_done = True
                         if plan["exit"] == "projector":
                             comp = HX.compensate_projector(PARENT_MODEL, c)
@@ -929,6 +932,11 @@ def main():
             if args.save_weights:
                 torch.save(tower.state_dict(), args.save_weights)
                 print(f"\n  교정된 비전 타워 저장: {args.save_weights}")
+                if res.get("residual", {}).get("eps_changed"):
+                    # eps는 모듈 설정이라 state_dict에 실리지 않는다 — 옆 파일로 남기고 적재하는 쪽에서 함께 적용한다
+                    Path(args.save_weights + ".eps.json").write_text(json.dumps(res["residual"]["eps_changed"], indent=1))
+                    print(f"  정규화 eps 변경 {len(res['residual']['eps_changed'])}개: {args.save_weights}.eps.json "
+                          f"— **함께 적용하지 않으면 정확한 등가가 아니다**")
                 if res.get("residual", {}).get("projector", {}).get("done") and "가중치" in res["residual"]["projector"].get("how", ""):
                     name, sub = HX.projector_first(PARENT_MODEL)
                     torch.save({name: sub.state_dict()}, args.save_weights + ".projector.pt")

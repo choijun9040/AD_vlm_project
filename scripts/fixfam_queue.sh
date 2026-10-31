@@ -22,15 +22,25 @@ for M in gemma-4-26B-A4B-it gemma-4-31B-it; do for ST in 280 1120; do
 done; done
 
 # ---- 상한을 넘지 않는 계열 8: 가상 상한(최악 최대 ÷ 1.5)에서 교정 효과와 등가성 ----
+# 디스크 여유가 38GB뿐이라(2026-10-31) 모델마다 측정이 끝나면 HF 캐시를 지운다 — 결과 파일은 남는다
 VR="--virtual_ratio 1.5"
+rmc(){ rm -rf "$HF_HOME/hub/models--${1//\//--}"; log "캐시 삭제 $1 (디스크 여유 $(disk_free_gb)GB)"; }
 step "Qwen2-VL-2B" $O/safe_qwen2vl2b.json 30 6 $PY $HG --repo Qwen/Qwen2-VL-2B-Instruct-AWQ $NAT $VR --out $O/safe_qwen2vl2b.json
+rmc Qwen/Qwen2-VL-2B-Instruct-AWQ
 step "SmolVLM" $O/safe_smolvlm.json 30 6 $PY $HG --repo HuggingFaceTB/SmolVLM-Instruct $VR --out $O/safe_smolvlm.json
+rmc HuggingFaceTB/SmolVLM-Instruct
 step "InternVL3-8B" $O/safe_internvl3.json 30 10 $PY $HG --repo ELVISIO/SenseNova-SI-InternVL3-8B-AWQ --trust_remote_code $VR --out $O/safe_internvl3.json
+rmc ELVISIO/SenseNova-SI-InternVL3-8B-AWQ
 step "LLaVA-1.5-7B" $O/safe_llava.json 30 10 $PY $HG --repo ybelkada/llava-1.5-7b-hf-awq $VR --out $O/safe_llava.json
+rmc ybelkada/llava-1.5-7b-hf-awq
 step "Phi-3.5-vision" $O/safe_phi35.json 30 6 $PY $HG --repo Isotr0py/Phi-3.5-vision-instruct-AWQ --trust_remote_code $VR --out $O/safe_phi35.json
+rmc Isotr0py/Phi-3.5-vision-instruct-AWQ
 step "Pixtral-12B" $O/safe_pixtral.json 40 30 $PY $HG --repo mistral-community/pixtral-12b $VR --out $O/safe_pixtral.json
+rmc mistral-community/pixtral-12b
 step "GLM-4.1V-9B" $O/safe_glm41v.json 40 25 $PG $HG --repo zai-org/GLM-4.1V-9B-Thinking $VR --out $O/safe_glm41v.json
+rmc zai-org/GLM-4.1V-9B-Thinking
 step "Kimi-VL" $O/safe_kimivl.json 40 40 $PY $HG --repo moonshotai/Kimi-VL-A3B-Instruct --trust_remote_code $VR --out $O/safe_kimivl.json
+rmc moonshotai/Kimi-VL-A3B-Instruct
 stage_done fixfam_tool
 
 # ---- 기준 ⑤: 기준 모델에 잔차 재조정이 받아들여졌을 때만 — 원본 해상도 fp16 정확도 (11,309문항, 8조각) ----

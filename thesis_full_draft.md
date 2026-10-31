@@ -1,10 +1,10 @@
-<!-- 자동 생성: scripts/build_thesis.py (2026-10-30). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
+<!-- 자동 생성: scripts/build_thesis.py (2026-10-31). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
 # 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정
 
 *Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*
 
-석사학위논문 초안 · 합본 생성 2026-10-30 · 학교 양식 적용 전
+석사학위논문 초안 · 합본 생성 2026-10-31 · 학교 양식 적용 전
 
 ---
 
@@ -307,11 +307,19 @@ fp16 추론에서의 수치 오버플로 자체는 알려진 문제다. PASA[29]
 넘었다(Ⅴ장 4절). 참조 구현은 이 연산들을 fp32로 승격하여 계산함으로써 오버플로를 방지한다. 다만 두 사례
 모두 한 모델의 사전학습이 만든 성질을 다룬다.
 
-자동차 영역에서는 취약 도로 이용자 안전을 위한 엣지 AI 연구[32]가 증류한 소형 모델이 교사보다
+오버플로를 찾아 고치는 실무 도구와 사례도 있다. Hugging Face transformers[32]의 디버깅 도구(`DebugUnderflowOverflow`)는 모듈마다 입력과 출력의
+절댓값 최대를 기록하여 무한대나 NaN이 처음 생긴 모듈을 보고하고, TensorRT[5]의 Polygraphy[33]는 fp16 결과가 틀릴 때 층별 출력을
+비교해 문제 층을 찾아 fp32로 고정하도록 안내한다. 이미지 생성 모델에서는 fp16에서 NaN을 내던 SDXL VAE[34]를 출력은 유지하고
+내부 가중치와 편향을 줄이도록 미세조정한 수정판이 공개되었고, Draw Things[35]는 확산 트랜스포머의 MLP 출력에 고정 배수(1/8·1/4)를
+곱해 fp16 범위 안에 두는 처방을 보고하였다. 앞의 둘은 상실이 일어난 뒤 원인 층을 찾는 사후 디버깅이고, 뒤의 둘은 미세조정이나
+고정 배수에 기대는 모델별 처방이다.
+
+자동차 영역에서는 취약 도로 이용자 안전을 위한 엣지 AI 연구[36]가 증류한 소형 모델이 교사보다
 INT8 양자화에 강건하다는 관측을 보고하였다. 다만 손실 종류를 통제
 비교하지 않았고 메커니즘을 제시하지 않았으며, 과제는 객체 검출이다.
 
-이 계열의 지표는 대부분 이상치 비율(동적 범위)을 본다. 오버플로 현상 자체에는 선례가 있다(위 PASA, vLLM 이슈).
+이 계열의 지표는 대부분 이상치 비율(동적 범위)을 본다. 오버플로 현상과 그 사후 진단 도구, 모델별 처방에는 선례가 있다.
+그러나 상실이 일어나기 전에 상실률을 추정하는 판정 기준과 그 검증, 학습 없이 상한을 넘는 연산 앞에서 줄이는 교정은 찾지 못하였다.
 본 연구가 조사한 범위는 위 문헌들, arXiv 전문 검색, 공개 양자화 저장소 197개의 설정 파일(config)이다. 이 범위에서 다음 두
 가지를 함께 다룬 연구는 찾지 못하였다. 하나는 절대 크기(표현 범위 여유)와 동적 범위(이상치 비율·양자화 SNR)를
 **같은 모델에서 분리해 측정하는** 것이고, 다른 하나는 그 절대 크기가 **같은 기반 모델을 다른 손실로 학습한
@@ -331,7 +339,7 @@ NuScenes-QA[3]는 nuScenes 장면에 대한 짧은 답의 질의응답으로, �
 분리된 평가다.
 
 CODA-LM[8]은 자율주행 코너 케이스 VQA로, 본 연구에서는 활성 크기의 도메인 일반성을 확인하는
-보조 축으로 쓴다. CODA[33] 자체는 이미지의 약 9%를 nuScenes에서 가져왔으므로 완전히 독립된
+보조 축으로 쓴다. CODA[37] 자체는 이미지의 약 9%를 nuScenes에서 가져왔으므로 완전히 독립된
 도메인은 아니다. 본 연구가 확인한 것은 사용한 143장이 **본 연구의 학습 이미지와 겹치지 않는다**는
 것(이미지 해시 대조)이며, 두 데이터셋의 독립성이 아니다.
 
@@ -414,21 +422,21 @@ RMSNorm(`x·w`)이라 스케일에 불변이다. 따라서 이 세 곳의 가중
 
 **③ 계열 차이는 이름 패턴으로 흡수하고, 인식하지 못한 구조는 판정에서 제외하며 그 사실을 출력한다.** 블록 목록과 MLP 구조를
 이름으로 찾으며, 대상은 게이트형 `(gate_proj, up_proj) → down_proj`(Qwen2.5-VL, LLaMA 계열)와 단순형
-`fc1 → fc2`(Qwen2-VL[34], CLIP[35] 계열)이다. 인식하지 못하는 구조는 건너뛰고 기록하며, **인식하지 못한 구조를
+`fc1 → fc2`(Qwen2-VL[38], CLIP[39] 계열)이다. 인식하지 못하는 구조는 건너뛰고 기록하며, **인식하지 못한 구조를
 안전으로 간주하지 않음을 출력에 명시한다.** 블록 목록 이름이 `blocks`가 아닌 계열(Idefics3의 `encoder.layers`)과, 처리기가
 5차원 입력(배치, 타일, 채널, 높이, 너비)을 내는 계열도 인식한다.
 
 **④ 블록 뒤 출력도 측정하고 보수적으로 판정한다.** 비전 인코더의 마지막 블록 뒤에 크기를 키우는
 연산이 있으면(vLLM #40290[30]의 Gemma 4) 블록만 보는 판정은 안전을 과대평가한다. 반대로 크기를 줄이는
 계열(Qwen2.5-VL의 병합 층, merger)에서 비전 인코더 출력만 보면 위험을 놓친다. 따라서 두 지점을 모두 측정하고 여유가
-작은 값으로 판정한다. Gemma 4 외에 블록 뒤까지 측정한 다섯 계열(Qwen2-VL·Qwen2.5-VL·Qwen3-VL[36]·GLM-4.1V[37]·Kimi-VL[38])은 모두 블록 뒤에서 크기를 줄였다(Ⅴ장 6절).
+작은 값으로 판정한다. Gemma 4 외에 블록 뒤까지 측정한 다섯 계열(Qwen2-VL·Qwen2.5-VL·Qwen3-VL[40]·GLM-4.1V[41]·Kimi-VL[42])은 모두 블록 뒤에서 크기를 줄였다(Ⅴ장 6절).
 
 **⑤ 대상이 지원하면 형식부터 검토하게 한다.** 도구는 목표 형식만이 아니라 모든 부동소수
 형식의 여유를 함께 보고한다. 측정한 모델들의 bf16 여유는 10³³배 이상이므로 표현 범위만 보면
 bf16이 문제를 즉시 없앤다. 따라서 GPU 배포라면 가중치를 고치기 전에 bf16 빌드를 먼저 검토하라고
 권고한다. 다만 형식을 자동으로 선택하지는 않는다. TensorRT에서 bf16 엔진은 fp16 대비 1.30~1.36배 느렸고(교정 그래프, 원본 해상도, A100, TensorRT 10.13·10.16, Ⅴ장 5절),
 fp16은 범위 안에서 bf16보다 8배 정밀하다(가수 10비트 대 7비트). 또한 **배포 대상이 bf16을 지원하지
-않으면 이 권고는 적용할 수 없다.** Jetson의 딥러닝 가속기 DLA[39]는 fp16과 INT8만 지원한다. 따라서 도구는 대상의 지원 형식을 입력으로 받는다.
+않으면 이 권고는 적용할 수 없다.** Jetson의 딥러닝 가속기 DLA[43]는 fp16과 INT8만 지원한다. 따라서 도구는 대상의 지원 형식을 입력으로 받는다.
 
 지원하지 않는 형식은 도구의 형식별 여유 출력에 대상 미지원으로 표시하고, 권고는 형식 전환을 뺀
 세 가지(가중치 교정, 배포 해상도 하향, 대상 변경)로 바뀐다. 형식 전환이라는 대안이 없는 대상에서는
@@ -511,7 +519,7 @@ fp32를 남길 수 있다. 따라서 다음 조건을 둔다. **관행**(약타�
 
 ## 1. 증류 모델과 비교 변형
 
-교사는 Qwen2.5-VL-7B-Instruct[2]를 LoRA[40]로 미세조정한 모델이다(rank 16, alpha 32, dropout
+교사는 Qwen2.5-VL-7B-Instruct[2]를 LoRA[44]로 미세조정한 모델이다(rank 16, alpha 32, dropout
 0.05, 학습 가능 파라미터 47,589,376개). 학생은 Qwen2.5-VL-3B-Instruct이며, 다섯 변형 모두
 같은 LoRA 구성(rank 16, alpha 32, dropout 0.05)을 쓴다. 대상 모듈은 언어 디코더의
 `q/k/v/o_proj`와 `gate/up/down_proj`에 더해 비전 인코더의 어텐션(`qkv`, `proj`)까지다.
@@ -633,7 +641,7 @@ bf16은 상한이 약 3.4×10³⁸이라 이 크기에서도 오버플로가 일
 모든 활성 크기는 bf16(일부는 fp32)에서 측정하고, 상실 여부만 목표 형식(fp16)에서 관측한다. 배포 전에 여유를
 측정하라는 처방은 측정 형식(bf16)까지 정해야 성립한다. fp16에서 측정하면 위험을 과소평가하는 방향으로 틀리기 때문이다.
 
-**INT4 체크포인트와 공개 모델도 같은 규칙으로 측정한다.** 다섯 학생의 INT4 체크포인트는 AWQ[41](4비트, 그룹 크기 128)로
+**INT4 체크포인트와 공개 모델도 같은 규칙으로 측정한다.** 다섯 학생의 INT4 체크포인트는 AWQ[45](4비트, 그룹 크기 128)로
 언어 모델만 양자화하고 비전 인코더는 양자화에서 제외하였다. 이 밖에 두 번째 구조인 Gemma 4[4](31B·26B-A4B)와 공개 양자화
 저장소(Ⅴ장 6절)의 비전 인코더를 같은 이미지에서 측정하였다.
 
@@ -649,7 +657,7 @@ bf16은 상한이 약 3.4×10³⁸이라 이 크기에서도 오버플로가 일
 
 학습과 PyTorch 측정은 NVIDIA A100 80GB에서 Python 3.10, PyTorch 2.3.0, `transformers` 4.49.0, `peft` 0.14.0으로 하였다.
 배포 런타임은 같은 A100의 TensorRT 10.13[5]이며, 형식에 따른 지연 비용은 10.16에서도 측정하였다. 엣지 보드는 Jetson
-Orin Nano 8GB[9](L4T R36.4.7, TensorRT 10.3.0, 15W 모드)이다. `transformers` 4.49.0이 지원하지 않는 Gemma 4·Qwen3-VL[36]·GLM-4.1V[37]는 별도 환경(PyTorch 2.11.0, `transformers` 5.20.2)에서 측정하였다. 세부 사양과 버전 간 대조는 부록 A, 보드의 측정 절차는 부록 B와
+Orin Nano 8GB[9](L4T R36.4.7, TensorRT 10.3.0, 15W 모드)이다. `transformers` 4.49.0이 지원하지 않는 Gemma 4·Qwen3-VL[40]·GLM-4.1V[41]는 별도 환경(PyTorch 2.11.0, `transformers` 5.20.2)에서 측정하였다. 세부 사양과 버전 간 대조는 부록 A, 보드의 측정 절차는 부록 B와
 같다.
 
 ---
@@ -815,7 +823,7 @@ nuScenes 원본 해상도(1,824개)보다 적다.
 0/799였고, 최댓값은 모두 30층 출력의 텍스트 토큰에 있었다. 기준 모델의 비전 인코더(최악 0.70배, p50 0.88배)보다
 약 20배(14.52배 대 0.70배) 여유가 크므로, 이 모델들에서 **위험은 비전 인코더에 집중된다.** 생성 단계의 활성은 측정하지 않았다.
 
-**집계 정확도도 출력 상실을 다른 원인으로 돌린다.** INT4 양자화 후의 정확도 저하가 그 예다. 다섯 학생의 AWQ[41] INT4 체크포인트를 두 조건에서 평가하였다. 교란 조건은 흔한 배포 구성으로, (i) AWQ 저장본을
+**집계 정확도도 출력 상실을 다른 원인으로 돌린다.** INT4 양자화 후의 정확도 저하가 그 예다. 다섯 학생의 AWQ[45] INT4 체크포인트를 두 조건에서 평가하였다. 교란 조건은 흔한 배포 구성으로, (i) AWQ 저장본을
 fp16으로 로드해 비전 인코더가 fp16으로 실행되고, (ii) 처리기를 체크포인트에서 만들어 입력 해상도가
 원본 해상도가 된다. 통제 조건은 같은 AWQ 체크포인트를 bf16으로 로드하고 처리기를 사전학습 모델에서 만든다(평가
 해상도). 두 조건 모두 전체 11,309문항으로 측정하였다(<표 8>).
@@ -935,7 +943,7 @@ fp16 비전 인코더에서 일어났다. 1.39%는
 확실한 것은 **생성 위치**가 마지막 블록 MLP라는 점이다. 정렬 손실이 코사인 거리로 방향을 바꾸므로, 가장 개연성 있는 해석은
 중간층 표현의 방향 변화가 마지막 블록 MLP의 생성량을 줄인다는 것이다.
 
-마지막 블록 MLP는 `down_proj(act(gate_proj(x)) ⊙ up_proj(x))`다. LoRA[40]를 병합한 뒤 이 층의 가중치
+마지막 블록 MLP는 `down_proj(act(gate_proj(x)) ⊙ up_proj(x))`다. LoRA[44]를 병합한 뒤 이 층의 가중치
 행 노름을 측정하면, 849번 행이 중앙값의 9.33배로 2위(1.06배)와 큰 차이를 보인다. 이 값은
 6개 모델(사전학습과 다섯 학생)에서 표기 자릿수까지 같다. LoRA가 비전 MLP에도 적용되어 있지만 그 델타는
 무시할 수준이다. 따라서 변형 간 차이는 증폭기가 아니라 **증폭기로 들어가는 입력**에서 온다.
@@ -948,7 +956,7 @@ fp16 비전 인코더에서 일어났다. 1.39%는
 799장 전부 849번이고, 그 값의 중앙값은 74,774(기준 모델, fp32 측정. bf16에서는 74,752)로 fp16 상한을 넘는다.
 
 **이 행은 이 체크포인트 고유가 아니다.** Qwen2.5-VL-7B[2](교사)도 849번(9.55배), 이전 세대
-Qwen2-VL-2B[34]는 759번(14.80배)에서 같은 형태의 단일 행 이상치를 보인다. 3B와 7B는 비전 설정이
+Qwen2-VL-2B[38]는 759번(14.80배)에서 같은 형태의 단일 행 이상치를 보인다. 3B와 7B는 비전 설정이
 같지만 노름 벡터를 대조하면 가중치가 다르다(두 모델의 행 노름 벡터 간 최대 차이 0.949). 즉 가중치가 다른 두 모델이
 같은 번호에 이상치를 만들었다.
 
@@ -995,7 +1003,7 @@ Qwen2-VL-2B[34]는 759번(14.80배)에서 같은 형태의 단일 행 이상치�
 bf16 경로의 교정 전후 코사인은 0.994~0.997(799장)로 bf16 원본과 fp32 원본 사이의 코사인(0.97~0.98)보다 높다.
 교정의 등가성은 fp32 기준 코사인으로 확인하였다.
 
-Ⅲ장 3절의 도구 `headroom_guard`를 본 연구의 체크포인트와 공개 모델에 기본 판정 기준으로 적용하였다(<표 13>). 입력 해상도는 Qwen 계열이 `max_pixels` 1,440,000(원본 해상도)이고, 고정 해상도 타일링을 하는 SmolVLM[42]은 모델의 기본 처리기를 그대로 썼다.
+Ⅲ장 3절의 도구 `headroom_guard`를 본 연구의 체크포인트와 공개 모델에 기본 판정 기준으로 적용하였다(<표 13>). 입력 해상도는 Qwen 계열이 `max_pixels` 1,440,000(원본 해상도)이고, 고정 해상도 타일링을 하는 SmolVLM[46]은 모델의 기본 처리기를 그대로 썼다.
 
 **<표 13>** 모델 계열별 도구 적용 결과
 
@@ -1133,9 +1141,9 @@ fp32는 안전하지만 교정 fp16보다 약 3배 느리고(측정 실행이 �
 불과하므로(Ⅴ장 4절), 선택 기준은 지연 대 가중치 편집의 위험으로
 좁혀지며, **어느 쪽이 필요한지는 여유를 측정해야 알 수 있다.** 교정은 fp16의 속도를 지키지만 완전한 등가가 아니고(Ⅴ장 4절 ③),
 bf16은 가중치를 변경하지 않지만 이 런타임에서는 느리다.
-또한 대상이 bf16을 지원하지 않는 경우(DLA[39] 오프로드)에는 마지막 행(bf16)이 선택지에서 빠진다.
+또한 대상이 bf16을 지원하지 않는 경우(DLA[43] 오프로드)에는 마지막 행(bf16)이 선택지에서 빠진다.
 
-TensorRT 11[43]은 fp16·bf16·INT8 등 정밀도 허용 빌더 플래그와 정밀도 제약 플래그, 레이어별 정밀도 지정
+TensorRT 11[47]은 fp16·bf16·INT8 등 정밀도 허용 빌더 플래그와 정밀도 제약 플래그, 레이어별 정밀도 지정
 (`setPrecision`) 같은 약타입 API를 모두 제거하였고, 이제 모든 네트워크를 강타입으로 빌드해 정밀도를 그래프의
 자료형으로 정한다. 이는 fp16을 허용하고 빌더가 정밀도를 선택하는 방식에서 그래프에 지정된 자료형을 따르는
 방식으로의 이행이다. 따라서 빌더가 위험한 레이어를 fp32로 남길 여지가 줄어들므로, 여유를 사용자가
@@ -1313,7 +1321,7 @@ Qwen2.5-VL AWQ 저장소는 `bfloat16`으로 선언되어 있어 전부 빠져 �
 상속은 집계 방식을 바꾼다. 저장소 27개 중 몇 개가 위험한지를 세는 대신, 기반 모델이 위험하면
 비전 인코더를 양자화 대상에서 제외한 그 파생본 전부가 위험하다고 보면 된다. 실무 권고도 명확해진다. 파생본마다
 측정할 필요 없이 기반 모델의 비전 인코더를 한 번 측정하는 것으로 충분하다. 다만 상속은 같은 기반의 파생본
-사이에서만 성립한다. 비전 키 개수가 같은 두 Qwen3-VL[36] 저장소(밀집형(dense) 32B와 MoE 30B-A3B)는 여유가
+사이에서만 성립한다. 비전 키 개수가 같은 두 Qwen3-VL[40] 저장소(밀집형(dense) 32B와 MoE 30B-A3B)는 여유가
 6.09배 대 41.99배(원본 해상도, 799장, p50)로 약 7배 다르고, 같은 크기의 Instruct와 Thinking 판도 여유가 다르다(32B, 6.09배 대 7.42배).
 
 모든 저장소는 가중치가 실제로 적재되었는지 검사한 뒤 측정하였다(Ⅲ장 3절 ⑨).
@@ -1322,8 +1330,8 @@ Qwen 세대·크기별로 보면(부록 C의 <부록 표 2>) **Qwen2.5-VL 세대
 순서가 맞지 않는다. 3B와 72B는 상한을 넘고(최악 0.74·0.88배) 7B와 32B는 넘지 않는다(7B는 공식 AWQ 1.248배·기반 1.236배로 둘 다 「경계」, 32B는 1.38배). 즉 계열과 세대는 위험한 세대를 좁히지만, 그 세대 안에서 어느 크기가 위험한지는 정하지 못한다.
 
 Qwen 밖에서 같은 설계(해상도에 따라 패치 수가 변하는 단일
-시퀀스 인코더)를 쓰는 모델을 찾아 측정하였다. Mistral의 Pixtral-12B[44]는 35.91배, Zhipu의 GLM-4.1V-9B[37]는
-38.08배, Moonshot의 Kimi-VL-A3B[38]는 40.14배다(원본 해상도, 799장, p50). 이로써 가변 해상도 인코더는 네 제작사의
+시퀀스 인코더)를 쓰는 모델을 찾아 측정하였다. Mistral의 Pixtral-12B[48]는 35.91배, Zhipu의 GLM-4.1V-9B[41]는
+38.08배, Moonshot의 Kimi-VL-A3B[42]는 40.14배다(원본 해상도, 799장, p50). 이로써 가변 해상도 인코더는 네 제작사의
 서로 다른 모델 16종(Qwen 13종과 Pixtral·GLM-4.1V·Kimi-VL)을 측정하였다. 서로 무관한 세 제작사의 값이 35.91~40.14배로 모이고,
 Qwen2.5-VL-3B(0.95배)는 이들보다 약 38~42배 작다. GLM-4.1V와 Qwen2-VL-2B의 여유는 38.08배 대
 3.91배다. **처리기 출력 형상이 같아도 여유는 약 10배 다르다.** 가변 해상도 설계는 전제일 뿐 여유를 정하지 않는다.
@@ -1334,7 +1342,7 @@ Qwen2.5-VL-3B(0.95배)는 이들보다 약 38~42배 작다. GLM-4.1V와 Qwen2-VL
 임베딩 차원으로 투영하는 단계라 구조적으로 감쇠하며, 블록 뒤에 LayerNorm 하나만 있어 차원을 줄이지
 않는 Kimi-VL의 배율이 가장 크다는 점이 이 설명을 뒷받침한다. 판정은 모두 바뀌지 않았다.
 
-**가중치의 증폭기 비율로도 예측할 수 없다.** 여섯 계열(Qwen2.5-VL·Qwen2-VL·Pixtral·InternVL3[12]·LLaVA-1.5[45]·Phi-3.5-vision[46])에서 MLP 출력층의 최대 행 노름 비를 측정한 결과,
+**가중치의 증폭기 비율로도 예측할 수 없다.** 여섯 계열(Qwen2.5-VL·Qwen2-VL·Pixtral·InternVL3[12]·LLaVA-1.5[49]·Phi-3.5-vision[50])에서 MLP 출력층의 최대 행 노름 비를 측정한 결과,
 Qwen2-VL-2B가 14.80배로 가장 크지만 여유는 3.91배로 안전하고, Qwen2.5-VL은 9.33배에 0.95배로
 출력을 상실한다. 증폭기 비율의 순서는 여유의 순서와 맞지 않는다. 활성은 증폭기와 입력의 곱이고,
 입력은 가중치만으로는 알 수 없다.
@@ -1453,21 +1461,25 @@ fp16을 유지한다. 같은 상실과 교정 효과를 TensorRT 엔진(A100의 
 [29] L. Cheng, Q. Liao, F. Wu, J. Mu, T. Han, Z. Qiu, et al., "Online Pseudo-average Shifting Attention (PASA) for Robust Low-precision LLM Inference: Algorithms and Numerical Analysis," arXiv:2503.01873, 2025.
 [30] vLLM Project, "[Bug]: Gemma 4 (31B/26B-A4B) vision outputs only \<pad\> under fp16 — vision_tower standardize overflows," *GitHub Issue* #40290, 2026. https://github.com/vllm-project/vllm/issues/40290 (accessed 2026-09-16)
 [31] X. Zhai, B. Mustafa, A. Kolesnikov, L. Beyer, "Sigmoid Loss for Language Image Pre-Training," in *Proc. ICCV*, 2023. (arXiv:2303.15343)
-[32] A. Karjol, D. M. Hanna, "Edge AI for Automotive Vulnerable Road User Safety: Deployable Detection via Knowledge Distillation," arXiv:2604.26857, 2026.
-[33] K. Li, K. Chen, H. Wang, L. Hong, C. Ye, J. Han, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
-[34] P. Wang, S. Bai, S. Tan, S. Wang, Z. Fan, J. Bai, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution," arXiv:2409.12191, 2024.
-[35] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, et al., "Learning Transferable Visual Models From Natural Language Supervision," in *Proc. ICML*, 2021. (arXiv:2103.00020)
-[36] S. Bai, Y. Cai, R. Chen, K. Chen, X. Chen, Z. Cheng, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
-[37] GLM-V Team, W. Hong, W. Yu, X. Gu, G. Wang, G. Gan, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
-[38] Kimi Team, A. Du, B. Yin, B. Xing, B. Qu, B. Wang, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
-[39] NVIDIA, "DLA Supported Layers and Restrictions," *TensorRT Documentation*, 2026. https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html (accessed 2026-10-29)
-[40] E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, et al., "LoRA: Low-Rank Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
-[41] J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, et al., "AWQ: Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc. MLSys*, 2024. (arXiv:2306.00978)
-[42] A. Marafioti, O. Zohar, M. Farré, M. Noyan, E. Bakouch, P. Cuenca, et al., "SmolVLM: Redefining Small and Efficient Multimodal Models," arXiv:2504.05299, 2025.
-[43] NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*, 2026. https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html (accessed 2026-10-29)
-[44] P. Agrawal, S. Antoniak, E. B. Hanna, B. Bout, D. Chaplot, J. Chudnovsky, et al., "Pixtral 12B," arXiv:2410.07073, 2024.
-[45] H. Liu, C. Li, Y. Li, Y. J. Lee, "Improved Baselines with Visual Instruction Tuning," in *Proc. CVPR*, 2024. (arXiv:2310.03744)
-[46] M. Abdin, J. Aneja, H. Awadalla, A. Awadallah, A. A. Awan, N. Bach, et al., "Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone," arXiv:2404.14219v4, 2024.
+[32] Hugging Face, "Debugging: Underflow and Overflow Detection," *Transformers Documentation*, 2026. https://huggingface.co/docs/transformers/main/en/debugging (accessed 2026-10-31)
+[33] NVIDIA, "Work with Reduced Precision," *Polygraphy How-To Guides*, TensorRT 10.9, 2025. https://github.com/NVIDIA/TensorRT/blob/release/10.9/tools/Polygraphy/how-to/work_with_reduced_precision.md (accessed 2026-10-31)
+[34] madebyollin, "SDXL-VAE-FP16-Fix," *Hugging Face Model Card*, 2023. https://huggingface.co/madebyollin/sdxl-vae-fp16-fix (accessed 2026-10-31)
+[35] Draw Things, "BF16 and Image Generation Models," *Draw Things Engineering Blog*, 2025. https://engineering.drawthings.ai/p/bf16-and-image-generation-models-803cf0515bee (accessed 2026-10-31)
+[36] A. Karjol, D. M. Hanna, "Edge AI for Automotive Vulnerable Road User Safety: Deployable Detection via Knowledge Distillation," arXiv:2604.26857, 2026.
+[37] K. Li, K. Chen, H. Wang, L. Hong, C. Ye, J. Han, et al., "CODA: A Real-World Road Corner Case Dataset for Object Detection in Autonomous Driving," in *Proc. ECCV*, 2022. (arXiv:2203.07724)
+[38] P. Wang, S. Bai, S. Tan, S. Wang, Z. Fan, J. Bai, et al., "Qwen2-VL: Enhancing Vision-Language Model's Perception of the World at Any Resolution," arXiv:2409.12191, 2024.
+[39] A. Radford, J. W. Kim, C. Hallacy, A. Ramesh, G. Goh, S. Agarwal, et al., "Learning Transferable Visual Models From Natural Language Supervision," in *Proc. ICML*, 2021. (arXiv:2103.00020)
+[40] S. Bai, Y. Cai, R. Chen, K. Chen, X. Chen, Z. Cheng, et al., "Qwen3-VL Technical Report," arXiv:2511.21631, 2025.
+[41] GLM-V Team, W. Hong, W. Yu, X. Gu, G. Wang, G. Gan, et al., "GLM-4.5V and GLM-4.1V-Thinking: Towards Versatile Multimodal Reasoning with Scalable Reinforcement Learning," arXiv:2507.01006, 2025.
+[42] Kimi Team, A. Du, B. Yin, B. Xing, B. Qu, B. Wang, et al., "Kimi-VL Technical Report," arXiv:2504.07491, 2025.
+[43] NVIDIA, "DLA Supported Layers and Restrictions," *TensorRT Documentation*, 2026. https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/dla-layer-restrictions.html (accessed 2026-10-29)
+[44] E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, et al., "LoRA: Low-Rank Adaptation of Large Language Models," in *Proc. ICLR*, 2022. (arXiv:2106.09685)
+[45] J. Lin, J. Tang, H. Tang, S. Yang, W.-M. Chen, W.-C. Wang, et al., "AWQ: Activation-aware Weight Quantization for On-Device LLM Compression and Acceleration," in *Proc. MLSys*, 2024. (arXiv:2306.00978)
+[46] A. Marafioti, O. Zohar, M. Farré, M. Noyan, E. Bakouch, P. Cuenca, et al., "SmolVLM: Redefining Small and Efficient Multimodal Models," arXiv:2504.05299, 2025.
+[47] NVIDIA, "TensorRT 11.0.0 Release Notes," *TensorRT Documentation*, 2026. https://docs.nvidia.com/deeplearning/tensorrt/latest/getting-started/release-notes-11/11.0.0.html (accessed 2026-10-29)
+[48] P. Agrawal, S. Antoniak, E. B. Hanna, B. Bout, D. Chaplot, J. Chudnovsky, et al., "Pixtral 12B," arXiv:2410.07073, 2024.
+[49] H. Liu, C. Li, Y. Li, Y. J. Lee, "Improved Baselines with Visual Instruction Tuning," in *Proc. CVPR*, 2024. (arXiv:2310.03744)
+[50] M. Abdin, J. Aneja, H. Awadalla, A. Awadallah, A. A. Awan, N. Bach, et al., "Phi-3 Technical Report: A Highly Capable Language Model Locally on Your Phone," arXiv:2404.14219v4, 2024.
 
 ---
 
