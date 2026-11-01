@@ -77,9 +77,11 @@ def forward_points(vm, pv, pos, upcast):
     layer_out = []
     hs = [lyr.register_forward_hook(lambda _m, _i, o: layer_out.append(o[0] if isinstance(o, tuple) else o))
           for lyr in vm.encoder.layers]
-    h = vm.encoder(inputs_embeds=x, attention_mask=~pad, pixel_position_ids=pos).last_hidden_state
-    for hk in hs:
-        hk.remove()
+    try:   # 호출 쪽이 forward를 예외로 끊어도(입구 탐색의 _Stop) 훅이 남지 않게 — 남으면 이후 forward마다 층 출력이 쌓인다
+        h = vm.encoder(inputs_embeds=x, attention_mask=~pad, pixel_position_ids=pos).last_hidden_state
+    finally:
+        for hk in hs:
+            hk.remove()
     h = h.masked_fill(pad.unsqueeze(-1), 0.0)
     h, mask = vm.pooler._avg_pool_by_positions(h, pos, L)          # 평균 — 크기를 키우지 않는다
     if upcast:

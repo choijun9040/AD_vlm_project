@@ -40,9 +40,10 @@ class _OpRecorder(TorchDispatchMode):
     - 모델 형식(bf16)보다 넓은 형식(fp32)으로 계산된 연산은 **승격 연산**으로 따로 표시한다. 참조 구현이 승격하는
       곳(Gemma 4의 pooler·표준화)은 그 승격이 없는 배포 경로에서만 위험하므로, 판정을 두 범주로 나눈다.
     """
-    def __init__(self, stack, model_dtype):
+    def __init__(self, stack, model_dtype, device=None):
         super().__init__()
         self.stack, self.seq, self.count, self.model_dtype = stack, [], {}, model_dtype
+        self.device = device
 
     def __torch_dispatch__(self, func, types, args=(), kwargs=None):
         out = func(*args, **(kwargs or {}))
@@ -50,7 +51,10 @@ class _OpRecorder(TorchDispatchMode):
         if name in _SKIP_OPS:
             return out
         t = out[0] if isinstance(out, (tuple, list)) and out and torch.is_tensor(out[0]) else out
-        if torch.is_tensor(t) and t.is_floating_point() and t.numel() > 0:
+        # 모델과 다른 장치의 텐서는 뺀다 — Idefics3(SmolVLM) 임베딩이 위치 경계를 CPU에서 계산한다. 모델 연산이 아니고, 섞이면
+        # 합칠 때 장치가 달라 죽는다(2026-11-01)
+        if (torch.is_tensor(t) and t.is_floating_point() and t.numel() > 0
+                and (self.device is None or t.device == self.device)):
             mod, cls = self.stack[-1] if self.stack else ("<tower>", "")
             if any(k in mod for k in ("rotary", "rope")):
                 return out               # 회전 위치 부호화는 이미지 내용과 무관한 위치 계산이다 — 활성이 아니다
@@ -97,7 +101,7 @@ def profile_ops(tower, cache, fwd, fmax, target=2.0):
     hs = _install_stack(tower, stack)
     try:
         for x in cache:
-            rec = _OpRecorder(stack, mdt)
+            rec = _OpRecorder(stack, mdt, next(tower.parameters()).device)
             with rec:
                 fwd(tower, x)
             stack.clear()
@@ -175,6 +179,8 @@ def block_writers(block):
             return "layer_scale", [pa, pb]
     _, attn = _child(block, ATTN_CHILD)
     _, mlp = _child(block, MLP_CHILD)
+    if attn is None and isinstance(_child(block, ATTN_OUT)[1], torch.nn.Linear):
+        attn = block                     # MoonViT(Kimi-VL)은 어텐션 사상(wqkv·wo)을 블록에 바로 둔다 (2026-11-01)
     if attn is None or mlp is None:
         return None
     _, ao = _child(attn, ATTN_OUT)
@@ -265,10 +271,17 @@ def entry_tensors(mod):
     for n, sub in mod.named_modules():
         if isinstance(sub, (torch.nn.Linear, torch.nn.Conv2d, torch.nn.Conv3d, torch.nn.Embedding)):
             ts += _affine(sub)
+        elif "pos" in n.lower() or "Pos" in type(sub).__name__:
+            # 위치 임베딩 모듈의 매개변수 — MoonViT(Kimi-VL)의 Learnable2DInterpPosEmb는 매개변수 이름이 `weight`라
+            # 아래 이름 규칙에 걸리지 않는다 (2026-11-01: 빠지면 패치 사상만 c배 되어 등가가 깨진다, 코사인 0.92)
+            ts += list(sub.parameters(recurse=False))
     for n, p in mod.named_parameters(recurse=False):
         if any(k in n.lower() for k in ("pos", "position", "class", "cls")):
             ts.append(p)
-    return ts
+    uniq = {}
+    for p in ts:
+        uniq.setdefault(id(p), p)
+    return list(uniq.values())
 
 
 def exit_kind(tower):
@@ -403,8 +416,16 @@ def plan_residual(tower32, blocks_of, probe_cache32, fwd, c, cos_tol=0.99999):
             t1 = apply_residual(tower32, blocks_of, names, c)
         except RuntimeError as e:
             tried.append({"entry": names, "error": str(e)}); continue
-        norms = find_residual_norms(tower32, t1, probe_cache32[0], fwd, c)
-        apply_eps(t1, norms, c)
+        # **되풀이해 고른다 (2026-11-01).** 앞 정규화의 eps를 보정하지 않은 채 재면, 활성이 작은 앞쪽 블록(Pixtral의 ln_pre
+        # 직후)에서 eps 오차가 잔차로 번져 뒤 정규화의 입력 비율이 c에서 2% 넘게 벗어나고 목록에서 빠진다(실측: 49개 중 43개).
+        # 같은 규칙(입력 크기 비율 ≈ c)을, 찾은 것의 eps를 보정한 모델에서 다시 재 새로 잡히는 것이 없을 때까지 되풀이한다.
+        norms = []
+        for _ in range(len(blocks) * 2 + 2):
+            found = [n for n in find_residual_norms(tower32, t1, probe_cache32[0], fwd, c) if n not in norms]
+            if not found:
+                break
+            apply_eps(t1, found, c)
+            norms += found
         r = compare(tower32, t1, probe_cache32, fwd)
         exit_ = None
         if abs(r["ratio_min"] - 1) < 1e-3 and abs(r["ratio_max"] - 1) < 1e-3:

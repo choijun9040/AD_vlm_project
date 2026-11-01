@@ -139,7 +139,8 @@ def fetch_vision_state(repo):
         vis_keys = [k for k in wmap
                     if ".visual." in k or k.startswith("visual.")
                     or k.startswith("vision_model.") or k.startswith("vision_tower.")
-                    or ".vision_tower." in k or "img_processor." in k]
+                    or ".vision_tower." in k or "img_processor." in k
+                    or k.startswith("model.vision_model.")]       # Idefics3(SmolVLM) — 2026-11-01
         shards = sorted({wmap[k] for k in vis_keys})
         print(f"  비전 키 {len(vis_keys)}개 · 샤드 {len(shards)}/{len(set(wmap.values()))}개만 받는다")
     except Exception:
@@ -152,7 +153,7 @@ def fetch_vision_state(repo):
 
     # **접두사는 계열마다 다르다 (2026-09-18 일반화).** 후보를 늘어놓고 **가장 많은
     # 키가 붙는 것**을 고른다. 하드코딩하면 계열이 늘 때마다 깨진다.
-    cands = ("model.visual.", "visual.", "vision_model.", "vision_tower.",
+    cands = ("model.visual.", "visual.", "vision_model.", "model.vision_model.", "vision_tower.",
              "model.vision_tower.", "model.vision_embed_tokens.img_processor.",
              "vision_embed_tokens.img_processor.")
     hit = {p: sum(1 for k in raw if k.startswith(p)) for p in cands}

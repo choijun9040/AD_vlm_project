@@ -93,6 +93,53 @@ def load_tower(checkpoint, base, dtype):
     return m.visual.eval().to("cuda")
 
 
+def load_tower_direct(repo, dtype, trust_remote_code=False):
+    """비전 가중치만 받아 타워를 직접 세운다 — 원고의 계열 측정(`probe_vision_tower_direct`·`bridge_measure_newhf`)과 같은 경로.
+
+    **왜 (2026-11-01).** 전체 모델 적재 경로는 계열 확장 대기열에서 다섯 계열이 죽었다 — SmolVLM은 타워 밖 장치 불일치,
+    InternVL3는 처리기에 image_processor가 없음, Phi-3.5는 AutoModel이 원격 config를 못 받음, Pixtral은 `image_sizes` 누락.
+    직접 적재는 이 계열들을 이미 799장으로 잰 경로이므로, 도구가 같은 경로를 쓰면 진단 수치도 원고와 같은 조건이 된다.
+    부모 모델이 없으므로 프로젝터 출구의 보정은 저장하지 못한다(배포 쪽에서 첫 선형층 가중치를 1/c배).
+    """
+    from transformers import AutoConfig
+    import probe_vision_tower_direct as PD
+    cfg = PD.retry_429(lambda: AutoConfig.from_pretrained(repo, trust_remote_code=trust_remote_code))
+    archs = getattr(cfg, "architectures", None) or []
+    if "Idefics3ForConditionalGeneration" in archs:   # SmolVLM — 두 측정 스크립트의 표에 없다
+        from transformers.models.idefics3.modeling_idefics3 import Idefics3VisionTransformer
+        tower, arch = Idefics3VisionTransformer(cfg.vision_config), "Idefics3ForConditionalGeneration"
+    else:
+        try:
+            tower, arch = PD.build_tower(cfg)
+        except RuntimeError:
+            import bridge_measure_newhf as BN      # GLM-4.1V 등 새 transformers 전용 계열
+            tower, arch = BN.build_tower(cfg)
+    sd = PD.retry_429(lambda: PD.fetch_vision_state(repo))
+    missing, unexpected = tower.load_state_dict(sd, strict=False)
+    pnames = {n for n, _ in tower.named_parameters()}
+    miss_param = [k for k in missing if k in pnames]
+    if miss_param or unexpected:
+        raise RuntimeError(f"적재 불일치 — 빠진 파라미터 {len(miss_param)}개 {miss_param[:2]}, 남은 키 {len(unexpected)}개 "
+                           f"{list(unexpected)[:2]}")
+    print(f"  로더: 직접 적재 {type(tower).__name__} ({arch}) — 파라미터 {len(pnames)}개 전부 적재")
+    return tower.to("cuda", getattr(torch, dtype)).eval(), cfg
+
+
+def load_image_processor(repo, cfg, trust_remote_code=False):
+    """이미지 처리기만 — 텍스트 쪽 결함(InternVL3 토크나이저, Phi-3.5 원격 처리기)에 걸리지 않게. 실패하면
+    config의 `img_processor.model_name`(Phi-3-V의 CLIP) 처리기로 대체한다 — `probe_vision_tower_direct`와 같은 규칙."""
+    from transformers import AutoImageProcessor
+    try:
+        return AutoImageProcessor.from_pretrained(repo, trust_remote_code=trust_remote_code)
+    except Exception as e:
+        ip = getattr(cfg, "img_processor", None)
+        fb = ip.get("model_name") if isinstance(ip, dict) else None
+        if not fb:
+            raise
+        print(f"  저장소 이미지 처리기 실패({type(e).__name__}) — '{fb}' 처리기로 대체")
+        return AutoImageProcessor.from_pretrained(fb)
+
+
 def load_tower_repo(repo, dtype, trust_remote_code=False):
     """임의 HF 저장소 경로. `profile_other_vlm_families`의 견고한 로더를 재사용한다.
 
@@ -155,7 +202,11 @@ def tower_forward(tower, pv, grid):
         out = tower(pv, grid) if grid is not None else tower(pv)
     except TypeError:
         out = tower(pv)
-    return out.last_hidden_state if hasattr(out, "last_hidden_state") else out
+    out = out.last_hidden_state if hasattr(out, "last_hidden_state") else out
+    if isinstance(out, (list, tuple)) and out and all(torch.is_tensor(o) for o in out):
+        # MoonViT(Kimi-VL)은 이미지별 텐서 리스트를 돌려준다 — 토큰 축으로 이어 붙인다 (2026-11-01)
+        out = torch.cat([o.reshape(-1, o.shape[-1]) for o in out])
+    return out
 
 
 def get_blocks(tower):
@@ -171,9 +222,15 @@ def get_blocks(tower):
     return find_blocks(tower)[1]
 
 
+def _mlp_of(block):
+    """블록의 MLP 자식 — 이름이 계열마다 다르다(Qwen·CLIP mlp, Pixtral feed_forward). 2026-11-01."""
+    from headroom_ext import MLP_CHILD, _child
+    return _child(block, MLP_CHILD)[1]
+
+
 def find_mlp_parts(block):
     """블록의 MLP에서 (곱 이전 선형층들, 출력 선형층)을 찾는다."""
-    mlp = getattr(block, "mlp", None)
+    mlp = _mlp_of(block)
     if mlp is None:
         return None, None
     for pre_names, out_name in MLP_PATTERNS:
@@ -277,14 +334,20 @@ def zero_obs_upper_bound(n, conf=0.95):
 def build_cache(processor, paths, dtype, device="cuda"):
     """계열마다 grid_thw 유무가 다르므로 없으면 None을 넣는다.
     device="cpu"는 fp32 등가성 검사용 — 원본 해상도 799장을 fp32로 GPU에 올리면 약 27GB다 (2026-10-30)."""
+    ipx = getattr(processor, "image_processor", processor)     # 전체·이미지 처리기 둘 다 받는다
     cache = []
     for p in paths:
-        enc = processor.image_processor(images=[Image.open(p).convert("RGB")],
-                                        return_tensors="pt")
+        enc = ipx(images=[Image.open(p).convert("RGB")], return_tensors="pt")
         pv = enc["pixel_values"]
         if pv.dim() > 2 and pv.shape[0] == 1:
             pv = pv[0] if pv.dim() == 3 else pv        # (1,N,D) → (N,D)
+        # 타워의 두 번째 인자는 계열마다 다르다 (2026-11-01) — Qwen·GLM image_grid_thw, Kimi image_grid_hws,
+        # Pixtral image_sizes. Phi-3-V도 image_sizes를 내지만 pixel_values가 5-D(크롭)라 넘기면 CLIP 타워가 죽는다.
         grid = enc.get("image_grid_thw")
+        if grid is None:
+            grid = enc.get("image_grid_hws")
+        if grid is None and "image_sizes" in enc and pv.dim() == 4:
+            grid = enc["image_sizes"]
         cache.append((pv.to(device, getattr(torch, dtype)),
                       grid.to(device) if grid is not None else None))
     return cache
@@ -309,7 +372,7 @@ def measure_branches(tower, cache, block_idx, dtype):
     def h_blk(_m, _i, out):
         buf["out"] = (out[0] if isinstance(out, tuple) else out).detach()
 
-    hs = [blk.mlp.register_forward_hook(h_mlp), blk.register_forward_hook(h_blk)]
+    hs = [_mlp_of(blk).register_forward_hook(h_mlp), blk.register_forward_hook(h_blk)]
     pairs = []
     for pv, grid in cache:
         buf.clear()
@@ -390,6 +453,34 @@ def plan_fix(per_block, target, tower=None, cache=None, dtype="float16", fmax=No
             item["scale"] = target / h
         plan.append(item)
     return plan
+
+
+def plan_from_ops(tower, ops, fmax, target):
+    """(R) 뒤에도 남은 위험이 **MLP 내부의 곱**이면 (P)의 대상으로 만든다 — 사전 등록 설계 2의 (P) 조건. 2026-11-01.
+
+    블록 출력으로 고르는 `plan_fix`는 (R)이 잔차를 줄인 뒤에는 위험을 보지 못한다(블록 출력은 작아졌는데 곱은 그대로다 —
+    Pixtral 4장 시험: 재조정 후 최대가 `feed_forward::mul`). 연산 단위 기록에서 MLP 모듈 자신의 연산(게이트 곱)이 목표를 넘는
+    블록만 고른다. 단순형 MLP(fc1 → 활성 → fc2)의 내부는 비선형 앞이라 이 방식으로 줄일 수 없으므로 고르지 않는다.
+    """
+    from headroom_ext import _block_prefix, MLP_CHILD
+    blocks = get_blocks(tower)
+    pre, tmax, need = _block_prefix(tower, blocks), fmax / target, {}
+    for r in ops["rows"]:
+        if not (r["max_worst"] > tmax):
+            continue
+        mod = r["point"].split("::")[0]
+        if not mod.startswith(pre):
+            continue
+        rest = mod[len(pre):].split(".")
+        if len(rest) != 2 or not rest[0].isdigit() or rest[1] not in MLP_CHILD:
+            continue
+        i = int(rest[0])
+        pres, _ = find_mlp_parts(blocks[i])
+        if pres is None or len(pres) < 2:
+            continue
+        need[i] = max(need.get(i, 1.0), r["max_worst"] / tmax)
+    return [{"block": i, "headroom": target / sc, "scale": sc, "source": "연산 단위 — MLP 내부 곱"}
+            for i, sc in sorted(need.items())]
 
 
 def apply_fix(tower, plan):
@@ -564,6 +655,9 @@ def main():
     ap.add_argument("--repo", default=None,
                     help="임의 HF 저장소를 대상으로 한다 (--checkpoint 대신)")
     ap.add_argument("--trust_remote_code", action="store_true")
+    ap.add_argument("--loader", choices=["direct", "full"], default="direct",
+                    help="--repo의 타워 적재 — direct: 비전 가중치만 받아 직접 구성(원고 계열 측정과 같은 경로, 기본) · "
+                         "full: 전체 모델을 세워 타워를 꺼낸다(프로젝터 출구 보정을 저장할 수 있다)")
     ap.add_argument("--dtype", default="float16", choices=list(FORMAT_MAX))
     ap.add_argument("--max_pixels", type=int, default=None,
                     help="미지정이면 **모델 기본 설정**을 쓴다 — 기본 경로에서의 위험을 보려면 그대로 둘 것")
@@ -615,17 +709,25 @@ def main():
     if args.min_pixels:
         kw["min_pixels"] = args.min_pixels
     src = args.repo or args.base
-    try:
-        proc = AutoProcessor.from_pretrained(
-            src, trust_remote_code=args.trust_remote_code, **kw)
-    except Exception:
-        # max_pixels 같은 인자를 받지 않는 계열이 있다(SmolVLM 등). 로드 후 주입한다.
-        proc = AutoProcessor.from_pretrained(
-            src, trust_remote_code=args.trust_remote_code)
+    if args.repo and args.loader == "direct":
+        from transformers import AutoConfig
+        proc = load_image_processor(args.repo, AutoConfig.from_pretrained(
+            args.repo, trust_remote_code=args.trust_remote_code), args.trust_remote_code)
         for k, v in kw.items():
-            if hasattr(proc.image_processor, k):
-                setattr(proc.image_processor, k, v)
-    ip = proc.image_processor
+            if hasattr(proc, k):
+                setattr(proc, k, v)
+    else:
+        try:
+            proc = AutoProcessor.from_pretrained(
+                src, trust_remote_code=args.trust_remote_code, **kw)
+        except Exception:
+            # max_pixels 같은 인자를 받지 않는 계열이 있다(SmolVLM 등). 로드 후 주입한다.
+            proc = AutoProcessor.from_pretrained(
+                src, trust_remote_code=args.trust_remote_code)
+            for k, v in kw.items():
+                if hasattr(proc.image_processor, k):
+                    setattr(proc.image_processor, k, v)
+    ip = getattr(proc, "image_processor", proc)
     if not hasattr(ip, "max_pixels"):
         # 고정 해상도 계열 — 해상도 인자가 의미 없다는 사실을 기록한다
         print("  (이 계열의 image_processor에는 max_pixels가 없다 — 고정/자체 규칙)")
@@ -645,7 +747,10 @@ def main():
     # 크기는 넘치지 않는 dtype에서, 상실은 목표 dtype에서 잰다 (docstring 참조)
     MAG = "bfloat16" if args.dtype == "float16" else args.dtype
     if args.repo:
-        tower = load_tower_repo(args.repo, MAG, args.trust_remote_code)
+        if args.loader == "direct":
+            tower, _ = load_tower_direct(args.repo, MAG, args.trust_remote_code)
+        else:
+            tower = load_tower_repo(args.repo, MAG, args.trust_remote_code)
     else:
         tower = load_tower(args.checkpoint, args.base, MAG)
     cache_mag = build_cache(proc, paths, MAG)
@@ -662,6 +767,10 @@ def main():
     if not args.no_ops:
         # **연산 단위 진단 (2026-10-30).** 블록 출력·타워 출력만 보면 블록 뒤 함수형 연산(Gemma 4 pooler의 × √d)을
         # 놓친다. 모든 연산의 출력 크기를 재고, 모델 형식 연산과 fp32 승격 연산을 나눠 처음 넘는 곳을 찾는다.
+        # 예열 — 첫 forward에서만 위치 표 등을 늦게 계산해 캐시하는 계열이 있다(Kimi-VL: 첫 기록에만 5,991이 잡혀 가상 상한이
+        # 두 번째 기록과 어긋났다). 이미지별 활성이 아니므로 기록 전에 한 번 돌려 둔다 (2026-11-01)
+        with torch.no_grad():
+            fwd(tower, cache_mag[0])
         ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
         if args.virtual_ratio:
             fmax_eff = HX.virtual_fmax(ops_before, args.virtual_ratio)
@@ -889,7 +998,12 @@ def main():
                           + ("" if fmax_eff / gm >= args.target_headroom else
                              f" — 목표 {args.target_headroom}배 미달(잔차로 가지 않는 연산이 남았다)"))
                     if fmax_eff / gm < args.target_headroom and not risky:
-                        print("  ⚠ 남은 위험 지점이 블록 MLP 출력이 아니어서 곱셈 이전 축소로도 다룰 수 없다 — 보고만 한다")
+                        risky = plan_from_ops(tower, ops_mid, fmax_eff, args.target_headroom)
+                        if risky:
+                            print(f"  남은 위험이 MLP 내부의 곱이다 — 블록 {[r['block'] for r in risky]}에 곱셈 이전 축소를 더한다")
+                        else:
+                            print("  ⚠ 남은 위험 지점이 MLP 내부의 곱이 아니어서(잔차 밖 연산) 곱셈 이전 축소로도 다룰 수 없다 — 보고만 한다")
+                    res["residual"]["remaining_point"] = ops_mid["global_max"]["point"]
 
             # ---- 교정 2: 곱셈 이전 축소 (비등가) ----
             if risky and args.fix_mode in ("auto", "premul"):
