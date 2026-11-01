@@ -479,8 +479,30 @@ def plan_from_ops(tower, ops, fmax, target):
         if pres is None or len(pres) < 2:
             continue
         need[i] = max(need.get(i, 1.0), r["max_worst"] / tmax)
-    return [{"block": i, "headroom": target / sc, "scale": sc, "source": "연산 단위 — MLP 내부 곱"}
+    return [{"block": i, "headroom": target / sc, "scale": sc, "max": sc * tmax, "source": "연산 단위 — MLP 내부 곱"}
             for i, sc in sorted(need.items())]
+
+
+@torch.no_grad()
+def apply_gate_equiv(tower, plan, fmax, target):
+    """(G) — (R) 뒤 게이트 곱의 등가 교정 (사전 등록 개정 4, 2026-11-01). `up_proj` ×f, `down_proj` 가중치 ×1/f(편향 그대로).
+
+    업 경로는 활성을 지나지 않으므로 곱 `act(gate)·up`이 정확히 f배가 되고, `down_proj`가 되돌려 MLP 출력은 그대로다.
+    f는 (R)의 c와 같은 규칙(2의 거듭제곱) — 곱해도 반올림이 없다.
+    """
+    import headroom_ext as HX
+    done = []
+    for it in plan:
+        mlp = _mlp_of(get_blocks(tower)[it["block"]])
+        up, down = getattr(mlp, "up_proj", None), getattr(mlp, "down_proj", None)
+        if not (isinstance(up, torch.nn.Linear) and isinstance(down, torch.nn.Linear)):
+            done.append({**it, "skipped": "up_proj·down_proj가 없다"}); continue
+        f = HX.choose_c(it["max"], fmax, target)
+        for t in HX._affine(up):
+            t.mul_(f)
+        down.weight.div_(f)
+        done.append({"block": it["block"], "f": f, "max": it["max"]})
+    return done
 
 
 def apply_fix(tower, plan):
@@ -1000,10 +1022,33 @@ def main():
                     if fmax_eff / gm < args.target_headroom and not risky:
                         risky = plan_from_ops(tower, ops_mid, fmax_eff, args.target_headroom)
                         if risky:
-                            print(f"  남은 위험이 MLP 내부의 곱이다 — 블록 {[r['block'] for r in risky]}에 곱셈 이전 축소를 더한다")
+                            print(f"  남은 위험이 MLP 내부의 곱이다 — 블록 {[r['block'] for r in risky]}에 게이트 곱 교정을 더한다")
                         else:
                             print("  ⚠ 남은 위험 지점이 MLP 내부의 곱이 아니어서(잔차 밖 연산) 곱셈 이전 축소로도 다룰 수 없다 — 보고만 한다")
                     res["residual"]["remaining_point"] = ops_mid["global_max"]["point"]
+
+            # ---- 교정 2a: (R) 뒤 게이트 곱의 등가 교정 (G) — 사전 등록 개정 4 ----
+            # (R) 뒤에 남은 위험이 게이트형 MLP의 곱뿐이면(plan_from_ops가 고른 것) 업 경로로 등가로 줄인다. 미달이면 (P)로 넘어간다
+            if (risky and residual_done and args.fix_mode == "auto"
+                    and all(r.get("source", "").startswith("연산 단위") for r in risky)):
+                print(f"\n[교정 2] 게이트 곱 등가 교정 — 블록 {[r['block'] for r in risky]} (up_proj ×f, down_proj ×1/f)")
+                t32 = copy.deepcopy(tower).float()
+                t32g = copy.deepcopy(t32)
+                gdone = apply_gate_equiv(t32g, risky, fmax_eff, args.target_headroom)
+                cache32 = build_cache(proc, paths, "float32", device="cpu")
+                fwd32 = lambda tw, x: tower_forward(tw, x[0].to("cuda"), x[1].to("cuda") if x[1] is not None else None)
+                eq = HX.compare(t32, t32g, cache32, fwd32)
+                ok = (eq["cos_min"] >= args.equiv_tol and abs(eq["ratio_min"] - 1) < 1e-3 and abs(eq["ratio_max"] - 1) < 1e-3
+                      and not any("skipped" in g for g in gdone))
+                print(f"  f = {sorted({g.get('f') for g in gdone if 'f' in g})} · 등가성(fp32, {len(cache32)}장): 코사인 최소 "
+                      f"{eq['cos_min']:.8f} · 크기 비율 {eq['ratio_min']:.6f}~{eq['ratio_max']:.6f} → "
+                      + ("**통과**" if ok else "미달 — 곱셈 이전 축소(비등가)로 넘어간다"))
+                res["gate_equiv"] = {"plan": gdone, "equivalence": eq, "accepted": ok}
+                if ok:
+                    apply_gate_equiv(tower, risky, fmax_eff, args.target_headroom)
+                    risky = []
+                del t32, t32g, cache32
+                torch.cuda.empty_cache()
 
             # ---- 교정 2: 곱셈 이전 축소 (비등가) ----
             if risky and args.fix_mode in ("auto", "premul"):
@@ -1065,7 +1110,9 @@ def main():
                     print("    정확도 비용은 별도로 측정할 것(배포 조건 실측: 원본 해상도·fp16·11,309문항에서 "
                           "교정 fp16 48.76% 대 무교정 bf16 48.47%, 출력 문자열 일치 74.8%).")
                 elif residual_done or res.get("attn_fold", {}).get("accepted"):
-                    used = (["잔차 재조정"] if residual_done else []) + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else [])
+                    used = ((["잔차 재조정"] if residual_done else [])
+                            + (["게이트 곱 등가 교정"] if res.get("gate_equiv", {}).get("accepted") else [])
+                            + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else []))
                     print(f"\n  등가 교정만 적용했다({' + '.join(used)}) — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
 
             if args.save_weights:
