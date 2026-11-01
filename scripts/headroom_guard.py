@@ -1093,6 +1093,43 @@ def main():
                     del t32, t32a, cache32
                     torch.cuda.empty_cache()
 
+            # ---- 교정 4·5: (S) 포화 절단, (K) 키 중심화 (등가, 그래프 수정 — 사전 등록 개정 6, 2026-11-01) ----
+            if args.fix_mode == "auto" and ops_ref is not None:
+                a_done = {a["block"] for a in res.get("attn_fold", {}).get("plan", [])} if res.get("attn_fold", {}).get("accepted") else set()
+                splan = HX.act_clamp_plan(tower, get_blocks, ops_ref, fmax_eff, args.target_headroom)
+                kplan = HX.key_center_plan(tower, get_blocks, ops_ref, fmax_eff, args.target_headroom, exclude=a_done)
+                if splan or kplan:
+                    cache32 = build_cache(proc, paths, "float32", device="cpu")
+                    fwd32 = lambda tw, x: tower_forward(tw, x[0].to("cuda"), x[1].to("cuda") if x[1] is not None else None)
+                    for tag, plan_, label in (("act_clamp", splan, "포화 절단"), ("key_center", kplan, "키 중심화")):
+                        if not plan_:
+                            continue
+                        t32 = copy.deepcopy(tower).float()
+                        t32x = copy.deepcopy(t32)
+                        extra = {}
+                        if tag == "act_clamp":
+                            HX.apply_act_clamp(t32x, get_blocks, plan_)
+                        else:
+                            n_est = max(1, min(100, len(cache32) // 2))       # 앞 절반(최대 100장)으로 키 평균을 추정한다
+                            means = HX.key_means(t32, get_blocks, plan_, cache32[:n_est], fwd32)
+                            HX.apply_key_center(t32x, get_blocks, plan_, means)
+                            extra = {"n_est": n_est}
+                        eq = HX.compare(t32, t32x, cache32, fwd32)
+                        ok = (eq["cos_min"] >= args.equiv_tol and abs(eq["ratio_min"] - 1) < 1e-3
+                              and abs(eq["ratio_max"] - 1) < 1e-3)
+                        print(f"\n[교정] {label} — 블록 {[p_['block'] for p_ in plan_]} · 등가성(fp32, {len(cache32)}장): 코사인 최소 "
+                              f"{eq['cos_min']:.8f} · 크기 비율 {eq['ratio_min']:.6f}~{eq['ratio_max']:.6f} → "
+                              + ("**통과**" if ok else "미달 — 적용하지 않는다"))
+                        res[tag] = {"plan": plan_, "equivalence": eq, "accepted": ok, **extra}
+                        if ok:
+                            if tag == "act_clamp":
+                                HX.apply_act_clamp(tower, get_blocks, plan_)
+                            else:
+                                HX.apply_key_center(tower, get_blocks, plan_, means)
+                        del t32, t32x
+                        torch.cuda.empty_cache()
+                    del cache32
+
             if args.verify:
                 after, _ = profile(tower, cache_mag, MAG, fmax_dtype=None if args.virtual_ratio else args.dtype)
                 per_image_mag["after"] = LAST_PER_IMAGE
@@ -1109,10 +1146,12 @@ def main():
                     print("\n  ⚠ 곱셈 이전 축소는 **완전 등가가 아니다.** 잔차 분기와 MLP 분기의 비율이 바뀐다.")
                     print("    정확도 비용은 별도로 측정할 것(배포 조건 실측: 원본 해상도·fp16·11,309문항에서 "
                           "교정 fp16 48.76% 대 무교정 bf16 48.47%, 출력 문자열 일치 74.8%).")
-                elif residual_done or res.get("attn_fold", {}).get("accepted"):
+                elif residual_done or any(res.get(k, {}).get("accepted") for k in ("attn_fold", "act_clamp", "key_center")):
                     used = ((["잔차 재조정"] if residual_done else [])
                             + (["게이트 곱 등가 교정"] if res.get("gate_equiv", {}).get("accepted") else [])
-                            + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else []))
+                            + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else [])
+                            + (["포화 절단"] if res.get("act_clamp", {}).get("accepted") else [])
+                            + (["키 중심화"] if res.get("key_center", {}).get("accepted") else []))
                     print(f"\n  등가 교정만 적용했다({' + '.join(used)}) — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
 
             if args.save_weights:

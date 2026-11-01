@@ -514,6 +514,109 @@ def apply_attn_fold(tower, blocks_of, plan):
     return changed
 
 
+class QuickGELUClamped(torch.nn.Module):
+    """(S) 포화 절단 — `x·σ(1.702·clip(x, ±k/1.702))`. σ(±16)은 fp16에서 정확히 1·0이고 fp32 오차는 e⁻¹⁶ 이하다.
+    곱하는 x는 자르지 않는다. σ 인자만 ±k 안에 묶인다 (사전 등록 개정 6, 2026-11-01)."""
+    def __init__(self, k=16.0):
+        super().__init__()
+        self.k = k
+
+    def forward(self, x):
+        return x * torch.sigmoid(1.702 * x.clamp(-self.k / 1.702, self.k / 1.702))
+
+
+def _block_point(ops, tower, blocks):
+    """연산 행을 (블록 번호, 블록 안 경로, 연산 이름)으로 푼다."""
+    pre = _block_prefix(tower, blocks)
+    for r in ops["rows"]:
+        mod, op = r["point"].split("::")
+        if not mod.startswith(pre):
+            continue
+        rest = mod[len(pre):].split(".")
+        if rest[0].isdigit():
+            yield int(rest[0]), rest[1:], op, r
+
+
+def act_clamp_plan(tower, blocks_of, ops, fmax, target=2.0):
+    """(S)의 대상 — QuickGELU의 σ 인자(`activation_fn::mul#0`)가 목표를 넘는 블록."""
+    blocks, tmax, out = blocks_of(tower), fmax / target, {}
+    for i, path, op, r in _block_point(ops, tower, blocks):
+        if len(path) == 2 and path[0] in MLP_CHILD and op == "mul#0" and r["max_worst"] > tmax:
+            act = getattr(getattr(blocks[i], path[0]), path[1], None)
+            if act is not None and "QuickGELU" in type(act).__name__:
+                out[i] = {"block": i, "mlp": path[0], "act": path[1], "max": max(out.get(i, {}).get("max", 0), r["max_worst"])}
+    return [out[i] for i in sorted(out)]
+
+
+def apply_act_clamp(tower, blocks_of, plan, k=16.0):
+    blocks = blocks_of(tower)
+    for it in plan:
+        setattr(getattr(blocks[it["block"]], it["mlp"]), it["act"], QuickGELUClamped(k))
+    return [it["block"] for it in plan]
+
+
+def key_center_plan(tower, blocks_of, ops, fmax, target=2.0, exclude=()):
+    """(K)의 대상 — 어텐션 점수(`bmm`·`matmul` #0)가 목표를 넘는 블록 중 키 편향을 고칠 수 있는 것((A)로 다룬 블록 제외)."""
+    blocks, tmax, out = blocks_of(tower), fmax / target, {}
+    for i, path, op, r in _block_point(ops, tower, blocks):
+        if (len(path) == 1 and path[0] in ATTN_CHILD and op.split("#")[0] in ("bmm", "matmul") and op.endswith("#0")
+                and r["max_worst"] > tmax and i not in exclude):
+            at = getattr(blocks[i], path[0])
+            if getattr(at, "qk_normalization", False):
+                continue
+            if isinstance(getattr(at, "k_proj", None), torch.nn.Linear):
+                kind = "k_proj"
+            elif isinstance(getattr(at, "qkv", None), torch.nn.Linear) and at.qkv.out_features % 3 == 0:
+                kind = "qkv"
+            else:
+                continue
+            out[i] = {"block": i, "attn": path[0], "kind": kind, "max": max(out.get(i, {}).get("max", 0), r["max_worst"])}
+    return [out[i] for i in sorted(out)]
+
+
+@torch.no_grad()
+def key_means(tower, blocks_of, plan, est_cache, fwd):
+    """블록마다 키(편향 포함 출력)의 토큰 평균 — float64로 모은다."""
+    blocks, sums, cnt, hs = blocks_of(tower), {}, {}, []
+    for it in plan:
+        at = getattr(blocks[it["block"]], it["attn"])
+        lin = at.k_proj if it["kind"] == "k_proj" else at.qkv
+
+        def h(_m, _a, o, it=it):
+            C = o.shape[-1] if it["kind"] == "k_proj" else o.shape[-1] // 3
+            k = (o if it["kind"] == "k_proj" else o[..., C:2 * C]).detach().double().reshape(-1, C)
+            sums[it["block"]] = sums.get(it["block"], 0) + k.sum(0)
+            cnt[it["block"]] = cnt.get(it["block"], 0) + k.shape[0]
+        hs.append(lin.register_forward_hook(h))
+    try:
+        for x in est_cache:
+            fwd(tower, x)
+    finally:
+        for hk in hs:
+            hk.remove()
+    return {i: (sums[i] / cnt[i]).cpu() for i in sums}
+
+
+@torch.no_grad()
+def apply_key_center(tower, blocks_of, plan, means):
+    """(K) — 키 편향에서 평균을 뺀다. q·b는 행마다 상수라 소프트맥스가 그대로다(편향이 없으면 0 편향을 만든다)."""
+    blocks = blocks_of(tower)
+    for it in plan:
+        if it["block"] not in means:
+            continue
+        at = getattr(blocks[it["block"]], it["attn"])
+        lin = at.k_proj if it["kind"] == "k_proj" else at.qkv
+        if lin.bias is None:
+            lin.bias = torch.nn.Parameter(torch.zeros(lin.out_features, dtype=lin.weight.dtype, device=lin.weight.device))
+        m = means[it["block"]].to(lin.bias.device, lin.bias.dtype)
+        if it["kind"] == "k_proj":
+            lin.bias -= m
+        else:
+            C = lin.out_features // 3
+            lin.bias[C:2 * C] -= m
+    return [it["block"] for it in plan if it["block"] in means]
+
+
 def virtual_fmax(ops_profile, ratio=1.5):
     """가상 상한 — 그 모델의 최악 최대 ÷ ratio. 실제로 넘지 않는 계열에서 교정의 효과를 보기 위한 판정 기준."""
     g = ops_profile["global_max"]
