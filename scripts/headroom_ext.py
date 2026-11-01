@@ -467,6 +467,53 @@ def compensate_projector(model, c):
     return {"done": True, "layer": name, "how": f"가중치 ×{1/c:g}"}
 
 
+def attn_fold_plan(tower, blocks_of, ops, fmax, target=2.0):
+    """(A) 어텐션 스케일 접기의 대상 — 블록 어텐션의 `q_proj` 출력이나 q·kᵀ가 목표를 넘는 블록과 p (사전 등록 개정 3, 2026-11-01).
+
+    CLIP은 `q_proj(h) * scale`, Idefics3(SigLIP)은 `(q·kᵀ) * scale`로 스케일을 뒤에 곱한다. `q_proj`를 p배, `scale`을 1/p배 하면
+    같은 계산이고 그 연산들의 크기만 p배가 된다. p는 (R)의 c와 같은 규칙(2의 거듭제곱). `q_proj`나 실수 `scale`이 없으면 고르지 않는다.
+    """
+    blocks = blocks_of(tower)
+    pre, tmax, worst = _block_prefix(tower, blocks), fmax / target, {}
+    for r in ops["rows"]:
+        if not (r["max_worst"] > tmax):
+            continue
+        mod, op = r["point"].split("::")
+        if not mod.startswith(pre):
+            continue
+        rest = mod[len(pre):].split(".")
+        if not rest[0].isdigit() or len(rest) < 2 or rest[1] not in ATTN_CHILD:
+            continue
+        is_q = len(rest) == 3 and rest[2] == "q_proj"
+        is_qk = len(rest) == 2 and op.split("#")[0] in ("bmm", "matmul")
+        if not (is_q or is_qk):
+            continue
+        i = int(rest[0])
+        worst[(i, rest[1])] = max(worst.get((i, rest[1]), 0.0), r["max_worst"])
+    plan = []
+    for (i, an), mx in sorted(worst.items()):
+        attn = getattr(blocks[i], an)
+        if not isinstance(getattr(attn, "q_proj", None), torch.nn.Linear) or not isinstance(getattr(attn, "scale", None), float):
+            continue
+        plan.append({"block": i, "attn": an, "max": mx, "p": choose_c(mx, fmax, target)})
+    return plan
+
+
+@torch.no_grad()
+def apply_attn_fold(tower, blocks_of, plan):
+    """q_proj 가중치·편향 ×p, 모듈 scale ×1/p. 바뀐 scale을 돌려준다(모듈 설정이라 state_dict에 실리지 않는다)."""
+    blocks, pre, changed = blocks_of(tower), None, {}
+    pre = _block_prefix(tower, blocks)
+    for it in plan:
+        attn = getattr(blocks[it["block"]], it["attn"])
+        for t in _affine(attn.q_proj):
+            t.mul_(it["p"])
+        old = attn.scale
+        attn.scale = old / it["p"]
+        changed[f"{pre}{it['block']}.{it['attn']}"] = {"scale_old": old, "scale_new": attn.scale}
+    return changed
+
+
 def virtual_fmax(ops_profile, ratio=1.5):
     """가상 상한 — 그 모델의 최악 최대 ÷ ratio. 실제로 넘지 않는 계열에서 교정의 효과를 보기 위한 판정 기준."""
     g = ops_profile["global_max"]

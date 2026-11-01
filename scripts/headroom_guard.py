@@ -1024,6 +1024,30 @@ def main():
             elif risky:
                 print(f"\n  ⚠ 잔차 재조정만으로는 블록 {[r['block'] for r in risky]}이 목표에 못 미친다 (--fix_mode residual)")
 
+            # ---- 교정 3: 어텐션 스케일 접기 (등가, 사전 등록 개정 3 — 2026-11-01) ----
+            # (P)는 MLP만, (A)는 어텐션만 바꾸므로 서로 영향이 없다 — (R) 뒤 기록(없으면 교정 전 기록)으로 대상을 고른다
+            ops_ref = ops_mid if residual_done else ops_before
+            if args.fix_mode == "auto" and ops_ref is not None:
+                aplan = HX.attn_fold_plan(tower, get_blocks, ops_ref, fmax_eff, args.target_headroom)
+                if aplan:
+                    print(f"\n[교정 3] 어텐션 스케일 접기 — 블록 {[a['block'] for a in aplan]} "
+                          f"(q_proj ×p, scale ×1/p, p = {sorted({a['p'] for a in aplan})})")
+                    t32 = copy.deepcopy(tower).float()
+                    t32a = copy.deepcopy(t32)
+                    HX.apply_attn_fold(t32a, get_blocks, aplan)
+                    cache32 = build_cache(proc, paths, "float32", device="cpu")
+                    fwd32 = lambda tw, x: tower_forward(tw, x[0].to("cuda"), x[1].to("cuda") if x[1] is not None else None)
+                    eq = HX.compare(t32, t32a, cache32, fwd32)
+                    ok = (eq["cos_min"] >= args.equiv_tol and abs(eq["ratio_min"] - 1) < 1e-3
+                          and abs(eq["ratio_max"] - 1) < 1e-3)
+                    print(f"  등가성(fp32, {len(cache32)}장): 코사인 최소 {eq['cos_min']:.8f} · 크기 비율 "
+                          f"{eq['ratio_min']:.6f}~{eq['ratio_max']:.6f} → " + ("**통과**" if ok else "미달 — 적용하지 않는다"))
+                    res["attn_fold"] = {"plan": aplan, "equivalence": eq, "accepted": ok}
+                    if ok:
+                        res["attn_fold"]["scale_changed"] = HX.apply_attn_fold(tower, get_blocks, aplan)
+                    del t32, t32a, cache32
+                    torch.cuda.empty_cache()
+
             if args.verify:
                 after, _ = profile(tower, cache_mag, MAG, fmax_dtype=None if args.virtual_ratio else args.dtype)
                 per_image_mag["after"] = LAST_PER_IMAGE
@@ -1040,8 +1064,9 @@ def main():
                     print("\n  ⚠ 곱셈 이전 축소는 **완전 등가가 아니다.** 잔차 분기와 MLP 분기의 비율이 바뀐다.")
                     print("    정확도 비용은 별도로 측정할 것(배포 조건 실측: 원본 해상도·fp16·11,309문항에서 "
                           "교정 fp16 48.76% 대 무교정 bf16 48.47%, 출력 문자열 일치 74.8%).")
-                elif residual_done:
-                    print("\n  잔차 재조정만 적용했다 — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
+                elif residual_done or res.get("attn_fold", {}).get("accepted"):
+                    used = (["잔차 재조정"] if residual_done else []) + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else [])
+                    print(f"\n  등가 교정만 적용했다({' + '.join(used)}) — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
 
             if args.save_weights:
                 torch.save(tower.state_dict(), args.save_weights)
@@ -1051,6 +1076,10 @@ def main():
                     Path(args.save_weights + ".eps.json").write_text(json.dumps(res["residual"]["eps_changed"], indent=1))
                     print(f"  정규화 eps 변경 {len(res['residual']['eps_changed'])}개: {args.save_weights}.eps.json "
                           f"— **함께 적용하지 않으면 정확한 등가가 아니다**")
+                if res.get("attn_fold", {}).get("scale_changed"):
+                    # 어텐션 scale도 모듈 설정이라 state_dict에 실리지 않는다 — eps와 같은 방식으로 옆 파일에 남긴다
+                    Path(args.save_weights + ".attn_scale.json").write_text(json.dumps(res["attn_fold"]["scale_changed"], indent=1))
+                    print(f"  어텐션 scale 변경: {args.save_weights}.attn_scale.json — **함께 적용하지 않으면 등가가 아니다**")
                 if res.get("residual", {}).get("projector", {}).get("done") and "가중치" in res["residual"]["projector"].get("how", ""):
                     name, sub = HX.projector_first(PARENT_MODEL)
                     torch.save({name: sub.state_dict()}, args.save_weights + ".projector.pt")
