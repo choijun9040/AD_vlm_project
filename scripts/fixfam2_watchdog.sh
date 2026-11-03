@@ -24,6 +24,11 @@ while true; do
       nohup bash scripts/fixfam2_eval_trt.sh >> logs/fixfam2_eval_trt.log 2>&1 &
     else w "경보: ⑤ 재시작 3회 초과 — 사람이 볼 것"; fi
   fi
+  if ! pgrep -f '[f]ixfam2_exp5.sh' >/dev/null && [ ! -f $O/.stage_fixfam2_exp5_done ]; then   # 실험 5 (개정 8, 2026-11-03)
+    if [ ${r5:-0} -lt 3 ]; then r5=$((${r5:-0}+1)); w "실험 5 대기열을 띄운다 (${r5}/3)"
+      nohup bash scripts/fixfam2_exp5.sh >> logs/fixfam2_exp5.log 2>&1 &
+    else w "경보: 실험 5 재시작 3회 초과 — 사람이 볼 것"; fi
+  fi
   # (2) 디스크
   free=$(df -BG --output=avail /workspace | tail -1 | tr -dc 0-9)
   if [ "${free:-0}" -lt 12 ]; then
@@ -38,9 +43,9 @@ while true; do
   fi
   # (3) 정지 경보
   u=$(nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits | head -1 | tr -dc 0-9)
-  if [ "${u:-0}" -eq 0 ] && { pgrep -f '[f]ixfam2_queue.sh' >/dev/null || pgrep -f '[f]ixfam2_eval_trt.sh' >/dev/null; }; then
+  if [ "${u:-0}" -eq 0 ] && { pgrep -f '[f]ixfam2_queue.sh' >/dev/null || pgrep -f '[f]ixfam2_eval_trt.sh' >/dev/null || pgrep -f '[f]ixfam2_exp5.sh' >/dev/null; }; then
     idle=$((idle+1)); [ $idle -eq 6 ] && w "경보: 대기열이 살아 있는데 GPU 사용률 0%가 30분 — 대기·정지 확인 필요 (디스크 ${free}GB)"
   else idle=0; fi
-  if [ -f $O/.stage_fixfam2_tool_done ] && [ -f $O/.stage_fixfam2_evaltrt_done ]; then w "전부 완료 — 감시 종료"; exit 0; fi
+  if [ -f $O/.stage_fixfam2_tool_done ] && [ -f $O/.stage_fixfam2_evaltrt_done ] && [ -f $O/.stage_fixfam2_exp5_done ]; then w "전부 완료 — 감시 종료"; exit 0; fi
   sleep 300
 done
