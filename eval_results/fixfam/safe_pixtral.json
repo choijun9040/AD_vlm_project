@@ -1,0 +1,1129 @@
+{
+  "target": "mistral-community/pixtral-12b",
+  "dtype": "float16",
+  "max_pixels": -1,
+  "n_images": 799,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 2.421875,
+        "max_worst": 5.03125,
+        "headroom": 704.6881720430108,
+        "headroom_worst": 339.21325051759834,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 4.53125,
+        "max_worst": 5.53125,
+        "headroom": 376.64367816091954,
+        "headroom_worst": 308.54990583804147,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 6.15625,
+        "max_worst": 6.84375,
+        "headroom": 277.22504230118443,
+        "headroom_worst": 249.37595129375953,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 7.0625,
+        "max_worst": 7.90625,
+        "headroom": 241.6519174041298,
+        "headroom_worst": 215.86297760210806,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 8.4375,
+        "max_worst": 9.25,
+        "headroom": 202.27160493827162,
+        "headroom_worst": 184.50450450450452,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 9.125,
+        "max_worst": 9.9375,
+        "headroom": 187.03196347031965,
+        "headroom_worst": 171.74004192872118,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 9.75,
+        "max_worst": 10.5625,
+        "headroom": 175.04273504273505,
+        "headroom_worst": 161.57790927021696,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 11.25,
+        "max_worst": 12.625,
+        "headroom": 151.70370370370372,
+        "headroom_worst": 135.1815181518152,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 13.0,
+        "max_worst": 15.75,
+        "headroom": 131.2820512820513,
+        "headroom_worst": 108.35978835978837,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 16.125,
+        "max_worst": 19.25,
+        "headroom": 105.83979328165375,
+        "headroom_worst": 88.65800865800867,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 18.375,
+        "max_worst": 22.25,
+        "headroom": 92.87981859410431,
+        "headroom_worst": 76.70411985018727,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 21.875,
+        "max_worst": 26.375,
+        "headroom": 78.01904761904763,
+        "headroom_worst": 64.70774091627173,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 28.875,
+        "max_worst": 33.5,
+        "headroom": 59.105339105339105,
+        "headroom_worst": 50.9452736318408,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 90.0,
+        "max_worst": 109.5,
+        "headroom": 18.962962962962965,
+        "headroom_worst": 15.58599695585997,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 93.0,
+        "max_worst": 111.0,
+        "headroom": 18.351254480286737,
+        "headroom_worst": 15.375375375375375,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 93.0,
+        "max_worst": 111.0,
+        "headroom": 18.351254480286737,
+        "headroom_worst": 15.375375375375375,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 1728.0,
+        "max_worst": 2272.0,
+        "headroom": 0.9876543209876544,
+        "headroom_worst": 0.7511737089201879,
+        "exceed_rate": 0.5619524405506884,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 1736.0,
+        "max_worst": 2288.0,
+        "headroom": 0.9831029185867896,
+        "headroom_worst": 0.745920745920746,
+        "exceed_rate": 0.5807259073842302,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 1744.0,
+        "max_worst": 2304.0,
+        "headroom": 0.9785932721712539,
+        "headroom_worst": 0.7407407407407408,
+        "exceed_rate": 0.6032540675844806,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 1800.0,
+        "max_worst": 2368.0,
+        "headroom": 0.9481481481481482,
+        "headroom_worst": 0.7207207207207208,
+        "exceed_rate": 0.8022528160200251,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom": 0.9356725146198831,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom": 0.9356725146198831,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom": 0.9356725146198831,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom": 0.9356725146198831,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom": 0.9356725146198831,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": {
+      "headroom": 27.293333333333333,
+      "available": true
+    },
+    "bfloat16": {
+      "headroom": 1.4122916666666666e+35,
+      "available": true
+    },
+    "float32": {
+      "headroom": 1.4178333333333334e+35,
+      "available": true
+    }
+  },
+  "available_formats": [
+    "bfloat16",
+    "float16",
+    "float32"
+  ],
+  "scaled_formats_declared": [],
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "blocked_formats": [],
+  "risky_blocks": [
+    {
+      "block": 16,
+      "headroom": 0.7511737089201879,
+      "headroom_p50": 0.9876543209876544,
+      "scale": 2.6942675159235665,
+      "factor_mlp": 0.3711583924349882,
+      "n_solved": 799,
+      "n_infeasible": 0
+    },
+    {
+      "block": 17,
+      "headroom": 0.745920745920746,
+      "headroom_p50": 0.9831029185867896,
+      "scale": 2.68125,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 18,
+      "headroom": 0.7407407407407408,
+      "headroom_p50": 0.9785932721712539,
+      "scale": 2.6999999999999997,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 19,
+      "headroom": 0.7207207207207208,
+      "headroom_p50": 0.9481481481481482,
+      "scale": 2.775,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 20,
+      "headroom": 0.7111111111111111,
+      "headroom_p50": 0.9356725146198831,
+      "scale": 2.8125,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 21,
+      "headroom": 0.7111111111111111,
+      "headroom_p50": 0.9356725146198831,
+      "scale": 2.8125,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 22,
+      "headroom": 0.7111111111111111,
+      "headroom_p50": 0.9356725146198831,
+      "scale": 2.8125,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 23,
+      "headroom": 0.7111111111111111,
+      "headroom_p50": 0.9356725146198831,
+      "scale": 2.8125,
+      "note": "분기 분리 실패 — 근사값 사용"
+    }
+  ],
+  "ops_before": {
+    "n_points": 680,
+    "fmax": 1706.6666666666667,
+    "first_exceed": {
+      "point": "transformer.layers.16.feed_forward::mul#0",
+      "upcast": false,
+      "max_p50": 2032.0,
+      "max_worst": 2560.0,
+      "headroom_worst": 0.6666666666666667,
+      "exceed_rate": 0.9962453066332916
+    },
+    "first_exceed_no_upcast": {
+      "point": "transformer.layers.16.feed_forward::mul#0",
+      "upcast": false,
+      "max_p50": 2032.0,
+      "max_worst": 2560.0,
+      "headroom_worst": 0.6666666666666667,
+      "exceed_rate": 0.9962453066332916
+    },
+    "global_max": {
+      "point": "transformer.layers.16.feed_forward::mul#0",
+      "upcast": false,
+      "max_p50": 2032.0,
+      "max_worst": 2560.0,
+      "headroom_worst": 0.6666666666666667,
+      "exceed_rate": 0.9962453066332916
+    },
+    "n_risky": 19,
+    "risky_top": [
+      {
+        "point": "transformer.layers.16.feed_forward::mul#0",
+        "upcast": false,
+        "max_p50": 2032.0,
+        "max_worst": 2560.0,
+        "headroom_worst": 0.6666666666666667,
+        "exceed_rate": 0.9962453066332916
+      },
+      {
+        "point": "transformer.layers.20::add#1",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      },
+      {
+        "point": "transformer.layers.21::add#0",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      },
+      {
+        "point": "transformer.layers.21::add#1",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      },
+      {
+        "point": "transformer.layers.22::add#0",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      },
+      {
+        "point": "transformer.layers.22::add#1",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      },
+      {
+        "point": "transformer.layers.23::add#0",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      },
+      {
+        "point": "transformer.layers.23::add#1",
+        "upcast": false,
+        "max_p50": 1824.0,
+        "max_worst": 2400.0,
+        "headroom_worst": 0.7111111111111111,
+        "exceed_rate": 0.8585732165206508
+      }
+    ]
+  },
+  "fmax_effective": 1706.6666666666667,
+  "virtual_ratio": 1.5,
+  "fix_mode": "auto",
+  "residual": {
+    "c": 0.25,
+    "entry": [
+      "ln_pre"
+    ],
+    "exit": "projector",
+    "writers": "out_proj",
+    "equivalence": {
+      "cos_min": 0.9999999999999996,
+      "ratio_min": 1.0,
+      "ratio_max": 1.0,
+      "n_nonfinite": 0
+    },
+    "accepted": true,
+    "eps_norms": [
+      "transformer.layers.0.attention_norm",
+      "transformer.layers.0.ffn_norm",
+      "transformer.layers.3.ffn_norm",
+      "transformer.layers.4.attention_norm",
+      "transformer.layers.4.ffn_norm",
+      "transformer.layers.5.attention_norm",
+      "transformer.layers.5.ffn_norm",
+      "transformer.layers.6.attention_norm",
+      "transformer.layers.6.ffn_norm",
+      "transformer.layers.7.attention_norm",
+      "transformer.layers.7.ffn_norm",
+      "transformer.layers.8.attention_norm",
+      "transformer.layers.8.ffn_norm",
+      "transformer.layers.9.attention_norm",
+      "transformer.layers.9.ffn_norm",
+      "transformer.layers.10.attention_norm",
+      "transformer.layers.10.ffn_norm",
+      "transformer.layers.11.attention_norm",
+      "transformer.layers.11.ffn_norm",
+      "transformer.layers.12.attention_norm",
+      "transformer.layers.12.ffn_norm",
+      "transformer.layers.13.attention_norm",
+      "transformer.layers.13.ffn_norm",
+      "transformer.layers.14.attention_norm",
+      "transformer.layers.14.ffn_norm",
+      "transformer.layers.15.attention_norm",
+      "transformer.layers.15.ffn_norm",
+      "transformer.layers.16.attention_norm",
+      "transformer.layers.16.ffn_norm",
+      "transformer.layers.17.attention_norm",
+      "transformer.layers.17.ffn_norm",
+      "transformer.layers.18.attention_norm",
+      "transformer.layers.18.ffn_norm",
+      "transformer.layers.19.attention_norm",
+      "transformer.layers.19.ffn_norm",
+      "transformer.layers.20.attention_norm",
+      "transformer.layers.20.ffn_norm",
+      "transformer.layers.21.attention_norm",
+      "transformer.layers.21.ffn_norm",
+      "transformer.layers.22.attention_norm",
+      "transformer.layers.22.ffn_norm",
+      "transformer.layers.23.attention_norm",
+      "transformer.layers.23.ffn_norm",
+      "transformer.layers.1.attention_norm",
+      "transformer.layers.1.ffn_norm",
+      "transformer.layers.2.attention_norm",
+      "transformer.layers.2.ffn_norm",
+      "transformer.layers.3.attention_norm"
+    ],
+    "tried": [
+      {
+        "entry": [
+          "ln_pre"
+        ],
+        "cos_min": 0.9999999999999997,
+        "ratio_min": 0.25,
+        "ratio_max": 0.25,
+        "n_nonfinite": 0,
+        "exit": "projector",
+        "n_eps_norms": 48
+      }
+    ],
+    "eps_changed": {
+      "transformer.layers.0.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.0.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.3.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.4.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.4.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.5.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.5.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.6.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.6.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.7.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.7.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.8.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.8.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.9.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.9.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.10.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.10.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.11.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.11.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.12.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.12.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.13.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.13.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.14.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.14.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.15.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.15.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.16.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.16.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.17.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.17.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.18.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.18.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.19.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.19.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.20.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.20.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.21.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.21.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.22.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.22.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.23.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.23.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.1.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.1.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.2.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.2.ffn_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "transformer.layers.3.attention_norm": {
+        "attr": "variance_epsilon",
+        "old": 1e-05,
+        "new": 6.25e-07
+      }
+    },
+    "projector": {
+      "done": false,
+      "reason": "프로젝터를 찾지 못함 — 배포 쪽에서 첫 선형층 가중치를 1/c배 할 것"
+    },
+    "ops_after": {
+      "n_points": 680,
+      "fmax": 1706.6666666666667,
+      "first_exceed": {
+        "point": "transformer.layers.16.feed_forward::mul#0",
+        "upcast": false,
+        "max_p50": 2032.0,
+        "max_worst": 2560.0,
+        "headroom_worst": 0.6666666666666667,
+        "exceed_rate": 0.9962453066332916
+      },
+      "first_exceed_no_upcast": {
+        "point": "transformer.layers.16.feed_forward::mul#0",
+        "upcast": false,
+        "max_p50": 2032.0,
+        "max_worst": 2560.0,
+        "headroom_worst": 0.6666666666666667,
+        "exceed_rate": 0.9962453066332916
+      },
+      "global_max": {
+        "point": "transformer.layers.16.feed_forward::mul#0",
+        "upcast": false,
+        "max_p50": 2032.0,
+        "max_worst": 2560.0,
+        "headroom_worst": 0.6666666666666667,
+        "exceed_rate": 0.9962453066332916
+      },
+      "n_risky": 3,
+      "risky_top": [
+        {
+          "point": "transformer.layers.16.feed_forward::mul#0",
+          "upcast": false,
+          "max_p50": 2032.0,
+          "max_worst": 2560.0,
+          "headroom_worst": 0.6666666666666667,
+          "exceed_rate": 0.9962453066332916
+        },
+        {
+          "point": "<tower>::full#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "<tower>::fill_#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        }
+      ]
+    },
+    "remaining_point": "transformer.layers.16.feed_forward::mul#0"
+  },
+  "gate_equiv": {
+    "plan": [
+      {
+        "block": 16,
+        "f": 0.25,
+        "max": 2560.0
+      }
+    ],
+    "equivalence": {
+      "cos_min": 0.9999999999999996,
+      "ratio_min": 1.0,
+      "ratio_max": 1.0,
+      "n_nonfinite": 0
+    },
+    "accepted": true
+  },
+  "after": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 0.60546875,
+        "max_worst": 1.2578125,
+        "headroom": 5.5981419354838706e+38,
+        "headroom_worst": 2.694757763975155e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 1.1328125,
+        "max_worst": 1.3828125,
+        "headroom": 2.992110344827586e+38,
+        "headroom_worst": 2.4511638418079093e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 1.5390625,
+        "max_worst": 1.7109375,
+        "headroom": 2.2023147208121825e+38,
+        "headroom_worst": 1.981077625570776e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 1.765625,
+        "max_worst": 1.9765625,
+        "headroom": 1.919716814159292e+38,
+        "headroom_worst": 1.7148458498023713e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 2.109375,
+        "max_worst": 2.3125,
+        "headroom": 1.606874074074074e+38,
+        "headroom_worst": 1.4657297297297298e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 2.28125,
+        "max_worst": 2.484375,
+        "headroom": 1.4858082191780822e+38,
+        "headroom_worst": 1.3643270440251572e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 2.4375,
+        "max_worst": 2.640625,
+        "headroom": 1.3905641025641025e+38,
+        "headroom_worst": 1.2835976331360946e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 2.8125,
+        "max_worst": 3.171875,
+        "headroom": 1.2051555555555555e+38,
+        "headroom_worst": 1.0686108374384235e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 3.25,
+        "max_worst": 3.953125,
+        "headroom": 1.0429230769230768e+38,
+        "headroom_worst": 8.574229249011857e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 4.03125,
+        "max_worst": 4.84375,
+        "headroom": 8.408062015503876e+37,
+        "headroom_worst": 6.997677419354838e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 4.59375,
+        "max_worst": 5.59375,
+        "headroom": 7.378503401360544e+37,
+        "headroom_worst": 6.059441340782122e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 5.46875,
+        "max_worst": 6.625,
+        "headroom": 6.197942857142857e+37,
+        "headroom_worst": 5.116226415094339e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 7.21875,
+        "max_worst": 8.375,
+        "headroom": 4.695411255411255e+37,
+        "headroom_worst": 4.0471641791044772e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 22.5,
+        "max_worst": 27.5,
+        "headroom": 1.5064444444444443e+37,
+        "headroom_worst": 1.2325454545454545e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 23.25,
+        "max_worst": 27.875,
+        "headroom": 1.4578494623655913e+37,
+        "headroom_worst": 1.215964125560538e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 23.375,
+        "max_worst": 27.875,
+        "headroom": 1.4500534759358289e+37,
+        "headroom_worst": 1.215964125560538e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 432.0,
+        "max_worst": 564.0,
+        "headroom": 7.846064814814815e+35,
+        "headroom_worst": 6.009751773049645e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 434.0,
+        "max_worst": 568.0,
+        "headroom": 7.809907834101382e+35,
+        "headroom_worst": 5.967429577464788e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 436.0,
+        "max_worst": 572.0,
+        "headroom": 7.774082568807339e+35,
+        "headroom_worst": 5.9256993006993005e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 452.0,
+        "max_worst": 588.0,
+        "headroom": 7.498893805309735e+35,
+        "headroom_worst": 5.764455782312925e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 456.0,
+        "max_worst": 596.0,
+        "headroom": 7.433114035087718e+35,
+        "headroom_worst": 5.687080536912752e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 456.0,
+        "max_worst": 596.0,
+        "headroom": 7.433114035087718e+35,
+        "headroom_worst": 5.687080536912752e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 456.0,
+        "max_worst": 596.0,
+        "headroom": 7.433114035087718e+35,
+        "headroom_worst": 5.687080536912752e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 456.0,
+        "max_worst": 596.0,
+        "headroom": 7.433114035087718e+35,
+        "headroom_worst": 5.687080536912752e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 456.0,
+        "max_worst": 596.0,
+        "headroom": 7.433114035087718e+35,
+        "headroom_worst": 5.687080536912752e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0,
+    "ops": {
+      "n_points": 680,
+      "fmax": 1706.6666666666667,
+      "first_exceed": null,
+      "first_exceed_no_upcast": null,
+      "global_max": {
+        "point": "transformer.layers.16.feed_forward::mul#0",
+        "upcast": false,
+        "max_p50": 508.0,
+        "max_worst": 640.0,
+        "headroom_worst": 2.666666666666667,
+        "exceed_rate": 0.0
+      },
+      "n_risky": 2,
+      "risky_top": [
+        {
+          "point": "<tower>::full#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "<tower>::fill_#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,261 @@
+{
+  "model_dir": "/workspace/gemma4_vision/gemma-4-26B-A4B-it",
+  "max_soft_tokens": 280,
+  "n_images": 799,
+  "ops_before": {
+    "n_points": 1204,
+    "fmax": 65504.0,
+    "first_exceed": null,
+    "first_exceed_no_upcast": {
+      "point": "<tower>::mul#0",
+      "upcast": true,
+      "max_p50": 80915.640625,
+      "max_worst": 95578.203125,
+      "headroom_worst": 0.6853445436124378,
+      "exceed_rate": 1.0
+    },
+    "global_max": {
+      "point": "<tower>::mul#0",
+      "upcast": true,
+      "max_p50": 80915.640625,
+      "max_worst": 95578.203125,
+      "headroom_worst": 0.6853445436124378,
+      "exceed_rate": 1.0
+    },
+    "n_risky": 85,
+    "risky_top": [
+      {
+        "point": "<tower>::mul#0",
+        "upcast": true,
+        "max_p50": 80915.640625,
+        "max_worst": 95578.203125,
+        "headroom_worst": 0.6853445436124378,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "<tower>::index#0",
+        "upcast": true,
+        "max_p50": 80915.640625,
+        "max_worst": 95578.203125,
+        "headroom_worst": 0.6853445436124378,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "<tower>::sub#0",
+        "upcast": true,
+        "max_p50": 51657.3046875,
+        "max_worst": 72293.5078125,
+        "headroom_worst": 0.9060841281888101,
+        "exceed_rate": 0.012515644555694618
+      },
+      {
+        "point": "patch_embedder::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.0.self_attn::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.0.self_attn::scalar_tensor#1",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.0.self_attn::where#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.1.self_attn::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      }
+    ]
+  },
+  "c": 0.25,
+  "loss_no_upcast_before": 1.0,
+  "plan": {
+    "ok": true,
+    "entry": [
+      "patch_embedder"
+    ],
+    "exit": "standardize",
+    "comp": 1.0,
+    "eps_norms": [
+      "encoder.layers.0.input_layernorm",
+      "encoder.layers.0.pre_feedforward_layernorm",
+      "encoder.layers.1.input_layernorm",
+      "encoder.layers.1.pre_feedforward_layernorm",
+      "encoder.layers.2.input_layernorm",
+      "encoder.layers.2.pre_feedforward_layernorm",
+      "encoder.layers.3.input_layernorm",
+      "encoder.layers.3.pre_feedforward_layernorm",
+      "encoder.layers.4.input_layernorm",
+      "encoder.layers.4.pre_feedforward_layernorm",
+      "encoder.layers.5.input_layernorm",
+      "encoder.layers.5.pre_feedforward_layernorm",
+      "encoder.layers.6.input_layernorm",
+      "encoder.layers.6.pre_feedforward_layernorm",
+      "encoder.layers.7.input_layernorm",
+      "encoder.layers.7.pre_feedforward_layernorm",
+      "encoder.layers.8.input_layernorm",
+      "encoder.layers.8.pre_feedforward_layernorm",
+      "encoder.layers.9.input_layernorm",
+      "encoder.layers.9.pre_feedforward_layernorm",
+      "encoder.layers.10.input_layernorm",
+      "encoder.layers.10.pre_feedforward_layernorm",
+      "encoder.layers.11.input_layernorm",
+      "encoder.layers.11.pre_feedforward_layernorm",
+      "encoder.layers.12.input_layernorm",
+      "encoder.layers.12.pre_feedforward_layernorm",
+      "encoder.layers.13.input_layernorm",
+      "encoder.layers.13.pre_feedforward_layernorm",
+      "encoder.layers.14.input_layernorm",
+      "encoder.layers.14.pre_feedforward_layernorm",
+      "encoder.layers.15.input_layernorm",
+      "encoder.layers.15.pre_feedforward_layernorm",
+      "encoder.layers.16.input_layernorm",
+      "encoder.layers.16.pre_feedforward_layernorm",
+      "encoder.layers.17.input_layernorm",
+      "encoder.layers.17.pre_feedforward_layernorm",
+      "encoder.layers.18.input_layernorm",
+      "encoder.layers.18.pre_feedforward_layernorm",
+      "encoder.layers.19.input_layernorm",
+      "encoder.layers.19.pre_feedforward_layernorm",
+      "encoder.layers.20.input_layernorm",
+      "encoder.layers.20.pre_feedforward_layernorm",
+      "encoder.layers.21.input_layernorm",
+      "encoder.layers.21.pre_feedforward_layernorm",
+      "encoder.layers.22.input_layernorm",
+      "encoder.layers.22.pre_feedforward_layernorm",
+      "encoder.layers.23.input_layernorm",
+      "encoder.layers.23.pre_feedforward_layernorm",
+      "encoder.layers.24.input_layernorm",
+      "encoder.layers.24.pre_feedforward_layernorm",
+      "encoder.layers.25.input_layernorm",
+      "encoder.layers.25.pre_feedforward_layernorm",
+      "encoder.layers.26.input_layernorm",
+      "encoder.layers.26.pre_feedforward_layernorm"
+    ],
+    "writers": "sandwich_norm",
+    "tried": [
+      {
+        "entry": [
+          "patch_embedder"
+        ],
+        "cos_min": 0.9999999999999998,
+        "ratio_min": 1.0,
+        "ratio_max": 1.0,
+        "n_nonfinite": 0,
+        "exit": "standardize",
+        "n_eps_norms": 54
+      }
+    ]
+  },
+  "equivalence_fp32": {
+    "cos_min": 0.9999999999999996,
+    "ratio_min": 1.0,
+    "ratio_max": 1.0,
+    "n_nonfinite": 0
+  },
+  "loss_no_upcast_after": 0.0,
+  "ops_after": {
+    "n_points": 1204,
+    "fmax": 65504.0,
+    "first_exceed": null,
+    "first_exceed_no_upcast": null,
+    "global_max": {
+      "point": "<tower>::mul#0",
+      "upcast": true,
+      "max_p50": 20228.91015625,
+      "max_worst": 23894.55078125,
+      "headroom_worst": 2.741378174449751,
+      "exceed_rate": 0.0
+    },
+    "n_risky": 82,
+    "risky_top": [
+      {
+        "point": "patch_embedder::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.0.self_attn::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.0.self_attn::scalar_tensor#1",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.0.self_attn::where#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.1.self_attn::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.1.self_attn::scalar_tensor#1",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.1.self_attn::where#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "encoder.layers.2.self_attn::scalar_tensor#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      }
+    ]
+  }
+}

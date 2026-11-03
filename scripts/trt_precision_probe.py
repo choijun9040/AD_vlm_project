@@ -44,8 +44,20 @@ def _load_trt():
         trt = _trt
 
 
-def build(onnx_path, mode, workspace_gb=24, log_path=None):
-    """엔진을 빌드하고 (engine, 빌드 로그) 를 돌려준다."""
+def build(onnx_path, mode, workspace_gb=24, log_path=None, plan_cache=None, timing_cache=None):
+    """엔진을 빌드하고 (engine, 빌드 로그) 를 돌려준다.
+
+    plan_cache(경로)를 주면 빌드한 엔진과 로그를 남기고, 이미 있으면 빌드하지 않고 불러온다 — 이어 하기용 (2026-11-03)."""
+    if plan_cache and Path(plan_cache).exists() and Path(plan_cache + ".log.txt").exists():
+        class Q(trt.ILogger):
+            def __init__(self):
+                trt.ILogger.__init__(self)
+
+            def log(self, severity, msg):
+                pass
+        print(f"  [{mode}] 저장한 엔진을 불러온다 — {plan_cache}", flush=True)
+        eng = trt.Runtime(Q()).deserialize_cuda_engine(Path(plan_cache).read_bytes())
+        return eng, Path(plan_cache + ".log.txt").read_text().split("\n")
     lines = []
 
     class Cap(trt.ILogger):
@@ -74,6 +86,12 @@ def build(onnx_path, mode, workspace_gb=24, log_path=None):
 
     cfg = builder.create_builder_config()
     cfg.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, workspace_gb << 30)
+    # 타이밍 캐시 (2026-11-03) — 커널 후보의 시간 측정값을 파일에 누적한다. 빌드가 끊겨 다시 할 때 이미 잰 층은 재지 않는다
+    tc = None
+    if timing_cache:
+        blob = Path(timing_cache).read_bytes() if Path(timing_cache).exists() else b""
+        tc = cfg.create_timing_cache(blob)
+        cfg.set_timing_cache(tc, False)
     if mode in ("fp16", "strict"):
         cfg.set_flag(trt.BuilderFlag.FP16)
     if mode == "bf16":
@@ -99,8 +117,19 @@ def build(onnx_path, mode, workspace_gb=24, log_path=None):
         Path(log_path).write_text("\n".join(lines))   # 실패해도 로그는 남긴다
     if plan is None:
         raise RuntimeError(f"[{mode}] 엔진 빌드 실패 — 로그: {log_path}")
+    if tc is not None:
+        Path(timing_cache).parent.mkdir(parents=True, exist_ok=True)
+        Path(timing_cache + ".tmp").write_bytes(bytes(cfg.get_timing_cache().serialize()))
+        Path(timing_cache + ".tmp").replace(timing_cache)
+    if plan_cache:
+        Path(plan_cache).parent.mkdir(parents=True, exist_ok=True)
+        Path(plan_cache + ".log.txt").write_text("\n".join(lines))
+        Path(plan_cache + ".tmp").write_bytes(bytes(plan))
+        Path(plan_cache + ".tmp").replace(plan_cache)
     rt = trt.Runtime(logger)
-    return rt.deserialize_cuda_engine(plan), lines
+    # 로그 메시지 하나에 여러 줄이 들어 있다(층 정보) — 저장했다 불러온 경로와 같게 줄 단위로 나눠 넘긴다 (2026-11-03:
+    # 새로 빌드하면 「Half 0 / Float 0」, 불러오면 「Half 8 / Float 8」로 집계가 갈렸다)
+    return rt.deserialize_cuda_engine(plan), "\n".join(lines).split("\n")
 
 
 def layer_precisions(lines):
@@ -131,6 +160,15 @@ def layer_precisions(lines):
     return prec
 
 
+def _cudart():
+    # cuda-python 13.x부터 경로가 cuda.bindings.runtime으로 바뀌었다(구버전은 cuda.cudart).
+    try:
+        from cuda.bindings import runtime as cudart
+    except ImportError:
+        from cuda import cudart
+    return cudart
+
+
 def _runner(engine, cudart):
     """엔진 하나를 감싼 실행 함수 — 입력 배열을 받아 출력 배열을 돌려준다."""
     ctx = engine.create_execution_context()
@@ -159,7 +197,7 @@ def _runner(engine, cudart):
     return f
 
 
-def run(engine, inputs, engine2=None, per_image=None):
+def run(engine, inputs, engine2=None, per_image=None, save=None, ref=None, state=None, checkpoint=None, every=50):
     """engine2가 있으면 **분할 엔진**이다(2026-10-01, 사전 등록 6.4d): 1부 출력을 2부 입력으로
     넘기고 상실은 2부의 최종 출력에서 판정한다. 두 엔진 사이 텐서는 엔진의 입출력 형식(기본 fp32)을
     그대로 따른다.
@@ -174,13 +212,32 @@ def run(engine, inputs, engine2=None, per_image=None):
     f1 = _runner(engine, cudart)
     f2 = _runner(engine2, cudart) if engine2 is not None else None
     import time
-    bad, maxes, lat = 0, [], []
-    for x in inputs:
+    bad, maxes, lat, coss, start = 0, [], [], [], 0
+    if state:                                   # 이어 하기 — 저장한 누적값에서 다음 장부터
+        bad, maxes, lat, coss, start = state["bad"], state["maxes"], state["lat"], state["coss"], state["i"]
+        if per_image is not None:
+            per_image.extend(state.get("per_image", []))
+        print(f"  [이어서] {start}장부터", flush=True)
+    for i, x in enumerate(inputs):
+        if i < start:
+            continue
+        if checkpoint is not None and i > start and i % every == 0:
+            checkpoint({"i": i, "bad": bad, "maxes": maxes, "lat": lat, "coss": coss,
+                        "per_image": list(per_image) if per_image is not None else []})
         t0 = time.perf_counter()
         out = f1(x)
         if f2 is not None:
             out = f2(out)
         lat.append((time.perf_counter() - t0) * 1000)
+        # 출력 저장·비교 (2026-11-03, 사전 등록 개정 7 실험 3) — 기준 엔진 출력(fp16로 저장)과 이미지별 코사인
+        if save is not None:
+            save[i] = out.astype(np.float16)
+        cs = None
+        if ref is not None:
+            a, b = np.asarray(ref[i], dtype=np.float64).ravel(), out.astype(np.float64).ravel()
+            if np.isfinite(b).all():
+                cs = float(a @ b / (np.linalg.norm(a) * np.linalg.norm(b) + 1e-30))
+            coss.append(cs)
         nf = not np.isfinite(out).all()
         if nf:
             bad += 1
@@ -190,11 +247,18 @@ def run(engine, inputs, engine2=None, per_image=None):
         if per_image is not None:
             per_image.append({"nonfinite": bool(nf),
                               "absmax_finite": float(np.abs(fin).max()) if fin.size else None,
-                              "latency_ms": lat[-1], "warmup": len(lat) <= 2})
+                              "latency_ms": lat[-1], "warmup": len(lat) <= 2, "cos_ref": cs})
     lat = sorted(lat)[2:]          # 처음 두 번은 워밍업으로 버린다
+    cstat = None
+    if ref is not None:
+        fin_c = [c for c in coss if c is not None]
+        cstat = {"n_finite": len(fin_c), "n": len(coss),
+                 "min": min(fin_c) if fin_c else None,
+                 "p01": float(np.percentile(fin_c, 1)) if fin_c else None,
+                 "median": float(np.median(fin_c)) if fin_c else None}
     return (bad / len(inputs), (float(np.median(maxes)) if maxes else None),
             {"p50": float(np.median(lat)), "p95": float(np.percentile(lat, 95))}
-            if lat else None)
+            if lat else None, cstat)
 
 
 def main():
@@ -206,6 +270,11 @@ def main():
     ap.add_argument("--modes", default="fp32,fp16,bf16")
     ap.add_argument("--workspace_gb", type=int, default=24)
     ap.add_argument("--out", default="eval_results/trt_precision_probe.json")
+    ap.add_argument("--save_out", default=None, help="--save_mode 조건의 출력을 이 .npy(fp16)로 저장 — 다른 실행의 코사인 기준")
+    ap.add_argument("--save_mode", default="fp32")
+    ap.add_argument("--plan_dir", default=None, help="빌드한 엔진을 여러 측정이 함께 쓰는 폴더(끝나도 지우지 않는다)")
+    ap.add_argument("--timing_cache", default=None, help="TensorRT 타이밍 캐시 파일(빌드마다 누적)")
+    ap.add_argument("--cos_ref", default=None, help="이 .npy(기준 출력)와 조건마다 이미지별 코사인을 잰다")
     ap.add_argument("--per_image", default=None,
                     help="조건·이미지별 비유한 여부·유한값 absmax·지연과 이미지 이름(npz의 _names)·장면 토큰을 "
                          "jsonl로 저장('w'). 이름이 없는 옛 npz면 image는 키(0000…)로 남긴다")
@@ -231,16 +300,42 @@ def main():
             scenes = image_to_scene()
         except Exception as e:
             print(f"  [경고] 장면 매핑 실패({type(e).__name__}: {e}) — scene은 null")
-        pi_f = open(args.per_image, "w")
+        pi_f = True                     # 이미지별 기록은 끝에 한 번에 쓴다(이어 하기 때 앞 조건 기록이 지워지지 않게)
+    # 이어 하기 (2026-11-03) — 끝난 조건의 결과·이미지별 기록과 진행 중 조건의 누적값을 `<out>.partial.json`에, 빌드한 엔진을
+    # `<out>.plans/`에 둔다. 같은 명령으로 다시 실행하면 끝난 조건은 건너뛰고, 진행 중 조건은 엔진을 다시 빌드하지 않고 이어 간다
+    part_p, plans = Path(args.out + ".partial.json"), (args.plan_dir or args.out + ".plans")
+
+    def _plan(onnx, mode):
+        # 엔진 이름은 그래프(경로·크기·수정 시각)와 조건으로 정한다 — --plan_dir를 여러 측정이 함께 쓰면 같은 엔진을 다시 빌드하지 않는다
+        import hashlib
+        st_ = Path(onnx).stat()
+        h = hashlib.sha1(f"{Path(onnx).resolve()}|{st_.st_size}|{st_.st_mtime_ns}".encode()).hexdigest()[:12]
+        return f"{plans}/{Path(onnx).stem}_{h}_{mode}.plan"
+    sig = json.dumps({"onnx": args.onnx, "onnx2": args.onnx2, "npz": args.npz, "modes": args.modes,
+                      "save_out": args.save_out, "cos_ref": args.cos_ref})
+    part = json.loads(part_p.read_text()) if part_p.exists() else None
+    if part is not None and part.get("sig") != sig:
+        print("  [이어 하기] 명령이 달라 이전 진행 기록을 쓰지 않는다"); part = None
+    part = part or {"sig": sig, "done": {}, "rows": [], "cur": None}
+
+    def _psave():
+        part_p.with_suffix(".tmp").write_text(json.dumps(part, ensure_ascii=False))
+        part_p.with_suffix(".tmp").replace(part_p)
     for mode in args.modes.split(","):
         mode = mode.strip()
         logp = f"logs/trt_build_{mode}.log"
+        if mode in part["done"]:
+            res["modes"][mode] = part["done"][mode]
+            print(f"  [{mode}] 끝난 조건 — 건너뛴다")
+            continue
         try:
-            eng, lines = build(args.onnx, mode, args.workspace_gb, logp)
+            eng, lines = build(args.onnx, mode, args.workspace_gb, logp, plan_cache=_plan(args.onnx, mode),
+                               timing_cache=args.timing_cache)
             eng2 = None
             if args.onnx2:
                 eng2, lines2 = build(args.onnx2, mode, args.workspace_gb,
-                                     logp.replace(".log", "_p2.log"))
+                                     logp.replace(".log", "_p2.log"), plan_cache=_plan(args.onnx2, mode),
+                                     timing_cache=args.timing_cache)
                 lines = lines + lines2
         except Exception as e:
             # 한 조건이 실패해도 나머지는 계속한다. 특히 strict는 TRT 10.12부터
@@ -249,15 +344,38 @@ def main():
             print(f"  [{mode}] 실패 — {type(e).__name__}: {str(e)[:120]}")
             res["modes"][mode] = {"failed": f"{type(e).__name__}: {str(e)[:200]}",
                                   "build_log": logp}
+            part["done"][mode] = res["modes"][mode]; _psave()
             continue
         prec = layer_precisions(lines)
         pi = [] if pi_f else None
-        nan_rate, absmax, lat = run(eng, inputs, eng2, pi)
+        save = None
+        cur = part["cur"] if part["cur"] and part["cur"].get("mode") == mode else None
+        if args.save_out and mode == args.save_mode:
+            if cur and Path(args.save_out).exists():    # 이어 하기 — 이미 쓴 장은 그대로 둔다
+                save = np.load(args.save_out, mmap_mode="r+")
+            else:
+                o0 = _runner(eng, _cudart())(inputs[0])            # 출력 형상을 알기 위해 한 장 먼저
+                if eng2 is not None:
+                    o0 = _runner(eng2, _cudart())(o0)
+                save = np.lib.format.open_memmap(args.save_out, mode="w+", dtype=np.float16, shape=(len(inputs),) + o0.shape)
+        ref = np.load(args.cos_ref, mmap_mode="r") if args.cos_ref else None
+
+        def _ck(st, mode=mode, save=save):
+            if save is not None:
+                save.flush()
+            part["cur"] = {"mode": mode, **st}; _psave()
+        nan_rate, absmax, lat, cstat = run(eng, inputs, eng2, pi, save=save, ref=ref,
+                                           state=cur, checkpoint=_ck)
+        if save is not None:
+            save.flush(); del save
+            print(f"  [{mode}] 출력 저장: {args.save_out}")
+        if cstat:
+            print(f"  [{mode}] 기준 대비 코사인 최소 {cstat['min']} · p01 {cstat['p01']} · 중앙 {cstat['median']} "
+                  f"(유한 {cstat['n_finite']}/{cstat['n']})")
         if pi_f:
             for nm, row in zip(names, pi):
-                pi_f.write(json.dumps({"mode": mode, "onnx": args.onnx, "onnx2": args.onnx2,
-                                       "image": nm, "scene": scenes.get(nm), **row}) + "\n")
-            pi_f.flush()
+                part["rows"].append({"mode": mode, "onnx": args.onnx, "onnx2": args.onnx2,
+                                     "image": nm, "scene": scenes.get(nm), **row})
         n_half, n_float = prec.get("Half", 0), prec.get("Float", 0)
         wmb = prec.get("_weights_mb")
         print(f"  [{mode}] 상실 {nan_rate*100:.1f}%   유한 max 중앙값 "
@@ -266,17 +384,24 @@ def main():
               f"가중치 {wmb:,.0f} MiB" if wmb else "" + f"   로그 {logp}")
         if lat:
             print(f"        지연 p50 {lat['p50']:.1f} ms / p95 {lat['p95']:.1f} ms")
-        res["modes"][mode] = {"nan_rate": nan_rate, "absmax_p50": absmax,
+        res["modes"][mode] = {"nan_rate": nan_rate, "absmax_p50": absmax, "cos_ref": cstat,
                               "n_half_tensors": n_half, "n_float_tensors": n_float,
                               "weights_mib": wmb, "latency_ms": lat,
                               "build_log": logp}
+        part["done"][mode] = res["modes"][mode]; part["cur"] = None; _psave()
         del eng, eng2
 
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
     print(f"\n저장: {args.out}")
     if pi_f:
-        pi_f.close()
+        with open(args.per_image, "w") as f:
+            for row in part["rows"]:
+                f.write(json.dumps(row) + "\n")
         print(f"이미지별: {args.per_image}")
+    import shutil
+    part_p.unlink(missing_ok=True)                      # 끝까지 마쳤다 — 진행 기록을 지운다
+    if not args.plan_dir:                               # 공유 엔진 폴더(--plan_dir)는 남긴다 — 다른 측정이 다시 쓴다
+        shutil.rmtree(plans, ignore_errors=True)
 
     m = res["modes"]
     print("\n" + "=" * 64)

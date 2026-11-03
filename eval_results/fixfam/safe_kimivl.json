@@ -1,0 +1,1058 @@
+{
+  "target": "moonshotai/Kimi-VL-A3B-Instruct",
+  "dtype": "float16",
+  "max_pixels": -1,
+  "n_images": 799,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 199.0,
+        "max_worst": 200.0,
+        "headroom": 5.76214405360134,
+        "headroom_worst": 5.733333333333333,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 170.0,
+        "max_worst": 171.0,
+        "headroom": 6.745098039215686,
+        "headroom_worst": 6.705653021442496,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 148.0,
+        "max_worst": 149.0,
+        "headroom": 7.7477477477477485,
+        "headroom_worst": 7.695749440715884,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 88.5,
+        "max_worst": 102.5,
+        "headroom": 12.95668549905838,
+        "headroom_worst": 11.1869918699187,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 75.5,
+        "max_worst": 88.5,
+        "headroom": 15.187637969094924,
+        "headroom_worst": 12.95668549905838,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 76.0,
+        "max_worst": 89.0,
+        "headroom": 15.087719298245615,
+        "headroom_worst": 12.883895131086144,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 76.0,
+        "max_worst": 88.5,
+        "headroom": 15.087719298245615,
+        "headroom_worst": 12.95668549905838,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 75.0,
+        "max_worst": 87.5,
+        "headroom": 15.28888888888889,
+        "headroom_worst": 13.104761904761906,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 78.5,
+        "max_worst": 90.5,
+        "headroom": 14.607218683651805,
+        "headroom_worst": 12.67034990791897,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 86.5,
+        "max_worst": 97.5,
+        "headroom": 13.256262042389212,
+        "headroom_worst": 11.760683760683762,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 97.0,
+        "max_worst": 108.0,
+        "headroom": 11.8213058419244,
+        "headroom_worst": 10.617283950617285,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 105.0,
+        "max_worst": 116.0,
+        "headroom": 10.920634920634921,
+        "headroom_worst": 9.885057471264368,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 105.5,
+        "max_worst": 116.5,
+        "headroom": 10.868878357030017,
+        "headroom_worst": 9.842632331902719,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 108.5,
+        "max_worst": 119.5,
+        "headroom": 10.568356374807989,
+        "headroom_worst": 9.595536959553696,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 115.0,
+        "max_worst": 126.0,
+        "headroom": 9.971014492753623,
+        "headroom_worst": 9.100529100529101,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 117.0,
+        "max_worst": 128.0,
+        "headroom": 9.800569800569802,
+        "headroom_worst": 8.958333333333334,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 118.0,
+        "max_worst": 129.0,
+        "headroom": 9.717514124293785,
+        "headroom_worst": 8.88888888888889,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 137.0,
+        "max_worst": 152.0,
+        "headroom": 8.369829683698297,
+        "headroom_worst": 7.543859649122807,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 155.0,
+        "max_worst": 170.0,
+        "headroom": 7.397849462365592,
+        "headroom_worst": 6.745098039215686,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 155.0,
+        "max_worst": 170.0,
+        "headroom": 7.397849462365592,
+        "headroom_worst": 6.745098039215686,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 155.0,
+        "max_worst": 170.0,
+        "headroom": 7.397849462365592,
+        "headroom_worst": 6.745098039215686,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 155.0,
+        "max_worst": 170.0,
+        "headroom": 7.397849462365592,
+        "headroom_worst": 6.745098039215686,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 156.0,
+        "max_worst": 170.0,
+        "headroom": 7.350427350427351,
+        "headroom_worst": 6.745098039215686,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 155.0,
+        "max_worst": 170.0,
+        "headroom": 7.397849462365592,
+        "headroom_worst": 6.745098039215686,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 24,
+        "max_p50": 154.0,
+        "max_worst": 169.0,
+        "headroom": 7.445887445887446,
+        "headroom_worst": 6.785009861932939,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 25,
+        "max_p50": 152.0,
+        "max_worst": 167.0,
+        "headroom": 7.543859649122807,
+        "headroom_worst": 6.8662674650698605,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 26,
+        "max_p50": 1632.0,
+        "max_worst": 1720.0,
+        "headroom": 0.7026143790849674,
+        "headroom_worst": 0.6666666666666667,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 161.0,
+        "max_worst": 162.0,
+        "headroom": 7.122153209109731,
+        "headroom_worst": 7.078189300411523,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": {
+      "headroom": 38.08372093023256,
+      "available": true
+    },
+    "bfloat16": {
+      "headroom": 1.9706395348837207e+35,
+      "available": true
+    },
+    "float32": {
+      "headroom": 1.9783720930232558e+35,
+      "available": true
+    }
+  },
+  "available_formats": [
+    "bfloat16",
+    "float16",
+    "float32"
+  ],
+  "scaled_formats_declared": [],
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "blocked_formats": [],
+  "risky_blocks": [
+    {
+      "block": 26,
+      "headroom": 0.6666666666666667,
+      "headroom_p50": 0.7026143790849674,
+      "scale": 3.0728155339805823,
+      "factor_mlp": 0.32543443917851506,
+      "n_solved": 799,
+      "n_infeasible": 0
+    }
+  ],
+  "ops_before": {
+    "n_points": 490,
+    "fmax": 1146.6666666666667,
+    "first_exceed": {
+      "point": "encoder.blocks.26.mlp.fc1::addmm#0",
+      "upcast": false,
+      "max_p50": 1608.0,
+      "max_worst": 1704.0,
+      "headroom_worst": 0.672926447574335,
+      "exceed_rate": 1.0
+    },
+    "first_exceed_no_upcast": {
+      "point": "encoder.blocks.26.mlp.fc1::addmm#0",
+      "upcast": false,
+      "max_p50": 1608.0,
+      "max_worst": 1704.0,
+      "headroom_worst": 0.672926447574335,
+      "exceed_rate": 1.0
+    },
+    "global_max": {
+      "point": "encoder.blocks.26::add#2",
+      "upcast": false,
+      "max_p50": 1632.0,
+      "max_worst": 1720.0,
+      "headroom_worst": 0.6666666666666667,
+      "exceed_rate": 1.0
+    },
+    "n_risky": 2,
+    "risky_top": [
+      {
+        "point": "encoder.blocks.26::add#2",
+        "upcast": false,
+        "max_p50": 1632.0,
+        "max_worst": 1720.0,
+        "headroom_worst": 0.6666666666666667,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "encoder.blocks.26.mlp.fc1::addmm#0",
+        "upcast": false,
+        "max_p50": 1608.0,
+        "max_worst": 1704.0,
+        "headroom_worst": 0.672926447574335,
+        "exceed_rate": 1.0
+      }
+    ]
+  },
+  "fmax_effective": 1146.6666666666667,
+  "virtual_ratio": 1.5,
+  "fix_mode": "auto",
+  "residual": {
+    "c": 0.25,
+    "entry": [
+      "patch_embed"
+    ],
+    "exit": "final_norm",
+    "writers": "out_proj",
+    "equivalence": {
+      "cos_min": 0.9999999999999996,
+      "ratio_min": 1.0,
+      "ratio_max": 1.0,
+      "n_nonfinite": 0
+    },
+    "accepted": true,
+    "eps_norms": [
+      "encoder.blocks.0.norm0",
+      "encoder.blocks.0.norm1",
+      "encoder.blocks.1.norm0",
+      "encoder.blocks.1.norm1",
+      "encoder.blocks.2.norm0",
+      "encoder.blocks.2.norm1",
+      "encoder.blocks.3.norm0",
+      "encoder.blocks.3.norm1",
+      "encoder.blocks.4.norm0",
+      "encoder.blocks.4.norm1",
+      "encoder.blocks.5.norm0",
+      "encoder.blocks.5.norm1",
+      "encoder.blocks.6.norm0",
+      "encoder.blocks.6.norm1",
+      "encoder.blocks.7.norm0",
+      "encoder.blocks.7.norm1",
+      "encoder.blocks.8.norm0",
+      "encoder.blocks.8.norm1",
+      "encoder.blocks.9.norm0",
+      "encoder.blocks.9.norm1",
+      "encoder.blocks.10.norm0",
+      "encoder.blocks.10.norm1",
+      "encoder.blocks.11.norm0",
+      "encoder.blocks.11.norm1",
+      "encoder.blocks.12.norm0",
+      "encoder.blocks.12.norm1",
+      "encoder.blocks.13.norm0",
+      "encoder.blocks.13.norm1",
+      "encoder.blocks.14.norm0",
+      "encoder.blocks.14.norm1",
+      "encoder.blocks.15.norm0",
+      "encoder.blocks.15.norm1",
+      "encoder.blocks.16.norm0",
+      "encoder.blocks.16.norm1",
+      "encoder.blocks.17.norm0",
+      "encoder.blocks.17.norm1",
+      "encoder.blocks.18.norm0",
+      "encoder.blocks.18.norm1",
+      "encoder.blocks.19.norm0",
+      "encoder.blocks.19.norm1",
+      "encoder.blocks.20.norm0",
+      "encoder.blocks.20.norm1",
+      "encoder.blocks.21.norm0",
+      "encoder.blocks.21.norm1",
+      "encoder.blocks.22.norm0",
+      "encoder.blocks.22.norm1",
+      "encoder.blocks.23.norm0",
+      "encoder.blocks.23.norm1",
+      "encoder.blocks.24.norm0",
+      "encoder.blocks.24.norm1",
+      "encoder.blocks.25.norm0",
+      "encoder.blocks.25.norm1",
+      "encoder.blocks.26.norm0",
+      "encoder.blocks.26.norm1",
+      "encoder.final_layernorm"
+    ],
+    "tried": [
+      {
+        "entry": [
+          "patch_embed"
+        ],
+        "cos_min": 0.9999999999999998,
+        "ratio_min": 1.0,
+        "ratio_max": 1.0,
+        "n_nonfinite": 0,
+        "exit": "final_norm",
+        "n_eps_norms": 55
+      }
+    ],
+    "eps_changed": {
+      "encoder.blocks.0.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.0.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.1.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.1.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.2.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.2.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.3.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.3.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.4.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.4.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.5.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.5.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.6.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.6.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.7.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.7.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.8.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.8.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.9.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.9.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.10.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.10.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.11.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.11.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.12.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.12.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.13.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.13.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.14.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.14.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.15.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.15.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.16.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.16.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.17.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.17.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.18.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.18.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.19.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.19.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.20.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.20.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.21.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.21.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.22.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.22.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.23.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.23.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.24.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.24.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.25.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.25.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.26.norm0": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.blocks.26.norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "encoder.final_layernorm": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      }
+    },
+    "ops_after": {
+      "n_points": 490,
+      "fmax": 1146.6666666666667,
+      "first_exceed": null,
+      "first_exceed_no_upcast": null,
+      "global_max": {
+        "point": "encoder.blocks.26::add#2",
+        "upcast": false,
+        "max_p50": 408.0,
+        "max_worst": 430.0,
+        "headroom_worst": 2.666666666666667,
+        "exceed_rate": 0.0
+      },
+      "n_risky": 0,
+      "risky_top": []
+    },
+    "remaining_point": "encoder.blocks.26::add#2"
+  },
+  "after": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 49.75,
+        "max_worst": 50.0,
+        "headroom": 6.813065326633166e+36,
+        "headroom_worst": 6.779e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 42.5,
+        "max_worst": 42.75,
+        "headroom": 7.975294117647059e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 37.0,
+        "max_worst": 37.25,
+        "headroom": 9.160810810810811e+36,
+        "headroom_worst": 9.099328859060403e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 22.125,
+        "max_worst": 25.625,
+        "headroom": 1.5319774011299433e+37,
+        "headroom_worst": 1.322731707317073e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 18.875,
+        "max_worst": 22.125,
+        "headroom": 1.7957615894039735e+37,
+        "headroom_worst": 1.5319774011299433e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 19.0,
+        "max_worst": 22.25,
+        "headroom": 1.7839473684210527e+37,
+        "headroom_worst": 1.523370786516854e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 19.0,
+        "max_worst": 22.125,
+        "headroom": 1.7839473684210527e+37,
+        "headroom_worst": 1.5319774011299433e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 18.75,
+        "max_worst": 21.875,
+        "headroom": 1.8077333333333333e+37,
+        "headroom_worst": 1.5494857142857142e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 19.625,
+        "max_worst": 22.625,
+        "headroom": 1.7271337579617834e+37,
+        "headroom_worst": 1.498121546961326e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 21.625,
+        "max_worst": 24.5,
+        "headroom": 1.5673988439306358e+37,
+        "headroom_worst": 1.383469387755102e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 24.25,
+        "max_worst": 27.125,
+        "headroom": 1.3977319587628866e+37,
+        "headroom_worst": 1.249585253456221e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 26.25,
+        "max_worst": 29.125,
+        "headroom": 1.2912380952380953e+37,
+        "headroom_worst": 1.1637768240343347e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 26.375,
+        "max_worst": 29.25,
+        "headroom": 1.2851184834123223e+37,
+        "headroom_worst": 1.1588034188034189e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 27.125,
+        "max_worst": 30.0,
+        "headroom": 1.249585253456221e+37,
+        "headroom_worst": 1.1298333333333333e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 28.75,
+        "max_worst": 31.625,
+        "headroom": 1.1789565217391304e+37,
+        "headroom_worst": 1.071778656126482e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 29.25,
+        "max_worst": 32.25,
+        "headroom": 1.1588034188034189e+37,
+        "headroom_worst": 1.0510077519379845e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 29.5,
+        "max_worst": 32.25,
+        "headroom": 1.1489830508474576e+37,
+        "headroom_worst": 1.0510077519379845e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 34.25,
+        "max_worst": 38.25,
+        "headroom": 9.896350364963503e+36,
+        "headroom_worst": 8.861437908496732e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 38.75,
+        "max_worst": 42.75,
+        "headroom": 8.747096774193548e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 38.75,
+        "max_worst": 42.75,
+        "headroom": 8.747096774193548e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 38.75,
+        "max_worst": 42.75,
+        "headroom": 8.747096774193548e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 38.75,
+        "max_worst": 42.75,
+        "headroom": 8.747096774193548e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 39.0,
+        "max_worst": 42.75,
+        "headroom": 8.69102564102564e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 38.75,
+        "max_worst": 42.75,
+        "headroom": 8.747096774193548e+36,
+        "headroom_worst": 7.928654970760233e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 24,
+        "max_p50": 38.5,
+        "max_worst": 42.5,
+        "headroom": 8.803896103896104e+36,
+        "headroom_worst": 7.975294117647059e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 25,
+        "max_p50": 38.0,
+        "max_worst": 42.0,
+        "headroom": 8.919736842105263e+36,
+        "headroom_worst": 8.070238095238094e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 26,
+        "max_p50": 408.0,
+        "max_worst": 430.0,
+        "headroom": 8.307598039215686e+35,
+        "headroom_worst": 7.882558139534883e+35,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 161.0,
+        "max_worst": 162.0,
+        "headroom": 2.10527950310559e+36,
+        "headroom_worst": 2.092283950617284e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0,
+    "ops": {
+      "n_points": 490,
+      "fmax": 1146.6666666666667,
+      "first_exceed": null,
+      "first_exceed_no_upcast": null,
+      "global_max": {
+        "point": "encoder.blocks.26::add#2",
+        "upcast": false,
+        "max_p50": 408.0,
+        "max_worst": 430.0,
+        "headroom_worst": 2.666666666666667,
+        "exceed_rate": 0.0
+      },
+      "n_risky": 0,
+      "risky_top": []
+    }
+  }
+}

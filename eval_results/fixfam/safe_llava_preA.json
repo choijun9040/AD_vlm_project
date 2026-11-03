@@ -1,0 +1,1195 @@
+{
+  "target": "ybelkada/llava-1.5-7b-hf-awq",
+  "dtype": "float16",
+  "max_pixels": -1,
+  "n_images": 799,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 12.5625,
+        "max_worst": 12.625,
+        "headroom": 11.940298507462687,
+        "headroom_worst": 11.881188118811881,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 11.8125,
+        "max_worst": 11.9375,
+        "headroom": 12.698412698412698,
+        "headroom_worst": 12.565445026178011,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 11.6875,
+        "max_worst": 11.8125,
+        "headroom": 12.834224598930481,
+        "headroom_worst": 12.698412698412698,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 11.75,
+        "max_worst": 11.9375,
+        "headroom": 12.76595744680851,
+        "headroom_worst": 12.565445026178011,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 11.4375,
+        "max_worst": 11.625,
+        "headroom": 13.114754098360656,
+        "headroom_worst": 12.903225806451612,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 11.0625,
+        "max_worst": 11.25,
+        "headroom": 13.559322033898304,
+        "headroom_worst": 13.333333333333334,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 10.375,
+        "max_worst": 10.5,
+        "headroom": 14.457831325301205,
+        "headroom_worst": 14.285714285714286,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 9.9375,
+        "max_worst": 10.125,
+        "headroom": 15.09433962264151,
+        "headroom_worst": 14.814814814814815,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 9.0,
+        "max_worst": 9.1875,
+        "headroom": 16.666666666666668,
+        "headroom_worst": 16.3265306122449,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 10.375,
+        "max_worst": 13.5,
+        "headroom": 14.457831325301205,
+        "headroom_worst": 11.11111111111111,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 13.0625,
+        "max_worst": 17.625,
+        "headroom": 11.483253588516746,
+        "headroom_worst": 8.51063829787234,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 76.5,
+        "max_worst": 91.5,
+        "headroom": 1.9607843137254901,
+        "headroom_worst": 1.639344262295082,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 200.0,
+        "max_worst": 220.0,
+        "headroom": 0.75,
+        "headroom_worst": 0.6818181818181818,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 200.0,
+        "max_worst": 220.0,
+        "headroom": 0.75,
+        "headroom_worst": 0.6818181818181818,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 200.0,
+        "max_worst": 220.0,
+        "headroom": 0.75,
+        "headroom_worst": 0.6818181818181818,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 201.0,
+        "max_worst": 221.0,
+        "headroom": 0.746268656716418,
+        "headroom_worst": 0.6787330316742082,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 202.0,
+        "max_worst": 222.0,
+        "headroom": 0.7425742574257426,
+        "headroom_worst": 0.6756756756756757,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 203.0,
+        "max_worst": 223.0,
+        "headroom": 0.7389162561576355,
+        "headroom_worst": 0.672645739910314,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom": 0.7352941176470589,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom": 0.7352941176470589,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 203.0,
+        "max_worst": 223.0,
+        "headroom": 0.7389162561576355,
+        "headroom_worst": 0.672645739910314,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom": 0.7352941176470589,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 205.0,
+        "max_worst": 225.0,
+        "headroom": 0.7317073170731707,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 205.0,
+        "max_worst": 225.0,
+        "headroom": 0.7317073170731707,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 205.0,
+        "max_worst": 225.0,
+        "headroom": 0.7317073170731707,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 1.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": {
+      "headroom": 291.12888888888887,
+      "available": true
+    },
+    "bfloat16": {
+      "headroom": 1.5064444444444443e+36,
+      "available": true
+    },
+    "float32": {
+      "headroom": 1.5123555555555556e+36,
+      "available": true
+    }
+  },
+  "available_formats": [
+    "bfloat16",
+    "float16",
+    "float32"
+  ],
+  "scaled_formats_declared": [],
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "blocked_formats": [],
+  "risky_blocks": [
+    {
+      "block": 11,
+      "headroom": 1.639344262295082,
+      "headroom_p50": 1.9607843137254901,
+      "scale": 1.282051282051282,
+      "factor_mlp": 0.78,
+      "n_solved": 799,
+      "n_infeasible": 0
+    },
+    {
+      "block": 12,
+      "headroom": 0.6818181818181818,
+      "headroom_p50": 0.75,
+      "scale": 247.0,
+      "factor_mlp": 0.004048582995951417,
+      "n_solved": 347,
+      "n_infeasible": 452,
+      "warn": "452장에서 **잔차만으로 목표를 넘는다** — MLP 축소만으로는 목표 여유에 도달할 수 없다"
+    },
+    {
+      "block": 13,
+      "headroom": 0.6818181818181818,
+      "headroom_p50": 0.75,
+      "scale": 2.9333333333333336,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 14,
+      "headroom": 0.6818181818181818,
+      "headroom_p50": 0.75,
+      "scale": 2.9333333333333336,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 15,
+      "headroom": 0.6787330316742082,
+      "headroom_p50": 0.746268656716418,
+      "scale": 2.9466666666666663,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 16,
+      "headroom": 0.6756756756756757,
+      "headroom_p50": 0.7425742574257426,
+      "scale": 2.96,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 17,
+      "headroom": 0.672645739910314,
+      "headroom_p50": 0.7389162561576355,
+      "scale": 2.973333333333333,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 18,
+      "headroom": 0.6696428571428571,
+      "headroom_p50": 0.7352941176470589,
+      "scale": 2.986666666666667,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 19,
+      "headroom": 0.6696428571428571,
+      "headroom_p50": 0.7352941176470589,
+      "scale": 2.986666666666667,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 20,
+      "headroom": 0.672645739910314,
+      "headroom_p50": 0.7389162561576355,
+      "scale": 2.973333333333333,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 21,
+      "headroom": 0.6696428571428571,
+      "headroom_p50": 0.7352941176470589,
+      "scale": 2.986666666666667,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 22,
+      "headroom": 0.6666666666666666,
+      "headroom_p50": 0.7317073170731707,
+      "scale": 3.0,
+      "note": "분기 분리 실패 — 근사값 사용"
+    },
+    {
+      "block": 23,
+      "headroom": 0.6666666666666666,
+      "headroom_p50": 0.7317073170731707,
+      "scale": 3.0,
+      "note": "분기 분리 실패 — 근사값 사용"
+    }
+  ],
+  "ops_before": {
+    "n_points": 341,
+    "fmax": 150.0,
+    "first_exceed": {
+      "point": "vision_model.encoder.layers.12::add#1",
+      "upcast": false,
+      "max_p50": 200.0,
+      "max_worst": 220.0,
+      "headroom_worst": 0.6818181818181818,
+      "exceed_rate": 1.0
+    },
+    "first_exceed_no_upcast": {
+      "point": "vision_model.encoder.layers.12::add#1",
+      "upcast": false,
+      "max_p50": 200.0,
+      "max_worst": 220.0,
+      "headroom_worst": 0.6818181818181818,
+      "exceed_rate": 1.0
+    },
+    "global_max": {
+      "point": "vision_model.encoder.layers.22::add#1",
+      "upcast": false,
+      "max_p50": 205.0,
+      "max_worst": 225.0,
+      "headroom_worst": 0.6666666666666666,
+      "exceed_rate": 1.0
+    },
+    "n_risky": 31,
+    "risky_top": [
+      {
+        "point": "vision_model.encoder.layers.22::add#1",
+        "upcast": false,
+        "max_p50": 205.0,
+        "max_worst": 225.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.23::add#0",
+        "upcast": false,
+        "max_p50": 205.0,
+        "max_worst": 225.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.23::add#1",
+        "upcast": false,
+        "max_p50": 205.0,
+        "max_worst": 225.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.18::add#1",
+        "upcast": false,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.19::add#0",
+        "upcast": false,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.19::add#1",
+        "upcast": false,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.21::add#1",
+        "upcast": false,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0
+      },
+      {
+        "point": "vision_model.encoder.layers.22::add#0",
+        "upcast": false,
+        "max_p50": 204.0,
+        "max_worst": 224.0,
+        "headroom_worst": 0.6696428571428571,
+        "exceed_rate": 1.0
+      }
+    ]
+  },
+  "fmax_effective": 150.0,
+  "virtual_ratio": 1.5,
+  "fix_mode": "auto",
+  "residual": {
+    "c": 0.25,
+    "entry": [
+      "vision_model.pre_layrnorm"
+    ],
+    "exit": "projector",
+    "writers": "out_proj",
+    "equivalence": {
+      "cos_min": 0.9999999999999996,
+      "ratio_min": 1.0,
+      "ratio_max": 1.0,
+      "n_nonfinite": 0
+    },
+    "accepted": true,
+    "eps_norms": [
+      "vision_model.encoder.layers.0.layer_norm1",
+      "vision_model.encoder.layers.0.layer_norm2",
+      "vision_model.encoder.layers.1.layer_norm1",
+      "vision_model.encoder.layers.1.layer_norm2",
+      "vision_model.encoder.layers.2.layer_norm1",
+      "vision_model.encoder.layers.2.layer_norm2",
+      "vision_model.encoder.layers.3.layer_norm1",
+      "vision_model.encoder.layers.3.layer_norm2",
+      "vision_model.encoder.layers.4.layer_norm1",
+      "vision_model.encoder.layers.4.layer_norm2",
+      "vision_model.encoder.layers.5.layer_norm1",
+      "vision_model.encoder.layers.5.layer_norm2",
+      "vision_model.encoder.layers.6.layer_norm1",
+      "vision_model.encoder.layers.6.layer_norm2",
+      "vision_model.encoder.layers.7.layer_norm1",
+      "vision_model.encoder.layers.7.layer_norm2",
+      "vision_model.encoder.layers.8.layer_norm1",
+      "vision_model.encoder.layers.8.layer_norm2",
+      "vision_model.encoder.layers.9.layer_norm1",
+      "vision_model.encoder.layers.9.layer_norm2",
+      "vision_model.encoder.layers.10.layer_norm1",
+      "vision_model.encoder.layers.10.layer_norm2",
+      "vision_model.encoder.layers.11.layer_norm1",
+      "vision_model.encoder.layers.11.layer_norm2",
+      "vision_model.encoder.layers.12.layer_norm1",
+      "vision_model.encoder.layers.12.layer_norm2",
+      "vision_model.encoder.layers.13.layer_norm1",
+      "vision_model.encoder.layers.13.layer_norm2",
+      "vision_model.encoder.layers.14.layer_norm1",
+      "vision_model.encoder.layers.14.layer_norm2",
+      "vision_model.encoder.layers.15.layer_norm1",
+      "vision_model.encoder.layers.15.layer_norm2",
+      "vision_model.encoder.layers.16.layer_norm1",
+      "vision_model.encoder.layers.16.layer_norm2",
+      "vision_model.encoder.layers.17.layer_norm1",
+      "vision_model.encoder.layers.17.layer_norm2",
+      "vision_model.encoder.layers.18.layer_norm1",
+      "vision_model.encoder.layers.18.layer_norm2",
+      "vision_model.encoder.layers.19.layer_norm1",
+      "vision_model.encoder.layers.19.layer_norm2",
+      "vision_model.encoder.layers.20.layer_norm1",
+      "vision_model.encoder.layers.20.layer_norm2",
+      "vision_model.encoder.layers.21.layer_norm1",
+      "vision_model.encoder.layers.21.layer_norm2",
+      "vision_model.encoder.layers.22.layer_norm1",
+      "vision_model.encoder.layers.22.layer_norm2",
+      "vision_model.encoder.layers.23.layer_norm1",
+      "vision_model.encoder.layers.23.layer_norm2",
+      "vision_model.post_layernorm"
+    ],
+    "tried": [
+      {
+        "entry": [
+          "vision_model.pre_layrnorm"
+        ],
+        "cos_min": 0.9999999999999999,
+        "ratio_min": 0.25,
+        "ratio_max": 0.25,
+        "n_nonfinite": 0,
+        "exit": "projector",
+        "n_eps_norms": 49
+      }
+    ],
+    "eps_changed": {
+      "vision_model.encoder.layers.0.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.0.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.1.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.1.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.2.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.2.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.3.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.3.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.4.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.4.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.5.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.5.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.6.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.6.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.7.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.7.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.8.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.8.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.9.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.9.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.10.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.10.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.11.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.11.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.12.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.12.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.13.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.13.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.14.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.14.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.15.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.15.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.16.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.16.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.17.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.17.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.18.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.18.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.19.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.19.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.20.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.20.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.21.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.21.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.22.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.22.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.23.layer_norm1": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.encoder.layers.23.layer_norm2": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      },
+      "vision_model.post_layernorm": {
+        "attr": "eps",
+        "old": 1e-05,
+        "new": 6.25e-07
+      }
+    },
+    "projector": {
+      "done": true,
+      "layer": "multi_modal_projector.linear_1",
+      "how": "가중치 ×4"
+    },
+    "ops_after": {
+      "n_points": 341,
+      "fmax": 150.0,
+      "first_exceed": {
+        "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 141.0,
+        "max_worst": 177.0,
+        "headroom_worst": 0.847457627118644,
+        "exceed_rate": 0.24030037546933666
+      },
+      "first_exceed_no_upcast": {
+        "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 141.0,
+        "max_worst": 177.0,
+        "headroom_worst": 0.847457627118644,
+        "exceed_rate": 0.24030037546933666
+      },
+      "global_max": {
+        "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 141.0,
+        "max_worst": 177.0,
+        "headroom_worst": 0.847457627118644,
+        "exceed_rate": 0.24030037546933666
+      },
+      "n_risky": 4,
+      "risky_top": [
+        {
+          "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+          "upcast": false,
+          "max_p50": 141.0,
+          "max_worst": 177.0,
+          "headroom_worst": 0.847457627118644,
+          "exceed_rate": 0.24030037546933666
+        },
+        {
+          "point": "vision_model.encoder.layers.12.mlp.activation_fn::mul#0",
+          "upcast": false,
+          "max_p50": 93.0,
+          "max_worst": 98.0,
+          "headroom_worst": 1.530612244897959,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "vision_model.encoder.layers.21.mlp.activation_fn::mul#0",
+          "upcast": false,
+          "max_p50": 61.25,
+          "max_worst": 80.0,
+          "headroom_worst": 1.875,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "vision_model.encoder.layers.21.self_attn.q_proj::addmm#0",
+          "upcast": false,
+          "max_p50": 74.0,
+          "max_worst": 75.5,
+          "headroom_worst": 1.9867549668874172,
+          "exceed_rate": 0.0
+        }
+      ]
+    }
+  },
+  "after": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 3.140625,
+        "max_worst": 3.15625,
+        "headroom": 1.0792437810945274e+38,
+        "headroom_worst": 1.0739009900990098e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 2.953125,
+        "max_worst": 2.984375,
+        "headroom": 1.1477671957671958e+38,
+        "headroom_worst": 1.1357486910994763e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 2.921875,
+        "max_worst": 2.953125,
+        "headroom": 1.1600427807486631e+38,
+        "headroom_worst": 1.1477671957671958e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 2.9375,
+        "max_worst": 2.984375,
+        "headroom": 1.153872340425532e+38,
+        "headroom_worst": 1.1357486910994763e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 2.859375,
+        "max_worst": 2.90625,
+        "headroom": 1.185398907103825e+38,
+        "headroom_worst": 1.166279569892473e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 2.765625,
+        "max_worst": 2.8125,
+        "headroom": 1.2255819209039547e+38,
+        "headroom_worst": 1.2051555555555555e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 2.59375,
+        "max_worst": 2.625,
+        "headroom": 1.3067951807228916e+38,
+        "headroom_worst": 1.2912380952380951e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 2.484375,
+        "max_worst": 2.53125,
+        "headroom": 1.3643270440251572e+38,
+        "headroom_worst": 1.3390617283950617e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 2.25,
+        "max_worst": 2.296875,
+        "headroom": 1.5064444444444443e+38,
+        "headroom_worst": 1.4757006802721089e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 2.59375,
+        "max_worst": 3.375,
+        "headroom": 1.3067951807228916e+38,
+        "headroom_worst": 1.0042962962962963e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 3.265625,
+        "max_worst": 4.40625,
+        "headroom": 1.0379330143540669e+38,
+        "headroom_worst": 7.692482269503546e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 19.125,
+        "max_worst": 22.875,
+        "headroom": 1.7722875816993464e+37,
+        "headroom_worst": 1.4817486338797813e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 50.0,
+        "max_worst": 55.0,
+        "headroom": 6.779e+36,
+        "headroom_worst": 6.162727272727273e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 50.0,
+        "max_worst": 55.0,
+        "headroom": 6.779e+36,
+        "headroom_worst": 6.162727272727273e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 50.0,
+        "max_worst": 55.0,
+        "headroom": 6.779e+36,
+        "headroom_worst": 6.162727272727273e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 50.25,
+        "max_worst": 55.25,
+        "headroom": 6.745273631840796e+36,
+        "headroom_worst": 6.134841628959276e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 50.5,
+        "max_worst": 55.5,
+        "headroom": 6.711881188118812e+36,
+        "headroom_worst": 6.107207207207207e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 50.75,
+        "max_worst": 55.75,
+        "headroom": 6.678817733990147e+36,
+        "headroom_worst": 6.07982062780269e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 51.0,
+        "max_worst": 56.0,
+        "headroom": 6.646078431372548e+36,
+        "headroom_worst": 6.052678571428571e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 51.0,
+        "max_worst": 56.0,
+        "headroom": 6.646078431372548e+36,
+        "headroom_worst": 6.052678571428571e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 50.75,
+        "max_worst": 55.75,
+        "headroom": 6.678817733990147e+36,
+        "headroom_worst": 6.07982062780269e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 51.0,
+        "max_worst": 56.0,
+        "headroom": 6.646078431372548e+36,
+        "headroom_worst": 6.052678571428571e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 51.25,
+        "max_worst": 56.25,
+        "headroom": 6.613658536585365e+36,
+        "headroom_worst": 6.025777777777777e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 51.25,
+        "max_worst": 56.25,
+        "headroom": 6.613658536585365e+36,
+        "headroom_worst": 6.025777777777777e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 51.25,
+        "max_worst": 56.25,
+        "headroom": 6.613658536585365e+36,
+        "headroom_worst": 6.025777777777777e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0,
+    "ops": {
+      "n_points": 341,
+      "fmax": 150.0,
+      "first_exceed": {
+        "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 141.0,
+        "max_worst": 177.0,
+        "headroom_worst": 0.847457627118644,
+        "exceed_rate": 0.25156445556946183
+      },
+      "first_exceed_no_upcast": {
+        "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 141.0,
+        "max_worst": 177.0,
+        "headroom_worst": 0.847457627118644,
+        "exceed_rate": 0.25156445556946183
+      },
+      "global_max": {
+        "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 141.0,
+        "max_worst": 177.0,
+        "headroom_worst": 0.847457627118644,
+        "exceed_rate": 0.25156445556946183
+      },
+      "n_risky": 4,
+      "risky_top": [
+        {
+          "point": "vision_model.encoder.layers.22.self_attn.q_proj::addmm#0",
+          "upcast": false,
+          "max_p50": 141.0,
+          "max_worst": 177.0,
+          "headroom_worst": 0.847457627118644,
+          "exceed_rate": 0.25156445556946183
+        },
+        {
+          "point": "vision_model.encoder.layers.12.mlp.activation_fn::mul#0",
+          "upcast": false,
+          "max_p50": 93.0,
+          "max_worst": 98.0,
+          "headroom_worst": 1.530612244897959,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "vision_model.encoder.layers.21.mlp.activation_fn::mul#0",
+          "upcast": false,
+          "max_p50": 61.25,
+          "max_worst": 79.0,
+          "headroom_worst": 1.8987341772151898,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "vision_model.encoder.layers.21.self_attn.q_proj::addmm#0",
+          "upcast": false,
+          "max_p50": 74.0,
+          "max_worst": 75.5,
+          "headroom_worst": 1.9867549668874172,
+          "exceed_rate": 0.0
+        }
+      ]
+    }
+  }
+}

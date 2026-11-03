@@ -221,6 +221,13 @@ def main():
         if vt is None:
             raise RuntimeError("비전 타워를 찾지 못했다 — --vision_state를 적용할 수 없다")
         sd = torch.load(args.vision_state, map_location="cpu")
+        # 교정 옆 파일(2026-11-03) — state_dict 밖의 교정(새 편향·포화 절단 활성 / eps·어텐션 scale)을 얹기 전·후에 적용한다.
+        # 없으면 이전 형식(.eps.json)만 적용한다. 어텐션 scale이 빠지면 출력이 틀리므로 반드시 함께 적용한다
+        fix_path = Path(args.vision_state + ".fix.json")
+        side = json.loads(fix_path.read_text()) if fix_path.exists() else None
+        if side is not None:
+            import headroom_ext as HX
+            HX.prepare_for_state(vt, side)
         missing, unexpected = vt.load_state_dict(sd, strict=False)
         pnames = {n for n, _ in vt.named_parameters()}
         miss_param = [k for k in missing if k in pnames]
@@ -236,7 +243,10 @@ def main():
         # 잔차 재조정이면 정규화 eps 변경이 옆 파일에 있다 (2026-10-31) — eps는 state_dict에 실리지 않으므로 함께 적용한다.
         # 없는 모듈 이름이 하나라도 있으면 멈춘다(조용히 일부만 적용하면 정확한 등가가 아니다)
         eps_path = Path(args.vision_state + ".eps.json")
-        if eps_path.exists():
+        if side is not None:
+            HX.apply_settings(vt, side)
+            print(f"[교정] 옆 파일 적용: {fix_path} — " + ", ".join(k for k in side if k != "version"))
+        elif eps_path.exists():
             mods = dict(vt.named_modules())
             ch = json.loads(eps_path.read_text())
             miss = [k for k in ch if k not in mods]

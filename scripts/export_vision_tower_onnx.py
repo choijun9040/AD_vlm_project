@@ -319,17 +319,16 @@ def main():
         if args.fixa:
             raise SystemExit("--vision_state와 --fixa를 함께 쓸 수 없다")
         sd = torch.load(args.vision_state, map_location="cpu")
-        missing, unexpected = tower.load_state_dict(sd, strict=False)
+        # 교정 옆 파일(2026-11-03) — eps·어텐션 scale 등 state_dict 밖의 교정. 그래프에는 상수로 굳으므로 내보내기 전에 적용한다.
+        # .fix.json이 없고 .eps.json만 있으면(이전 형식) eps만 적용한다
+        import json as _json
+        import headroom_ext as HX
+        fp, ep = Path(args.vision_state + ".fix.json"), Path(args.vision_state + ".eps.json")
+        side = _json.loads(fp.read_text()) if fp.exists() else ({"eps": _json.loads(ep.read_text())} if ep.exists() else {})
+        HX.load_fixed(tower, sd, side)
         pnames = {n for n, _ in tower.named_parameters()}
-        miss_p = [k for k in missing if k in pnames]
-        if miss_p or unexpected:
-            raise RuntimeError(
-                f"교정 가중치 적재 불일치 — 빠진 파라미터 {len(miss_p)}개"
-                f"{', 예: ' + miss_p[0] if miss_p else ''}, "
-                f"남은 키 {len(unexpected)}개"
-                f"{', 예: ' + unexpected[0] if unexpected else ''}")
-        print(f"[교정] 도구 산출 가중치 적재: {args.vision_state} "
-              f"(파라미터 {len(pnames)}개 전부)")
+        print(f"[교정] 도구 산출 가중치 적재: {args.vision_state} (파라미터 {len(pnames)}개 전부)"
+              + (f" · 옆 파일 {', '.join(k for k in side if k != 'version')}" if side else ""))
 
     if args.fixa:
         import math as _math

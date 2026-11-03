@@ -93,6 +93,47 @@ def load_tower(checkpoint, base, dtype):
     return m.visual.eval().to("cuda")
 
 
+# ---------------------------------------------------------------- 중간 저장 (2026-11-03)
+# 인스턴스가 멈추면 긴 실행(원본 해상도 Qwen 5시간 남짓)이 처음부터 다시 돈다. 진단·교정·검증이 끝날 때마다 `<out>.ckpt/`에
+# 저장하고, **같은 인자로** 다시 실행하면 그 지점부터 이어 간다. 인자가 다르면 쓰지 않는다. 끝까지 마치면 지운다.
+CKPT = {"dir": None, "key": None}
+
+
+def ckpt_init(out, argv):
+    d = Path(out + ".ckpt")
+    key = json.dumps(argv, ensure_ascii=False)
+    kf = d / "argv.json"
+    if d.exists() and (not kf.exists() or kf.read_text() != key):
+        import shutil
+        shutil.rmtree(d)
+        print(f"[중간 저장] 인자가 달라 이전 중간 저장을 지웠다: {d}")
+    d.mkdir(parents=True, exist_ok=True)
+    kf.write_text(key)
+    CKPT.update(dir=d, key=key)
+
+
+def ckpt_load(name):
+    f = CKPT["dir"] / f"{name}.pt" if CKPT["dir"] else None
+    if f is None or not f.exists():
+        return None
+    print(f"[이어서] 중간 저장 {name}을(를) 불러온다 — {f}")
+    return torch.load(f, map_location="cpu", weights_only=False)
+
+
+def ckpt_save(name, obj):
+    if CKPT["dir"] is None:
+        return
+    f = CKPT["dir"] / f"{name}.pt"
+    torch.save(obj, str(f) + ".tmp")
+    Path(str(f) + ".tmp").replace(f)          # 쓰다 끊기면 반쪽 파일이 남지 않게
+
+
+def ckpt_done():
+    if CKPT["dir"] is not None and CKPT["dir"].exists():
+        import shutil
+        shutil.rmtree(CKPT["dir"])
+
+
 def load_tower_direct(repo, dtype, trust_remote_code=False):
     """비전 가중치만 받아 타워를 직접 세운다 — 원고의 계열 측정(`probe_vision_tower_direct`·`bridge_measure_newhf`)과 같은 경로.
 
@@ -677,6 +718,8 @@ def main():
     ap.add_argument("--repo", default=None,
                     help="임의 HF 저장소를 대상으로 한다 (--checkpoint 대신)")
     ap.add_argument("--trust_remote_code", action="store_true")
+    ap.add_argument("--fp16_error", action="store_true",
+                    help="교정 전·후 타워의 fp16 출력이 교정 전 fp32 출력과 얼마나 다른지(상대 오차) 이미지별로 잰다 (개정 7 실험 4)")
     ap.add_argument("--loader", choices=["direct", "full"], default="direct",
                     help="--repo의 타워 적재 — direct: 비전 가중치만 받아 직접 구성(원고 계열 측정과 같은 경로, 기본) · "
                          "full: 전체 모델을 세워 타워를 꺼낸다(프로젝터 출구 보정을 저장할 수 있다)")
@@ -723,6 +766,10 @@ def main():
         selftest(); return
 
     awq_compat.patch()
+    if args.cmd == "fix":
+        ckpt_init(args.out, sys.argv[1:])        # 같은 인자로 다시 실행하면 중간 저장에서 이어 간다
+        import headroom_ext as _HX
+        _HX.PROGRESS.update(load=ckpt_load, save=ckpt_save)   # 긴 반복도 50장마다 이어 하기
     from transformers import AutoProcessor
 
     kw = {}
@@ -793,12 +840,18 @@ def main():
         # 두 번째 기록과 어긋났다). 이미지별 활성이 아니므로 기록 전에 한 번 돌려 둔다 (2026-11-01)
         with torch.no_grad():
             fwd(tower, cache_mag[0])
-        ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
+        ck = ckpt_load("diagnosis")
+        if ck is not None:
+            ops_before, fmax_eff = ck["ops_before"], ck["fmax_eff"]
+        else:
+            ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom, tag="ops0")
+            if args.virtual_ratio:
+                fmax_eff = HX.virtual_fmax(ops_before, args.virtual_ratio)
+                ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom, tag="ops_v")
+            ckpt_save("diagnosis", {"ops_before": ops_before, "fmax_eff": fmax_eff})
         if args.virtual_ratio:
-            fmax_eff = HX.virtual_fmax(ops_before, args.virtual_ratio)
             print(f"[가상 상한] {fmax_eff:,.1f} (= 최악 최대 {ops_before['global_max']['max_worst']:,.1f} ÷ "
                   f"{args.virtual_ratio}) — 실제 형식 상한이 아니라 교정 효과를 보기 위한 판정 기준이다")
-            ops_before = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
         fe, fa, g = ops_before["first_exceed"], ops_before["first_exceed_no_upcast"], ops_before["global_max"]
         print(f"[연산 단위] 지점 {ops_before['n_points']}개 · 최대 {g['max_worst']:,.0f} ({g['point']})")
         print(f"  모델 형식 연산에서 처음 상한을 넘는 곳: "
@@ -960,16 +1013,26 @@ def main():
 
     if args.cmd == "fix":
         res["fix_mode"] = args.fix_mode
+        # 저장할 때 왕복 검사용 — 교정 전 타워 사본(CPU). 저장한 것을 여기에 다시 얹어 교정한 타워와 같은지 본다 (2026-11-03)
+        tower0 = copy.deepcopy(tower).cpu() if (args.save_weights or args.fp16_error) else None
         g_need = (ops_before is not None and
                   ops_before["global_max"]["max_worst"] * args.target_headroom > fmax_eff)
         if not risky and not g_need:
             print("\n교정할 곳이 없다 — 이 설정에서는 안전하다.")
         else:
             residual_done = False
+            ck_fix = ckpt_load("fixed")
+            resumed = ck_fix is not None
+            if resumed:
+                HX.load_fixed(tower, ck_fix["state"], ck_fix["side"])
+                res.update(ck_fix["res"])
+                residual_done, risky = ck_fix["residual_done"], []
+                print("[이어서] 교정 단계를 건너뛰고 저장한 교정 타워를 쓴다 — "
+                      + ", ".join(k for k in ck_fix["res"] if res.get(k)))
             # ---- 교정 1: 잔차 재조정 (등가) ----
             # 잔차에 값을 쓰는 곳 전부를 c배 하고 출구에서 되돌린다. 잔차를 읽는 정규화가 스케일 불변이면 중간 계산이
             # 그대로라 **출력이 바뀌지 않는다.** 적용 여부는 구조 추측이 아니라 fp32 등가성 검사로 정한다.
-            if args.fix_mode in ("auto", "residual") and ops_before is not None:
+            if not resumed and args.fix_mode in ("auto", "residual") and ops_before is not None:
                 c = HX.choose_c(ops_before["global_max"]["max_worst"], fmax_eff, args.target_headroom)
                 print(f"\n[교정 1] 잔차 재조정 시도 — c = {c:g} "
                       f"(목표 여유 {args.target_headroom}배를 넘기는 가장 큰 2의 거듭제곱 — 곱해도 반올림이 없다)")
@@ -980,7 +1043,7 @@ def main():
                 if plan["ok"]:
                     t32c = HX.apply_residual(t32, get_blocks, plan["entry"], c)
                     HX.apply_eps(t32c, plan["eps_norms"], c)       # 잔차를 읽는 정규화의 eps도 c²배 (2026-10-31 개정)
-                    eq = HX.compare(t32, t32c, cache32, fwd32, comp=plan["comp"])
+                    eq = HX.compare(t32, t32c, cache32, fwd32, comp=plan["comp"], tag="eq_R")
                     del t32c
                     accepted = eq["cos_min"] >= args.equiv_tol
                     print(f"  입구 {plan['entry']} · 잔차 쓰기 방식 {plan['writers']} · 출구 {plan['exit']} · "
@@ -1013,7 +1076,7 @@ def main():
                             b["headroom_worst"] = fmax_eff / w if w and math.isfinite(w) else None
                     risky = plan_fix(before, args.target_headroom, tower=tower, cache=cache_mag,
                                      dtype=args.dtype, fmax=fmax_eff)
-                    ops_mid = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
+                    ops_mid = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom, tag="ops_mid")
                     res["residual"]["ops_after"] = HX.summarize_ops(ops_mid)
                     gm = ops_mid["global_max"]["max_worst"]
                     print(f"  재조정 후 연산 단위 최대 {gm:,.0f} · 최악 여유 {fmax_eff/gm:.2f}배"
@@ -1037,7 +1100,7 @@ def main():
                 gdone = apply_gate_equiv(t32g, risky, fmax_eff, args.target_headroom)
                 cache32 = build_cache(proc, paths, "float32", device="cpu")
                 fwd32 = lambda tw, x: tower_forward(tw, x[0].to("cuda"), x[1].to("cuda") if x[1] is not None else None)
-                eq = HX.compare(t32, t32g, cache32, fwd32)
+                eq = HX.compare(t32, t32g, cache32, fwd32, tag="eq_G")
                 ok = (eq["cos_min"] >= args.equiv_tol and abs(eq["ratio_min"] - 1) < 1e-3 and abs(eq["ratio_max"] - 1) < 1e-3
                       and not any("skipped" in g for g in gdone))
                 print(f"  f = {sorted({g.get('f') for g in gdone if 'f' in g})} · 등가성(fp32, {len(cache32)}장): 코사인 최소 "
@@ -1071,7 +1134,7 @@ def main():
 
             # ---- 교정 3: 어텐션 스케일 접기 (등가, 사전 등록 개정 3 — 2026-11-01) ----
             # (P)는 MLP만, (A)는 어텐션만 바꾸므로 서로 영향이 없다 — (R) 뒤 기록(없으면 교정 전 기록)으로 대상을 고른다
-            ops_ref = ops_mid if residual_done else ops_before
+            ops_ref = None if resumed else (ops_mid if residual_done else ops_before)
             if args.fix_mode == "auto" and ops_ref is not None:
                 aplan = HX.attn_fold_plan(tower, get_blocks, ops_ref, fmax_eff, args.target_headroom)
                 if aplan:
@@ -1082,7 +1145,7 @@ def main():
                     HX.apply_attn_fold(t32a, get_blocks, aplan)
                     cache32 = build_cache(proc, paths, "float32", device="cpu")
                     fwd32 = lambda tw, x: tower_forward(tw, x[0].to("cuda"), x[1].to("cuda") if x[1] is not None else None)
-                    eq = HX.compare(t32, t32a, cache32, fwd32)
+                    eq = HX.compare(t32, t32a, cache32, fwd32, tag="eq_A")
                     ok = (eq["cos_min"] >= args.equiv_tol and abs(eq["ratio_min"] - 1) < 1e-3
                           and abs(eq["ratio_max"] - 1) < 1e-3)
                     print(f"  등가성(fp32, {len(cache32)}장): 코사인 최소 {eq['cos_min']:.8f} · 크기 비율 "
@@ -1114,7 +1177,7 @@ def main():
                             means = HX.key_means(t32, get_blocks, plan_, cache32[:n_est], fwd32)
                             HX.apply_key_center(t32x, get_blocks, plan_, means)
                             extra = {"n_est": n_est}
-                        eq = HX.compare(t32, t32x, cache32, fwd32)
+                        eq = HX.compare(t32, t32x, cache32, fwd32, tag=f"eq_{tag}")
                         ok = (eq["cos_min"] >= args.equiv_tol and abs(eq["ratio_min"] - 1) < 1e-3
                               and abs(eq["ratio_max"] - 1) < 1e-3)
                         print(f"\n[교정] {label} — 블록 {[p_['block'] for p_ in plan_]} · 등가성(fp32, {len(cache32)}장): 코사인 최소 "
@@ -1126,46 +1189,70 @@ def main():
                                 HX.apply_act_clamp(tower, get_blocks, plan_)
                             else:
                                 HX.apply_key_center(tower, get_blocks, plan_, means)
+                                nb = [p_ for p_ in plan_ if p_.get("new_bias")]
+                                res[tag]["new_bias"] = HX.module_paths(tower, get_blocks, nb, ("attn", "kind"))
                         del t32, t32x
                         torch.cuda.empty_cache()
                     del cache32
 
+            if not resumed:
+                FIXK = ("residual", "gate_equiv", "applied", "attn_fold", "act_clamp", "key_center")
+                ckpt_save("fixed", {"state": {k: v.detach().cpu() for k, v in tower.state_dict().items()},
+                                    "side": HX.build_sidecar(tower, get_blocks, res),
+                                    "res": {k: res[k] for k in FIXK if k in res}, "residual_done": residual_done})
+
             if args.verify:
-                after, _ = profile(tower, cache_mag, MAG, fmax_dtype=None if args.virtual_ratio else args.dtype)
-                per_image_mag["after"] = LAST_PER_IMAGE
-                nan_after = collapse_in_target("after")
-                res["after"] = {"per_block": after, "nan_rate": nan_after}
-                if not args.no_ops:
-                    ops_after = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom)
-                    res["after"]["ops"] = HX.summarize_ops(ops_after)
-                    ga = ops_after["global_max"]["max_worst"]
-                    print(f"\n[검증] 연산 단위 최대 {ga:,.0f} · 최악 여유 {fmax_eff/ga:.2f}배"
-                          + ("  (가상 상한 기준)" if args.virtual_ratio else ""))
-                print(f"[검증] 상실률 {nan_before*100:.1f}% → **{nan_after*100:.1f}%** ({args.dtype}, 이 실행 경로)")
-                if res.get("applied"):
-                    print("\n  ⚠ 곱셈 이전 축소는 **완전 등가가 아니다.** 잔차 분기와 MLP 분기의 비율이 바뀐다.")
-                    print("    정확도 비용은 별도로 측정할 것(배포 조건 실측: 원본 해상도·fp16·11,309문항에서 "
-                          "교정 fp16 48.76% 대 무교정 bf16 48.47%, 출력 문자열 일치 74.8%).")
-                elif residual_done or any(res.get(k, {}).get("accepted") for k in ("attn_fold", "act_clamp", "key_center")):
-                    used = ((["잔차 재조정"] if residual_done else [])
-                            + (["게이트 곱 등가 교정"] if res.get("gate_equiv", {}).get("accepted") else [])
-                            + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else [])
-                            + (["포화 절단"] if res.get("act_clamp", {}).get("accepted") else [])
-                            + (["키 중심화"] if res.get("key_center", {}).get("accepted") else []))
-                    print(f"\n  등가 교정만 적용했다({' + '.join(used)}) — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
+                ck_v = ckpt_load("verify")
+                if ck_v is not None:
+                    res["after"] = ck_v
+                    print(f"[이어서] 검증 결과를 불러왔다 — 상실률 {ck_v.get('nan_rate')}")
+                else:
+                    after, _ = profile(tower, cache_mag, MAG, fmax_dtype=None if args.virtual_ratio else args.dtype)
+                    per_image_mag["after"] = LAST_PER_IMAGE
+                    nan_after = collapse_in_target("after")
+                    res["after"] = {"per_block": after, "nan_rate": nan_after}
+                    if not args.no_ops:
+                        ops_after = HX.profile_ops(tower, cache_mag, fwd, fmax_eff, args.target_headroom, tag="ops_after")
+                        res["after"]["ops"] = HX.summarize_ops(ops_after)
+                        ga = ops_after["global_max"]["max_worst"]
+                        print(f"\n[검증] 연산 단위 최대 {ga:,.0f} · 최악 여유 {fmax_eff/ga:.2f}배"
+                              + ("  (가상 상한 기준)" if args.virtual_ratio else ""))
+                    print(f"[검증] 상실률 {nan_before*100:.1f}% → **{nan_after*100:.1f}%** ({args.dtype}, 이 실행 경로)")
+                    if res.get("applied"):
+                        print("\n  ⚠ 곱셈 이전 축소는 **완전 등가가 아니다.** 잔차 분기와 MLP 분기의 비율이 바뀐다.")
+                        print("    정확도 비용은 별도로 측정할 것(배포 조건 실측: 원본 해상도·fp16·11,309문항에서 "
+                              "교정 fp16 48.76% 대 무교정 bf16 48.47%, 출력 문자열 일치 74.8%).")
+                    elif residual_done or any(res.get(k, {}).get("accepted") for k in ("attn_fold", "act_clamp", "key_center")):
+                        used = ((["잔차 재조정"] if residual_done else [])
+                                + (["게이트 곱 등가 교정"] if res.get("gate_equiv", {}).get("accepted") else [])
+                                + (["어텐션 스케일 접기"] if res.get("attn_fold", {}).get("accepted") else [])
+                                + (["포화 절단"] if res.get("act_clamp", {}).get("accepted") else [])
+                                + (["키 중심화"] if res.get("key_center", {}).get("accepted") else []))
+                        print(f"\n  등가 교정만 적용했다({' + '.join(used)}) — fp32 등가성 검사를 통과했으므로 출력은 교정 전과 같다.")
+                    ckpt_save("verify", res["after"])
 
             if args.save_weights:
                 torch.save(tower.state_dict(), args.save_weights)
                 print(f"\n  교정된 비전 타워 저장: {args.save_weights}")
-                if res.get("residual", {}).get("eps_changed"):
-                    # eps는 모듈 설정이라 state_dict에 실리지 않는다 — 옆 파일로 남기고 적재하는 쪽에서 함께 적용한다
-                    Path(args.save_weights + ".eps.json").write_text(json.dumps(res["residual"]["eps_changed"], indent=1))
-                    print(f"  정규화 eps 변경 {len(res['residual']['eps_changed'])}개: {args.save_weights}.eps.json "
-                          f"— **함께 적용하지 않으면 정확한 등가가 아니다**")
-                if res.get("attn_fold", {}).get("scale_changed"):
-                    # 어텐션 scale도 모듈 설정이라 state_dict에 실리지 않는다 — eps와 같은 방식으로 옆 파일에 남긴다
-                    Path(args.save_weights + ".attn_scale.json").write_text(json.dumps(res["attn_fold"]["scale_changed"], indent=1))
-                    print(f"  어텐션 scale 변경: {args.save_weights}.attn_scale.json — **함께 적용하지 않으면 등가가 아니다**")
+                # state_dict 밖의 교정(eps, 어텐션 scale, 포화 절단 활성, 새 편향)은 옆 파일 하나에 모은다 (2026-11-03).
+                # 적재는 headroom_ext.load_fixed — 준비 → state_dict → 설정 순서이고, 없는 모듈이 있으면 멈춘다
+                side = HX.build_sidecar(tower, get_blocks, res)
+                Path(args.save_weights + ".fix.json").write_text(json.dumps(side, indent=1, ensure_ascii=False))
+                if side.get("eps"):        # 이전 평가 스크립트와의 호환
+                    Path(args.save_weights + ".eps.json").write_text(json.dumps(side["eps"], indent=1))
+                print(f"  교정 옆 파일: {args.save_weights}.fix.json — " + ", ".join(
+                      f"{k} {len(v) if not isinstance(v, dict) or k != 'act_clamp' else len(v['modules'])}개"
+                      for k, v in side.items() if k != "version") + " — **함께 적용하지 않으면 등가가 아니다**")
+                # 왕복 검사 — 교정 전 사본에 저장한 것을 얹어 교정한 타워와 출력이 같은지 본다
+                t_rt = HX.load_fixed(copy.deepcopy(tower0).to(next(tower.parameters()).device),
+                                     torch.load(args.save_weights, map_location="cpu"), side)
+                rt = HX.compare(tower, t_rt, cache_mag[:min(8, len(cache_mag))], fwd)
+                res["roundtrip"] = rt
+                print(f"  왕복 검사({min(8, len(cache_mag))}장): 코사인 최소 {rt['cos_min']:.8f} · 크기 비율 "
+                      f"{rt['ratio_min']:.6f}~{rt['ratio_max']:.6f}")
+                if not (rt["cos_min"] >= 1 - 1e-6 and abs(rt["ratio_min"] - 1) < 1e-4 and abs(rt["ratio_max"] - 1) < 1e-4):
+                    raise RuntimeError("왕복 검사 실패 — 저장한 교정을 다시 얹은 타워가 교정한 타워와 다르다")
+                del t_rt
                 if res.get("residual", {}).get("projector", {}).get("done") and "가중치" in res["residual"]["projector"].get("how", ""):
                     name, sub = HX.projector_first(PARENT_MODEL)
                     torch.save({name: sub.state_dict()}, args.save_weights + ".projector.pt")
@@ -1176,7 +1263,52 @@ def main():
                 print("    (3) 빠진 파라미터가 하나라도 있으면 **예외로 중단**할 것 —")
                 print("        strict 검증 없이 적재하면 조용히 무교정 모델을 평가하게 된다")
 
+    # ---- fp16 오차 (사전 등록 개정 7 실험 4, 2026-11-03) ----
+    # 교정 전·후 타워를 fp16으로 돌린 출력의, 교정 전 fp32 출력 대비 상대 오차 e = ‖y16 − y32‖/‖y32‖ (이미지별)
+    if args.cmd == "fix" and args.fp16_error and tower0 is not None:
+        dev = next(tower.parameters()).device
+        r32 = copy.deepcopy(tower0).float().to(dev)
+        u16 = copy.deepcopy(tower0).half().to(dev)
+        f16 = copy.deepcopy(tower).half()
+        cache32 = build_cache(proc, paths, "float32", device="cpu")
+        # 출구가 프로젝터인 잔차 재조정이면 타워 출력이 c배다(프로젝터 첫 층이 되돌린다) — 등가성 검사와 같이 1/c를 곱해 비교한다
+        # (2026-11-03 Phi-3.5 4장 시험에서 이 보정이 빠져 교정 후 오차가 정확히 1 − c = 0.75로 나왔다)
+        rr = res.get("residual", {})
+        comp = 1.0 / rr["c"] if rr.get("accepted") and rr.get("exit") == "projector" else 1.0
+        e_u, e_f = [], []
+        pf = ckpt_load("part_fp16err")              # 이어 하기 — 50장마다 저장한 이미지별 오차 (2026-11-03)
+        if pf is not None:
+            e_u, e_f = pf["e_u"], pf["e_f"]
+            print(f"  [이어서] fp16 오차 {len(e_u)}장부터")
+        with torch.no_grad():
+            for i_, (pv, grid) in enumerate(cache32):
+                if i_ < len(e_u):
+                    continue
+                if i_ and i_ % 50 == 0:
+                    ckpt_save("part_fp16err", {"e_u": e_u, "e_f": e_f})
+                g = grid.to(dev) if grid is not None else None
+                y = tower_forward(r32, pv.to(dev), g).double()
+                for m_, acc, k in ((u16, e_u, 1.0), (f16, e_f, comp)):
+                    z = tower_forward(m_, pv.to(dev, torch.float16), g).double() * k
+                    acc.append(float((z - y).norm() / y.norm()) if torch.isfinite(z).all() else float("inf"))
+        def _st(v):
+            fv = sorted(x for x in v if math.isfinite(x))
+            return {"n": len(v), "n_finite": len(fv),
+                    "median": fv[len(fv) // 2] if fv else None,
+                    "p99": fv[min(len(fv) - 1, int(0.99 * len(fv)))] if fv else None,
+                    "max": fv[-1] if fv else None}
+        su, sf = _st(e_u), _st(e_f)
+        ratio = ({"median": sf["median"] / su["median"], "p99": sf["p99"] / su["p99"]}
+                 if su["n_finite"] == su["n"] and su["median"] and su["p99"] else None)
+        res["fp16_error"] = {"unfixed": su, "fixed": sf, "ratio_fixed_over_unfixed": ratio, "exit_comp": comp}
+        print(f"\n[fp16 오차] 교정 전 중앙 {su['median']} · p99 {su['p99']} (유한 {su['n_finite']}/{su['n']}) / "
+              f"교정 후 중앙 {sf['median']} · p99 {sf['p99']} (유한 {sf['n_finite']}/{sf['n']})"
+              + (f" → 비 중앙 {ratio['median']:.3f} · p99 {ratio['p99']:.3f}" if ratio else " → 비 정의 안 됨(교정 전 비유한)"))
+        del r32, u16, f16, cache32
+        torch.cuda.empty_cache()
+
     Path(args.out).write_text(json.dumps(res, ensure_ascii=False, indent=2))
+    ckpt_done()                                   # 끝까지 마쳤다 — 중간 저장을 지운다
     print(f"\n저장: {args.out}")
     if args.per_image:
         from scene_map import image_to_scene

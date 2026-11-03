@@ -1,0 +1,983 @@
+{
+  "target": "ELVISIO/SenseNova-SI-InternVL3-8B-AWQ",
+  "dtype": "float16",
+  "max_pixels": -1,
+  "n_images": 799,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 4.5625,
+        "max_worst": 5.71875,
+        "headroom": 149.04109589041096,
+        "headroom_worst": 118.90710382513662,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 5.375,
+        "max_worst": 5.5,
+        "headroom": 126.51162790697674,
+        "headroom_worst": 123.63636363636364,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 6.65625,
+        "max_worst": 6.8125,
+        "headroom": 102.15962441314554,
+        "headroom_worst": 99.81651376146789,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 7.5,
+        "max_worst": 7.71875,
+        "headroom": 90.66666666666667,
+        "headroom_worst": 88.09716599190283,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 7.75,
+        "max_worst": 7.9375,
+        "headroom": 87.74193548387096,
+        "headroom_worst": 85.66929133858268,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 8.75,
+        "max_worst": 9.0,
+        "headroom": 77.71428571428571,
+        "headroom_worst": 75.55555555555556,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 8.375,
+        "max_worst": 8.6875,
+        "headroom": 81.19402985074628,
+        "headroom_worst": 78.27338129496403,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 8.0625,
+        "max_worst": 8.375,
+        "headroom": 84.34108527131782,
+        "headroom_worst": 81.19402985074628,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 7.75,
+        "max_worst": 8.625,
+        "headroom": 87.74193548387096,
+        "headroom_worst": 78.84057971014492,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 10.75,
+        "max_worst": 14.25,
+        "headroom": 63.25581395348837,
+        "headroom_worst": 47.719298245614034,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 13.3125,
+        "max_worst": 18.5,
+        "headroom": 51.07981220657277,
+        "headroom_worst": 36.75675675675676,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 56.0,
+        "max_worst": 67.5,
+        "headroom": 12.142857142857142,
+        "headroom_worst": 10.074074074074074,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 131.0,
+        "max_worst": 144.0,
+        "headroom": 5.190839694656488,
+        "headroom_worst": 4.722222222222222,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 132.0,
+        "max_worst": 145.0,
+        "headroom": 5.151515151515151,
+        "headroom_worst": 4.689655172413793,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 135.0,
+        "max_worst": 148.0,
+        "headroom": 5.037037037037037,
+        "headroom_worst": 4.594594594594595,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 138.0,
+        "max_worst": 151.0,
+        "headroom": 4.927536231884058,
+        "headroom_worst": 4.503311258278146,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 141.0,
+        "max_worst": 154.0,
+        "headroom": 4.822695035460993,
+        "headroom_worst": 4.415584415584416,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 142.0,
+        "max_worst": 155.0,
+        "headroom": 4.788732394366197,
+        "headroom_worst": 4.387096774193548,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 144.0,
+        "max_worst": 158.0,
+        "headroom": 4.722222222222222,
+        "headroom_worst": 4.30379746835443,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 146.0,
+        "max_worst": 160.0,
+        "headroom": 4.657534246575342,
+        "headroom_worst": 4.25,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 148.0,
+        "max_worst": 162.0,
+        "headroom": 4.594594594594595,
+        "headroom_worst": 4.197530864197531,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 152.0,
+        "max_worst": 166.0,
+        "headroom": 4.473684210526316,
+        "headroom_worst": 4.096385542168675,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 158.0,
+        "max_worst": 172.0,
+        "headroom": 4.30379746835443,
+        "headroom_worst": 3.953488372093023,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 156.0,
+        "max_worst": 170.0,
+        "headroom": 4.358974358974359,
+        "headroom_worst": 4.0,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 156.0,
+        "max_worst": 170.0,
+        "headroom": 4.358974358974359,
+        "headroom_worst": 4.0,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0
+  },
+  "headroom_by_format": {
+    "float16": {
+      "headroom": 380.83720930232556,
+      "available": true
+    },
+    "bfloat16": {
+      "headroom": 1.970639534883721e+36,
+      "available": true
+    },
+    "float32": {
+      "headroom": 1.978372093023256e+36,
+      "available": true
+    }
+  },
+  "available_formats": [
+    "bfloat16",
+    "float16",
+    "float32"
+  ],
+  "scaled_formats_declared": [],
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "blocked_formats": [],
+  "risky_blocks": [],
+  "ops_before": {
+    "n_points": 363,
+    "fmax": 680.0,
+    "first_exceed": {
+      "point": "encoder.layers.22.attn::bmm#0",
+      "upcast": false,
+      "max_p50": 652.0,
+      "max_worst": 1020.0,
+      "headroom_worst": 0.6666666666666666,
+      "exceed_rate": 0.2753441802252816
+    },
+    "first_exceed_no_upcast": {
+      "point": "encoder.layers.22.attn::bmm#0",
+      "upcast": false,
+      "max_p50": 652.0,
+      "max_worst": 1020.0,
+      "headroom_worst": 0.6666666666666666,
+      "exceed_rate": 0.2753441802252816
+    },
+    "global_max": {
+      "point": "encoder.layers.22.attn::bmm#0",
+      "upcast": false,
+      "max_p50": 652.0,
+      "max_worst": 1020.0,
+      "headroom_worst": 0.6666666666666666,
+      "exceed_rate": 0.2753441802252816
+    },
+    "n_risky": 1,
+    "risky_top": [
+      {
+        "point": "encoder.layers.22.attn::bmm#0",
+        "upcast": false,
+        "max_p50": 652.0,
+        "max_worst": 1020.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 0.2753441802252816
+      }
+    ]
+  },
+  "fmax_effective": 680.0,
+  "virtual_ratio": 1.5,
+  "fix_mode": "auto",
+  "residual": {
+    "c": 0.25,
+    "entry": [
+      "embeddings"
+    ],
+    "exit": "projector",
+    "writers": "layer_scale",
+    "equivalence": {
+      "cos_min": 0.9999999999999997,
+      "ratio_min": 1.0,
+      "ratio_max": 1.0,
+      "n_nonfinite": 0
+    },
+    "accepted": true,
+    "eps_norms": [
+      "encoder.layers.0.norm1",
+      "encoder.layers.0.norm2",
+      "encoder.layers.1.norm1",
+      "encoder.layers.1.norm2",
+      "encoder.layers.2.norm1",
+      "encoder.layers.2.norm2",
+      "encoder.layers.3.norm1",
+      "encoder.layers.3.norm2",
+      "encoder.layers.4.norm1",
+      "encoder.layers.4.norm2",
+      "encoder.layers.5.norm1",
+      "encoder.layers.5.norm2",
+      "encoder.layers.6.norm1",
+      "encoder.layers.6.norm2",
+      "encoder.layers.7.norm1",
+      "encoder.layers.7.norm2",
+      "encoder.layers.8.norm1",
+      "encoder.layers.8.norm2",
+      "encoder.layers.9.norm1",
+      "encoder.layers.9.norm2",
+      "encoder.layers.10.norm1",
+      "encoder.layers.10.norm2",
+      "encoder.layers.11.norm1",
+      "encoder.layers.11.norm2",
+      "encoder.layers.12.norm1",
+      "encoder.layers.12.norm2",
+      "encoder.layers.13.norm1",
+      "encoder.layers.13.norm2",
+      "encoder.layers.14.norm1",
+      "encoder.layers.14.norm2",
+      "encoder.layers.15.norm1",
+      "encoder.layers.15.norm2",
+      "encoder.layers.16.norm1",
+      "encoder.layers.16.norm2",
+      "encoder.layers.17.norm1",
+      "encoder.layers.17.norm2",
+      "encoder.layers.18.norm1",
+      "encoder.layers.18.norm2",
+      "encoder.layers.19.norm1",
+      "encoder.layers.19.norm2",
+      "encoder.layers.20.norm1",
+      "encoder.layers.20.norm2",
+      "encoder.layers.21.norm1",
+      "encoder.layers.21.norm2",
+      "encoder.layers.22.norm1",
+      "encoder.layers.22.norm2",
+      "encoder.layers.23.norm1",
+      "encoder.layers.23.norm2"
+    ],
+    "tried": [
+      {
+        "entry": [
+          "embeddings"
+        ],
+        "cos_min": 0.9999999999999999,
+        "ratio_min": 0.25,
+        "ratio_max": 0.25,
+        "n_nonfinite": 0,
+        "exit": "projector",
+        "n_eps_norms": 48
+      }
+    ],
+    "eps_changed": {
+      "encoder.layers.0.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.0.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.1.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.1.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.2.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.2.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.3.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.3.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.4.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.4.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.5.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.5.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.6.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.6.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.7.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.7.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.8.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.8.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.9.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.9.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.10.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.10.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.11.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.11.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.12.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.12.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.13.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.13.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.14.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.14.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.15.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.15.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.16.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.16.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.17.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.17.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.18.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.18.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.19.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.19.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.20.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.20.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.21.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.21.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.22.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.22.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.23.norm1": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "encoder.layers.23.norm2": {
+        "attr": "eps",
+        "old": 1e-06,
+        "new": 6.25e-08
+      }
+    },
+    "projector": {
+      "done": false,
+      "reason": "프로젝터를 찾지 못함 — 배포 쪽에서 첫 선형층 가중치를 1/c배 할 것"
+    },
+    "ops_after": {
+      "n_points": 363,
+      "fmax": 680.0,
+      "first_exceed": {
+        "point": "encoder.layers.22.attn::bmm#0",
+        "upcast": false,
+        "max_p50": 652.0,
+        "max_worst": 1020.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 0.2753441802252816
+      },
+      "first_exceed_no_upcast": {
+        "point": "encoder.layers.22.attn::bmm#0",
+        "upcast": false,
+        "max_p50": 652.0,
+        "max_worst": 1020.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 0.2753441802252816
+      },
+      "global_max": {
+        "point": "encoder.layers.22.attn::bmm#0",
+        "upcast": false,
+        "max_p50": 652.0,
+        "max_worst": 1020.0,
+        "headroom_worst": 0.6666666666666666,
+        "exceed_rate": 0.2753441802252816
+      },
+      "n_risky": 1,
+      "risky_top": [
+        {
+          "point": "encoder.layers.22.attn::bmm#0",
+          "upcast": false,
+          "max_p50": 652.0,
+          "max_worst": 1020.0,
+          "headroom_worst": 0.6666666666666666,
+          "exceed_rate": 0.2753441802252816
+        }
+      ]
+    },
+    "remaining_point": "encoder.layers.22.attn::bmm#0"
+  },
+  "key_center": {
+    "plan": [
+      {
+        "block": 22,
+        "attn": "attn",
+        "kind": "qkv",
+        "max": 1020.0
+      }
+    ],
+    "equivalence": {
+      "cos_min": 0.9999999999997122,
+      "ratio_min": 0.9999999762549812,
+      "ratio_max": 1.000000022720797,
+      "n_nonfinite": 0
+    },
+    "accepted": true,
+    "n_est": 100
+  },
+  "after": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 1.140625,
+        "max_worst": 1.4296875,
+        "headroom": 2.9716164383561644e+38,
+        "headroom_worst": 2.37079781420765e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 1.34375,
+        "max_worst": 1.375,
+        "headroom": 2.5224186046511628e+38,
+        "headroom_worst": 2.465090909090909e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 1.6640625,
+        "max_worst": 1.703125,
+        "headroom": 2.036882629107981e+38,
+        "headroom_worst": 1.9901651376146788e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 1.875,
+        "max_worst": 1.9296875,
+        "headroom": 1.8077333333333332e+38,
+        "headroom_worst": 1.756502024291498e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 1.9375,
+        "max_worst": 1.984375,
+        "headroom": 1.7494193548387096e+38,
+        "headroom_worst": 1.7080944881889764e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 2.1875,
+        "max_worst": 2.25,
+        "headroom": 1.5494857142857142e+38,
+        "headroom_worst": 1.5064444444444443e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 2.09375,
+        "max_worst": 2.171875,
+        "headroom": 1.6188656716417909e+38,
+        "headroom_worst": 1.5606330935251797e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 2.015625,
+        "max_worst": 2.09375,
+        "headroom": 1.6816124031007752e+38,
+        "headroom_worst": 1.6188656716417909e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 1.9375,
+        "max_worst": 2.15625,
+        "headroom": 1.7494193548387096e+38,
+        "headroom_worst": 1.571942028985507e+38,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 2.6875,
+        "max_worst": 3.5625,
+        "headroom": 1.2612093023255814e+38,
+        "headroom_worst": 9.51438596491228e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 3.328125,
+        "max_worst": 4.625,
+        "headroom": 1.0184413145539905e+38,
+        "headroom_worst": 7.328648648648649e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 14.0,
+        "max_worst": 16.875,
+        "headroom": 2.4210714285714285e+37,
+        "headroom_worst": 2.0085925925925925e+37,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 32.75,
+        "max_worst": 36.0,
+        "headroom": 1.0349618320610686e+37,
+        "headroom_worst": 9.415277777777777e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 33.0,
+        "max_worst": 36.25,
+        "headroom": 1.0271212121212121e+37,
+        "headroom_worst": 9.350344827586206e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 33.75,
+        "max_worst": 37.0,
+        "headroom": 1.0042962962962963e+37,
+        "headroom_worst": 9.160810810810811e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 34.5,
+        "max_worst": 37.75,
+        "headroom": 9.824637681159419e+36,
+        "headroom_worst": 8.978807947019867e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 35.25,
+        "max_worst": 38.5,
+        "headroom": 9.615602836879432e+36,
+        "headroom_worst": 8.803896103896104e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 35.5,
+        "max_worst": 38.75,
+        "headroom": 9.547887323943661e+36,
+        "headroom_worst": 8.747096774193548e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 36.0,
+        "max_worst": 39.5,
+        "headroom": 9.415277777777777e+36,
+        "headroom_worst": 8.581012658227848e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 36.5,
+        "max_worst": 40.0,
+        "headroom": 9.286301369863014e+36,
+        "headroom_worst": 8.47375e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 37.0,
+        "max_worst": 40.5,
+        "headroom": 9.160810810810811e+36,
+        "headroom_worst": 8.369135802469136e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 38.0,
+        "max_worst": 41.5,
+        "headroom": 8.919736842105263e+36,
+        "headroom_worst": 8.167469879518072e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 39.5,
+        "max_worst": 43.0,
+        "headroom": 8.581012658227848e+36,
+        "headroom_worst": 7.882558139534884e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 39.0,
+        "max_worst": 42.5,
+        "headroom": 8.69102564102564e+36,
+        "headroom_worst": 7.975294117647059e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 39.0,
+        "max_worst": 42.5,
+        "headroom": 8.69102564102564e+36,
+        "headroom_worst": 7.975294117647059e+36,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0,
+    "ops": {
+      "n_points": 363,
+      "fmax": 680.0,
+      "first_exceed": null,
+      "first_exceed_no_upcast": null,
+      "global_max": {
+        "point": "encoder.layers.21.attn::bmm#0",
+        "upcast": false,
+        "max_p50": 86.5,
+        "max_worst": 171.0,
+        "headroom_worst": 3.9766081871345027,
+        "exceed_rate": 0.0
+      },
+      "n_risky": 0,
+      "risky_top": []
+    }
+  }
+}

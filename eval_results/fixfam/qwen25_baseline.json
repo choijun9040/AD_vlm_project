@@ -1,0 +1,1395 @@
+{
+  "target": "checkpoints/student_baseline_v2/epoch_1",
+  "dtype": "float16",
+  "max_pixels": 1440000,
+  "n_images": 799,
+  "target_headroom": 2.0,
+  "before": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 14.125,
+        "max_worst": 15.3125,
+        "headroom": 4637.451327433629,
+        "headroom_worst": 4277.812244897959,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 20.75,
+        "max_worst": 22.5,
+        "headroom": 3156.8192771084337,
+        "headroom_worst": 2911.288888888889,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 24.75,
+        "max_worst": 26.75,
+        "headroom": 2646.626262626263,
+        "headroom_worst": 2448.7476635514017,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 28.75,
+        "max_worst": 31.75,
+        "headroom": 2278.4,
+        "headroom_worst": 2063.1181102362207,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 31.125,
+        "max_worst": 34.5,
+        "headroom": 2104.5461847389556,
+        "headroom_worst": 1898.6666666666667,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 34.5,
+        "max_worst": 39.0,
+        "headroom": 1898.6666666666667,
+        "headroom_worst": 1679.5897435897436,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 36.0,
+        "max_worst": 42.0,
+        "headroom": 1819.5555555555557,
+        "headroom_worst": 1559.6190476190477,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 40.75,
+        "max_worst": 47.25,
+        "headroom": 1607.4601226993866,
+        "headroom_worst": 1386.3280423280423,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 45.25,
+        "max_worst": 50.75,
+        "headroom": 1447.6022099447514,
+        "headroom_worst": 1290.71921182266,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 50.0,
+        "max_worst": 58.75,
+        "headroom": 1310.08,
+        "headroom_worst": 1114.9617021276595,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 50.75,
+        "max_worst": 60.25,
+        "headroom": 1290.71921182266,
+        "headroom_worst": 1087.2033195020747,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 48.75,
+        "max_worst": 57.5,
+        "headroom": 1343.6717948717949,
+        "headroom_worst": 1139.2,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 55.5,
+        "max_worst": 75.5,
+        "headroom": 1180.2522522522522,
+        "headroom_worst": 867.6026490066225,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 65.5,
+        "max_worst": 89.5,
+        "headroom": 1000.0610687022901,
+        "headroom_worst": 731.8882681564246,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 94.0,
+        "max_worst": 117.0,
+        "headroom": 696.8510638297872,
+        "headroom_worst": 559.8632478632478,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 872.0,
+        "max_worst": 1000.0,
+        "headroom": 75.11926605504587,
+        "headroom_worst": 65.504,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 968.0,
+        "max_worst": 1080.0,
+        "headroom": 67.6694214876033,
+        "headroom_worst": 60.65185185185185,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 24,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 25,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 26,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 27,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 28,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 29,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 30,
+        "max_p50": 11200.0,
+        "max_worst": 14144.0,
+        "headroom": 5.848571428571429,
+        "headroom_worst": 4.631221719457014,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 31,
+        "max_p50": 74752.0,
+        "max_worst": 92160.0,
+        "headroom": 0.8762842465753424,
+        "headroom_worst": 0.7107638888888889,
+        "exceed_rate": 0.9649561952440551,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 48.75,
+        "max_worst": 74.0,
+        "headroom": 1343.6717948717949,
+        "headroom_worst": 885.1891891891892,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.9612015018773467
+  },
+  "headroom_by_format": {
+    "float16": {
+      "headroom": 0.7107638888888889,
+      "available": true
+    },
+    "bfloat16": {
+      "headroom": 3.677842881944444e+33,
+      "available": true
+    },
+    "float32": {
+      "headroom": 3.6922743055555556e+33,
+      "available": true
+    }
+  },
+  "available_formats": [
+    "bfloat16",
+    "float16",
+    "float32"
+  ],
+  "scaled_formats_declared": [],
+  "safer_formats": [
+    "bfloat16",
+    "float32"
+  ],
+  "blocked_formats": [],
+  "risky_blocks": [
+    {
+      "block": 31,
+      "headroom": 0.7107638888888889,
+      "headroom_p50": 0.8762842465753424,
+      "scale": 2.8138739618954567,
+      "factor_mlp": 0.35538194444444443,
+      "n_solved": 799,
+      "n_infeasible": 0
+    }
+  ],
+  "ops_before": {
+    "n_points": 4240,
+    "fmax": 65504.0,
+    "first_exceed": {
+      "point": "blocks.31.mlp.down_proj::addmm#0",
+      "upcast": false,
+      "max_p50": 74752.0,
+      "max_worst": 92160.0,
+      "headroom_worst": 0.7107638888888889,
+      "exceed_rate": 0.9649561952440551
+    },
+    "first_exceed_no_upcast": {
+      "point": "blocks.31.mlp.down_proj::addmm#0",
+      "upcast": false,
+      "max_p50": 74752.0,
+      "max_worst": 92160.0,
+      "headroom_worst": 0.7107638888888889,
+      "exceed_rate": 0.9649561952440551
+    },
+    "global_max": {
+      "point": "blocks.31.mlp.down_proj::addmm#0",
+      "upcast": false,
+      "max_p50": 74752.0,
+      "max_worst": 92160.0,
+      "headroom_worst": 0.7107638888888889,
+      "exceed_rate": 0.9649561952440551
+    },
+    "n_risky": 3398,
+    "risky_top": [
+      {
+        "point": "blocks.31.mlp.down_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 74752.0,
+        "max_worst": 92160.0,
+        "headroom_worst": 0.7107638888888889,
+        "exceed_rate": 0.9649561952440551
+      },
+      {
+        "point": "blocks.31::add#1",
+        "upcast": false,
+        "max_p50": 74752.0,
+        "max_worst": 92160.0,
+        "headroom_worst": 0.7107638888888889,
+        "exceed_rate": 0.9649561952440551
+      },
+      {
+        "point": "blocks.0.attn::full#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "blocks.0.attn::fill_#0",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "blocks.0.attn::fill_#1",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "blocks.0.attn::fill_#2",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "blocks.0.attn::fill_#3",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      },
+      {
+        "point": "blocks.0.attn::fill_#4",
+        "upcast": false,
+        "max_p50": 0.0,
+        "max_worst": 0.0,
+        "headroom_worst": 0.0,
+        "exceed_rate": 0.0
+      }
+    ]
+  },
+  "fmax_effective": 65504.0,
+  "virtual_ratio": null,
+  "fix_mode": "auto",
+  "residual": {
+    "c": 0.25,
+    "entry": [
+      "patch_embed"
+    ],
+    "exit": "final_norm",
+    "writers": "out_proj",
+    "equivalence": {
+      "cos_min": 0.9999999999999997,
+      "ratio_min": 1.0,
+      "ratio_max": 1.0,
+      "n_nonfinite": 0
+    },
+    "accepted": true,
+    "eps_norms": [
+      "blocks.0.norm1",
+      "blocks.0.norm2",
+      "blocks.1.norm1",
+      "blocks.1.norm2",
+      "blocks.2.norm1",
+      "blocks.2.norm2",
+      "blocks.3.norm1",
+      "blocks.3.norm2",
+      "blocks.4.norm1",
+      "blocks.4.norm2",
+      "blocks.5.norm1",
+      "blocks.5.norm2",
+      "blocks.6.norm1",
+      "blocks.6.norm2",
+      "blocks.7.norm1",
+      "blocks.7.norm2",
+      "blocks.8.norm1",
+      "blocks.8.norm2",
+      "blocks.9.norm1",
+      "blocks.9.norm2",
+      "blocks.10.norm1",
+      "blocks.10.norm2",
+      "blocks.11.norm1",
+      "blocks.11.norm2",
+      "blocks.12.norm1",
+      "blocks.12.norm2",
+      "blocks.13.norm1",
+      "blocks.13.norm2",
+      "blocks.14.norm1",
+      "blocks.14.norm2",
+      "blocks.15.norm1",
+      "blocks.15.norm2",
+      "blocks.16.norm1",
+      "blocks.16.norm2",
+      "blocks.17.norm1",
+      "blocks.17.norm2",
+      "blocks.18.norm1",
+      "blocks.18.norm2",
+      "blocks.19.norm1",
+      "blocks.19.norm2",
+      "blocks.20.norm1",
+      "blocks.20.norm2",
+      "blocks.21.norm1",
+      "blocks.21.norm2",
+      "blocks.22.norm1",
+      "blocks.22.norm2",
+      "blocks.23.norm1",
+      "blocks.23.norm2",
+      "blocks.24.norm1",
+      "blocks.24.norm2",
+      "blocks.25.norm1",
+      "blocks.25.norm2",
+      "blocks.26.norm1",
+      "blocks.26.norm2",
+      "blocks.27.norm1",
+      "blocks.27.norm2",
+      "blocks.28.norm1",
+      "blocks.28.norm2",
+      "blocks.29.norm1",
+      "blocks.29.norm2",
+      "blocks.30.norm1",
+      "blocks.30.norm2",
+      "blocks.31.norm1",
+      "blocks.31.norm2",
+      "merger.ln_q"
+    ],
+    "tried": [
+      {
+        "entry": [
+          "patch_embed"
+        ],
+        "cos_min": 0.9999999999999997,
+        "ratio_min": 1.0,
+        "ratio_max": 1.0,
+        "n_nonfinite": 0,
+        "exit": "final_norm",
+        "n_eps_norms": 65
+      }
+    ],
+    "eps_changed": {
+      "blocks.0.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.0.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.1.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.1.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.2.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.2.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.3.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.3.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.4.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.4.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.5.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.5.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.6.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.6.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.7.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.7.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.8.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.8.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.9.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.9.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.10.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.10.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.11.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.11.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.12.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.12.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.13.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.13.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.14.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.14.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.15.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.15.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.16.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.16.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.17.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.17.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.18.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.18.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.19.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.19.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.20.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.20.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.21.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.21.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.22.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.22.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.23.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.23.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.24.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.24.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.25.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.25.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.26.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.26.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.27.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.27.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.28.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.28.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.29.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.29.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.30.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.30.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.31.norm1": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "blocks.31.norm2": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      },
+      "merger.ln_q": {
+        "attr": "variance_epsilon",
+        "old": 1e-06,
+        "new": 6.25e-08
+      }
+    },
+    "ops_after": {
+      "n_points": 4240,
+      "fmax": 65504.0,
+      "first_exceed": null,
+      "first_exceed_no_upcast": null,
+      "global_max": {
+        "point": "blocks.31.mlp.down_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 18688.0,
+        "max_worst": 23424.0,
+        "headroom_worst": 2.796448087431694,
+        "exceed_rate": 0.0
+      },
+      "n_risky": 3396,
+      "risky_top": [
+        {
+          "point": "blocks.0.attn::full#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#1",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#2",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#3",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#4",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#5",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#6",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        }
+      ]
+    }
+  },
+  "after": {
+    "per_block": [
+      {
+        "block": 0,
+        "max_p50": 3.53125,
+        "max_worst": 3.828125,
+        "headroom": 18549.805309734515,
+        "headroom_worst": 17111.248979591837,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 1,
+        "max_p50": 5.1875,
+        "max_worst": 5.625,
+        "headroom": 12627.277108433735,
+        "headroom_worst": 11645.155555555555,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 2,
+        "max_p50": 6.1875,
+        "max_worst": 6.6875,
+        "headroom": 10586.505050505051,
+        "headroom_worst": 9794.990654205607,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 3,
+        "max_p50": 7.1875,
+        "max_worst": 7.9375,
+        "headroom": 9113.6,
+        "headroom_worst": 8252.472440944883,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 4,
+        "max_p50": 7.78125,
+        "max_worst": 8.625,
+        "headroom": 8418.184738955822,
+        "headroom_worst": 7594.666666666667,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 5,
+        "max_p50": 8.625,
+        "max_worst": 9.75,
+        "headroom": 7594.666666666667,
+        "headroom_worst": 6718.358974358975,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 6,
+        "max_p50": 9.0,
+        "max_worst": 10.5625,
+        "headroom": 7278.222222222223,
+        "headroom_worst": 6201.5621301775145,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 7,
+        "max_p50": 10.125,
+        "max_worst": 11.8125,
+        "headroom": 6469.530864197531,
+        "headroom_worst": 5545.312169312169,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 8,
+        "max_p50": 11.3125,
+        "max_worst": 12.75,
+        "headroom": 5790.408839779006,
+        "headroom_worst": 5137.568627450981,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 9,
+        "max_p50": 12.5,
+        "max_worst": 14.75,
+        "headroom": 5240.32,
+        "headroom_worst": 4440.949152542373,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 10,
+        "max_p50": 12.6875,
+        "max_worst": 15.0625,
+        "headroom": 5162.87684729064,
+        "headroom_worst": 4348.813278008299,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 11,
+        "max_p50": 12.1875,
+        "max_worst": 14.375,
+        "headroom": 5374.6871794871795,
+        "headroom_worst": 4556.8,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 12,
+        "max_p50": 13.875,
+        "max_worst": 18.875,
+        "headroom": 4721.009009009009,
+        "headroom_worst": 3470.41059602649,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 13,
+        "max_p50": 16.375,
+        "max_worst": 22.375,
+        "headroom": 4000.2442748091603,
+        "headroom_worst": 2927.5530726256984,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 14,
+        "max_p50": 23.375,
+        "max_worst": 29.25,
+        "headroom": 2802.3101604278077,
+        "headroom_worst": 2239.4529914529912,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 15,
+        "max_p50": 218.0,
+        "max_worst": 250.0,
+        "headroom": 300.4770642201835,
+        "headroom_worst": 262.016,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 16,
+        "max_p50": 242.0,
+        "max_worst": 270.0,
+        "headroom": 270.6776859504132,
+        "headroom_worst": 242.6074074074074,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 17,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 18,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 19,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 20,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 21,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 22,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 23,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 24,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 25,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 26,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 27,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 28,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 29,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 30,
+        "max_p50": 2800.0,
+        "max_worst": 3600.0,
+        "headroom": 23.394285714285715,
+        "headroom_worst": 18.195555555555554,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": 31,
+        "max_p50": 18688.0,
+        "max_worst": 23424.0,
+        "headroom": 3.5051369863013697,
+        "headroom_worst": 2.796448087431694,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      },
+      {
+        "block": "tower_out",
+        "max_p50": 49.0,
+        "max_worst": 73.5,
+        "headroom": 1336.8163265306123,
+        "headroom_worst": 891.2108843537414,
+        "exceed_rate": 0.0,
+        "n_finite": 799,
+        "n_images": 799
+      }
+    ],
+    "nan_rate": 0.0,
+    "ops": {
+      "n_points": 4240,
+      "fmax": 65504.0,
+      "first_exceed": null,
+      "first_exceed_no_upcast": null,
+      "global_max": {
+        "point": "blocks.31.mlp.down_proj::addmm#0",
+        "upcast": false,
+        "max_p50": 18688.0,
+        "max_worst": 23680.0,
+        "headroom_worst": 2.766216216216216,
+        "exceed_rate": 0.0
+      },
+      "n_risky": 3396,
+      "risky_top": [
+        {
+          "point": "blocks.0.attn::full#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#0",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#1",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#2",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#3",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#4",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#5",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        },
+        {
+          "point": "blocks.0.attn::fill_#6",
+          "upcast": false,
+          "max_p50": 0.0,
+          "max_worst": 0.0,
+          "headroom_worst": 0.0,
+          "exceed_rate": 0.0
+        }
+      ]
+    }
+  }
+}

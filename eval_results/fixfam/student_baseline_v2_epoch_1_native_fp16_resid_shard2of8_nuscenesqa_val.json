@@ -1,0 +1,59 @@
+{
+  "checkpoint": "checkpoints/student_baseline_v2/epoch_1",
+  "precision": "lora_bf16",
+  "dtype": "bfloat16",
+  "run_conditions": {
+    "max_pixels": 1440000,
+    "min_pixels": 3136,
+    "max_pixels_arg": 1440000,
+    "min_pixels_arg": 3136,
+    "processor_from_checkpoint": false,
+    "lora_dtype": "float16",
+    "quantized_load_dtype": null,
+    "model_dtype_effective": "float16",
+    "stride": null,
+    "limit": null,
+    "shard": 2,
+    "num_shards": 8,
+    "vision_state": "checkpoints_fix/baseline_v2_residual_native.pt",
+    "max_new_tokens": 16
+  },
+  "max_new_tokens": 16,
+  "total": 1413,
+  "correct": 685,
+  "accuracy": 0.4847841472045294,
+  "eos_diagnostics": {
+    "no_eos": 103,
+    "no_eos_rate": 0.07289455060155697,
+    "hit_cap": 103,
+    "hit_cap_rate": 0.07289455060155697,
+    "mean_gen_tokens": 4.2123142250530785
+  },
+  "by_type": {
+    "comparison": {
+      "correct": 163,
+      "total": 248,
+      "accuracy": 0.657258064516129
+    },
+    "object": {
+      "correct": 111,
+      "total": 343,
+      "accuracy": 0.3236151603498542
+    },
+    "exist": {
+      "correct": 292,
+      "total": 373,
+      "accuracy": 0.7828418230563002
+    },
+    "status": {
+      "correct": 104,
+      "total": 220,
+      "accuracy": 0.4727272727272727
+    },
+    "count": {
+      "correct": 15,
+      "total": 229,
+      "accuracy": 0.06550218340611354
+    }
+  }
+}

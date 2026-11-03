@@ -1,0 +1,11 @@
+{
+  "n": 11309,
+  "n_fix": 11309,
+  "n_ref": 11309,
+  "acc_fix_fp16": 0.48368556017331327,
+  "acc_ref_bf16": 0.48465823680254666,
+  "diff_pp": -0.09726766292333933,
+  "string_agreement": 0.871429834644973,
+  "reference_agreement_full_fp16_vs_bf16": 0.929,
+  "verdict": "수치만 보고"
+}

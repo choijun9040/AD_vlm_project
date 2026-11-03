@@ -90,17 +90,38 @@ def _install_stack(root, stack):
     return hs
 
 
+# 구간 안 이어 하기 (2026-11-03) — 호출 쪽(headroom_guard)이 load/save를 넣으면, 꼬리표(tag)가 있는 긴 반복이 `every`장마다 누적값을
+# 저장하고 다시 실행하면 그 다음 장부터 잰다. 꼬리표가 없으면 예전과 같다(Gemma 스크립트 등)
+PROGRESS = {"load": None, "save": None, "every": 50}
+
+
+def _pload(tag):
+    return PROGRESS["load"](f"part_{tag}") if tag and PROGRESS["load"] else None
+
+
+def _psave(tag, i, n, obj):
+    if tag and PROGRESS["save"] and i % PROGRESS["every"] == 0 and i < n:
+        PROGRESS["save"](f"part_{tag}", {**obj, "i": i})
+
+
 @torch.no_grad()
-def profile_ops(tower, cache, fwd, fmax, target=2.0):
+def profile_ops(tower, cache, fwd, fmax, target=2.0, tag=None):
     """모든 연산 출력의 이미지별 max|x|. 실행 순서대로 지점 목록과 처음 넘는 지점을 돌려준다.
 
     크기는 넘치지 않는 형식(bf16)에서 재고 `fmax`(목표 형식의 상한 또는 가상 상한)로 판정한다.
     """
     stack, order, vals, upcast = [], [], {}, {}
+    prog = _pload(tag)
+    start = 0
+    if prog is not None:
+        order, vals, upcast, start = prog["order"], prog["vals"], prog["upcast"], prog["i"]
+        print(f"  [이어서] 연산 단위 기록 {tag}: {start}장부터")
     mdt = next(p for p in tower.parameters() if p.is_floating_point()).dtype
     hs = _install_stack(tower, stack)
     try:
-        for x in cache:
+        for i, x in enumerate(cache):
+            if i < start:
+                continue
             rec = _OpRecorder(stack, mdt, next(tower.parameters()).device)
             with rec:
                 fwd(tower, x)
@@ -112,6 +133,7 @@ def profile_ops(tower, cache, fwd, fmax, target=2.0):
                     order.append(k)
                     upcast[k] = up
                 vals[k].append(v)
+            _psave(tag, i + 1, len(cache), {"order": order, "vals": vals, "upcast": upcast})
     finally:
         for h in hs:
             h.remove()
@@ -131,7 +153,9 @@ def profile_ops(tower, cache, fwd, fmax, target=2.0):
     first = next((r for r in rows if r["exceed_rate"] > 0 and not r["upcast"]), None)
     first_any = next((r for r in rows if r["exceed_rate"] > 0), None)
     top = max(rows, key=lambda r: r["max_worst"]) if rows else None
-    risky = [r for r in rows if r["headroom_worst"] < target]
+    # 최대가 0인 연산(마스크를 만드는 full·fill_ 등)은 여유가 무한대다 — headroom_worst를 0.0으로 적어 두므로 여기서 뺀다
+    # (2026-11-01: Pixtral 결과에서 위험 2개로 잘못 집계되었다. 판단에는 쓰이지 않고 보고에만 쓰인다)
+    risky = [r for r in rows if r["max_worst"] > 0 and r["headroom_worst"] < target]
     return {"n_points": len(rows), "first_exceed": first, "first_exceed_no_upcast": first_any,
             "global_max": top,
             "risky_points": risky, "fmax": fmax, "rows": rows}
@@ -378,10 +402,17 @@ def apply_residual(tower, blocks_of, entry_names, c, inplace=False):
 
 
 @torch.no_grad()
-def compare(t0, t1, cache, fwd, comp=1.0):
+def compare(t0, t1, cache, fwd, comp=1.0, tag=None):
     """최종 출력의 이미지별 코사인과 크기 비율(교정 쪽에 comp를 곱해 비교)."""
     cos, ratio = [], []
-    for x in cache:
+    prog = _pload(tag)
+    if prog is not None:
+        cos, ratio = prog["cos"], prog["ratio"]
+        print(f"  [이어서] 등가성 비교 {tag}: {len(cos)}장부터")
+    for i, x in enumerate(cache):
+        if i < len(cos):
+            continue
+        _psave(tag, i, len(cache), {"cos": cos, "ratio": ratio})
         a = fwd(t0, x).double().flatten()
         b = (fwd(t1, x).double() * comp).flatten()
         if not (torch.isfinite(a).all() and torch.isfinite(b).all()):
@@ -608,6 +639,7 @@ def apply_key_center(tower, blocks_of, plan, means):
         lin = at.k_proj if it["kind"] == "k_proj" else at.qkv
         if lin.bias is None:
             lin.bias = torch.nn.Parameter(torch.zeros(lin.out_features, dtype=lin.weight.dtype, device=lin.weight.device))
+            it["new_bias"] = True        # 표준 모델에는 이 편향 자리가 없다 — 저장 옆 파일에 남긴다
         m = means[it["block"]].to(lin.bias.device, lin.bias.dtype)
         if it["kind"] == "k_proj":
             lin.bias -= m
@@ -615,6 +647,71 @@ def apply_key_center(tower, blocks_of, plan, means):
             C = lin.out_features // 3
             lin.bias[C:2 * C] -= m
     return [it["block"] for it in plan if it["block"] in means]
+
+
+# ---------------------------------------------------------------- 저장·적재 (state_dict 밖의 교정)
+def module_paths(tower, blocks_of, plan, child_keys):
+    """계획(블록 번호 + 블록 안 자식 이름들)을 타워 기준 모듈 경로로."""
+    pre = _block_prefix(tower, blocks_of(tower))
+    return [f"{pre}{it['block']}." + ".".join(it[k] for k in child_keys) for it in plan]
+
+
+def build_sidecar(tower, blocks_of, res):
+    """교정 중 state_dict에 실리지 않는 변경을 모은다 (2026-11-03) — eps, 어텐션 scale, 포화 절단 활성, 새로 만든 편향.
+
+    빠지면: eps → 미세한 비등가, scale → **출력이 틀린다**(q_proj만 p배), 활성·편향 → 오버플로 방지가 사라진다.
+    """
+    side = {"version": 1}
+    if res.get("residual", {}).get("eps_changed"):
+        side["eps"] = res["residual"]["eps_changed"]
+    if res.get("attn_fold", {}).get("scale_changed"):
+        side["attn_scale"] = res["attn_fold"]["scale_changed"]
+    if res.get("act_clamp", {}).get("accepted"):
+        side["act_clamp"] = {"modules": module_paths(tower, blocks_of, res["act_clamp"]["plan"], ("mlp", "act")), "k": 16.0}
+    if res.get("key_center", {}).get("new_bias"):
+        side["new_bias"] = res["key_center"]["new_bias"]
+    return side
+
+
+def prepare_for_state(tower, side):
+    """state_dict를 얹기 **전에** — 새 편향 자리를 만들고 활성을 바꾼다. 없는 모듈이 있으면 멈춘다."""
+    mods = dict(tower.named_modules())
+    need = list(side.get("new_bias", [])) + list(side.get("act_clamp", {}).get("modules", []))
+    miss = [m for m in need if m not in mods]
+    if miss:
+        raise RuntimeError(f"교정 옆 파일의 대상 모듈이 없다: {miss[:3]}")
+    for m in side.get("new_bias", []):
+        lin = mods[m]
+        if lin.bias is None:
+            lin.bias = torch.nn.Parameter(torch.zeros(lin.out_features, dtype=lin.weight.dtype, device=lin.weight.device))
+    for m in side.get("act_clamp", {}).get("modules", []):
+        parent, _, name = m.rpartition(".")
+        setattr(mods[parent], name, QuickGELUClamped(side["act_clamp"].get("k", 16.0)))
+
+
+def apply_settings(tower, side):
+    """state_dict를 얹은 **뒤에** — eps와 어텐션 scale. 없는 모듈이 있으면 멈춘다."""
+    mods = dict(tower.named_modules())
+    miss = [m for m in list(side.get("eps", {})) + list(side.get("attn_scale", {})) if m not in mods]
+    if miss:
+        raise RuntimeError(f"교정 옆 파일의 대상 모듈이 없다: {miss[:3]}")
+    for m, v in side.get("eps", {}).items():
+        setattr(mods[m], v["attr"], v["new"])
+    for m, v in side.get("attn_scale", {}).items():
+        mods[m].scale = v["scale_new"]
+
+
+def load_fixed(tower, state, side):
+    """교정 전 타워에 교정 결과를 얹는다 — 준비 → state_dict(파라미터가 하나라도 빠지거나 남으면 멈춘다) → 설정."""
+    prepare_for_state(tower, side)
+    missing, unexpected = tower.load_state_dict(state, strict=False)
+    pnames = {n for n, _ in tower.named_parameters()}
+    miss_p = [k for k in missing if k in pnames]
+    if miss_p or unexpected:
+        raise RuntimeError(f"교정 가중치 적재 불일치 — 빠진 파라미터 {len(miss_p)}개 {miss_p[:2]}, 남은 키 {len(unexpected)}개 "
+                           f"{list(unexpected)[:2]}")
+    apply_settings(tower, side)
+    return tower
 
 
 def virtual_fmax(ops_profile, ratio=1.5):

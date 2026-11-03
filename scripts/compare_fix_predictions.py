@@ -9,14 +9,19 @@
 import argparse
 import glob
 import json
+import re
 
 
 def load(pattern):
+    """(조각 번호, 조각 안 문항 번호)를 키로 — (이미지, 질문)을 키로 쓰면 같은 이미지에 같은 질문이 두 번 나오는 84문항이
+    합쳐져 11,309가 아니라 11,225문항만 센다(2026-11-01 정정). `idx`는 조각마다 0부터 다시 매겨진다."""
     rows = {}
     for f in sorted(glob.glob(pattern)):
+        m = re.search(r"shard(\d+)of\d+", f)
+        s = int(m.group(1)) if m else 0
         for ln in open(f):
             r = json.loads(ln)
-            rows[(r["image"], r["question"])] = r
+            rows[(s, r["idx"])] = r
     return rows
 
 
@@ -28,6 +33,9 @@ def main():
     a = ap.parse_args()
     fx, rf = load(a.fix), load(a.ref)
     keys = sorted(set(fx) & set(rf))
+    bad = [k for k in keys if (fx[k]["image"], fx[k]["question"]) != (rf[k]["image"], rf[k]["question"])]
+    if bad:
+        raise SystemExit(f"두 실행의 문항 순서가 다르다 — {len(bad)}개 (예: {bad[0]})")
     acc_fix = sum(fx[k]["correct"] for k in keys) / len(keys)
     acc_ref = sum(rf[k]["correct"] for k in keys) / len(keys)
     same = sum(fx[k]["pred_raw"] == rf[k]["pred_raw"] for k in keys) / len(keys)
