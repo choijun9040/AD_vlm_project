@@ -125,4 +125,4 @@ fi
 cat onnx/SHA256SUMS_full799
 ls -la $OUT | awk '{printf "  %s  %.2f GB\n", $NF, $5/2^30}'
 rm -rf $S
-log "꾸러미 완료 — 보드 절차는 scripts/ORIN_FULL799_README.md"
+log "꾸러미 완료 — 보드 절차는 scripts/ORIN_RESID_README.md"
