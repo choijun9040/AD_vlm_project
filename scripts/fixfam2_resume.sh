@@ -4,7 +4,7 @@
 cd /workspace/vlm_project_2 || exit 0
 O=eval_results/fixfam2
 [ -f $O/.armed ] || exit 0
-[ -f $O/.stage_fixfam2_tool_done ] && [ -f $O/.stage_fixfam2_evaltrt_done ] && [ -f $O/.stage_fixfam2_exp5_done ] && exit 0
+[ -f $O/.stage_fixfam2_tool_done ] && [ -f $O/.stage_fixfam2_evaltrt_done ] && [ -f $O/.stage_fixfam2_exp5_done ] && [ -f $O/.stage_fixfam2_rtrt_done ] && exit 0
 pgrep -f '[b]ash scripts/fixfam2_watchdog' >/dev/null && exit 0
 echo "[$(TZ=Asia/Seoul date '+%F %T KST')] 원격 감시가 없어 다시 띄운다(cron)"
 nohup bash scripts/fixfam2_watchdog.sh >> logs/fixfam2_watchdog.log 2>&1 &

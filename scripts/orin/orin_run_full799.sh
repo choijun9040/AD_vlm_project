@@ -91,7 +91,8 @@ for RES in $RESL; do
     401408h) MP=401408 ;;
     *) echo "해상도는 802816h, 401408h"; exit 1 ;;
   esac
-  MODELS="tower_baseline_v2_$RES tower_full_$RES tower_baseline_v2_${RES}_fixa"
+  # 모델 목록은 MODELS_TPL로 바꿀 수 있다({RES} 자리표시) — (R) 교정본 꾸러미는 MODELS_TPL="tower_baseline_v2_{RES}_resid" (2026-11-03, 개정 10)
+  MODELS=$(echo "${MODELS_TPL:-tower_baseline_v2_{RES} tower_full_{RES} tower_baseline_v2_{RES}_fixa}" | sed "s/{RES}/$RES/g")
   log "[2] $RES (max_pixels $MP) 강타입"
   for m in $MODELS; do
     for p in p1 p2; do
@@ -114,7 +115,7 @@ import json, glob, os
 for f in sorted(glob.glob("results/orin_*_typed.json")):
     o = json.load(open(f)); tag = o["tag"][:-len("_typed")]            # baseline_v2_802816h(_fixa) / full_802816h
     res = next(r for r in ("802816h", "401408h") if r in tag)
-    m = "fixa" if tag.endswith("_fixa") else tag.replace("_" + res, "")
+    m = next((sfx for sfx in ("fixa", "resid") if tag.endswith("_" + sfx)), None) or tag.replace("_" + res, "")
     ref = f"a100_ref/trt_{res}_typed_{m}.json"
     a = json.load(open(ref))["modes"]["typed"] if os.path.exists(ref) else None
     a_s = f"A100 {a['nan_rate']*100:5.1f}%" if a else "A100 기준 없음"
