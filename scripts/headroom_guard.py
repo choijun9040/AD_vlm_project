@@ -154,7 +154,17 @@ def load_tower_direct(repo, dtype, trust_remote_code=False):
             tower, arch = PD.build_tower(cfg)
         except RuntimeError:
             import bridge_measure_newhf as BN      # GLM-4.1V 등 새 transformers 전용 계열
-            tower, arch = BN.build_tower(cfg)
+            try:
+                tower, arch = BN.build_tower(cfg)
+            except RuntimeError:
+                # 두 표에 없는 구조 — 모델이 비전 타워를 `AutoModel.from_config(config.vision_config)`로 만드는 경우가 흔하다
+                # (LLaVA-OneVision: SigLIP). 같은 방식으로 세운다. 적재 검증(파라미터 전부)은 아래에서 그대로 한다.
+                # 2026-11-03 — 실험 2에서 LLaVA-OneVision이 이 표 누락으로 적재 실패한 뒤 더했다(실험 2 집계에는 넣지 않는다)
+                vc = getattr(cfg, "vision_config", None)
+                if vc is None:
+                    raise
+                from transformers import AutoModel
+                tower, arch = AutoModel.from_config(vc), f"{archs[0] if archs else '?'}/AutoModel(vision_config)"
     sd = PD.retry_429(lambda: PD.fetch_vision_state(repo))
     missing, unexpected = tower.load_state_dict(sd, strict=False)
     pnames = {n for n, _ in tower.named_parameters()}
