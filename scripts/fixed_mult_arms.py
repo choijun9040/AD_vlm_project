@@ -126,7 +126,9 @@ def run_qwen(a):
         # 정확도 평가용 저장 (병합된 타워 기준 state_dict — eval_nuscenesqa_val --vision_state)
         Path(a.state_dir).mkdir(parents=True, exist_ok=True)
         sp = f"{a.state_dir}/baseline_v2_exp5_{arm}.pt"
-        torch.save({k: v.detach().cpu() for k, v in t.state_dict().items()}, sp + ".tmp")
+        # fp16으로 저장한다 — 정확도 평가는 fp16 모델에 얹으므로 결과가 같고 디스크는 절반이다(fp32 2.7 GB가 디스크를 채운 뒤 바꿨다, 2026-11-03)
+        torch.save({k: (v.detach().cpu().half() if v.is_floating_point() else v.detach().cpu())
+                    for k, v in t.state_dict().items()}, sp + ".tmp")
         Path(sp + ".tmp").replace(sp)
         Path(sp + ".fix.json").write_text(json.dumps(side, indent=1))
         info["state"] = sp

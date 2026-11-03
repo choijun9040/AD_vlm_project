@@ -28,7 +28,6 @@ probe(){ local name=$1 npz=$2 modes=$3 g=$4 split=$5; shift 5
 for MP in 802816 401408; do
   R=${MP}h
   exp tower_unfixed_$MP $MP
-  exp tower_resid_$MP $MP --vision_state $RESID
   exp tower_baseline_v2_${R}_resid $MP --vision_state $RESID $HARGS      # Orin 꾸러미에 들어가는 이름
   for half in 0 1; do
     off=$((half*400)); n=$([ $half = 0 ] && echo 400 || echo 399)
@@ -37,12 +36,11 @@ for MP in 802816 401408; do
       $PY scripts/prep_trt_inputs.py --limit $n --offset $off --max_pixels $MP --min_pixels 3136 --out $NPZ.tmp.npz > logs/fixfam2r_prep_${MP}_h$half.log 2>&1 && mv $NPZ.tmp.npz $NPZ
       log "끝 입력 준비 $NPZ"; fi
     probe rtrt_ref_unfixed_fp32_${MP}_h$half $NPZ fp32 tower_unfixed_$MP single --save_out $REF --save_mode fp32
-    probe rtrt_resid_single_${MP}_h$half $NPZ fp32,fp16 tower_resid_$MP single --cos_ref $REF
+    # 관행 --fp16 측정은 뺐다 — 배포 경로를 강타입으로 한정(2026-11-03 사용자 결정 「안 A」)
     probe rtrt_resid_typed_${MP}_h$half $NPZ typed tower_baseline_v2_${R}_resid split --cos_ref $REF
-    probe rtrt_resid_fp16graph_${MP}_h$half $NPZ fp16 tower_baseline_v2_${R}_resid split --cos_ref $REF
     rm -f $NPZ $REF; log "입력·기준 삭제 ${MP} h$half (디스크 여유 $(disk_free_gb)GB)"
   done
-  rm -f $G/tower_unfixed_$MP.onnx* $G/tower_resid_$MP.onnx*        # 분할 fp16 그래프(*h_resid)는 Orin 꾸러미용으로 남긴다
+  rm -f $G/tower_unfixed_$MP.onnx*        # 분할 fp16 그래프(*h_resid)는 Orin 꾸러미용으로 남긴다
 done
 rm -rf $G/plans $G/timing.cache
 bash scripts/make_orin_pkg_resid.sh && log "Orin 꾸러미 완료" || log "**Orin 꾸러미 실패**"
