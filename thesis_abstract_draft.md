@@ -9,7 +9,7 @@
 
 ## 국문 초록
 
-**비전-언어 모델과 확산 모델의 fp16 배포를 위한 오버플로 진단 및 잔차 재조정**
+**비전-언어 모델과 확산 모델의 저정밀 배포를 위한 오버플로 진단 및 잔차 재조정**
 
 비전-언어 모델(VLM)과 확산 모델을 bf16을 지원하지 않는 엣지 가속기에 배포하려면 fp16을 사용해야 하며, 활성값이 fp16 상한(65,504)을
 초과하면 그 입력의 출력 전체가 상실된다. Qwen2.5-VL-3B의 비전 인코더는 DriveLM 검증 799장 중 71.5%, Gemma 4의 비전 인코더는 형식 승격이
@@ -35,7 +35,7 @@ fp32 경로가 필요하거나, 모델의 출력을 변경하거나, 모델마�
 
 ## Abstract
 
-**Overflow Diagnosis and Residual Rescaling for fp16 Deployment of
+**Overflow Diagnosis and Residual Rescaling for Low-Precision Deployment of
 Vision-Language and Diffusion Models**\*
 
 *○○○ (영문 성명, 예: Kim, Ji-Hye)*

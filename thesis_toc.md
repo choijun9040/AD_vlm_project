@@ -1,8 +1,8 @@
 <!-- 자동 생성: scripts/build_thesis.py (2026-11-12). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->
 
-# 비전-언어 모델과 확산 모델의 fp16 배포를 위한 오버플로 진단 및 잔차 재조정
+# 비전-언어 모델과 확산 모델의 저정밀 배포를 위한 오버플로 진단 및 잔차 재조정
 
-*Overflow Diagnosis and Residual Rescaling for fp16 Deployment of Vision-Language and Diffusion Models*
+*Overflow Diagnosis and Residual Rescaling for Low-Precision Deployment of Vision-Language and Diffusion Models*
 
 석사학위논문 목차 · 합본 생성 2026-11-12 · 학교 양식 적용 전
 
@@ -61,7 +61,7 @@ Abstract
 
 # Abstract
 
-**Overflow Diagnosis and Residual Rescaling for fp16 Deployment of
+**Overflow Diagnosis and Residual Rescaling for Low-Precision Deployment of
 Vision-Language and Diffusion Models**\*
 
 *○○○ (영문 성명, 예: Kim, Ji-Hye)*

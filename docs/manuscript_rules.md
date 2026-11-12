@@ -69,7 +69,7 @@
   (초과 비율은 원고에 쓰지 않음 — 2026-11-10 진단을 M→c로 서술); 등가성 코사인은 실험마다 그 실험의 값과 표본 수를 함께(자동 도구 시험 8장 값과 799장 교정 값을 섞지 않는다).
 - DebugUnderflowOverflow·TensorRT 문서 비교, Draw Things 원형의 Qwen 이식(DTo8) 등은 개요에만.
 
-- **제목 (2026-11-12 17:55 교체)**: 「비전-언어 모델과 확산 모델의 fp16 배포를 위한 오버플로 진단 및 잔차 재조정」 / *Overflow Diagnosis and Residual Rescaling for fp16 Deployment of Vision-Language and Diffusion Models*. 이전 제목 「비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정」(2026-11-06 「지금 제목 유지」)를 대체한다 — 확산 모델 대비 결과(FP16-Fix·Draw Things)가 주 기여이므로 VLM과 확산 모델을 함께 대상으로 둔다. 「경량화」는 쓰지 않는다(크기·속도는 fp16 형식의 효과이지 기여가 아님).
+- **제목 (2026-11-12 19:11 교체)**: 「비전-언어 모델과 확산 모델의 저정밀 배포를 위한 오버플로 진단 및 잔차 재조정」 / *Overflow Diagnosis and Residual Rescaling for Low-Precision Deployment of Vision-Language and Diffusion Models*. 이전 제목 「비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정」(2026-11-06 「지금 제목 유지」)를 대체한다 — 확산 모델 대비 결과(FP16-Fix·Draw Things)가 주 기여이므로 VLM과 확산 모델을 함께 대상으로 둔다. 「경량화」는 쓰지 않는다(크기·속도는 fp16 형식의 효과이지 기여가 아님). (2026-11-12 19:11: 「fp16 배포」→「저정밀 배포」. 본문·초록에서 측정 형식은 fp16으로 명시한다.)
 - **장 구성**(2026-11-06 15:21 사용자 「이 구성으로」): Ⅰ 서론 / Ⅱ 관련 연구(저정밀 배포, fp16 넘침의 기존 처방 — FP16-Fix·Draw Things·fp32 승격·TensorRT) / Ⅲ 방법(여유 진단, (R) 정의, c 결정, 자동 도구, 배포 검증) /
   Ⅳ 실험 구성(모델·데이터·지표·환경) / Ⅴ 결과(1 FP16-Fix 대비, 2 Draw Things 대비, 3 공식 Qwen·Gemma, 4 TensorRT·Orin 배포, 5 자동 도구) / Ⅵ 결론. 파일은 지금 구성(ch1_ch2~ch6)을 그대로 쓴다.
 
