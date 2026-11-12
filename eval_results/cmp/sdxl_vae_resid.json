@@ -1,0 +1,29 @@
+{
+ "c": 0.015625,
+ "measured_max": 1474560.0,
+ "n": 799,
+ "equivalence_fp32": {
+  "cos_min": 0.9999999999997288,
+  "cos_median": 0.9999999999997815
+ },
+ "accepted": true,
+ "resid_fp16": {
+  "nonfinite": 0,
+  "rate": 0.0,
+  "rel_err": {
+   "median": 0.0009211202687911665,
+   "p99": 0.0017262663833445071
+  },
+  "psnr_db": {
+   "median": 73.51581031261699,
+   "min": 66.81506247993616
+  }
+ },
+ "rediagnosis_bf16": {
+  "global_max_point": "up_blocks.3.resnets.2::add#0",
+  "max_worst": 23040.0,
+  "headroom_worst": 2.8430555555555554,
+  "first_exceed": null,
+  "any_exceed_rate": 0.0
+ }
+}

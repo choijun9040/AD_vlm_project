@@ -1,0 +1,47 @@
+{
+ "latents": "eval_results/cmp/sdxl_calib.latents.pt",
+ "n_diag": 100,
+ "n_over_target": 10,
+ "max_worst": 1409024.0,
+ "graph_ops": 167,
+ "targets": 10,
+ "missing": [],
+ "ok": true,
+ "region": 11,
+ "c": 0.015625,
+ "n_scaled": 9,
+ "n_eps": 4,
+ "inv": [],
+ "equiv_cos_min": 0.9999999999999996,
+ "equiv_n": 100,
+ "fp16_nonfinite": 0,
+ "saved": {
+  "plan": {
+   "scale": {
+    "up_blocks.3.resnets.2.conv2.weight": 1,
+    "up_blocks.3.resnets.2.conv2.bias": 1,
+    "up_blocks.3.resnets.1.conv2.weight": 1,
+    "up_blocks.3.resnets.1.conv2.bias": 1,
+    "up_blocks.3.resnets.0.conv_shortcut.bias": 1,
+    "up_blocks.3.resnets.0.conv2.weight": 1,
+    "up_blocks.3.resnets.0.conv2.bias": 1,
+    "up_blocks.2.upsamplers.0.conv.weight": 1,
+    "up_blocks.2.upsamplers.0.conv.bias": 1
+   },
+   "eps": {
+    "conv_norm_out": "native_group_norm",
+    "up_blocks.3.resnets.2.norm1": "native_group_norm",
+    "up_blocks.3.resnets.1.norm1": "native_group_norm",
+    "up_blocks.3.resnets.0.norm1": "native_group_norm"
+   }
+  },
+  "c": 0.015625
+ },
+ "same_params": true,
+ "same_eps": true,
+ "n_manual_params": 9,
+ "n_manual_eps": 4,
+ "only_manual": [],
+ "only_auto": [],
+ "reason": null
+}

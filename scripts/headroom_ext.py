@@ -156,8 +156,13 @@ def profile_ops(tower, cache, fwd, fmax, target=2.0, tag=None):
     # 최대가 0인 연산(마스크를 만드는 full·fill_ 등)은 여유가 무한대다 — headroom_worst를 0.0으로 적어 두므로 여기서 뺀다
     # (2026-11-01: Pixtral 결과에서 위험 2개로 잘못 집계되었다. 판단에는 쓰이지 않고 보고에만 쓰인다)
     risky = [r for r in rows if r["max_worst"] > 0 and r["headroom_worst"] < target]
+    # 이미지별로 어느 연산이든 상한을 넘었는가(초과 비율 = 상실률 추정, 5.3절) — 연산마다 이미지 수가 같을 때만(2026-11-04, 개정 16 C*)
+    any_rate = None
+    if order and all(len(vals[k]) == n for k in order):
+        hit = [any((not math.isfinite(vals[k][i])) or vals[k][i] > fmax for k in order if not upcast[k]) for i in range(n)]
+        any_rate = sum(hit) / n
     return {"n_points": len(rows), "first_exceed": first, "first_exceed_no_upcast": first_any,
-            "global_max": top,
+            "global_max": top, "any_exceed_rate": any_rate,
             "risky_points": risky, "fmax": fmax, "rows": rows}
 
 

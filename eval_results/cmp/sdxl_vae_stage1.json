@@ -1,0 +1,147 @@
+{
+ "n": 799,
+ "size": [
+  1024,
+  576
+ ],
+ "latent_shape": [
+  1,
+  4,
+  72,
+  128
+ ],
+ "orig_fp16": {
+  "nonfinite": 799,
+  "rate": 1.0,
+  "rel_err": {
+   "median": null,
+   "p99": null
+  },
+  "psnr_db": {
+   "median": null,
+   "min": null
+  }
+ },
+ "fix_fp16": {
+  "nonfinite": 0,
+  "rate": 0.0,
+  "rel_err": {
+   "median": 0.010421762744487108,
+   "p99": 0.020703885243337876
+  },
+  "psnr_db": {
+   "median": 52.87786420751136,
+   "min": 46.071606376443285
+  }
+ },
+ "diagnosis_bf16": {
+  "n_points": 135,
+  "fmax": 65504.0,
+  "first_exceed": {
+   "point": "up_blocks.2.upsamplers.0.conv::convolution#0",
+   "upcast": false,
+   "max_p50": 134144.0,
+   "max_worst": 218112.0,
+   "headroom_worst": 0.3003227699530516,
+   "exceed_rate": 1.0
+  },
+  "first_exceed_no_upcast": {
+   "point": "up_blocks.2.upsamplers.0.conv::convolution#0",
+   "upcast": false,
+   "max_p50": 134144.0,
+   "max_worst": 218112.0,
+   "headroom_worst": 0.3003227699530516,
+   "exceed_rate": 1.0
+  },
+  "global_max": {
+   "point": "up_blocks.3.resnets.2::add#0",
+   "upcast": false,
+   "max_p50": 905216.0,
+   "max_worst": 1474560.0,
+   "headroom_worst": 0.044422743055555554,
+   "exceed_rate": 1.0
+  },
+  "n_risky": 10,
+  "risky_top": [
+   {
+    "point": "up_blocks.3.resnets.2::add#0",
+    "upcast": false,
+    "max_p50": 905216.0,
+    "max_worst": 1474560.0,
+    "headroom_worst": 0.044422743055555554,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.2::div#0",
+    "upcast": false,
+    "max_p50": 905216.0,
+    "max_worst": 1474560.0,
+    "headroom_worst": 0.044422743055555554,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.1::add#0",
+    "upcast": false,
+    "max_p50": 897024.0,
+    "max_worst": 1458176.0,
+    "headroom_worst": 0.044921875,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.1::div#0",
+    "upcast": false,
+    "max_p50": 897024.0,
+    "max_worst": 1458176.0,
+    "headroom_worst": 0.044921875,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0::add#0",
+    "upcast": false,
+    "max_p50": 888832.0,
+    "max_worst": 1441792.0,
+    "headroom_worst": 0.04543235085227273,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0::div#0",
+    "upcast": false,
+    "max_p50": 888832.0,
+    "max_worst": 1441792.0,
+    "headroom_worst": 0.04543235085227273,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0.conv_shortcut::convolution#0",
+    "upcast": false,
+    "max_p50": 864256.0,
+    "max_worst": 1400832.0,
+    "headroom_worst": 0.04676078216374269,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.2.upsamplers.0.conv::convolution#0",
+    "upcast": false,
+    "max_p50": 134144.0,
+    "max_worst": 218112.0,
+    "headroom_worst": 0.3003227699530516,
+    "exceed_rate": 1.0
+   }
+  ]
+ },
+ "diagnosis_brief": {
+  "global_max_point": "up_blocks.3.resnets.2::add#0",
+  "max_worst": 1474560.0,
+  "headroom_worst": 0.044422743055555554,
+  "exceed_rate_at_global": 1.0,
+  "first_exceed": {
+   "point": "up_blocks.2.upsamplers.0.conv::convolution#0",
+   "upcast": false,
+   "max_p50": 134144.0,
+   "max_worst": 218112.0,
+   "headroom_worst": 0.3003227699530516,
+   "exceed_rate": 1.0
+  },
+  "any_exceed_rate_predicted_loss": 1.0
+ }
+}

@@ -1,0 +1,1 @@
+{"max_worst": 81920.0, "point": "blocks.31.mlp.down_proj::addmm#0", "any_exceed_rate": 0.57, "c": 0.25}

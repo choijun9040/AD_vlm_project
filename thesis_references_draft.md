@@ -119,6 +119,28 @@
 52. Draw Things, "BF16 and Image Generation Models," *Draw Things Engineering Blog*, 2025.
     https://engineering.drawthings.ai/p/bf16-and-image-generation-models-803cf0515bee
     (accessed 2026-10-31)
+53. D. Podell, Z. English, K. Lacey, A. Blattmann, T. Dockhorn, J. Müller, et al., "SDXL: Improving Latent Diffusion Models for High-Resolution Image Synthesis," in *Proc. ICLR*, 2024. (arXiv:2307.01952)
+54. Black Forest Labs, "FLUX.1 [schnell]," *Hugging Face Model Card*, 2024.
+    https://huggingface.co/black-forest-labs/FLUX.1-schnell
+    (accessed 2026-11-06)
+55. J. Yu, Y. Xu, J. Y. Koh, T. Luong, G. Baid, Z. Wang, et al., "Scaling Autoregressive Models for Content-Rich Text-to-Image Generation," *Trans. Mach. Learn. Res.*, 2022. (arXiv:2206.10789)
+56. T.-Y. Lin, M. Maire, S. Belongie, J. Hays, P. Perona, D. Ramanan, et al., "Microsoft COCO: Common Objects in Context," in *Proc. ECCV*, 2014, pp. 740–755. (arXiv:1405.0312)
+57. R. Zhang, P. Isola, A. A. Efros, E. Shechtman, O. Wang, "The Unreasonable Effectiveness of Deep Features as a Perceptual Metric," in *Proc. CVPR*, 2018. (arXiv:1801.03924)
+58. Z. Wang, A. C. Bovik, H. R. Sheikh, E. P. Simoncelli, "Image Quality Assessment: From Error Visibility to Structural Similarity,"
+    *IEEE Trans. Image Process.*, vol. 13, no. 4, pp. 600–612, Apr. 2004. (doi:10.1109/TIP.2003.819861)
+59. G. Xiao, J. Lin, M. Seznec, H. Wu, J. Demouth, S. Han, "SmoothQuant: Accurate and Efficient Post-Training Quantization for Large Language Models," in *Proc. ICML*, 2023. (arXiv:2211.10438)
+60. P. Micikevicius, S. Narang, J. Alben, G. Diamos, E. Elsen, D. Garcia, et al., "Mixed Precision Training," in *Proc. ICLR*, 2018. (arXiv:1710.03740)
+61. T. Wolf, L. Debut, V. Sanh, J. Chaumond, C. Delangue, A. Moi, et al., "Transformers: State-of-the-Art Natural Language Processing," in *Proc. EMNLP: System Demonstrations*, 2020, pp. 38–45. (arXiv:1910.03771)
+62. J. L. Ba, J. R. Kiros, G. E. Hinton, "Layer Normalization," arXiv:1607.06450, 2016.
+63. Y. Wu, K. He, "Group Normalization," in *Proc. ECCV*, 2018, pp. 3–19. (arXiv:1803.08494)
+64. B. Zhang, R. Sennrich, "Root Mean Square Layer Normalization," in *Proc. NeurIPS*, 2019. (arXiv:1910.07467)
+65. D. Kalamkar, D. Mudigere, N. Mellempudi, D. Das, K. Banerjee, S. Avancha, et al., "A Study of BFLOAT16 for Deep Learning Training," arXiv:1905.12322, 2019.
+66. Kubuxu, "Evaluation results," *Hugging Face Discussions (madebyollin/sdxl-vae-fp16-fix #7)*, 2023.
+    https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/discussions/7
+    (accessed 2026-11-06)
+67. Draw Things, "draw-things-community," *GitHub repository*, Libraries/SwiftDiffusion/Sources/Models/Flux1.swift, commit 060f99d6, 2026.
+    https://github.com/drawthingsai/draw-things-community
+    (accessed 2026-11-06)
 
 ---
 
@@ -152,6 +174,21 @@
 | 42 | 위 URL | DLA 지원 정밀도 "FP16, INT8", BF16 언급 없음 확인 |
 | 44 | 위 URL (+ 10.x→11.x 마이그레이션 안내) | 11.0에서 정밀도별 BuilderFlag(FP16·BF16·INT8·… ·OBEY_PRECISION_CONSTRAINTS)와 약타입 API(`setPrecision` 등) 제거, 강타입이 기본 — 5.4절. 개요가 적던 "10.12부터 폐기 예정"의 버전 번호는 확인하지 못해 본문에서 뺐다 (2026-09-29) |
 | 43 | 위 URL | 8GB 모듈 "1024-core NVIDIA Ampere Architecture GPU with 32 Tensor Cores", DLA 언급 없음 확인 |
+| 53 | arxiv.org/abs/2307.01952 + OpenReview (api2.openreview.net, note di52zR8xgf) | 저자 8인 → 6인 + et al. **arXiv에는 게재처 표기 없음**(comments·journal_ref 모두 없음). 게재처는 OpenReview venue 「ICLR 2024 spotlight」 |
+| 54 | huggingface.co/black-forest-labs/FLUX.1-schnell (+ /api/models) | 조직 표시명 「Black Forest Labs」(핸들 black-forest-labs). 저장소 생성 2024-07-31 → 2024. 모델 카드 제목 「FLUX.1 [schnell]」. gated=auto(README 원문은 로그인 필요, 페이지 제목·조직명은 공개 페이지에서 확인) |
+| 55 | arxiv.org/abs/2206.10789 + OpenReview (note AFDcYJKhND) | 저자 17인 → 6인 + et al. arXiv comments는 「Preprint」, journal_ref 없음. 게재처는 OpenReview venue 「Accepted by TMLR」(게재 2022-11-07) |
+| 56 | arxiv.org/abs/1405.0312 + Crossref 10.1007/978-3-319-10602-1_48 | 게재처·쪽(LNCS, ECCV 2014, pp. 740–755)은 Crossref. arXiv에는 게재처 표기 없음. **저자 수가 다르다** — ECCV판 8인(Lin, Maire, Belongie, Hays, Perona, Ramanan, Dollár, Zitnick), arXiv v3 10인(Bourdev·Girshick 추가, comments 「updated author list」). ECCV판을 인용하므로 ECCV 저자 순서를 따랐다 |
+| 57 | arxiv.org/abs/1801.03924 | 저자 5인 전부. 게재처는 arXiv comments 「Accepted to CVPR 2018」 |
+| 58 | api.crossref.org/works/10.1109/TIP.2003.819861 | 저자 4인 전부. vol. 13, no. 4, pp. 600–612, 2004-04 (Crossref) |
+| 59 | arxiv.org/abs/2211.10438 | 저자 6인 전부. 게재처는 arXiv comments 「ICML 2023」 |
+| 60 | arxiv.org/abs/1710.03740 | 저자 11인 → 6인 + et al. 게재처는 arXiv comments 「Published as a conference paper at ICLR 2018」 |
+| 61 | arxiv.org/abs/1910.03771 + Crossref 10.18653/v1/2020.emnlp-demos.6 | 저자 22인 → 6인 + et al. **arXiv 제목은 「HuggingFace's Transformers: State-of-the-art Natural Language Processing」**, 게재처 표기 없음. 제목·게재처·쪽(EMNLP 2020 System Demonstrations, pp. 38–45)은 Crossref(게재판)를 따랐다 |
+| 62 | arxiv.org/abs/1607.06450 | 저자 3인 전부. 게재처 표기 없음 → 프리프린트로 인용 |
+| 63 | arxiv.org/abs/1803.08494 + Crossref 10.1007/978-3-030-01261-8_1 | 저자 2인. arXiv에는 게재처 표기 없음. 게재처·쪽(LNCS, ECCV 2018, pp. 3–19)은 Crossref |
+| 64 | arxiv.org/abs/1910.07467 | 저자 2인. 게재처는 arXiv comments 「NeurIPS 2019」 |
+| 65 | arxiv.org/abs/1905.12322 | 저자 19인 → 6인 + et al. 게재처 표기 없음 → 프리프린트로 인용 |
+| 66 | huggingface.co/api/models/madebyollin/sdxl-vae-fp16-fix/discussions/7 (+ 페이지) | 작성자 Kubuxu, 2023-07-30 01:46 UTC. **현재 제목 「Evaluation results」** — 원제 「Basic evaluation results」를 2023-08-10 Kubuxu가 바꿈. 본문: COCO val-2017, 256x256, LPIPS·SSIM 표 + MSE 문단(표 열이 아니라 아래 본문). 본문은 2023-07-31 수정됨. 모델 카드가 이 글을 「close enough for most purposes」로 링크 |
+| 67 | github.com/drawthingsai/draw-things-community (main b002b883, Flux1.swift 마지막 수정 커밋 060f99d6, 2026-10-12) | 블로그(52)가 이 저장소의 Flux1.swift를 직접 가리킨다(블로그 시점 커밋 0054f779 497행). README 5행이 「앱 내부 구현의 재구현」이라 밝힌다. 정밀도 처리 대조 기록은 `docs/dt_code_check_20261106.md`. (처음에는 liuliu/swift-diffusion을 넣었으나 README에 Draw Things 언급이 없어 바꾸었다, 2026-11-06) |
 
 **저자 표기 규칙 — 6인 이내 기재로 변경 (2026-10-27, 사용자 승인 「권고대로 적용」).** 충북대 대학원 「석·박사학위논문 작성 방법」
 다.(1)-3) 「저자는 6명 이내로 기재하며 그 이상의 저자는 …et al.로 표시」에 따라 **6인 이하는 전부, 7인 이상은 처음 6인 + et al.**로

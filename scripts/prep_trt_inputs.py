@@ -30,12 +30,15 @@ def main():
     ap.add_argument("--min_pixels", type=int, default=3136)
     ap.add_argument("--out", default="trt_inputs.npz")
     ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--list", default=None, help="이미지 경로 목록 파일(줄마다 하나) — 개정 25 RealWorldQA, 2026-11-04")
     args = ap.parse_args()
 
     proc = AutoProcessor.from_pretrained(BASE, max_pixels=args.max_pixels,
                                          min_pixels=args.min_pixels)
     tok = build_token_to_images(VAL)
     paths = [str(v["CAM_FRONT"]) for v in tok.values() if "CAM_FRONT" in v][args.offset:args.offset + args.limit]
+    if args.list:
+        paths = [l.strip() for l in open(args.list) if l.strip()][args.offset:args.offset + args.limit]
     print(f"[전처리] {len(paths)}장, max_pixels={args.max_pixels}")
 
     arrs, shape = {}, None

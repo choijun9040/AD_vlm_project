@@ -1,0 +1,25 @@
+{
+ "which": "qwen",
+ "model_dir": null,
+ "tokens": null,
+ "n_cal": 100,
+ "n_eval": 799,
+ "calib": {
+  "max_worst": 81920.0,
+  "point": "blocks.31.mlp.down_proj::addmm#0",
+  "c": 0.25
+ },
+ "fp32_resid": {
+  "nonfinite": 0,
+  "n": 799,
+  "rel_err": {
+   "median": 0.0,
+   "p99": 0.0,
+   "max": 0.0
+  },
+  "cos": {
+   "min": 0.9999999999997387,
+   "median": 0.9999999999998075
+  }
+ }
+}

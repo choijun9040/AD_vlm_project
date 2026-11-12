@@ -80,12 +80,14 @@ MLP_PATTERNS = [
 
 
 # ---------------------------------------------------------------- 모델·타워
-def load_tower(checkpoint, base, dtype):
-    """우리 체크포인트(LoRA 병합) 경로."""
+def load_tower(checkpoint, base, dtype, attn="eager"):
+    """우리 체크포인트(LoRA 병합) 경로. attn=None이면 어텐션 구현을 지정하지 않는다 — 공식 저장소 사용법 그대로(transformers 4.49 기본 sdpa).
+    기본값 eager는 지금까지의 실험과 같게 둔 것이다(2026-11-04 개정 22 정정)."""
     from transformers import Qwen2_5_VLForConditionalGeneration
     from peft import PeftModel
+    kw = {} if attn is None else {"attn_implementation": attn}
     m = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        base, torch_dtype=getattr(torch, dtype), attn_implementation="eager")
+        base, torch_dtype=getattr(torch, dtype), **kw)
     if checkpoint and checkpoint.lower() != "none":
         m = PeftModel.from_pretrained(m, checkpoint).merge_and_unload()
     global PARENT_MODEL

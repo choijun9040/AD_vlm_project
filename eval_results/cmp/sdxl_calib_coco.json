@@ -1,0 +1,10 @@
+{
+ "images": "COCO train2017 000000000009.jpg~000000000536.jpg (100장)",
+ "max_worst": 630784.0,
+ "point": "up_blocks.3.resnets.2::add#0",
+ "any_exceed_rate": 1.0,
+ "first_exceed": "up_blocks.2.upsamplers.0.conv::convolution#0",
+ "c": 0.03125,
+ "n_over_target": 9,
+ "over_outside_region": []
+}

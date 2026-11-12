@@ -1,0 +1,471 @@
+# 원고 전면 수정(#11, 2026-11-06)의 주장 출처 대장. 옛 대장(claim_provenance.yaml)은 학생 모델·학회 요약문 주장이라 그대로 둔다.
+# 실행: python scripts/verify_claim_provenance.py --manifest docs/claim_provenance_v2.yaml --strict
+# 값은 eval_results/cmp/(A100 결과 사본, git 무시)와 eval_results/orin_dlm/에서 읽는다. 원본 백업은 a100_backup/20261106/.
+- id: qwen_official
+  where: 5.3.1절·초록·1장 — 공식 Qwen2.5-VL-3B, DriveLM val 799장, 공식 설정
+  values:
+  - claim: 실제 상실 수
+    from: eval_results/cmp/dlm_diag_qwen.json::fp16_actual_loss.nonfinite
+    expect: 571
+    docs:
+      files: &id001
+      - thesis_ch1_ch2_draft.md
+      - thesis_ch3_draft.md
+      - thesis_ch4_draft.md
+      - thesis_ch5_draft.md
+      - thesis_ch6_draft.md
+      - thesis_abstract_draft.md
+      render:
+      - '{v:.0f}장'
+  - claim: 실제 상실%
+    from: eval_results/cmp/dlm_diag_qwen.json::fp16_actual_loss.rate
+    expect: 71.5
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}%'
+    expr: 100*x
+    tol: 0.05
+  - claim: 측정용 최댓값
+    from: eval_results/cmp/env4/dlm_gen_qwen.json::calib.max_worst
+    expect: 81920
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+  - claim: bf16 상대 오차 중앙
+    from: eval_results/cmp/env4/dlm_fid_qwen.json::bf16.rel_err.median
+    expect: 0.183
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 0.0005
+  - claim: (R) 상대 오차 중앙
+    from: eval_results/cmp/env4/dlm_fid_qwen.json::fp16_resid.rel_err.median
+    expect: 0.0558
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: (R) 코사인 최소
+    from: eval_results/cmp/env4/dlm_fid_qwen.json::fp16_resid.cos.min
+    expect: 0.9783
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    tol: 5.0e-05
+  - claim: bf16 문장 일치%
+    from: eval_results/cmp/env4/dlm_gen_qwen.json::bf16.agree_fp32_string
+    expect: 40.9
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}%'
+    expr: 100*x
+    tol: 0.05
+  - claim: fp16 문장 일치%
+    from: eval_results/cmp/env4/dlm_gen_qwen.json::fp16.agree_fp32_string
+    expect: 22.7
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}%'
+    expr: 100*x
+    tol: 0.05
+  - claim: (R) 문장 일치%
+    from: eval_results/cmp/env4/dlm_gen_qwen.json::fp16_resid.agree_fp32_string
+    expect: 73.1
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}%'
+    expr: 100*x
+    tol: 0.05
+  - claim: (R) fp32 등가성 코사인 최소(799장)
+    from: eval_results/cmp/dlm_equiv_qwen.json::fp32_resid.cos.min
+    expect: 0.9999999999997387
+    docs:
+      files: *id001
+      render:
+      - '{v:.16f}'
+    tol: 1.0e-16
+- id: gemma_official
+  where: 5.3.2절 — Gemma 4 네 조건, 경로 (ii)
+  values:
+  - claim: 26B-A4B·280 (R) 오차 중앙
+    from: eval_results/cmp/dlm_fid_gemma_26B-A4B_280.json::fp16_resid.rel_err.median
+    expect: 0.0381
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: 26B-A4B·1120 (R) 오차 중앙
+    from: eval_results/cmp/dlm_fid_gemma_26B-A4B_1120.json::fp16_resid.rel_err.median
+    expect: 0.0432
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: 31B·280 (R) 오차 중앙
+    from: eval_results/cmp/dlm_fid_gemma_31B_280.json::fp16_resid.rel_err.median
+    expect: 0.038
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: 31B·1120 (R) 오차 중앙
+    from: eval_results/cmp/dlm_fid_gemma_31B_1120.json::fp16_resid.rel_err.median
+    expect: 0.0433
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: (R) fp32 등가성 코사인 최소(네 조건 중 최소)
+    from: eval_results/cmp/dlm_equiv_gemma_31B_1120.json::fp32_resid.cos.min
+    expect: 0.9999999999998634
+    docs:
+      files: *id001
+      render:
+      - '{v:.16f}'
+    tol: 1.0e-16
+  - claim: 280 측정용 최댓값
+    from: eval_results/cmp/calib100_gemma_26B-A4B_280.json::max_worst
+    expect: 91136
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+  - claim: 1120 측정용 최댓값
+    from: eval_results/cmp/calib100_gemma_26B-A4B_1120.json::max_worst
+    expect: 93696
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+- id: sdxl_gen
+  where: 5.1.1절·초록 — SDXL VAE 디코더, 생성 잠재 100개
+  values:
+  - claim: FP16-Fix PSNR 중앙
+    from: eval_results/cmp/env3/sdxl_gen_cmp.json::fix_fp16.psnr_db.median
+    expect: 46.1
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: (R) PSNR 중앙
+    from: eval_results/cmp/env3/sdxl_gen_cmp.json::resid_eps1_fp16.psnr_db.median
+    expect: 67.2
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: FP16-Fix 오차 중앙
+    from: eval_results/cmp/env3/sdxl_gen_cmp.json::fix_fp16.rel_err.median
+    expect: 0.0292
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: (R) 오차 중앙
+    from: eval_results/cmp/env3/sdxl_gen_cmp.json::resid_eps1_fp16.rel_err.median
+    expect: 0.00262
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-06
+  - claim: 측정용 최댓값
+    from: eval_results/cmp/sdxl_calib.json::max_worst
+    expect: 1409024
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+  - claim: (R) fp32 등가성 코사인 최소
+    from: eval_results/cmp/env3/sdxl_gen_cmp.json::resid_eps1_equivalence_cos_min
+    expect: 0.9999999999999997
+    docs:
+      files: *id001
+      render:
+      - '{v:.16f}'
+    tol: 1.0e-16
+  - claim: 원래 bf16 오차 중앙
+    from: eval_results/cmp/env5/sdxl_gen_bf16.json::orig_bf16.rel_err.median
+    expect: 0.0195
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: 원래 bf16 PSNR 중앙
+    from: eval_results/cmp/env5/sdxl_gen_bf16.json::orig_bf16.psnr_db.median
+    expect: 49.6
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: (R) 오차 최대
+    from: eval_results/cmp/env5/sdxl_gen_bf16.json::resid_fp16.rel_err.max
+    expect: 0.00585
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-06
+- id: sdxl_coco
+  where: 5.1.2절·초록 — COCO val2017 5,000장, LPIPS alex·[0,1]
+  values:
+  - claim: 원래 fp32 LPIPS
+    from: eval_results/cmp/env3/sdxl_coco.json::orig_fp32.lpips01.mean
+    expect: 0.0543
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    tol: 5.0e-05
+  - claim: FP16-Fix fp16 LPIPS
+    from: eval_results/cmp/env3/sdxl_coco.json::fix_fp16.lpips01.mean
+    expect: 0.0562
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    tol: 5.0e-05
+  - claim: (R) 모두 fp16 LPIPS
+    from: eval_results/cmp/env3/sdxl_coco.json::resid_full_fp16.lpips01.mean
+    expect: 0.0543
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    tol: 5.0e-05
+  - claim: FP16-Fix fp16 PSNR
+    from: eval_results/cmp/env3/sdxl_coco.json::fix_fp16.psnr_vs_orig32.mean
+    expect: 38.2
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: (R) 모두 fp16 PSNR
+    from: eval_results/cmp/env3/sdxl_coco.json::resid_full_fp16.psnr_vs_orig32.mean
+    expect: 45.1
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: 인코더 측정용 최댓값
+    from: eval_results/cmp/sdxl_enc_resid_plan_coco.json::diagnosis.max_worst
+    expect: 552960
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+  - claim: 디코더 측정용 최댓값
+    from: eval_results/cmp/sdxl_calib_coco.json::max_worst
+    expect: 630784
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+  - claim: 원래 bf16 PSNR
+    from: eval_results/cmp/env3/sdxl_coco.json::orig_bf16.psnr_vs_orig32.mean
+    expect: 34.7
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: FP16-Fix bf16 PSNR
+    from: eval_results/cmp/env3/sdxl_coco.json::fix_bf16.psnr_vs_orig32.mean
+    expect: 35.4
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: 원래 bf16 LPIPS
+    from: eval_results/cmp/env3/sdxl_coco.json::orig_bf16.lpips01.mean
+    expect: 0.0567
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    tol: 5.0e-05
+  - claim: FP16-Fix bf16 LPIPS
+    from: eval_results/cmp/env3/sdxl_coco.json::fix_bf16.lpips01.mean
+    expect: 0.0574
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    tol: 5.0e-05
+  - claim: 인코더·디코더 등가성 코사인 최소(5,000장)
+    from: eval_results/cmp/sdxl_coco_equiv.json::enc_cos.min
+    expect: 0.9999999999999996
+    docs:
+      files: *id001
+      render:
+      - '{v:.16f}'
+    tol: 1.0e-16
+- id: flux
+  where: 5.2절·초록 — FLUX.1-schnell 100개, 4스텝
+  values:
+  - claim: bf16 오차 중앙
+    from: eval_results/cmp/flux_rev35.json::bf16.rel_err_vs_fp32.median
+    expect: 0.125
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 0.0005
+  - claim: diffusers 자르기 오차
+    from: eval_results/cmp/flux_rev35.json::a2_fp16_diffusers.rel_err_vs_fp32.median
+    expect: 0.138
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 0.0005
+  - claim: Draw Things 오차
+    from: eval_results/cmp/flux_rev35.json::b2_drawthings_engine.rel_err_vs_fp32.median
+    expect: 0.306
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 0.0005
+  - claim: (R) 오차
+    from: eval_results/cmp/flux_rev35.json::c_resid.rel_err_vs_fp32.median
+    expect: 0.0602
+    docs:
+      files: *id001
+      render:
+      - '{v:#.3g}'
+    tol: 5.0e-05
+  - claim: (R) PSNR
+    from: eval_results/cmp/flux_rev35.json::c_resid.psnr_db_vs_fp32.median
+    expect: 36.0
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: Draw Things PSNR
+    from: eval_results/cmp/flux_rev35.json::b2_drawthings_engine.psnr_db_vs_fp32.median
+    expect: 20.3
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f} dB'
+    tol: 0.05
+  - claim: 측정용 최댓값
+    from: eval_results/cmp/flux_calib.json::diagnosis_bf16.max_worst
+    expect: 233472
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f}'
+  - claim: (R) fp32 등가성 코사인 최소(100개)
+    from: eval_results/cmp/flux_rev35.json::equiv_r_fp32.cos_min
+    expect: 0.9999999999999225
+    docs:
+      files: *id001
+      render:
+      - '{v:.16f}'
+    tol: 1.0e-16
+  - claim: 자동 도구 영역 연산
+    from: eval_results/cmp/auto100_flux.json::region
+    expect: 574
+    docs:
+      files: *id001
+      render:
+      - '{v:.0f}'
+- id: deploy
+  where: 5.4절·초록 — A100 TensorRT·Orin Nano, 799장
+  values:
+  - claim: fp32 지연
+    from: eval_results/cmp/dlm_lat_f32.json::modes.fp32.latency_ms.p50
+    expect: 193.7
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}'
+    tol: 0.05
+  - claim: bf16 지연
+    from: eval_results/cmp/dlm_lat_bf16.json::modes.bf16.latency_ms.p50
+    expect: 109.8
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}'
+    tol: 0.05
+  - claim: fp16 지연
+    from: eval_results/cmp/dlm_lat_f16.json::modes.typed.latency_ms.p50
+    expect: 113.1
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}'
+    tol: 0.05
+  - claim: (R) 지연
+    from: eval_results/cmp/dlm_lat_f16_resid.json::modes.typed.latency_ms.p50
+    expect: 103.0
+    docs:
+      files: *id001
+      render:
+      - '{v:.1f}'
+    tol: 0.05
+  - claim: 무교정 상실 (전용 빌드)
+    from: eval_results/cmp/dlm_lat_f16.json::modes.typed.nan_rate
+    expect: 550
+    docs:
+      files: *id001
+      render:
+      - '{v:.0f}'
+    expr: 799*x
+    tol: 0.5
+  - claim: 래퍼 코사인 최소
+    from: eval_results/cmp/dlm_wrapper_verify.json::ort_cos_median.min
+    expect: 0.9993
+    docs:
+      files: *id001
+      render:
+      - '{v:.4f}'
+    expr: math.floor(x*10000)/10000
+    tol: 5.0e-05
+  - claim: Orin 무교정 상실
+    from: eval_results/orin_dlm/results/orin_official_dlm1596h_typed.json::nan_count
+    expect: 555
+    docs:
+      files: *id001
+      render:
+      - '{v:.0f}'
+  - claim: Orin 무교정 지연
+    from: eval_results/orin_dlm/results/orin_official_dlm1596h_typed.json::latency_ms.p50
+    expect: 2090
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f} /'
+    tol: 0.5
+  - claim: Orin (R) 지연
+    from: eval_results/orin_dlm/results/orin_official_dlm1596h_resid_typed.json::latency_ms.p50
+    expect: 2098
+    docs:
+      files: *id001
+      render:
+      - '{v:,.0f} /'
+    tol: 0.5

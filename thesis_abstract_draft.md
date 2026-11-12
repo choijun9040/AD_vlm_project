@@ -1,52 +1,42 @@
-# 학위 논문 초록 초안 (2026-09-29)
+# 학위 논문 초록 초안 (2026-11-06 전면 수정)
 
-> **이 문서의 위치.** 학위 논문 국문·영문 초록 초안이다. 학술대회 요약문(`ksae2026_abstract.md`)은
-> **발견**(지표 역전)을 세우는 글이고, 이 초록은 제목대로 **오버플로의 진단과 교정** — 발견, 기전, 공개 모델에서의
-> 범위, 도구, 배포 런타임 확인 — 를 요약한다. 근거는 6장 결론 초안의 6.1절이다.
->
-> **작성 규칙.** 수치마다 조건(해상도·통계량)을 짧게 붙인다. 확인된 것은 A100의 TensorRT fp16 엔진까지다.
-> Orin은 강타입 엔진으로 확인한 결과 한 문장을 넣었다(5.5절, 2026-10-02). 관행 빌드 불가 등 조건은 본문에 둔다.
-> 분량은 **국문 1,415자**(공백 제외)·**영문 545단어**이고 양쪽 다 **8단락·주요어 6개**다(제목·주요어 포함, 2026-10-19 재집계 — 10-02 판의 「1,225자·478단어·7단락」은 지도교수 피드백 재구성과 결과 단락 분리 이전 값이다). **학교 규정에서 확인할 것 넷**: 분량 상한 · 단락 수 제한(한 단락만 받는 규정도 있다) · 주요어 개수(보통 다섯이라 **하나를 줄여야 할 수 있다**) · 영문 초록의 위치와 제목 반복 여부. 규정이 정해지면 맞춘다.
->
-> **정확도 문장의 범위.** "다섯 학생이 정확도로 구별되지 않는다"로 쓰지 않는다 — 출력 증류 학생(46.74%)은
-> 뚜렷이 낮다(5.1절). 구별되지 않는 것은 특징 증류 세 학생과 기준선(50.30~51.69%)이다.
+> **이 문서의 위치.** 국문·영문 초록. 합본에는 영문 초록만 싣는다(2026-10-30 사용자 결정). 구조는 지도교수 피드백(2026-10-19)의
+> 「연구 내용·필요성 → 기존 연구의 문제점 → 제안 → 기존 대비 실험 결과 → 결론」 다섯 단락을 유지한다. 주장은 「원래 출력을 지킨다」이며
+> 정확도·화질 향상을 주장하지 않는다(`docs/manuscript_rules.md`). **학교 규정에서 확인할 것**: 분량 상한·단락 수·주요어 개수·영문 초록 형식.
+> 이전 초록(학생 모델 중심)은 git 이력에 있다.
 
-> **2026-10-19 재구성 (지도교수 피드백).** 초록을 「연구 내용·필요성 → 기존 연구의 문제점 → 제안 → 기존 대비 실험 결과 → 결론」 다섯 단락으로 다시 썼다. 비교 기준은 **기존 평가 지표**(과제 정확도, INT8 양자화 SNR, 이상치 비율)와 **기존 대안**(bf16 형식 전환, 출력 측 축소)이다. 구어 표현(「고치는」·「빼」·「재야만」·「보고서에 드러나지 않는다」)은 학술 표현으로 바꿨다. 같은 날 17:46~18:21에 고친 판(「오버플로 교정」·「수치 오버플로」 주요어, 첫 단락의 오버플로 정의·적용 범위, 결론의 bf16 측정 규칙, 결과 단락 분리 등)은 사용자 결정으로 되돌리고 커밋 339c5e0 판을 쓴다. 그 판 위에 새 제목 기준 검토 넷을 적용했다: 첫 단락에서 현상을 「오버플로」로 부르고, 첫 문장의 범위를 「차량과 같은 엣지 장치」로 넓히고(자율주행은 실험 사례로 남김), 주요어에 「수치 오버플로」·「가중치 교정」을 넣고 「지식 증류」·「배포 검증」을 뺐으며, 결과 단락을 기존 지표의 실패와 제안 방법의 결과 두 단락으로 나눴다. 이어 첫 단락 끝에 자율주행을 사례로 밝히는 문장을 넣었다(적용 범위 주장은 넣지 않음).
->
 ---
 
 ## 국문 초록
 
-**비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정**
+**비전-언어 모델과 확산 모델의 fp16 배포를 위한 오버플로 진단 및 잔차 재조정**
 
-비전-언어 모델(VLM)을 엣지 장치에 배포하려면 지식 증류로 모델을 줄이고 반정밀도(fp16)로 연산하는 것이 일반적이다.
-그러나 비전 인코더의 활성값이 fp16 상한(65,504)을 넘으면 그 이미지에 대한 출력 전체가 상실되며, 압축 모델의
-평가에 쓰이는 과제 정확도와 양자화 오차 지표는 이 위험을 판별하지 못한다. 양자화 오차 지표는 절대 크기를
-보지 않는 스케일 불변량이고, 정확도는 오버플로가 일어나지 않는 조건(bf16, 평가 해상도)에서 측정되기 때문이다.
+비전-언어 모델(VLM)과 확산 모델을 bf16을 지원하지 않는 엣지 가속기에 배포하려면 fp16을 사용해야 하며, 활성값이 fp16 상한(65,504)을
+초과하면 그 입력의 출력 전체가 상실된다. Qwen2.5-VL-3B의 비전 인코더는 DriveLM 검증 799장 중 71.5%, Gemma 4의 비전 인코더는 형식 승격이
+없는 배포 경로에서 799장 모두 출력을 상실하였다. SDXL VAE 디코더는 생성 잠재 100개 모두, FLUX.1-schnell은 값 클리핑 없이 프롬프트 100개
+모두 출력을 상실하였다.
 
-본 논문은 층별 **표현 범위 여유**(형식 최댓값 ÷ 최대 활성 크기)를 정의하고, 형식 상한을 넘는 이미지의 비율로
-출력 상실률을 예측하는 진단 지표와, 게이트형 MLP의 곱셈 이전 단계에서 가중치를 축소하는 학습 없는 교정 방법을
-제안한다.
+기존 처방은 연산을 fp32로 승격하거나, 모델을 미세조정하거나(SDXL-VAE-FP16-Fix), 특정 블록을 고정 배수로 축소한다(Draw Things). 이들은
+fp32 경로가 필요하거나, 모델의 출력을 변경하거나, 모델마다 조정해야 한다.
 
-Qwen2.5-VL-7B를 교사로 하는 증류 설정에서 손실 항만 달리한 3B 학생 모델로 검증하였다. 학생 모델의 여유는 원본 해상도에서
-0.88~2.94배(이미지별 최대의 중앙값)로 달랐고, 여유가 1 미만인 학생 모델은 fp16에서 이미지의
-96.0%(799장)에 대해 출력을 상실하였다. 그 결과 원본 해상도의 NuScenes-QA 11,309문항에서 이 모델의 정확도는 48.47%(bf16)에서 1.34%(fp16)로 떨어졌다. 텐서 단위 INT8 양자화 SNR은 이 모델을
-상실이 없는 모델보다 오히려 높게 평가하였다(32.28 대 22.78 dB). 제안 지표는 사전학습 모델을 포함한 6개 모델의 상실률을 평균 절대 오차 1.1%p(PyTorch fp16, 원본 해상도,
-799장)로 예측하였고, 제안 교정은 정확도를 오버플로 없는 bf16 실행(48.47%)과
-0.29%p 차이인 48.76%로 회복하면서(11,309문항) fp16 형식을
-유지하였다. 같은 상실과 교정 효과는 TensorRT 엔진과 Jetson Orin Nano(강타입 엔진, `max_pixels` 802,816 이하)에서도 확인되었다.
+본 논문은 평가와 겹치지 않는 입력 100개(진단 집합)를 bf16으로 측정해 오버플로 지점과 최댓값을 찾는 진단과, 그 최댓값으로 정한 배수 c만큼
+잔차 흐름을 축소하면서 fp32 함수를 유지하는 학습 없는 **잔차 재조정**을 제안한다. 교정할 층은 연산 그래프에서 자동으로 탐색한다.
 
-이상의 결과는 압축된 VLM을 저정밀로 배포하기 전에 배포 해상도에서 표현 범위 여유를 측정하여 출력 상실 위험을
-진단하고 교정해야 함을 보여 준다.
+잔차 재조정은 모든 대상에서 fp16 출력 상실을 없앴고, 기존 처방보다 원본 fp32 출력에 가까웠다. SDXL VAE에서 원본 출력 대비 PSNR 중앙값은
+67.2 dB로 SDXL-VAE-FP16-Fix의 46.1 dB보다 높았고, FLUX.1-schnell에서 최종 잠재 상대 오차 중앙값은 0.0602로 Draw Things 공개 설정의 0.306보다
+작았다. VLM에서는 bf16 대비 약 1/3의 오차를 보였고, 교정한 Qwen 비전 인코더는 A100과 Jetson Orin Nano의 TensorRT fp16 엔진에서 모든
+이미지의 출력을 유지하였다.
 
-**주요어**: 표현 범위 여유, 수치 오버플로, 저정밀 추론, 가중치 교정, 비전-언어 모델, 자율주행
+이 결과는 오버플로가 잔차 흐름에 있을 때 학습 없이 원본 출력을 지키면서 fp16 상실을 없앨 수 있음을 보여 준다.
+
+**주요어**: fp16 오버플로, 오버플로 진단, 잔차 재조정, 저정밀 배포, 비전-언어 모델, 확산 모델
 
 ---
 
 ## Abstract
 
-**Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of
-Vision-Language Models**\*
+**Overflow Diagnosis and Residual Rescaling for fp16 Deployment of
+Vision-Language and Diffusion Models**\*
 
 *○○○ (영문 성명, 예: Kim, Ji-Hye)*
 
@@ -55,32 +45,26 @@ Graduate School, Chungbuk National University
 Cheongju, Korea  
 Supervised by Professor ○○○*
 
-Deploying vision-language models (VLMs) on edge devices typically involves both knowledge distillation
-and half-precision (fp16) inference. When an activation in the vision encoder exceeds the fp16 limit
-(65,504), the model's entire output for that image is lost, yet the task accuracy and
-quantization-error metrics used to evaluate compressed models cannot detect this risk:
-quantization-error metrics are scale-invariant and ignore absolute magnitude, and accuracy is
-measured under conditions where overflow does not occur (bf16, evaluation resolution).
+Deploying vision-language models (VLMs) and diffusion models on edge accelerators without bf16 support requires fp16, and an
+activation above the fp16 limit (65,504) destroys the entire output. The vision encoder of Qwen2.5-VL-3B loses its output on 71.5% of
+799 DriveLM images, and that of Gemma 4 on all of them along a deployment path without upcasting; the SDXL VAE decoder loses it on all
+100 generated latents, and FLUX.1-schnell on all 100 prompts without value clipping.
 
-This thesis defines a per-layer **representable-range headroom** (format maximum ÷ maximum
-activation magnitude) and proposes a diagnostic that estimates the collapse rate as the fraction of
-images exceeding the format limit, together with a training-free correction that scales down the two input projections before the
-element-wise multiplication in the gated MLP.
+Existing remedies upcast overflowing operations to fp32, fine-tune the model (SDXL-VAE-FP16-Fix), or rescale fixed blocks (Draw Things);
+they need an fp32 path, change the model's output, or must be tuned per model.
 
-We validated both on 3B students that differ only in their loss terms within a distillation setup
-with a Qwen2.5-VL-7B teacher. The students differ in headroom from 0.88× to 2.94× (median over images, native resolution); the student below 1× loses its output on 96.0% of 799 images in fp16.
-Its accuracy on 11,309 NuScenes-QA questions at native resolution falls from 48.47% (bf16) to 1.34% (fp16). Per-tensor INT8 quantization SNR rates this student
-higher than the collapse-free one (32.28 vs. 22.78 dB). The proposed diagnostic estimates the
-collapse rate of six models, including the pretrained model, with a mean absolute error of 1.1 percentage points (PyTorch fp16, native resolution, 799 images), and the proposed correction
-restores accuracy to 48.76%, 0.29 percentage points from bf16 execution without overflow (48.47%; 11,309 questions), while keeping fp16.
-The same collapse and correction were confirmed on TensorRT engines and, with strongly typed engines
-at resolutions up to 802,816 pixels, on a Jetson Orin Nano.
+This thesis proposes a bf16 diagnostic that locates overflowing operations and their maximum on 100 diagnosis inputs disjoint from the
+evaluation data, and **residual rescaling**, a training-free edit that shrinks the residual stream by a factor c set from that maximum
+while leaving the fp32 function unchanged. The layers to edit are found automatically from the operation graph.
 
-These results show that representable-range headroom must be measured at the deployment
-resolution to diagnose and correct the collapse risk before deploying compressed VLMs in low
-precision.
+Residual rescaling removed fp16 output loss on every target and stayed closer to the original fp32 output than existing remedies: a
+median PSNR of 67.2 dB versus 46.1 dB for SDXL-VAE-FP16-Fix, and a median final-latent error of 0.0602 versus 0.306 for Draw Things on
+FLUX.1-schnell. On the VLMs, its error was about one third of that of bf16, and the corrected Qwen vision encoder kept its output on all
+images with TensorRT fp16 engines on an A100 and a Jetson Orin Nano.
 
-**Keywords**: representable-range headroom, numerical overflow, low-precision inference, weight
-correction, vision-language model, autonomous driving
+When the overflow lies in the residual stream, fp16 output loss can thus be removed without training while preserving the original
+output.
+
+**Keywords**: fp16 overflow, overflow diagnosis, residual rescaling, low-precision deployment, vision-language model, diffusion model
 
 \* A thesis for the degree of Master in ○○ 20○○.

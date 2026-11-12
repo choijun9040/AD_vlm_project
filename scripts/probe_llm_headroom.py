@@ -34,12 +34,16 @@ MIN_PIXELS = 64 * 28 * 28              # 평가 스크립트와 같은 하한
 IMAGE_TOKEN_ID = 151655
 
 
+ATTN = {"impl": "eager"}          # 개정 24: --attn default면 지정 안 함(공식 사용법, sdpa)
+
+
 def load(checkpoint, dtype):
     awq_compat.patch()
     from transformers import Qwen2_5_VLForConditionalGeneration
     from peft import PeftModel
+    kw = {} if ATTN["impl"] == "default" else {"attn_implementation": ATTN["impl"]}
     m = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-        BASE_3B, torch_dtype=getattr(torch, dtype), attn_implementation="eager")
+        BASE_3B, torch_dtype=getattr(torch, dtype), **kw)
     if checkpoint and checkpoint.lower() != "none":
         m = PeftModel.from_pretrained(m, checkpoint).merge_and_unload()
     m = m.eval().to("cuda")
@@ -67,6 +71,14 @@ def pick_inputs(limit, offset=0):
     return items[offset:]
 
 
+def all_items():
+    """정확도 평가와 같은 11,309문항(`eval_nuscenesqa_val.py`의 NuScenesQADataset 순서) — 개정 13 (2026-11-04)."""
+    from dataloader import NuScenesQADataset
+    tok = build_token_to_images(DRIVELM_VAL)
+    ds = NuScenesQADataset(json_path=NUSCENESQA_VAL, token_to_images=tok, processor=None)
+    return [(s["sample_token"], str(tok[s["sample_token"]]["CAM_FRONT"]), s["question"]) for s in ds.samples]
+
+
 def hook_points(model):
     lm = model.model
     pts = {}
@@ -79,8 +91,12 @@ def hook_points(model):
 
 
 @torch.no_grad()
-def run(model, processor, items, record_pos, logit_flags=None):
-    """logit_flags: 리스트를 주면 이미지별 비유한 로짓 여부를 덧붙인다 — 집계에는 영향 없음."""
+def run(model, processor, items, record_pos, logit_flags=None, cache_images=False):
+    """logit_flags: 리스트를 주면 이미지별 비유한 로짓 여부를 덧붙인다 — 집계에는 영향 없음.
+
+    cache_images (개정 13, 2026-11-04): 11,309문항은 799장을 나눠 쓴다. 이미지 전처리와 비전 인코더 출력을 이미지마다 한 번만 계산해
+    그 이미지의 문항에 다시 쓴다 — 처리기가 하는 이미지 토큰 펼치기를 그대로 하고(같은 input_ids), 비전 출력은 forward 안의
+    masked_scatter와 같은 자리에 넣는다. RoPE 위치는 past_key_values가 없어 문항마다 input_ids·image_grid_thw로 다시 계산된다."""
     pts = hook_points(model)
     rec = {k: [] for k in pts}
     where = {k: [] for k in pts}
@@ -103,14 +119,36 @@ def run(model, processor, items, record_pos, logit_flags=None):
 
     hs = [m.register_forward_hook(mk(n)) for n, m in pts.items()]
     nonfinite_logits = 0
-    for _tok, path, q in items:
+    img_cache = {}
+    merge = processor.image_processor.merge_size ** 2
+    for n_done, (_tok, path, q) in enumerate(items):
+        if n_done and n_done % 500 == 0:
+            print(f"  {n_done}/{len(items)}", flush=True)
         msgs = [{"role": "user", "content": [{"type": "image", "image": path},
                                              {"type": "text", "text": q}]}]
         text = processor.apply_chat_template(msgs, tokenize=False, add_generation_prompt=True)
-        inp = processor(text=[text], images=[Image.open(path).convert("RGB")],
-                        return_tensors="pt").to("cuda")
-        cur["ids"] = inp["input_ids"][0]
-        out = model(**inp)
+        if not cache_images:
+            inp = processor(text=[text], images=[Image.open(path).convert("RGB")],
+                            return_tensors="pt").to("cuda")
+            cur["ids"] = inp["input_ids"][0]
+            out = model(**inp)
+        else:
+            if path not in img_cache:
+                enc = processor.image_processor(images=[Image.open(path).convert("RGB")], return_tensors="pt")
+                grid = enc["image_grid_thw"].to("cuda")
+                emb = model.visual(enc["pixel_values"].to("cuda", model.visual.dtype), grid_thw=grid)
+                img_cache[path] = (grid.cpu(), emb.cpu())
+            grid, emb = img_cache[path]
+            n_tok = int(grid.prod()) // merge
+            t2 = text.replace("<|image_pad|>", "<|image_pad|>" * n_tok, 1)
+            tk = processor.tokenizer([t2], return_tensors="pt").to("cuda")
+            ids = tk["input_ids"]
+            emb_in = model.model.embed_tokens(ids)
+            msk = (ids == IMAGE_TOKEN_ID).unsqueeze(-1).expand_as(emb_in)
+            emb_in = emb_in.masked_scatter(msk, emb.to("cuda", emb_in.dtype))
+            cur["ids"] = ids[0]
+            out = model(input_ids=ids, inputs_embeds=emb_in, attention_mask=tk["attention_mask"],
+                        image_grid_thw=grid.to("cuda"))
         nfl = not torch.isfinite(out.logits).all()
         if nfl:
             nonfinite_logits += 1
@@ -146,27 +184,41 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=NATIVE_MAX_PIXELS)
     ap.add_argument("--out_dir", default="eval_results")
     ap.add_argument("--offset", type=int, default=0, help="이미지 시작 위치 (표준 순서 기준)")
+    ap.add_argument("--all_questions", action="store_true",
+                    help="이미지마다 첫 문항 대신 정확도 평가와 같은 11,309문항 전부(--limit·--offset 무시) — 개정 13")
+    ap.add_argument("--cache_images", action="store_true",
+                    help="이미지 전처리·비전 인코더 출력을 이미지마다 한 번만 계산(개정 13 — 결과는 같고 반복만 없앤다)")
+    ap.add_argument("--first_n", type=int, default=0, help="문항 앞 N개만(동일성 시험용)")
+    ap.add_argument("--min_pixels", type=int, default=MIN_PIXELS, help="공식 처리기 기본값은 3,136 — 개정 24")
+    ap.add_argument("--rwqa", default=None, help="RealWorldQA 문항 jsonl — 765문항 전부(문항당 이미지 하나). 개정 24, 2026-11-04")
+    ap.add_argument("--attn", default="eager", help="어텐션 구현. default = 지정 안 함(공식 사용법, sdpa) — 개정 24")
     ap.add_argument("--per_image", default=None,
                     help="이미지별 지점 max(bf16·fp16, 비유한이면 inf)·bf16 argmax 위치 종류·비유한 로짓 여부와 "
                          "장면 토큰을 jsonl로 저장('w'). 장면 군집 부트스트랩용")
     args = ap.parse_args()
 
     from transformers import AutoProcessor
-    processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=args.max_pixels, min_pixels=MIN_PIXELS)
-    items = pick_inputs(args.limit, args.offset)
-    print(f"[설정] {args.tag}  이미지 {len(items)}장  max_pixels={args.max_pixels:,}")
+    processor = AutoProcessor.from_pretrained(BASE_3B, max_pixels=args.max_pixels, min_pixels=args.min_pixels)
+    ATTN["impl"] = args.attn
+    if args.rwqa:
+        items = [(str(r["idx"]), r["image"], r["question"]) for r in map(json.loads, open(args.rwqa))]
+    else:
+        items = all_items() if args.all_questions else pick_inputs(args.limit, args.offset)
+    if args.first_n:
+        items = items[:args.first_n]
+    print(f"[설정] {args.tag}  {'문항' if args.all_questions else '이미지'} {len(items)}개  max_pixels={args.max_pixels:,}")
 
     # 1) 크기 — 전체 bf16
     m = load(args.checkpoint, "bfloat16")
     flags_bf16 = [] if args.per_image else None
-    rec, where, nf_bf16 = run(m, processor, items, record_pos=True, logit_flags=flags_bf16)
+    rec, where, nf_bf16 = run(m, processor, items, record_pos=True, logit_flags=flags_bf16, cache_images=args.cache_images)
     mag = summarize(rec, where)
     del m; torch.cuda.empty_cache()
 
     # 2) 상실 — 언어 모델 fp16, 비전 bf16
     m = load(args.checkpoint, "float16")
     flags_fp16 = [] if args.per_image else None
-    rec16, where16, nf_fp16 = run(m, processor, items, record_pos=False, logit_flags=flags_fp16)
+    rec16, where16, nf_fp16 = run(m, processor, items, record_pos=False, logit_flags=flags_fp16, cache_images=args.cache_images)
     del m; torch.cuda.empty_cache()
 
     worst = min((r for r in mag if r["headroom_worst"]), key=lambda r: r["headroom_worst"])
@@ -175,8 +227,9 @@ def main():
           f"(max {worst['max_worst']:,.0f}, 위치 {worst['argmax_kind']})  초과 비율 최대 {exceed_any:.1%}")
     print(f"[상실 fp16]  비유한 로짓 이미지 {nf_fp16:.1%}   (bf16 기준 {nf_bf16:.1%})")
 
-    out = {"tag": args.tag, "checkpoint": args.checkpoint, "n_images": len(items),
-           "max_pixels": args.max_pixels, "magnitude_dtype": "bfloat16",
+    out = {"tag": args.tag, "checkpoint": args.checkpoint, "n_images": len({it[1] for it in items}), "n_items": len(items),
+           "all_questions": args.all_questions, "cache_images": args.cache_images,
+           "max_pixels": args.max_pixels, "magnitude_dtype": "bfloat16", "rwqa": args.rwqa, "attn": args.attn,
            "collapse_rate_fp16_llm": nf_fp16, "nonfinite_bf16": nf_bf16,
            "worst_point": worst["point"], "worst_headroom": worst["headroom_worst"],
            "per_point": mag,

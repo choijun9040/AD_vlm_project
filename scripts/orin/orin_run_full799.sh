@@ -10,6 +10,7 @@
 #
 #   bash orin_run_full799.sh                 # 802816h → 401408h, 세 모델씩
 #   bash orin_run_full799.sh 802816h         # 한 해상도만
+#   bash orin_run_full799.sh 1440000h        # 원본 해상도 재시도(개정 11, 2026-11-04 — 그래프를 따로 옮겨 SHA256SUMS_onnx에 더한 뒤)
 # 다시 실행하면 이미 만든 엔진·결과는 건너뛴다 — 중간에 끊겨도 그대로 다시 돌리면 된다.
 set -u
 cd "$(dirname "$0")"
@@ -89,10 +90,14 @@ for RES in $RESL; do
   case $RES in
     802816h) MP=802816 ;;
     401408h) MP=401408 ;;
-    *) echo "해상도는 802816h, 401408h"; exit 1 ;;
+    1440000h) MP=1440000 ;;   # 개정 11 재시도 전용 — 꾸러미 기본 목록에는 넣지 않는다(2026-11-04)
+    *) echo "해상도는 802816h, 401408h, 1440000h"; exit 1 ;;
   esac
   # 모델 목록은 MODELS_TPL로 바꿀 수 있다({RES} 자리표시) — (R) 교정본 꾸러미는 MODELS_TPL="tower_baseline_v2_{RES}_resid" (2026-11-03, 개정 10)
-  MODELS=$(echo "${MODELS_TPL:-tower_baseline_v2_{RES} tower_full_{RES} tower_baseline_v2_{RES}_fixa}" | sed "s/{RES}/$RES/g")
+  # 기본값을 ${MODELS_TPL:-...} 안에 바로 쓰면 {RES}의 「}」가 확장을 닫아 버려, MODELS_TPL을 줘도 기본 목록 뒷부분이 붙는다(2026-11-04 보드에서 발견)
+  DEFAULT_TPL='tower_baseline_v2_{RES} tower_full_{RES} tower_baseline_v2_{RES}_fixa'
+  TPL=${MODELS_TPL:-$DEFAULT_TPL}
+  MODELS=$(echo "$TPL" | sed "s/{RES}/$RES/g")
   log "[2] $RES (max_pixels $MP) 강타입"
   for m in $MODELS; do
     for p in p1 p2; do
@@ -114,7 +119,7 @@ python3 - <<'PY'
 import json, glob, os
 for f in sorted(glob.glob("results/orin_*_typed.json")):
     o = json.load(open(f)); tag = o["tag"][:-len("_typed")]            # baseline_v2_802816h(_fixa) / full_802816h
-    res = next(r for r in ("802816h", "401408h") if r in tag)
+    res = next(r for r in ("802816h", "401408h", "1440000h") if r in tag)
     m = next((sfx for sfx in ("fixa", "resid") if tag.endswith("_" + sfx)), None) or tag.replace("_" + res, "")
     ref = f"a100_ref/trt_{res}_typed_{m}.json"
     a = json.load(open(ref))["modes"]["typed"] if os.path.exists(ref) else None

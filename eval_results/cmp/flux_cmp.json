@@ -1,0 +1,174 @@
+{
+ "repo": "black-forest-labs/FLUX.1-schnell",
+ "n": 100,
+ "size": 1024,
+ "steps": 4,
+ "configs": {
+  "ref32": {
+   "nonfinite": 0,
+   "rate": 0.0,
+   "rel_err_vs_fp32": {
+    "median": null,
+    "max": null
+   },
+   "psnr_db_vs_fp32": {
+    "median": null,
+    "min": null
+   }
+  },
+  "bf16": {
+   "nonfinite": 0,
+   "rate": 0.0,
+   "rel_err_vs_fp32": {
+    "median": 0.12436893306565527,
+    "max": 0.4145297486145968
+   },
+   "psnr_db_vs_fp32": {
+    "median": 29.06882706136593,
+    "min": 18.14115017847784
+   }
+  },
+  "a_fp16_noclip": {
+   "nonfinite": 100,
+   "rate": 1.0,
+   "rel_err_vs_fp32": {
+    "median": null,
+    "max": null
+   },
+   "psnr_db_vs_fp32": {
+    "median": null,
+    "min": null
+   }
+  },
+  "a2_fp16_diffusers": {
+   "nonfinite": 0,
+   "rate": 0.0,
+   "rel_err_vs_fp32": {
+    "median": 0.13937787547435554,
+    "max": 0.8443741518598199
+   },
+   "psnr_db_vs_fp32": {
+    "median": 27.845198191895246,
+    "min": 10.890406242324511
+   }
+  },
+  "b_drawthings": {
+   "nonfinite": 0,
+   "rate": 0.0,
+   "rel_err_vs_fp32": {
+    "median": 0.30281916033675216,
+    "max": 1.1614434808706804
+   },
+   "psnr_db_vs_fp32": {
+    "median": 20.463867782651064,
+    "min": 7.608156020084622
+   }
+  },
+  "c_resid": {
+   "nonfinite": 0,
+   "rate": 0.0,
+   "rel_err_vs_fp32": {
+    "median": 0.06096833041225491,
+    "max": 0.27665999493639576
+   },
+   "psnr_db_vs_fp32": {
+    "median": 35.32962374997321,
+    "min": 19.829233369072178
+   }
+  }
+ },
+ "diagnosis_bf16": {
+  "global_max_point": "single_transformer_blocks.37::add#3",
+  "max_worst": 232448.0,
+  "headroom_worst": 0.2818006607929515,
+  "first_exceed": {
+   "point": "transformer_blocks.18::mul#5",
+   "upcast": false,
+   "max_p50": 99840.0,
+   "max_worst": 105472.0,
+   "headroom_worst": 0.6210558252427184,
+   "exceed_rate": 1.0
+  },
+  "any_exceed_rate_predicted_loss": 1.0,
+  "risky_top": [
+   {
+    "point": "single_transformer_blocks.37::add#3",
+    "upcast": false,
+    "max_p50": 223232.0,
+    "max_worst": 232448.0,
+    "headroom_worst": 0.2818006607929515,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.36::add#3",
+    "upcast": false,
+    "max_p50": 222208.0,
+    "max_worst": 231424.0,
+    "headroom_worst": 0.28304756637168144,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.34::add#3",
+    "upcast": false,
+    "max_p50": 221184.0,
+    "max_worst": 230400.0,
+    "headroom_worst": 0.28430555555555553,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.35::add#3",
+    "upcast": false,
+    "max_p50": 221184.0,
+    "max_worst": 230400.0,
+    "headroom_worst": 0.28430555555555553,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.33::add#3",
+    "upcast": false,
+    "max_p50": 220160.0,
+    "max_worst": 229376.0,
+    "headroom_worst": 0.2855747767857143,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "transformer_blocks.18::add#31",
+    "upcast": false,
+    "max_p50": 219136.0,
+    "max_worst": 228352.0,
+    "headroom_worst": 0.2868553811659193,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.0::add#3",
+    "upcast": false,
+    "max_p50": 219136.0,
+    "max_worst": 228352.0,
+    "headroom_worst": 0.2868553811659193,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.1::add#3",
+    "upcast": false,
+    "max_p50": 219136.0,
+    "max_worst": 228352.0,
+    "headroom_worst": 0.2868553811659193,
+    "exceed_rate": 1.0
+   }
+  ],
+  "c": 0.125,
+  "stream_max": 232448.0,
+  "inner_over_target": [],
+  "G_A_note": "FF는 GELU 단일 MLP — (G) 등가 불가; 어텐션 점수는 SDPA 안"
+ },
+ "resid": {
+  "c": 0.125,
+  "n_writers": 116,
+  "n_norms": 115,
+  "equivalence_fp32_cos": [
+   0.9999999999999394,
+   0.9999999999999465
+  ],
+  "accepted": true
+ }
+}

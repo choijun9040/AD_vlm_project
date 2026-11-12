@@ -1,0 +1,41 @@
+{
+ "n": 799,
+ "configs": {
+  "official": {
+   "p1": "/dev/shm/dlm799/onnx/tower_official_dlm1596h_p1.onnx",
+   "p2": "/dev/shm/dlm799/onnx/tower_official_dlm1596h_p2.onnx",
+   "loss": 563,
+   "cos_image": {
+    "min": 0.9893204636444941,
+    "median": 0.9968426452059121
+   },
+   "cos_token_median": {
+    "min": 0.9984351992607117,
+    "median": 0.999538004398346
+   },
+   "latency_ms_p50_reference_only": 365.8658650238067,
+   "engine_mib": {
+    "p1": 626.8773994445801,
+    "p2": 689.4290351867676
+   }
+  },
+  "resid": {
+   "p1": "/dev/shm/dlm799/onnx/tower_official_dlm1596h_resid_p1.onnx",
+   "p2": "/dev/shm/dlm799/onnx/tower_official_dlm1596h_resid_p2.onnx",
+   "loss": 0,
+   "cos_image": {
+    "min": 0.9841342026061063,
+    "median": 0.9968513298727977
+   },
+   "cos_token_median": {
+    "min": 0.9969093799591064,
+    "median": 0.9995937943458557
+   },
+   "latency_ms_p50_reference_only": 366.2159410305321,
+   "engine_mib": {
+    "p1": 627.1504249572754,
+    "p2": 689.7769432067871
+   }
+  }
+ }
+}

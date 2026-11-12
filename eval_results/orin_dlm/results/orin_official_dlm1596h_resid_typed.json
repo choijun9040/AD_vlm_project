@@ -1,0 +1,23 @@
+{
+  "sequential": true,
+  "tag": "official_dlm1596h_resid_typed",
+  "engine": "tower_official_dlm1596h_resid_p1_typed.plan",
+  "engine2": "tower_official_dlm1596h_resid_p2_typed.plan",
+  "n": 799,
+  "max_pixels": 12845056,
+  "nan_rate": 0.0,
+  "nan_count": 0,
+  "latency_ms": {
+    "p50": 2097.871672999645,
+    "p95": 2102.08632170029,
+    "min": 2088.4529000004477
+  },
+  "mem_mib": {
+    "baseline": 975.50390625,
+    "peak": 2250.17578125,
+    "delta": 1274.671875
+  },
+  "max_abs_p50": 53.375,
+  "headroom_p50": 1227.2412177985948,
+  "nan_images": []
+}

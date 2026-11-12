@@ -36,7 +36,10 @@ CHAPTERS = ["thesis_ch1_ch2_draft.md", "thesis_ch3_draft.md", "thesis_ch4_draft.
 ARXIV = {"2601.21288": 3, "2303.06884": 6, "2305.04526": 7, "2605.01330": 8, "2407.08044": 9,
          "2502.09003": 10, "2403.06497": 11, "2402.17762": 12, "2605.15572": 13, "2510.04547": 14,
          "2607.08029": 15, "2503.01873": 16, "2604.26857": 18, "2506.24044": 19, "2512.16760": 20,
-         "2510.24795": 21, "2608.30144": 22}
+         "2510.24795": 21, "2608.30144": 22,
+         # 2026-11-06 전면 수정(#11) — 새 문헌 53~67
+         "2307.01952": 53, "2206.10789": 55, "1405.0312": 56, "1801.03924": 57, "2211.10438": 59, "1710.03740": 60,
+         "1910.03771": 61, "1607.06450": 62, "1803.08494": 63, "1910.07467": 64, "1905.12322": 65}
 # 장마다 처음 한 번 인용한다. (정규식, 옛 번호). 뒤에 붙는 모델 크기 등(-7B, -Instruct)은 토큰째 넘긴다.
 # 처리는 줄 단위라 줄을 넘는 패턴은 쓸 수 없다 — vLLM 이슈는 「#40290」만 필수로 둔다(2026-10-24: 「vLLM\n이슈」 줄바꿈으로 2장 인용이 빠졌다).
 NAMED = [
@@ -53,7 +56,11 @@ NAMED = [
     # 2026-10-30: SigLIP·CLIP·TensorRT. TensorRT 11은 위의 출시 노트([44])가 맡으므로 일반 규칙에서 뺀다
     (r"SigLIP", 46), (r"(?<![A-Za-z])CLIP(?![A-Za-z])", 47), (r"TensorRT(?! 11(?![0-9]))(?: 10(?:\.[0-9]+)*)?", 48),
     # 2026-10-31: 오버플로 실무 도구·사례 (2.2절)
-    (r"Hugging Face transformers", 49), (r"Polygraphy", 50), (r"SDXL VAE", 51), (r"Draw Things", 52),   # 「TensorRT[5] 10.13」이 되지 않게 버전까지 한 이름으로
+    # 2026-11-06 전면 수정(#11): 디버깅 도구는 [49], transformers 라이브러리는 arXiv:1910.03771([61]).
+    # SDXL 자체는 [53], 미세조정본 SDXL-VAE-FP16-Fix는 [51] — 「SDXL-」로 이어지면 [53]에 걸리지 않게 한다
+    (r"transformers의 디버깅 도구", 49), (r"Polygraphy", 50), (r"SDXL-VAE-FP16-Fix", 51), (r"Draw Things", 52),
+    (r"SDXL(?![-A-Za-z])", 53), (r"FLUX\.1", 54), (r"PartiPrompts", 55), (r"(?<![A-Za-z])COCO(?![A-Za-z])", 56),
+    (r"(?<![A-Za-z])SSIM(?![A-Za-z])", 58), (r"SmoothQuant", 59), (r"토론 #7", 66), (r"draw-things-community", 67),
 ]
 TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 
@@ -63,13 +70,18 @@ TOKEN_TAIL = r"[A-Za-z0-9.\-]*"
 # 장과 무관하게 이어 붙인다. 캡션 키("4-1" 등)는 `thesis_figures.md` 쪽 식별자라 그대로 둔다 —
 # 번호와 키를 분리해야 그림을 끼워 넣어도 캡션 파일을 건드리지 않는다.
 FIGURES = [
-    ("1", "1-1", "figures/fig0_intro_overview.png", "이 배포 구성과, 같은 이미지·같은 질문에 대한"),
-    ("2", "4-1", "figures/fig1_activation_profile.png", "(799장, 평가 해상도, bf16, 이미지별 최대의 중앙값)"),
-    ("3", "4-2", "figures/fig2_resolution_collapse.png", "이미지 단위로 출력이 NaN이면 상실)"),
-    ("4", "4-3", "figures/fig4_metric_inversion.png", "여유는 p50·bf16 측정)"),
-    ("5", "4-4", "figures/fig3_lambda_dose_response.png", "(799장, 평가 해상도, bf16, p50)"),
-    ("6", "6-1", "figures/fig6_runtime_collapse.png", "같은 순서, 15W 모드, TensorRT 10.3, 강타입. 지연은 두 분할 엔진의 합)"),
-    ("7", "7-1", "figures/fig_gate_calibration.png", "전이가 형식 상한 그 자체에서 일어나므로 **따로 보정할 상수가 없다**."),
+    # 2026-11-06 전면 수정(#11): 학생 모델 그림(fig0~fig7)은 원고에서 빠졌다. 기준 글자는 본문 문장의 일부
+    ("1", "3-1", "figures/fig_resid_schematic.png", "잔차 재조정의 구조를 [그림:3-1]에 제시한다."),
+    ("1", "5-1", "figures/fig_sdxl_gen_view.png", "복호 결과의 예를 [그림:5-1]에 제시한다."),
+    ("3", "5-2", "figures/fig_calib_c.png", "최댓값과 c를 [그림:5-2]에 제시한다."),
+    ("4", "5-3", "figures/fig_fidelity.png", "가까웠다([그림:5-3])."),
+    ("5", "5-4", "figures/fig_deploy.png", "A100 지연을 [그림:5-4]에 제시한다."),
+    ("1", "1-1", "figures/fig_teaser.png", "출력 상실 예를 [그림:1-1]에 제시한다."),
+    ("3", "3-0", "figures/fig_flow.png", "전체 흐름을 [그림:3-0]에 제시한다."),
+    ("3", "3-2", "figures/fig_region.png", "모식도로 [그림:3-2]에 제시한다."),
+    ("5", "5-5", "figures/fig_qwen_qual.png", "첫 세 문항의 답을 [그림:5-5]에 제시한다."),
+    ("3", "3-3", "figures/fig_block_profile.png", "블록별 최댓값을 [그림:3-3]에 제시한다."),
+    ("2", "5-6", "figures/fig_flux_qual.png", "생성 결과를 [그림:5-6]에 제시한다."),
 ]
 
 
@@ -185,13 +197,16 @@ def insert_figures(text, caps):
     figs = [(str(k + 1), key, path, a) for k, (_, key, path, a) in enumerate(pos)]
     for num, key, path, anchor in reversed(figs):   # 뒤에서부터 넣어야 앞 그림의 위치가 밀리지 않는다
         i = text.find(anchor)
-        j = text.index("\n", i)
-        line = text[text.rfind("\n", 0, i) + 1:j]
+        # 2026-11-09: 기준 문장이 있는 줄 뒤가 아니라 **그 문장이 속한 문단 끝** 뒤에 넣는다 — 줄 뒤에 넣으면 문단이
+        # 그림 앞뒤로 갈라져 문장이 줄 중간에서 끊겼다(그림 2·3)
+        j = text.find("\n\n", i)
+        j = len(text) if j < 0 else j
+        line = text[text.rfind("\n", 0, i) + 1:text.index("\n", i)]
         # 2026-10-30 학교 지침 「표와 그림의 번호는 본문에 반드시 인용」: 기준 줄 꼬리표(「; <그림 N>」)를 없애고
         # 본문 문장이 `[그림:키]`로 직접 가리키게 한다 — 가리키지 않는 그림은 아래에서 멈춘다
         new_line = line
         block = (f"\n\n**<그림 {num}>** {caps[key]}\n\n![그림 {num}]({path})")   # 2026-10-27 학교 작성 방법: 제목은 그림 상단
-        text = text[:text.rfind("\n", 0, i) + 1] + new_line + block + text[j:]
+        text = text[:j] + block + text[j:]
     # 본문의 그림 참조 `[그림:4-2]`(캡션 키) → `[그림 N]` (2026-10-25 — 서론·관련 연구에서 그림을 가리키려고)
     key2num = {key: num for num, key, _, _ in figs}
     def fig_ref(m):
@@ -231,9 +246,14 @@ def style_chapters(text):
     text = re.sub(r"^# (\d+)장 (.*)$", chap_title, text, flags=re.M)
     # 절 제목: 장 안에서 1부터 — `## 4.8 제목` → `## 8. 제목`
     text = re.sub(r"^## \d+\.(\d+) (.*)$", lambda m: f"## {m.group(1)}. {m.group(2)}", text, flags=re.M)
+    # 소절 제목: `### 5.1.2 제목` → `### 1.2 제목` (2026-11-10 — 절이 `1.`인데 소절이 `5.1.2`로 남았다)
+    text = re.sub(r"^### \d+\.(\d+)\.(\d+) (.*)$", lambda m: f"### {m.group(1)}.{m.group(2)} {m.group(3)}", text, flags=re.M)
     # 절 참조: `7.3절` → `Ⅶ장 3절`
     text = re.sub(r"(?<![\d.])(\d+)\.(\d+)절",
                   lambda m: f"{ROMAN[int(m.group(1))]}장 {m.group(2)}절", text)
+    # 같은 장 안의 절 범위: `Ⅲ장 2절~Ⅲ장 3절` → `Ⅲ장 2~3절` (2026-11-10)
+    text = re.sub(r"([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])장 (\d+)절~\1장 (\d+)절", r"\1장 \2~\3절", text)
+    text = re.sub(r"([ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩ])장 (\d+)절·\1장 (\d+)절", r"\1장 \2·\3절", text)   # 「Ⅴ장 1절·Ⅴ장 2절」 → 「Ⅴ장 1·2절」
     # 장 참조: `6장` · `4·6장` · `4~6장`
     def chap_ref(m):
         body = m.group(1)
@@ -262,6 +282,27 @@ def style_chapters(text):
     if left:
         print(f"  (이미지 수로 보아 그대로 둔 `N장`: {', '.join(left)})")
     return text
+
+
+# 숫자의 마지막 자리 읽기에 받침이 있는가 — 영(0)·일·삼·육·칠·팔은 받침, 이·사·오·구는 없음. 10·20…은 「십」이라 받침.
+_BATCHIM = {"0": True, "1": True, "2": False, "3": True, "4": False, "5": False, "6": True, "7": True, "8": True, "9": False}
+_RIEUL = {"1", "7", "8"}          # 받침이 ㄹ이면 「로」 (일로·칠로·팔로)
+_PAIRS = {"과": ("과", "와"), "와": ("과", "와"), "은": ("은", "는"), "는": ("은", "는"),
+          "이": ("이", "가"), "가": ("이", "가"), "을": ("을", "를"), "를": ("을", "를")}
+
+
+def fix_particles(text):
+    """`[표:…]`·`[그림:…]`을 번호로 바꾸면 초안에서 한글 꼬리표에 맞춰 붙인 조사가 틀린다(2026-11-10: 「<표 5>과」·「<표 6>와」).
+    `<표 N>`·`<그림 N>` 바로 뒤 조사를 번호의 마지막 자리 읽기에 맞춘다. 조사 뒤에 한글이 이어지면(「이다」 등) 건드리지 않는다."""
+    def fix(m):
+        num, p = m.group(2), m.group(3)
+        bat = _BATCHIM[num[-1]]
+        if p in ("으로", "로"):
+            q = "로" if (not bat or num[-1] in _RIEUL) else "으로"
+        else:
+            q = _PAIRS[p][0] if bat else _PAIRS[p][1]
+        return m.group(1) + q
+    return re.sub(r"(<(?:표|그림) (\d+)>)(으로|로|과|와|은|는|이|가|을|를)(?![가-힣])", fix, text)
 
 
 def toc(text):
@@ -391,11 +432,12 @@ def main():
     main_text = insert_figures(main_text, parse_captions())
     main_text, table_items = number_tables(main_text)
     main_text = style_chapters(main_text)      # 장절 번호와 본문 참조를 함께 바꾼다
+    main_text = fix_particles(main_text)       # 번호로 바뀐 표·그림 참조 뒤의 조사를 번호에 맞춘다
 
     today = dt.date.today().isoformat()
     head = (f"<!-- 자동 생성: scripts/build_thesis.py ({today}). 직접 고치지 말 것 — 장별 초안을 고치고 다시 생성한다. -->\n\n"
-            "# 비전-언어 모델의 저정밀 배포를 위한 표현 범위 기반 오버플로 진단 및 교정\n\n"
-            "*Representable-Range-Based Overflow Diagnosis and Correction for Low-Precision Deployment of Vision-Language Models*\n\n"
+            "# 비전-언어 모델과 확산 모델의 fp16 배포를 위한 오버플로 진단 및 잔차 재조정\n\n"
+            "*Overflow Diagnosis and Residual Rescaling for fp16 Deployment of Vision-Language and Diffusion Models*\n\n"
             f"석사학위논문 초안 · 합본 생성 {today} · 학교 양식 적용 전\n\n---\n\n")
     # 구성 순서 (2026-10-12 학교 양식) — 졸업생 논문(2026-08):
     #   표지 → 속표지 → 차례 → Abstract → 표 차례 → 그림 차례 → 본문 → 참고 문헌 → 부록 (감사의 글은 2026-10-28부터 제외)

@@ -1,0 +1,25 @@
+{
+ "checkpoint": "none",
+ "max_pixels": 12845056,
+ "onnx": "/dev/shm/dlm799/verify/tower_official_dlm1596h_fp32.onnx",
+ "n_images": 799,
+ "grid_mismatch": 0,
+ "grid": [
+  [
+   1,
+   64,
+   114
+  ]
+ ],
+ "wrapper_maxabs_max": 0.3526730537414551,
+ "ort_cos_median": {
+  "min": 0.9993764162063599,
+  "median": 0.9999640583992004
+ },
+ "n_below_0.9999": 56,
+ "runtime": "trt",
+ "cos_vs_orig_median": {
+  "min": 0.9993757009506226
+ },
+ "nonfinite_tokens_total": 0
+}

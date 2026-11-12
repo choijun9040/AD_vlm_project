@@ -1,0 +1,74 @@
+{
+ "n": 100,
+ "c": 0.015625,
+ "prompts": "PartiPrompts 앞 100개",
+ "gen": {
+  "steps": 30,
+  "cfg": 5.0,
+  "size": 1024
+ },
+ "orig_fp16": {
+  "nonfinite": 100,
+  "rate": 1.0,
+  "rel_err": {
+   "median": null,
+   "p99": null
+  },
+  "psnr_db": {
+   "median": null,
+   "min": null
+  }
+ },
+ "fix_fp16": {
+  "nonfinite": 0,
+  "rate": 0.0,
+  "rel_err": {
+   "median": 0.029244746193075613,
+   "p99": 0.07730126322855735
+  },
+  "psnr_db": {
+   "median": 46.08993095107845,
+   "min": 39.511850466606056
+  }
+ },
+ "resid_eps1_equivalence_cos_min": 0.9999999999999998,
+ "resid_eps1_fp16": {
+  "nonfinite": 0,
+  "rate": 0.0,
+  "rel_err": {
+   "median": 0.0026092002433368206,
+   "p99": 0.005864064896993687
+  },
+  "psnr_db": {
+   "median": 67.0996374648351,
+   "min": 59.085706555125455
+  }
+ },
+ "resid_eps0_equivalence_cos_min": 0.9999999996479354,
+ "resid_eps0_fp16": {
+  "nonfinite": 0,
+  "rate": 0.0,
+  "rel_err": {
+   "median": 0.0026092002433368206,
+   "p99": 0.005864064896993687
+  },
+  "psnr_db": {
+   "median": 67.0996374648351,
+   "min": 59.085706555125455
+  }
+ },
+ "diag_orig": {
+  "max_worst": 1540096.0,
+  "point": "up_blocks.3.resnets.2::add#0",
+  "headroom_worst": 0.042532413563829786,
+  "any_exceed_rate": 1.0,
+  "first_exceed": "up_blocks.2.upsamplers.0.conv::convolution#0"
+ },
+ "diag_resid": {
+  "max_worst": 24064.0,
+  "point": "up_blocks.3.resnets.2::add#0",
+  "headroom_worst": 2.7220744680851063,
+  "any_exceed_rate": 0.0,
+  "first_exceed": null
+ }
+}

@@ -1,0 +1,21 @@
+{
+  "onnx": "/dev/shm/dlm799/lat/tower_official_dlm1596h_f32_p1.onnx",
+  "onnx2": "/dev/shm/dlm799/lat/tower_official_dlm1596h_f32_p2.onnx",
+  "n_images": 799,
+  "trt": "10.13.3.9",
+  "modes": {
+    "fp32": {
+      "nan_rate": 0.0,
+      "absmax_p50": 53.35036849975586,
+      "cos_ref": null,
+      "n_half_tensors": 0,
+      "n_float_tensors": 14,
+      "weights_mib": 1347.8355712890625,
+      "latency_ms": {
+        "p50": 193.71006707660854,
+        "p95": 195.51248019561172
+      },
+      "build_log": "logs/trt_build_fp32.log"
+    }
+  }
+}

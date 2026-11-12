@@ -1,0 +1,12 @@
+{
+ "prompts": "PartiPrompts 101~200번",
+ "seeds": [
+  100,
+  199
+ ],
+ "max_worst": 1409024.0,
+ "point": "up_blocks.3.resnets.2::add#0",
+ "any_exceed_rate": 1.0,
+ "first_exceed": "up_blocks.2.upsamplers.0.conv::convolution#0",
+ "c": 0.015625
+}

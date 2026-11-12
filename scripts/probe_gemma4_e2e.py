@@ -57,6 +57,16 @@ def pick(offset, limit):
     return items, len(toks)
 
 
+def pick_all():
+    """정확도 평가와 같은 11,309문항(`eval_nuscenesqa_val.py`의 NuScenesQADataset 순서) — 개정 13 (2026-11-04)."""
+    from dataloader import NuScenesQADataset
+    tok = build_token_to_images(DRIVELM_VAL)
+    ds = NuScenesQADataset(json_path=NUSCENESQA_VAL, token_to_images=tok, processor=None)
+    items = [(x["sample_token"], str(tok[x["sample_token"]]["CAM_FRONT"]),
+              {"question": x["question"], "answer": x["answer"]}) for x in ds.samples]
+    return items, len({t for t, _p, _q in items})
+
+
 @torch.no_grad()
 def answer(model, processor, path, question):
     msgs = [{"role": "user", "content": [{"type": "image", "image": Image.open(path).convert("RGB")},
@@ -75,13 +85,15 @@ def main():
     ap.add_argument("--offset", type=int, default=100)
     ap.add_argument("--limit", type=int, default=100)
     ap.add_argument("--out", default="eval_results/gemma4_e2e_26B-A4B_off100.json")
+    ap.add_argument("--all_questions", action="store_true",
+                    help="이미지마다 첫 문항 대신 정확도 평가와 같은 11,309문항 전부(--offset·--limit 무시) — 개정 13")
     args = ap.parse_args()
 
     from transformers import AutoProcessor, Gemma4ForConditionalGeneration
     from scipy.stats import binomtest
     processor = AutoProcessor.from_pretrained(REPO)
     model = Gemma4ForConditionalGeneration.from_pretrained(REPO, torch_dtype=torch.bfloat16).to("cuda").eval()
-    items, n_img = pick(args.offset, args.limit)
+    items, n_img = pick_all() if args.all_questions else pick(args.offset, args.limit)
     print(f"[설정] 이미지 {n_img}장 중 문항이 있는 {len(items)}개 · 해상도 기본(280)")
 
     orig = model.model.vision_tower
@@ -92,7 +104,8 @@ def main():
     from probe_gemma4_vision import profile
     ip = processor.image_processor
     cache = []
-    for _t, p, _q in items:
+    uniq = list(dict.fromkeys(p for _t, p, _q in items))       # c는 고유 이미지로 — 문항마다 이미지가 겹쳐도 같은 c (개정 13)
+    for p in uniq:
         enc = ip(images=[Image.open(p).convert("RGB")], return_tensors="pt")
         cache.append((enc["pixel_values"], enc["image_position_ids"]))
     rec, _ = profile(orig, cache, upcast=True)
@@ -105,7 +118,9 @@ def main():
     res = {k: [] for k in conds}
     for name, tower in conds.items():
         model.model.vision_tower = tower
-        for tk, p, q in items:
+        for n_done, (tk, p, q) in enumerate(items):
+            if n_done and n_done % 500 == 0:
+                print(f"  [{name}] {n_done}/{len(items)}", flush=True)
             text, finite = answer(model, processor, p, q["question"])
             ok = normalize_answer(text) == normalize_answer(q["answer"])
             res[name].append({"token": tk, "q": q["question"], "gt": q["answer"], "pred": text,

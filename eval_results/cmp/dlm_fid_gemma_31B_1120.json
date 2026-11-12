@@ -1,0 +1,51 @@
+{
+ "which": "gemma",
+ "model_dir": "/workspace/gemma4_vision/gemma-4-31B-it",
+ "tokens": 1120,
+ "n_cal": 100,
+ "n_eval": 799,
+ "calib": {
+  "max_worst": 93696.0,
+  "point": "<tower>::mul#0",
+  "c": 0.25
+ },
+ "bf16": {
+  "nonfinite": 0,
+  "n": 799,
+  "rel_err": {
+   "median": 0.13081196684593382,
+   "p99": 0.18473632316639862,
+   "max": 0.19327073727679062
+  },
+  "cos": {
+   "min": 0.981283110103418,
+   "median": 0.9914416618460574
+  }
+ },
+ "fp16": {
+  "nonfinite": 799,
+  "n": 799,
+  "rel_err": {
+   "median": null,
+   "p99": null,
+   "max": null
+  },
+  "cos": {
+   "min": null,
+   "median": null
+  }
+ },
+ "fp16_resid": {
+  "nonfinite": 0,
+  "n": 799,
+  "rel_err": {
+   "median": 0.04327673934478539,
+   "p99": 0.06965869991890924,
+   "max": 0.07639081161483156
+  },
+  "cos": {
+   "min": 0.9970828146981394,
+   "median": 0.9990633226567658
+  }
+ }
+}

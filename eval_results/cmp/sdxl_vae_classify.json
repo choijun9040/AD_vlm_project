@@ -1,0 +1,62 @@
+{
+ "n": 799,
+ "target": 32752.0,
+ "n_over_target": 10,
+ "by_kind": {
+  "stream": [
+   {
+    "point": "up_blocks.3.resnets.2::add#0",
+    "max_worst": 1474560.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.2::div#0",
+    "max_worst": 1474560.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.1::add#0",
+    "max_worst": 1458176.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.1::div#0",
+    "max_worst": 1458176.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0::add#0",
+    "max_worst": 1441792.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0::div#0",
+    "max_worst": 1441792.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0.conv_shortcut::convolution#0",
+    "max_worst": 1400832.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.2.upsamplers.0.conv::convolution#0",
+    "max_worst": 218112.0,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "up_blocks.3.resnets.0.conv2::convolution#0",
+    "max_worst": 129024.0,
+    "exceed_rate": 0.8936170212765957
+   },
+   {
+    "point": "up_blocks.3.resnets.2.conv2::convolution#0",
+    "max_worst": 42496.0,
+    "exceed_rate": 0.0
+   }
+  ]
+ },
+ "counts": {
+  "stream": 10
+ }
+}

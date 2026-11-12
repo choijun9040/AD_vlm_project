@@ -178,6 +178,10 @@ def main():
                         help="교정된 비전 타워 state_dict(.pt) 경로")
     # **--no_resume (2026-10-22).** 예측 덤프가 이미 있으면 기본으로 **이어서** 한다 — 컨테이너가 4~5시간마다 재시작해
     # 조각(최대 75분)의 진행분을 통째로 잃었기 때문이다. 이 인자를 주면 예전처럼 덤프를 지우고 처음부터 한다.
+    # **--dt_original S (2026-11-04, 개정 14b).** Draw Things 원형 처방(잔차 fp32·블록 안 fp16·마지막 2블록 다운 프로젝션 입력 ×1/S·출력 fp32 ×S, 편향 그대로)을
+    # 비전 타워에 훅으로 건다(scripts/dt_original.py). fp16 배포 조건(--lora_dtype float16)에서만 의미가 있다.
+    parser.add_argument("--dt_original", type=int, default=0, metavar="S",
+                        help="Draw Things 원형 처방의 배수(8 또는 4). 0이면 쓰지 않는다")
     parser.add_argument("--no_resume", action="store_true",
                         help="예측 덤프가 있어도 이어서 하지 않고 처음부터 다시 잰다")
     parser.add_argument("--print_samples", type=int, default=0,
@@ -255,6 +259,26 @@ def main():
             for k, v in ch.items():
                 setattr(mods[k], v["attr"], v["new"])
             print(f"[교정] 정규화 eps 변경 {len(ch)}개 적용: {eps_path}")
+
+    if args.dt_original:
+        if args.lora_dtype != "float16" or args.vision_state:
+            raise SystemExit("--dt_original은 무교정 fp16 조건(--lora_dtype float16, --vision_state 없음)에서만 쓴다")
+        from dt_original import apply_dt_qwen
+        vt_dt = None
+        for path in (("visual",), ("model", "visual"), ("base_model", "model", "visual"), ("base_model", "model", "model", "visual")):
+            o, ok = model, True
+            for a_ in path:
+                if not hasattr(o, a_):
+                    ok = False
+                    break
+                o = getattr(o, a_)
+            if ok and hasattr(o, "blocks"):
+                vt_dt = o
+                break
+        if vt_dt is None:
+            raise RuntimeError("비전 타워를 찾지 못했다 — --dt_original을 적용할 수 없다")
+        apply_dt_qwen(vt_dt, s=args.dt_original)
+        print(f"[DT-원형] 잔차 fp32 · 마지막 2블록 down_proj 입력 ×1/{args.dt_original}·출력 fp32 ×{args.dt_original} (편향 그대로)")
 
     print("[데이터 준비] DriveLM val 이미지 매핑 구성 중...")
     token_to_images = build_token_to_images(DRIVELM_VAL_JSON)

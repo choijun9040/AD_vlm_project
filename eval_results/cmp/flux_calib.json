@@ -1,0 +1,91 @@
+{
+ "repo": "black-forest-labs/FLUX.1-schnell",
+ "n": 100,
+ "size": 1024,
+ "steps": 4,
+ "configs": {},
+ "diagnosis_bf16": {
+  "global_max_point": "single_transformer_blocks.37::add#3",
+  "max_worst": 233472.0,
+  "headroom_worst": 0.2805646929824561,
+  "first_exceed": {
+   "point": "transformer_blocks.18::mul#5",
+   "upcast": false,
+   "max_p50": 100608.0,
+   "max_worst": 105472.0,
+   "headroom_worst": 0.6210558252427184,
+   "exceed_rate": 1.0
+  },
+  "any_exceed_rate_predicted_loss": 1.0,
+  "risky_top": [
+   {
+    "point": "single_transformer_blocks.37::add#3",
+    "upcast": false,
+    "max_p50": 225280.0,
+    "max_worst": 233472.0,
+    "headroom_worst": 0.2805646929824561,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.36::add#3",
+    "upcast": false,
+    "max_p50": 224256.0,
+    "max_worst": 232448.0,
+    "headroom_worst": 0.2818006607929515,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.34::add#3",
+    "upcast": false,
+    "max_p50": 223232.0,
+    "max_worst": 231424.0,
+    "headroom_worst": 0.28304756637168144,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.35::add#3",
+    "upcast": false,
+    "max_p50": 223232.0,
+    "max_worst": 231424.0,
+    "headroom_worst": 0.28304756637168144,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.33::add#3",
+    "upcast": false,
+    "max_p50": 222208.0,
+    "max_worst": 230400.0,
+    "headroom_worst": 0.28430555555555553,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "transformer_blocks.18::add#31",
+    "upcast": false,
+    "max_p50": 221184.0,
+    "max_worst": 229376.0,
+    "headroom_worst": 0.2855747767857143,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.0::add#3",
+    "upcast": false,
+    "max_p50": 221184.0,
+    "max_worst": 229376.0,
+    "headroom_worst": 0.2855747767857143,
+    "exceed_rate": 1.0
+   },
+   {
+    "point": "single_transformer_blocks.1::add#3",
+    "upcast": false,
+    "max_p50": 221184.0,
+    "max_worst": 229376.0,
+    "headroom_worst": 0.2855747767857143,
+    "exceed_rate": 1.0
+   }
+  ],
+  "c": 0.125,
+  "stream_max": 233472.0,
+  "inner_over_target": [],
+  "G_A_note": "FF는 GELU 단일 MLP — (G) 등가 불가; 어텐션 점수는 SDPA 안"
+ }
+}

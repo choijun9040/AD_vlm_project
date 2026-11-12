@@ -23,6 +23,7 @@ Qwen2.5-VL 비전 타워 ONNX 내보내기 (Orin Nano 검증용)
 """
 
 import argparse
+import copy
 import sys
 from pathlib import Path
 
@@ -204,6 +205,8 @@ class TowerExportWrapper(nn.Module):
         # **자료형 (6.4g).** 타워를 fp16으로 바꿔 내보낼 때도 입출력(1부→2부 은닉 상태 포함)은 fp32로 둔다 —
         # 그래프 안에서 변환하므로 측정 스크립트가 그대로 쓰인다. fp32 타워에서는 둘 다 아무 연산도 만들지 않는다.
         x = pixel_values.to(t.patch_embed.proj.weight.dtype)
+        if self.part == 2 and KEEP32_STREAM:     # DT-원형(개정 14b·15d): 분할 지점에서도 잔차를 fp32로 넘긴다
+            x = pixel_values
         if self.part == 2:                       # 입력이 이미 은닉 상태다(1부의 출력)
             h, blocks = x, range(self.split, n)
         else:
@@ -224,6 +227,9 @@ class TowerExportWrapper(nn.Module):
         h = t.merger(h)
         h = h[self.reverse_index, :]
         return h.float() if h.dtype == torch.float16 else h
+
+
+KEEP32_STREAM = False                    # --cmp_arm DTo*: 분할 지점에서 잔차를 fp32로 넘긴다
 
 
 def dedup_constants(model, min_bytes=2**20):
@@ -278,6 +284,8 @@ def main():
     ap.add_argument("--max_pixels", type=int, default=200704,
                     help="배포 해상도. 이 값으로 형상이 고정된다")
     ap.add_argument("--min_pixels", type=int, default=50176)
+    ap.add_argument("--image", default=None,
+                    help="형상을 정할 대표 이미지(없으면 DriveLM 검증 첫 CAM_FRONT). 개정 23: RealWorldQA 952×1456 형상(원본 1448×938) — 2026-11-04")
     ap.add_argument("--out", default=None)
     ap.add_argument("--opset", type=int, default=17)
     ap.add_argument("--tol", type=float, default=2e-3, help="원본 대비 허용 최대 오차")
@@ -299,6 +307,9 @@ def main():
     ap.add_argument("--attn", choices=["dense", "chunked"], default="dense",
                     help="dense=S×S 어텐션 전체(기존), chunked=창 묶음·쿼리 나눠 계산(6.4f)")
     ap.add_argument("--attn_chunk", type=int, default=256)
+    # **--cmp_arm (2026-11-04, 개정 15d).** 비교 처방을 그래프에 넣어 (R)과 같은 설정으로 내보낸다(--dtype fp16 전용):
+    # B1 TensorRT 문서의 혼합 정밀도(블록 31 down_proj fp32·merger ln_q 입력까지 fp32), B2 입력 ×¼, DTo8·DTo4 Draw Things 원형(잔차 fp32 등)
+    ap.add_argument("--cmp_arm", choices=["B1", "B2", "DTo8", "DTo4"], default=None)
     ap.add_argument("--dtype", choices=["fp32", "fp16"], default="fp32",
                     help="fp16=타워를 fp16으로 바꿔 내보낸다(가중치·활성 fp16, softmax fp32, 입출력 fp32). "
                          "Orin 빌드의 가중치 상수 메모리 대응(6.4g)")
@@ -347,14 +358,31 @@ def main():
         print(f"[fixA] 마지막 블록 gate·up의 weight{'·bias' if has_b else ''}를 각각 "
               f"x{f:.6f} (곱 1/{args.fixa:g}) — 논문 7.4 처방을 그래프에 굳혔다")
 
+    if args.cmp_arm and args.dtype != "fp16":
+        raise SystemExit("--cmp_arm은 --dtype fp16과 함께 쓴다")
+    dp31_32 = copy.deepcopy(tower.blocks[31].mlp.down_proj).float() if args.cmp_arm == "B1" else None
     if args.dtype == "fp16":
         # PyTorch fp16 측정(`model.to(float16)`)과 같은 부류 — 버퍼(회전 위치 주파수 등)도 함께 바뀐다
         tower.half()
         print("[자료형] 타워를 fp16으로 바꿨다 — 가중치·활성 fp16, softmax fp32, 입출력 fp32 (6.4g)")
+    if args.cmp_arm:
+        import dt_original as DT
+        global KEEP32_STREAM
+        if args.cmp_arm == "B1":
+            DT.apply_trt_mixed_qwen(tower, type("T", (), {"blocks": {31: type("B", (), {"mlp": type("M", (), {"down_proj": dp31_32})})}})(), blocks=(31,))
+        elif args.cmp_arm == "B2":
+            DT.apply_input_scale_qwen(tower, 0.25)
+        else:
+            DT.apply_dt_qwen(tower, s=8 if args.cmp_arm == "DTo8" else 4)
+            KEEP32_STREAM = True
+        print(f"[비교 처방] {args.cmp_arm}를 그래프에 넣는다(개정 15d)")
 
     # 대표 이미지 하나로 형상을 고정한다
-    tok = build_token_to_images(DRIVELM_VAL_JSON)
-    img_path = str(next(iter(tok.values()))["CAM_FRONT"])
+    if args.image:
+        img_path = args.image
+    else:
+        tok = build_token_to_images(DRIVELM_VAL_JSON)
+        img_path = str(next(iter(tok.values()))["CAM_FRONT"])
     proc = AutoProcessor.from_pretrained(BASE, max_pixels=args.max_pixels,
                                          min_pixels=args.min_pixels)
     enc = proc.image_processor(images=[Image.open(img_path).convert("RGB")],
@@ -375,7 +403,17 @@ def main():
     with torch.no_grad():
         got = wrapper(pv)
 
-    if args.dtype == "fp16":
+    if args.dtype == "fp16" and args.cmp_arm:
+        bad_r = ~torch.isfinite(ref.float()).all(dim=-1)
+        bad_g = ~torch.isfinite(got.float()).all(dim=-1)
+        ok = ~bad_r & ~bad_g
+        cosm = torch.nn.functional.cosine_similarity(got.float()[ok], ref.float()[ok], dim=-1).median().item() if ok.any() else float("nan")
+        print(f"[대조·비교 처방] 비유한 토큰 원본 {int(bad_r.sum())} · 래퍼 {int(bad_g.sum())}, 토큰별 코사인 중앙 {cosm:.6f} (같은 처방을 건 원래 구현 대비)")
+        if not torch.equal(bad_r, bad_g) or not cosm >= 0.9999:
+            raise SystemExit("래퍼가 같은 처방의 원래 구현과 다르다 — 내보내기 중단")
+        print("  fp16 일치 확인")
+        diff = 0.0
+    elif args.dtype == "fp16":
         # **fp16 일치 검사 (6.4g 등록).** 출력을 상실하는 모델은 일부 토큰이 NaN이 되므로 절대오차 하나로는 못 본다
         # (NaN과의 비교는 항상 거짓이라 조용히 통과한다). (1) 유한하지 않은 토큰 위치가 원본과 같아야 하고,
         # (2) 유한한 토큰에서 fp32 기준값 대비 오차가 원본 fp16 오차의 1.5배 안이어야 한다.

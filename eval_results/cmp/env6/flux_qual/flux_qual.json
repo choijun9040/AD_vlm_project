@@ -1,0 +1,81 @@
+{
+ "n": 4,
+ "c": 0.125,
+ "torch": "2.11.0+cu128",
+ "diffusers": "0.41.0",
+ "fp16_accumulation": true,
+ "prompts": [
+  "bond",
+  "element",
+  "molecule",
+  "life"
+ ],
+ "rows": {
+  "fp16_noclip": [
+   {
+    "i": 0,
+    "finite": false,
+    "rel": null
+   },
+   {
+    "i": 1,
+    "finite": false,
+    "rel": null
+   },
+   {
+    "i": 2,
+    "finite": false,
+    "rel": null
+   },
+   {
+    "i": 3,
+    "finite": false,
+    "rel": null
+   }
+  ],
+  "drawthings": [
+   {
+    "i": 0,
+    "finite": true,
+    "rel": 0.6098144961366329
+   },
+   {
+    "i": 1,
+    "finite": true,
+    "rel": 0.4346028195456542
+   },
+   {
+    "i": 2,
+    "finite": true,
+    "rel": 0.3079131841461389
+   },
+   {
+    "i": 3,
+    "finite": true,
+    "rel": 0.27931501462408587
+   }
+  ],
+  "resid": [
+   {
+    "i": 0,
+    "finite": true,
+    "rel": 0.2017781854146694
+   },
+   {
+    "i": 1,
+    "finite": true,
+    "rel": 0.13042861403710068
+   },
+   {
+    "i": 2,
+    "finite": true,
+    "rel": 0.06015538571518785
+   },
+   {
+    "i": 3,
+    "finite": true,
+    "rel": 0.1172067400100553
+   }
+  ]
+ }
+}

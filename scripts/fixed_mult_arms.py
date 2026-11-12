@@ -2,7 +2,7 @@
 실험 5 — 고정 배수 대조. 2026-11-03.
 사전 등록: thesis_outline_20260910.md §6 「교정의 전 계열 확장」 개정 8 (결과 보기 전).
 
-기존 처방(Draw Things: MLP 하향 사상에 ⅛·¼ 고정 축소)과 도구의 교정을 같은 모델에서 나란히 잰다.
+기존 처방과 도구의 교정을 같은 모델에서 나란히 잰다. (정정 2026-11-04: F는 Draw Things 원형이 아니다 — 원형은 특정 블록만 줄이고 GEMM 뒤 fp32에서 되돌린다. F는 모든 블록·되돌리기 없음. 개요 §6 실험 5 정정)
   F¼·F⅛ — 측정 없이 **모든 블록**의 down_proj 입력을 s배(가중치 ×s, 편향 그대로) — 비등가 고정 처방
   P⅛    — 도구의 곱셈 이전 축소를 계산값 f = 0.3554 대신 ⅛로(마지막 블록) — 비등가 과잉 축소
   R⅛    — 잔차 재조정을 c = ¼ 대신 ⅛로(eps ×c²) — 등가 과잉 축소(fp32 등가성 검사 통과가 적용 조건)
@@ -74,7 +74,7 @@ def run_qwen(a):
     # 기준 출력 — 무교정 fp32 (CPU에 둔다)
     ref = None
     for arm in a.arms.split(","):
-        if arm in res["arms"] and Path(f"{a.state_dir}/baseline_v2_exp5_{arm}.pt").exists():
+        if arm in res["arms"] and (arm in ("DT4", "DTo8", "DTo4", "B1", "B2") or Path(f"{a.state_dir}/baseline_v2_exp5_{arm}.pt").exists()):
             print(f"[{arm}] 끝난 팔 — 건너뛴다"); continue
         if ref is None:
             r32 = copy.deepcopy(tower0).cuda()
@@ -91,6 +91,15 @@ def run_qwen(a):
         elif arm == "P8":
             applied = G.apply_fix(t, [{"block": len(blocks) - 1, "scale": 8.0, "headroom": None}])
             info["applied"] = applied
+        elif arm in ("B1", "B2"):
+            info.update({"note": "TensorRT Accuracy Considerations(개정 15c): " + ("B1 혼합 정밀도 — 블록 31 down_proj fp32·ln_q 입력까지 fp32"
+                                                                                  if arm == "B1" else "B2 입력 pixel_values ×¼")})
+        elif arm in ("DTo8", "DTo4"):
+            info.update({"s": 8 if arm == "DTo8" else 4, "last_n": 2,
+                         "note": "Draw Things 원형(개정 14b): 잔차 fp32, 블록 안 fp16, 마지막 2블록 down_proj 입력 ×1/s·출력 fp32 ×s, 편향 그대로"})
+        elif arm == "DT4":
+            info.update({"blocks": [int(b) for b in a.dt_blocks.split(",")], "s": 0.25,
+                         "note": "Draw Things 원형(개정 14): 넘치는 블록만 down_proj ×¼로 fp16 GEMM, fp32로 올려 ×4, 잔차는 fp16"})
         elif arm == "R8":
             c = 0.125
             plan = HX.plan_residual(t, G.get_blocks, cache32[:8], fwd32, c)
@@ -110,6 +119,29 @@ def run_qwen(a):
             raise SystemExit(f"모르는 팔: {arm}")
         # fp16 상실률과 상대 오차
         t16 = copy.deepcopy(t).half()
+        dt_hooks = []
+        if arm in ("DTo8", "DTo4"):
+            from dt_original import apply_dt_qwen
+            dt_hooks = apply_dt_qwen(t16, s=info["s"], last_n=info["last_n"])
+        undo_b = None
+        if arm == "B1":
+            from dt_original import apply_trt_mixed_qwen
+            undo_b = apply_trt_mixed_qwen(t16, t, blocks=(31,))
+        if arm == "B2":
+            from dt_original import apply_input_scale_qwen
+            undo_b = apply_input_scale_qwen(t16, 0.25)
+        if arm == "DT4":
+            b16 = G.get_blocks(t16)
+            for bi in info["blocks"]:
+                dp = G._mlp_of(b16[bi]).down_proj
+                with torch.no_grad():
+                    dp.weight.mul_(0.25)
+                    if dp.bias is not None:
+                        dp.bias.mul_(0.25)
+                # GEMM 뒤 fp32로 올려 되돌린다(원문 「upcast to FP32 after the final GEMM in the MLP」) — 게이팅이 없으므로 그대로 잔차에 더한다
+                dt_hooks.append(dp.register_forward_hook(lambda _m, _i, o: o.float() * 4.0))
+                # 잔차 흐름은 모델 형식(fp16) — 블록 출력을 fp16으로(fp32로 두면 승격이다)
+                dt_hooks.append(b16[bi].register_forward_hook(lambda _m, _i, o: o.half() if torch.is_tensor(o) else o))
         bad, errs = 0, []
         with torch.no_grad():
             for x, y in zip(cache32, ref):
@@ -123,6 +155,16 @@ def run_qwen(a):
                                     "p99": fe[min(len(fe) - 1, int(0.99 * len(fe)))] if fe else None,
                                     "n_finite": len(fe), "n": len(errs)}})
         print(f"[{arm}] fp16 상실 {bad}/{len(cache32)} · 상대 오차 중앙 {info['fp16_error']['median']} · p99 {info['fp16_error']['p99']}")
+        for h in dt_hooks:
+            h.remove()
+        if undo_b is not None:
+            undo_b()
+        if arm in ("DT4", "DTo8", "DTo4", "B1", "B2"):           # 훅으로 정의되는 처방이라 가중치 저장으로는 재현되지 않는다 — 정확도는 상실 < 5%일 때만(개정 14)
+            info["state"] = None
+            res["arms"][arm] = info
+            _save(a.out, res)
+            del t, t16; torch.cuda.empty_cache()
+            continue
         # 정확도 평가용 저장 (병합된 타워 기준 state_dict — eval_nuscenesqa_val --vision_state)
         Path(a.state_dir).mkdir(parents=True, exist_ok=True)
         sp = f"{a.state_dir}/baseline_v2_exp5_{arm}.pt"
@@ -154,10 +196,18 @@ def run_gemma(a):
     for arm in a.arms.split(","):
         if arm in res["arms"]:
             print(f"[{arm}] 끝난 팔 — 건너뛴다"); continue
-        s = {"F4": 0.25, "F8": 0.125}[arm]
         vm16 = load_vision(a.model_dir, "float16")
-        n = scale_down_proj(vm16, R.blocks_of, _mlp_of, s)
-        res["arms"][arm] = {"s": s, "n_blocks": n, "loss_no_upcast": R.loss_no_upcast(vm16, cache)}
+        if arm in ("DTo8", "DTo4"):                  # Draw Things 원형(개정 14b)
+            from dt_original import apply_dt_gemma
+            sdt = 8 if arm == "DTo8" else 4
+            hooks = apply_dt_gemma(vm16, s=sdt, last_n=2)
+            res["arms"][arm] = {"s": sdt, "last_n": 2, "loss_no_upcast": R.loss_no_upcast(vm16, cache)}
+            for h in hooks:
+                h.remove()
+        else:
+            s = {"F4": 0.25, "F8": 0.125}[arm]
+            n = scale_down_proj(vm16, R.blocks_of, _mlp_of, s)
+            res["arms"][arm] = {"s": s, "n_blocks": n, "loss_no_upcast": R.loss_no_upcast(vm16, cache)}
         print(f"[{arm}] 경로 (ii) 상실 {res['base']['loss_no_upcast']:.1%} → {res['arms'][arm]['loss_no_upcast']:.1%}")
         _save(a.out, res); del vm16; torch.cuda.empty_cache()
     print(f"저장: {a.out}")
@@ -173,6 +223,7 @@ def main():
     q.add_argument("--limit", type=int, default=799)
     q.add_argument("--arms", default="F4,F8,P8,R8")
     q.add_argument("--state_dir", default="checkpoints_fix")
+    q.add_argument("--dt_blocks", default="31", help="DT4 팔을 적용할 블록(측정상 상한을 넘는 블록 — 기준 모델은 31 하나)")
     q.add_argument("--out", required=True)
     g = sub.add_parser("gemma")
     g.add_argument("--model_dir", required=True)
